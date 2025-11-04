@@ -110,7 +110,10 @@ export function KitDetail() {
           kitId={kit.id}
           onSuccess={() => {
             setBookingModalOpened(false);
-            navigate('/bookings');
+            // Return to the previous page instead of forcing a specific route
+            if (window.history.length > 1) {
+              window.history.back();
+            }
           }}
           onCancel={() => setBookingModalOpened(false)}
         />

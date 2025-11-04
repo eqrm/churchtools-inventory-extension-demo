@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, Container, Group, Menu, Modal, Title } from '@mantine/core';
+import { Button, Container, Menu, Modal } from '@mantine/core';
 import { IconChevronDown, IconPlus, IconTemplate } from '@tabler/icons-react';
 import { AssetCategoryList } from '../components/categories/AssetCategoryList';
 import { AssetCategoryForm } from '../components/categories/AssetCategoryForm';
@@ -94,15 +94,15 @@ export function CategoriesPage() {
 
   return (
     <Container size="xl" py="xl">
-      <Group justify="space-between" mb="md">
-        <Title order={1}>Asset Categories</Title>
-        <NewCategoryMenu
-          onCreateNew={handleCreateNew}
-          onShowTemplates={handleShowTemplates}
-        />
-      </Group>
-
-      <AssetCategoryList onEdit={handleEdit} />
+      <AssetCategoryList
+        onEdit={handleEdit}
+        headerActions={
+          <NewCategoryMenu
+            onCreateNew={handleCreateNew}
+            onShowTemplates={handleShowTemplates}
+          />
+        }
+      />
 
       <Modal
         opened={isFormOpen}

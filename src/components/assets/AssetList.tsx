@@ -13,14 +13,12 @@ import {
   Stack,
   Text,
   TextInput,
-  Title,
 } from '@mantine/core';
-import { DataTable, type DataTableSortStatus } from 'mantine-datatable';
+import type { DataTableSortStatus } from 'mantine-datatable';
 import {
   IconDots,
   IconEdit,
   IconEye,
-  IconFilter,
   IconPlus,
   IconSearch,
   IconTrash,
@@ -38,6 +36,9 @@ import { IconDisplay } from '../categories/IconDisplay';
 import { MaintenanceReminderBadge } from '../maintenance/MaintenanceReminderBadge';
 import type { Asset, AssetStatus, AssetFilters } from '../../types/entities';
 import { ASSET_STATUS_OPTIONS } from '../../constants/assetStatuses';
+import { DataViewLayout } from '../dataView/DataViewLayout';
+import { DataViewTable } from '../dataView/DataViewTable';
+import { useDataViewState } from '../../hooks/useDataViewState';
 
 interface AssetListProps {
   onView?: (asset: Asset) => void;
@@ -60,6 +61,37 @@ const ASSET_PAGE_SIZE_OPTIONS: number[] = [25, 50, 100, 200];
 const ASSET_PAGE_SIZE_STORAGE_KEY = 'asset-list-page-size';
 const DEFAULT_ASSET_PAGE_SIZE = 50;
 
+type AssetTypeFilter = 'parent' | 'child' | 'standalone';
+
+interface AssetViewFilters extends AssetFilters {
+  assetType?: AssetTypeFilter;
+  prefixId?: string;
+}
+
+function getActiveAssetFilterCount(filters: AssetViewFilters): number {
+  let count = 0;
+
+  if (filters.search) count += 1;
+  if (filters.categoryId) count += 1;
+  if (filters.status) count += 1;
+  if (filters.location) count += 1;
+  if (filters.parentAssetId) count += 1;
+  if (typeof filters.isParent === 'boolean') count += 1;
+  if (filters.assetType) count += 1;
+  if (filters.prefixId) count += 1;
+
+  if (filters.customFields) {
+    count += Object.values(filters.customFields).filter((value) => {
+      if (Array.isArray(value)) {
+        return value.length > 0;
+      }
+      return value !== undefined && value !== null && value !== '';
+    }).length;
+  }
+
+  return count;
+}
+
 interface AssetListRow extends Asset {
   __depth: number;
   __parentId?: string;
@@ -77,32 +109,8 @@ export function AssetList({
   hideFilterButton,
 }: AssetListProps) {
   const navigate = useNavigate(); // T263 - E4: Router navigation for direct clicks
-  const [filters, setFilters] = useState<AssetFilters>(initialFilters || {});
   const [internalFiltersOpen, setInternalFiltersOpen] = useState(false);
-  const [assetTypeFilter, setAssetTypeFilter] = useState<string>('all');
-  const [prefixFilter, setPrefixFilter] = useState<string>('all'); // T275: Prefix-based filtering
-  const [sortStatus, setSortStatus] = useState<DataTableSortStatus<AssetListRow>>({
-    columnAccessor: 'assetNumber',
-    direction: 'asc',
-  });
   const [expandedParents, setExpandedParents] = useState<Record<string, boolean>>({});
-  
-  // T214: Pagination for large asset lists (performance optimization)
-  const [pageSize, setPageSize] = useState<number>(() => {
-    if (typeof window === 'undefined') {
-      return DEFAULT_ASSET_PAGE_SIZE;
-    }
-    const stored = window.localStorage.getItem(ASSET_PAGE_SIZE_STORAGE_KEY);
-    const parsed = stored ? Number.parseInt(stored, 10) : NaN;
-    return ASSET_PAGE_SIZE_OPTIONS.includes(parsed) ? parsed : DEFAULT_ASSET_PAGE_SIZE;
-  });
-  const [page, setPage] = useState(1);
-  useEffect(() => {
-    if (typeof window === 'undefined') {
-      return;
-    }
-    window.localStorage.setItem(ASSET_PAGE_SIZE_STORAGE_KEY, String(pageSize));
-  }, [pageSize]);
 
   const filtersPanelOpen = filtersOpen ?? internalFiltersOpen;
   const toggleFilters = () => {
@@ -118,23 +126,62 @@ export function AssetList({
     [initialFilters],
   );
 
-  useEffect(() => {
-    if (initialFilters && Object.keys(initialFilters).length > 0) {
-      setFilters({
-        ...initialFilters,
-        customFields: initialFilters.customFields
-          ? { ...initialFilters.customFields }
-          : undefined,
-      });
-    } else {
-      setFilters({});
+  const initialViewFilters = useMemo<AssetViewFilters>(() => {
+    if (!initialFilters) {
+      return {} as AssetViewFilters;
     }
-  }, [initialFiltersSnapshot, initialFilters]);
+
+    const base: AssetViewFilters = {
+      ...initialFilters,
+      customFields: initialFilters.customFields ? { ...initialFilters.customFields } : undefined,
+    } as AssetViewFilters;
+
+    return base;
+  }, [initialFilters]);
+
+  const {
+    viewMode,
+    setViewMode,
+    filters,
+    setFilters,
+    resetFilters,
+    hasActiveFilters,
+    activeFilterCount,
+    sortStatus,
+    setSortStatus,
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
+    pageSizeOptions,
+  } = useDataViewState<AssetViewFilters, DataTableSortStatus<AssetListRow>>({
+    storageKey: 'asset-data-view',
+    initialFilters: initialViewFilters,
+    initialFiltersKey: initialFiltersSnapshot,
+    defaultMode: 'table',
+    initialSort: {
+      columnAccessor: 'assetNumber',
+      direction: 'asc',
+    } satisfies DataTableSortStatus<AssetListRow>,
+    defaultPageSize: DEFAULT_ASSET_PAGE_SIZE,
+    pageSizeOptions: ASSET_PAGE_SIZE_OPTIONS,
+    pageSizeStorageKey: ASSET_PAGE_SIZE_STORAGE_KEY,
+    getActiveFilterCount: getActiveAssetFilterCount,
+  });
 
 
   const { data: categories = [] } = useCategories();
   const { data: prefixes = [] } = useAssetPrefixes(); // T275: Load prefixes for filtering
-  const { data: assets = [], isLoading, error } = useAssets(filters);
+  const assetFilters = useMemo<AssetFilters>(() => {
+    const { assetType: _assetType, prefixId: _prefixId, ...rest } = filters;
+    const next: AssetFilters = { ...rest };
+    if (rest.customFields) {
+      next.customFields = { ...rest.customFields };
+    }
+    return next;
+  }, [filters]);
+
+  const { data: assets = [], isLoading, error } = useAssets(assetFilters);
   const { data: maintenanceSchedules = [] } = useMaintenanceSchedules();
   const deleteAsset = useDeleteAsset();
   const createAsset = useCreateAsset();
@@ -186,22 +233,20 @@ export function AssetList({
   // T275: Also filter by prefix
   const filteredAssets = useMemo(() => {
     return assets.filter(asset => {
-      // Filter by asset type
-      if (assetTypeFilter === 'parent' && !asset.isParent) return false;
-      if (assetTypeFilter === 'child' && !asset.parentAssetId) return false;
-      if (assetTypeFilter === 'standalone' && (asset.isParent || asset.parentAssetId)) return false;
-      
-      // T275: Filter by prefix
-      if (prefixFilter !== 'all') {
-        const selectedPrefix = prefixes.find(p => p.id === prefixFilter);
+      if (filters.assetType === 'parent' && !asset.isParent) return false;
+      if (filters.assetType === 'child' && !asset.parentAssetId) return false;
+      if (filters.assetType === 'standalone' && (asset.isParent || asset.parentAssetId)) return false;
+
+      if (filters.prefixId) {
+        const selectedPrefix = prefixes.find(prefix => prefix.id === filters.prefixId);
         if (selectedPrefix && !asset.assetNumber.startsWith(`${selectedPrefix.prefix}-`)) {
           return false;
         }
       }
-      
+
       return true;
     });
-  }, [assets, assetTypeFilter, prefixFilter, prefixes]);
+  }, [assets, filters.assetType, filters.prefixId, prefixes]);
 
   // Sort assets (memoized to avoid re-sorting on every render) - T217
   const sortedAssets = useMemo(() => {
@@ -262,7 +307,7 @@ export function AssetList({
     if (page > maxPage) {
       setPage(maxPage);
     }
-  }, [page, topLevelAssets.length, pageSize]);
+  }, [page, pageSize, topLevelAssets.length, setPage]);
 
   const paginatedTopLevelAssets = useMemo(() => {
     const from = (page - 1) * pageSize;
@@ -377,19 +422,162 @@ export function AssetList({
   };
 
   const clearFilters = () => {
-    setFilters({});
+    resetFilters();
   };
 
-  // Memoize filter check to avoid recalculation on every render - T217
-  const hasActiveFilters = useMemo(() => {
-    return Boolean(
-      filters.categoryId || 
-      filters.status || 
-      filters.location || 
-      filters.search ||
-      (filters.customFields && Object.keys(filters.customFields).length > 0)
-    );
-  }, [filters]);
+  const filterContent = (
+    <Stack gap="md">
+      <Group align="flex-end">
+        <TextInput
+          label="Search"
+          placeholder="Search by name, asset number, or description"
+          leftSection={<IconSearch size={16} />}
+          value={filters.search ?? ''}
+          onChange={(e) => {
+            const nextValue = e.currentTarget.value;
+            setFilters((prev) => ({
+              ...prev,
+              search: nextValue,
+            }));
+          }}
+          style={{ flex: 1 }}
+        />
+        {hasActiveFilters && (
+          <Button
+            variant="subtle"
+            color="gray"
+            leftSection={<IconX size={16} />}
+            onClick={clearFilters}
+          >
+            Clear All
+          </Button>
+        )}
+      </Group>
+
+      <Group grow>
+        <Select
+          label="Asset Type"
+          value={filters.assetType ?? 'all'}
+          onChange={(val) => {
+            setFilters((prev) => ({
+              ...prev,
+              assetType: val && val !== 'all' ? (val as AssetTypeFilter) : undefined,
+            }));
+          }}
+          data={ASSET_TYPE_OPTIONS}
+        />
+
+        {prefixes.length > 0 && (
+          <Select
+            label="Asset Prefix"
+            placeholder="All prefixes"
+            value={filters.prefixId ?? null}
+            onChange={(val) => {
+              setFilters((prev) => ({
+                ...prev,
+                prefixId: val ?? undefined,
+              }));
+            }}
+            data={prefixes.map((prefix) => ({
+              value: prefix.id,
+              label: `${prefix.prefix} - ${prefix.description}`,
+            }))}
+            clearable
+          />
+        )}
+
+        <Select
+          label="Category"
+          placeholder="All categories"
+          value={filters.categoryId ?? null}
+          onChange={(val) => {
+            setFilters((prev) => ({
+              ...prev,
+              categoryId: val ?? undefined,
+              customFields:
+                val && val === prev.categoryId ? prev.customFields : undefined,
+            }));
+          }}
+          data={categories.map((cat) => ({
+            value: cat.id,
+            label: `${cat.icon || ''} ${cat.name}`.trim(),
+          }))}
+          clearable
+        />
+
+        <Select
+          label="Status"
+          placeholder="All statuses"
+          value={(filters.status as string | undefined) ?? null}
+          onChange={(val) => {
+            setFilters((prev) => ({
+              ...prev,
+              status: val ? (val as AssetStatus) : undefined,
+            }));
+          }}
+          data={ASSET_STATUS_OPTIONS}
+          clearable
+        />
+
+        <TextInput
+          label="Location"
+          placeholder="Filter by location"
+          value={filters.location ?? ''}
+          onChange={(e) => {
+            const nextValue = e.currentTarget.value;
+            setFilters((prev) => ({
+              ...prev,
+              location: nextValue ? nextValue : undefined,
+            }));
+          }}
+        />
+      </Group>
+
+      {filters.categoryId && (() => {
+        const selectedCategory = categories.find((category) => category.id === filters.categoryId);
+        if (selectedCategory && selectedCategory.customFields.length > 0) {
+          return (
+            <>
+              <Text size="sm" fw={600} mt="md">
+                Custom Field Filters
+              </Text>
+              <Group grow>
+                {selectedCategory.customFields.map((field) => (
+                  <CustomFieldFilterInput
+                    key={field.id}
+                    field={field}
+                    value={filters.customFields?.[field.id]}
+                    onChange={(value) => {
+                      setFilters((prev) => {
+                        const currentCustomFields = { ...(prev.customFields ?? {}) };
+
+                        let nextCustomFields: Record<string, unknown> | undefined;
+                        if (value === undefined) {
+                          const { [field.id]: _removed, ...remaining } = currentCustomFields;
+                          nextCustomFields = Object.keys(remaining).length > 0 ? remaining : undefined;
+                        } else {
+                          nextCustomFields = {
+                            ...currentCustomFields,
+                            [field.id]: value,
+                          };
+                        }
+
+                        return {
+                          ...prev,
+                          customFields: nextCustomFields,
+                        };
+                      });
+                    }}
+                  />
+                ))}
+              </Group>
+            </>
+          );
+        }
+        return null;
+      })()}
+    </Stack>
+  );
 
   if (error) {
     return (
@@ -399,189 +587,43 @@ export function AssetList({
     );
   }
 
+  const primaryAction = onCreateNew
+    ? {
+        label: 'New Asset',
+        icon: <IconPlus size={16} />,
+        onClick: onCreateNew,
+      }
+    : undefined;
+
   return (
-    <Stack gap="md">
-      <Group justify="space-between">
-        <Title order={2}>Assets</Title>
-        <Group>
-          {hideFilterButton !== true && (
-            <Button
-              variant={filtersPanelOpen ? 'filled' : 'default'}
-              leftSection={<IconFilter size={16} />}
-              onClick={toggleFilters}
-            >
-              Filters
-              {hasActiveFilters && (
-                <Badge size="xs" circle ml="xs">
-                  {[
-                    filters.categoryId,
-                    filters.status,
-                    filters.location,
-                    filters.search,
-                    ...(filters.customFields ? Object.keys(filters.customFields) : []),
-                  ]
-                    .filter(Boolean)
-                    .length}
-                </Badge>
-              )}
-            </Button>
-          )}
-          {onCreateNew && (
-            <Button
-              leftSection={<IconPlus size={16} />}
-              onClick={onCreateNew}
-            >
-              New Asset
-            </Button>
-          )}
-        </Group>
-      </Group>
-
-      {filtersPanelOpen && (
-        <Card withBorder>
-          <Stack gap="md">
-            <Group align="flex-end">
-              <TextInput
-                label="Search"
-                placeholder="Search by name, asset number, or description"
-                leftSection={<IconSearch size={16} />}
-                value={filters.search || ''}
-                onChange={(e) => {
-                  setFilters({ ...filters, search: e.currentTarget.value });
-                }}
-                style={{ flex: 1 }}
-              />
-              {hasActiveFilters && (
-                <Button
-                  variant="subtle"
-                  color="gray"
-                  leftSection={<IconX size={16} />}
-                  onClick={clearFilters}
-                >
-                  Clear All
-                </Button>
-              )}
-            </Group>
-
-            <Group grow>
-              <Select
-                label="Asset Type"
-                value={assetTypeFilter}
-                onChange={(val) => setAssetTypeFilter(val || 'all')}
-                data={ASSET_TYPE_OPTIONS}
-              />
-
-              {/* T275: Asset Prefix Filter */}
-              {prefixes.length > 0 && (
-                <Select
-                  label="Asset Prefix"
-                  placeholder="All prefixes"
-                  value={prefixFilter}
-                  onChange={(val) => setPrefixFilter(val || 'all')}
-                  data={[
-                    { value: 'all', label: 'All Prefixes' },
-                    ...prefixes.map(prefix => ({
-                      value: prefix.id,
-                      label: `${prefix.prefix} - ${prefix.description}`,
-                    })),
-                  ]}
-                  clearable
-                />
-              )}
-
-              <Select
-                label="Category"
-                placeholder="All categories"
-                value={filters.categoryId || null}
-                onChange={(val) => {
-                  setFilters({ ...filters, categoryId: val || undefined });
-                }}
-                data={categories.map(cat => ({
-                  value: cat.id,
-                  label: `${cat.icon || ''} ${cat.name}`.trim(),
-                }))}
-                clearable
-              />
-
-              <Select
-                label="Status"
-                placeholder="All statuses"
-                value={(filters.status as string) || null}
-                onChange={(val) => {
-                  setFilters({ ...filters, status: val ? (val as AssetStatus) : undefined });
-                }}
-                data={ASSET_STATUS_OPTIONS}
-                clearable
-              />
-
-              <TextInput
-                label="Location"
-                placeholder="Filter by location"
-                value={filters.location || ''}
-                onChange={(e) => {
-                  setFilters({ ...filters, location: e.currentTarget.value || undefined });
-                }}
-              />
-            </Group>
-
-            {filters.categoryId && (() => {
-              const selectedCategory = categories.find(c => c.id === filters.categoryId);
-              if (selectedCategory && selectedCategory.customFields.length > 0) {
-                return (
-                  <>
-                    <Text size="sm" fw={600} mt="md">Custom Field Filters</Text>
-                    <Group grow>
-                      {selectedCategory.customFields.map((field) => (
-                        <CustomFieldFilterInput
-                          key={field.id}
-                          field={field}
-                          value={filters.customFields?.[field.id]}
-                          onChange={(value) => {
-                            const currentCustomFields = filters.customFields || {};
-                            const newCustomFields = value === undefined
-                              ? Object.fromEntries(
-                                  Object.entries(currentCustomFields).filter(([k]) => k !== field.id)
-                                )
-                              : { ...currentCustomFields, [field.id]: value };
-                            
-                            setFilters({
-                              ...filters,
-                              customFields: Object.keys(newCustomFields).length > 0 
-                                ? newCustomFields 
-                                : undefined,
-                            });
-                          }}
-                        />
-                      ))}
-                    </Group>
-                  </>
-                );
-              }
-              return null;
-            })()}
-          </Stack>
-        </Card>
-      )}
-
+    <DataViewLayout
+      title="Assets"
+      mode={viewMode}
+      availableModes={['table']}
+      onModeChange={setViewMode}
+      filtersOpen={filtersPanelOpen}
+      onToggleFilters={toggleFilters}
+      hasActiveFilters={hasActiveFilters}
+      activeFilterCount={activeFilterCount}
+      primaryAction={primaryAction}
+      showFilterButton={hideFilterButton !== true}
+      filterContent={filterContent}
+    >
       <Card withBorder>
-        <DataTable<AssetListRow>
-          withTableBorder
-          borderRadius="sm"
-          striped
-          highlightOnHover
+        <DataViewTable<AssetListRow>
           records={displayRecords}
           onRowClick={handleRowClick}
           rowStyle={() => ({ cursor: 'pointer' })}
           totalRecords={topLevelAssets.length}
           recordsPerPage={pageSize}
-          recordsPerPageOptions={ASSET_PAGE_SIZE_OPTIONS}
+          recordsPerPageOptions={pageSizeOptions}
           page={page}
           onPageChange={setPage}
-          onRecordsPerPageChange={(size) => {
+          onRecordsPerPageChange={(size: number) => {
             setPageSize(size);
             setPage(1);
           }}
-          paginationText={({ from, to, totalRecords }) =>
+          paginationText={({ from, to, totalRecords }: { from: number; to: number; totalRecords: number }) =>
             `Showing ${from} to ${to} of ${totalRecords} assets`
           }
           columns={[
@@ -789,7 +831,7 @@ export function AssetList({
           noRecordsText={hasActiveFilters ? 'No assets match your filters' : 'No assets found'}
         />
       </Card>
-    </Stack>
+    </DataViewLayout>
   );
 }
 

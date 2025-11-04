@@ -13,26 +13,43 @@ import {
   IconTool,
 } from '@tabler/icons-react';
 import { Link, useLocation } from 'react-router-dom';
+import type { ReactNode, MouseEvent as ReactMouseEvent } from 'react';
 
 interface NavigationProps {
-  children: React.ReactNode;
+  children: ReactNode;
   onScanClick?: () => void;
 }
 
 export function Navigation({ children, onScanClick }: NavigationProps) {
-  const [opened, { toggle }] = useDisclosure();
+  const [opened, { toggle, close }] = useDisclosure();
   const location = useLocation();
 
-  // Detect platform for correct keyboard shortcut display
-  const isMac = /Mac|iPhone|iPad|iPod/.test(navigator.userAgent);
-  const scanShortcut = isMac ? '⌘S' : 'Alt+S';
-
-  const isActive = (path: string) => {
+  const routeIsActive = (path: string | undefined) => {
+    if (!path) return false;
     if (path === '/') {
       return location.pathname === '/';
     }
     return location.pathname.startsWith(path);
   };
+
+  const handleNavClick = (
+    event: ReactMouseEvent<HTMLElement>,
+    context: { label: string; route?: string },
+  ) => {
+    const { route } = context;
+    if (routeIsActive(route)) {
+      event.preventDefault();
+      event.stopPropagation();
+      close();
+      return;
+    }
+
+    close();
+  };
+
+  // Detect platform for correct keyboard shortcut display
+  const isMac = /Mac|iPhone|iPad|iPod/.test(navigator.userAgent);
+  const scanShortcut = isMac ? '⌘S' : 'Alt+S';
 
   return (
     <AppShell
@@ -47,7 +64,12 @@ export function Navigation({ children, onScanClick }: NavigationProps) {
       <AppShell.Header>
         <Group h="100%" px="md" justify="space-between">
           <Group>
-            <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
+            <Burger
+              opened={opened}
+              onClick={toggle}
+              hiddenFrom="sm"
+              size="sm"
+            />
             <Title order={3}>Inventory Manager</Title>
           </Group>
         </Group>
@@ -55,116 +77,111 @@ export function Navigation({ children, onScanClick }: NavigationProps) {
 
       <AppShell.Navbar p="md">
         <NavLink
+          data-nav-label="Dashboard"
           component={Link}
           to="/"
           label="Dashboard"
           leftSection={<IconHome size={20} />}
-          active={isActive('/')}
-          onClick={() => {
-            if (opened) toggle();
-          }}
+          active={routeIsActive('/')}
+          onClick={(event) => handleNavClick(event, { label: 'Dashboard', route: '/' })}
         />
         
         <NavLink
+          data-nav-label="Categories"
           component={Link}
           to="/categories"
           label="Categories"
           leftSection={<IconCategory size={20} />}
-          active={isActive('/categories')}
-          onClick={() => {
-            if (opened) toggle();
-          }}
+          active={routeIsActive('/categories')}
+          onClick={(event) => handleNavClick(event, { label: 'Categories', route: '/categories' })}
         />
         
         <NavLink
+          data-nav-label="Assets"
           component={Link}
           to="/assets"
           label="Assets"
           leftSection={<IconBox size={20} />}
-          active={isActive('/assets')}
-          onClick={() => {
-            if (opened) toggle();
-          }}
+          active={routeIsActive('/assets')}
+          onClick={(event) => handleNavClick(event, { label: 'Assets', route: '/assets' })}
         />
 
         <NavLink
+          data-nav-label="Bookings"
           component={Link}
           to="/bookings"
           label="Bookings"
           leftSection={<IconCalendarEvent size={20} />}
-          active={isActive('/bookings')}
-          onClick={() => {
-            if (opened) toggle();
-          }}
+          active={routeIsActive('/bookings')}
+          onClick={(event) => handleNavClick(event, { label: 'Bookings', route: '/bookings' })}
         />
 
         <NavLink
+          data-nav-label="Kits"
           component={Link}
           to="/kits"
           label="Kits"
           leftSection={<IconPackage size={20} />}
-          active={isActive('/kits')}
-          onClick={() => {
-            if (opened) toggle();
-          }}
+          active={routeIsActive('/kits')}
+          onClick={(event) => handleNavClick(event, { label: 'Kits', route: '/kits' })}
         />
 
         <NavLink
+          data-nav-label="Stock Take"
           component={Link}
           to="/stock-take"
           label="Stock Take"
           leftSection={<IconClipboardList size={20} />}
-          active={isActive('/stock-take')}
-          onClick={() => {
-            if (opened) toggle();
-          }}
+          active={routeIsActive('/stock-take')}
+          onClick={(event) => handleNavClick(event, { label: 'Stock Take', route: '/stock-take' })}
         />
 
         <NavLink
+          data-nav-label="Reports"
           component={Link}
           to="/reports"
           label="Reports"
           leftSection={<IconChartBar size={20} />}
-          active={isActive('/reports')}
-          onClick={() => {
-            if (opened) toggle();
-          }}
+          active={routeIsActive('/reports')}
+          onClick={(event) => handleNavClick(event, { label: 'Reports', route: '/reports' })}
         />
 
         <NavLink
+          data-nav-label="Maintenance"
           component={Link}
           to="/maintenance"
           label="Maintenance"
           leftSection={<IconTool size={20} />}
-          active={isActive('/maintenance')}
-          onClick={() => {
-            if (opened) toggle();
-          }}
+          active={routeIsActive('/maintenance')}
+          onClick={(event) => handleNavClick(event, { label: 'Maintenance', route: '/maintenance' })}
         />
 
         <NavLink
+          data-nav-label="Quick Scan"
           label="Quick Scan"
           description={scanShortcut}
           leftSection={<IconScan size={20} />}
-          onClick={() => {
-            if (opened) toggle();
+          onClick={(event) => {
+            event.preventDefault();
+            close();
             onScanClick?.();
           }}
         />
         
         <NavLink
+          data-nav-label="Settings"
           component={Link}
           to="/settings"
           label="Settings"
           leftSection={<IconSettings size={20} />}
-          active={isActive('/settings')}
-          onClick={() => {
-            if (opened) toggle();
-          }}
+          active={routeIsActive('/settings')}
+          onClick={(event) => handleNavClick(event, { label: 'Settings', route: '/settings' })}
         />
       </AppShell.Navbar>
 
-      <AppShell.Main>{children}</AppShell.Main>
+      <AppShell.Main data-view-key={location.pathname}>
+        {children}
+      </AppShell.Main>
     </AppShell>
   );
 }

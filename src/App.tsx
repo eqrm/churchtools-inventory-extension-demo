@@ -1,5 +1,5 @@
 import { useState, useEffect, Suspense } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Center, Loader, Stack, Text } from '@mantine/core';
 import { Navigation } from './components/layout/Navigation';
 import { QuickScanModal } from './components/scanner/QuickScanModal';
@@ -17,6 +17,24 @@ function PageLoader() {
         <Text c="dimmed">Loading...</Text>
       </Stack>
     </Center>
+  );
+}
+
+/**
+ * AppRoutes component with location-based key to force remounts
+ */
+function AppRoutes() {
+  const location = useLocation();
+  
+  return (
+    <Suspense fallback={<PageLoader />}>
+      <Routes key={location.pathname}>
+        {appRoutes.map(({ path, Component }) => (
+          <Route key={path} path={path} element={<Component />} />
+        ))}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </Suspense>
   );
 }
 
@@ -60,14 +78,7 @@ function App() {
             setScanModalOpened(true);
           }}
         >
-          <Suspense fallback={<PageLoader />}>
-            <Routes>
-              {appRoutes.map(({ path, Component }) => (
-                <Route key={path} path={path} element={<Component />} />
-              ))}
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </Suspense>
+          <AppRoutes />
         </Navigation>
 
         {/* Global Quick Scan Modal - Alt+S anywhere to open */}

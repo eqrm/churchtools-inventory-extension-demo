@@ -39,19 +39,26 @@ export interface PersonSearchError {
 }
 
 interface ChurchToolsPersonRaw {
-  title: string
-  domainType: 'person'
-  domainIdentifier: string
+  title?: string
+  domainType?: 'person'
+  domainIdentifier?: string
   apiUrl?: string
-  frontendUrl: string | null
+  frontendUrl?: string | null
   imageUrl?: string | null
-  domainAttributes: {
-    firstName: string
-    lastName: string
-    guid: string
-    isArchived: boolean
-    dateOfDeath: string | null
+  domainAttributes?: {
+    firstName?: string
+    lastName?: string
+    guid?: string
+    isArchived?: boolean
+    dateOfDeath?: string | null
   }
+  firstName?: string
+  lastName?: string
+  id?: number | string
+  guid?: string
+  displayName?: string
+  avatarUrl?: string | null
+  email?: string | null
   infos?: string[]
 }
 
@@ -246,17 +253,46 @@ export class PersonSearchService implements IPersonSearchService {
    * T037: Transform ChurchTools person to our format
    */
   private transformPerson(raw: ChurchToolsPersonRaw): PersonSearchResult {
-    // Use domainAttributes for firstName/lastName (more reliable than parsing title)
-    const firstName = raw.domainAttributes.firstName || ''
-    const lastName = raw.domainAttributes.lastName || ''
+    const domainAttributes = raw.domainAttributes ?? {}
+
+    const firstName = domainAttributes.firstName ?? raw.firstName ?? ''
+    const lastName = domainAttributes.lastName ?? raw.lastName ?? ''
+
+    const resolvedId = (() => {
+      if (raw.domainIdentifier) return raw.domainIdentifier
+      if (domainAttributes.guid) return domainAttributes.guid
+      if (raw.guid) return raw.guid
+      if (typeof raw.id !== 'undefined' && raw.id !== null) return String(raw.id)
+      if (raw.apiUrl) {
+        const parts = raw.apiUrl.split('/')
+        const tail = parts[parts.length - 1]
+        if (tail) {
+          return tail
+        }
+      }
+      return undefined
+    })()
+
+    const displayName = (() => {
+      if (raw.title && raw.title.trim()) return raw.title.trim()
+      if (raw.displayName && raw.displayName.trim()) return raw.displayName.trim()
+      const combined = [firstName, lastName].filter(Boolean).join(' ').trim()
+      if (combined) return combined
+      if (domainAttributes.guid) return domainAttributes.guid
+      if (resolvedId) return resolvedId
+      return 'Unknown Person'
+    })()
+
+    const avatarUrl = raw.imageUrl ?? raw.avatarUrl ?? undefined
+    const email = raw.email ?? undefined
 
     return {
-      id: raw.domainIdentifier,
+      id: resolvedId ?? displayName,
       firstName,
       lastName,
-      email: '', // ChurchTools search API doesn't return email in search results
-      avatarUrl: raw.imageUrl || undefined,
-      displayName: raw.title.trim()
+      email,
+      avatarUrl: avatarUrl ?? undefined,
+      displayName
     }
   }
 
