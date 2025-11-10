@@ -4,10 +4,12 @@ import { IconBox, IconCategory, IconHistory, IconTrendingUp } from '@tabler/icon
 import { useAssets } from '../hooks/useAssets';
 import { useCategories } from '../hooks/useCategories';
 import { PrefixWarningCard } from '../components/dashboard/PrefixWarningCard';
+import { useFeatureSettingsStore } from '../stores';
 
 export function DashboardPage() {
   const { data: assets = [] } = useAssets();
   const { data: categories = [] } = useCategories();
+  const maintenanceEnabled = useFeatureSettingsStore((state) => state.maintenanceEnabled);
 
   const availableAssets = assets.filter(a => a.status === 'available').length;
   const inUseAssets = assets.filter(a => a.status === 'in-use').length;
@@ -118,7 +120,7 @@ export function DashboardPage() {
           </Stack>
         </Card>
 
-        {brokenAssets > 0 && (
+        {maintenanceEnabled && brokenAssets > 0 && (
           <Card withBorder padding="lg" bg="red.0">
             <Stack gap="xs">
               <Group>

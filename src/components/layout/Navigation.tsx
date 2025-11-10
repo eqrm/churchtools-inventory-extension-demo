@@ -15,6 +15,7 @@ import {
 } from '@tabler/icons-react';
 import { Link, useLocation } from 'react-router-dom';
 import type { ReactNode, MouseEvent as ReactMouseEvent } from 'react';
+import { useFeatureSettingsStore } from '../../stores';
 
 interface NavigationProps {
   children: ReactNode;
@@ -24,6 +25,11 @@ interface NavigationProps {
 export function Navigation({ children, onScanClick }: NavigationProps) {
   const [opened, { toggle, close }] = useDisclosure();
   const location = useLocation();
+  const { bookingsEnabled, kitsEnabled, maintenanceEnabled } = useFeatureSettingsStore((state) => ({
+    bookingsEnabled: state.bookingsEnabled,
+    kitsEnabled: state.kitsEnabled,
+    maintenanceEnabled: state.maintenanceEnabled,
+  }));
 
   const routeIsActive = (path: string | undefined) => {
     if (!path) return false;
@@ -117,25 +123,29 @@ export function Navigation({ children, onScanClick }: NavigationProps) {
           onClick={(event) => handleNavClick(event, { label: 'Asset Models', route: '/asset-groups' })}
         />
 
-        <NavLink
-          data-nav-label="Bookings"
-          component={Link}
-          to="/bookings"
-          label="Bookings"
-          leftSection={<IconCalendarEvent size={20} />}
-          active={routeIsActive('/bookings')}
-          onClick={(event) => handleNavClick(event, { label: 'Bookings', route: '/bookings' })}
-        />
+        {bookingsEnabled && (
+          <NavLink
+            data-nav-label="Bookings"
+            component={Link}
+            to="/bookings"
+            label="Bookings"
+            leftSection={<IconCalendarEvent size={20} />}
+            active={routeIsActive('/bookings')}
+            onClick={(event) => handleNavClick(event, { label: 'Bookings', route: '/bookings' })}
+          />
+        )}
 
-        <NavLink
-          data-nav-label="Kits"
-          component={Link}
-          to="/kits"
-          label="Kits"
-          leftSection={<IconPackage size={20} />}
-          active={routeIsActive('/kits')}
-          onClick={(event) => handleNavClick(event, { label: 'Kits', route: '/kits' })}
-        />
+        {kitsEnabled && (
+          <NavLink
+            data-nav-label="Kits"
+            component={Link}
+            to="/kits"
+            label="Kits"
+            leftSection={<IconPackage size={20} />}
+            active={routeIsActive('/kits')}
+            onClick={(event) => handleNavClick(event, { label: 'Kits', route: '/kits' })}
+          />
+        )}
 
         <NavLink
           data-nav-label="Stock Take"
@@ -157,15 +167,17 @@ export function Navigation({ children, onScanClick }: NavigationProps) {
           onClick={(event) => handleNavClick(event, { label: 'Reports', route: '/reports' })}
         />
 
-        <NavLink
-          data-nav-label="Maintenance"
-          component={Link}
-          to="/maintenance"
-          label="Maintenance"
-          leftSection={<IconTool size={20} />}
-          active={routeIsActive('/maintenance')}
-          onClick={(event) => handleNavClick(event, { label: 'Maintenance', route: '/maintenance' })}
-        />
+        {maintenanceEnabled && (
+          <NavLink
+            data-nav-label="Maintenance"
+            component={Link}
+            to="/maintenance"
+            label="Maintenance"
+            leftSection={<IconTool size={20} />}
+            active={routeIsActive('/maintenance')}
+            onClick={(event) => handleNavClick(event, { label: 'Maintenance', route: '/maintenance' })}
+          />
+        )}
 
         <NavLink
           data-nav-label="Quick Scan"

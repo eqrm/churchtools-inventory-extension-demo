@@ -29,7 +29,7 @@ describe('ImportGroupSnapshotModal', () => {
     groupNumber: 'AG-001',
     name: 'Production Mics',
     barcode: '7000001',
-    category: { id: 'cat-1', name: 'Microphones' },
+    assetType: { id: 'asset-type-1', name: 'Microphones' },
     manufacturer: 'Shure',
     model: 'SM58',
     modelNumber: 'SM58-LC',

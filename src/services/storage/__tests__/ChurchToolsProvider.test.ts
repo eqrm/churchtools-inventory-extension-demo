@@ -270,7 +270,7 @@ describe('ChurchToolsStorageProvider Integration Tests', () => {
       vi.mocked(mockAPIClient.getDataValues).mockResolvedValue([]);
 
       const assetData = {
-        category: { id: 'cat-1', name: 'Test Category' },
+        assetType: { id: 'cat-1', name: 'Test Category' },
         name: 'New Camera',
         description: 'A test camera',
         manufacturer: 'Test Manufacturer',

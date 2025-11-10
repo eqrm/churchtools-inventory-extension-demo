@@ -6,7 +6,7 @@ export const ASSET_GROUP_BARCODE_PADDING = 7
 export const CUSTOM_FIELD_SOURCE_PREFIX = 'customFieldValues.'
 
 export const DEFAULT_ASSET_GROUP_INHERITANCE_RULES: Readonly<Record<string, AssetGroupInheritanceRule>> = Object.freeze({
-  category: { inherited: true, overridable: false },
+  assetType: { inherited: true, overridable: false },
   manufacturer: { inherited: true, overridable: false },
   model: { inherited: true, overridable: false },
   description: { inherited: true, overridable: true },

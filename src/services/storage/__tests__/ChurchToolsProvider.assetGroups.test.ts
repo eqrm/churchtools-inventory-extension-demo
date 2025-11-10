@@ -58,7 +58,7 @@ describe('ChurchToolsStorageProvider - Asset Groups', () => {
 
     const group = await provider.createAssetGroup({
       name: 'Camera Kit',
-      category: { id: 'cat-audio', name: 'Audio' },
+      assetType: { id: 'cat-audio', name: 'Audio' },
       inheritanceRules: {},
       customFieldRules: {},
       memberAssetIds: ['asset-1'],
@@ -98,7 +98,7 @@ describe('ChurchToolsStorageProvider - Asset Groups', () => {
 
     const created = await provider.createAssetGroup({
       name: 'Lighting Rig',
-      category: { id: 'cat-audio', name: 'Audio' },
+      assetType: { id: 'cat-audio', name: 'Audio' },
       inheritanceRules: {},
       customFieldRules: {},
       memberAssetIds: ['asset-1'],
@@ -135,7 +135,7 @@ describe('ChurchToolsStorageProvider - Asset Groups', () => {
 
     const created = await provider.createAssetGroup({
       name: 'Mic Pack',
-      category: { id: 'cat-audio', name: 'Audio' },
+      assetType: { id: 'cat-audio', name: 'Audio' },
       inheritanceRules: {},
       customFieldRules: {},
       memberAssetIds: ['asset-1'],
@@ -151,7 +151,7 @@ describe('ChurchToolsStorageProvider - Asset Groups', () => {
 
     const created = await provider.createAssetGroup({
       name: 'Audio Bundle',
-      category: { id: 'cat-audio', name: 'Audio' },
+      assetType: { id: 'cat-audio', name: 'Audio' },
       inheritanceRules: {},
       customFieldRules: {},
       memberAssetIds: ['asset-1'],

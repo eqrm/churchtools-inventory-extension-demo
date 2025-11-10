@@ -3,10 +3,10 @@ import { ChurchToolsStorageProvider } from '../ChurchToolsProvider';
 import { createMockChurchToolsApi } from './mockChurchToolsApiClient';
 
 const MODULE_ID = '42';
-const CATEGORY_ID = '100';
+const ASSET_TYPE_ID = '100';
 
 const createAssetInput = () => ({
-  category: { id: CATEGORY_ID, name: 'Lighting' },
+  assetType: { id: ASSET_TYPE_ID, name: 'Lighting' },
   name: 'Stage Light',
   description: 'LED Stage Light',
   manufacturer: 'BeamCo',
@@ -26,7 +26,7 @@ describe('ChurchToolsStorageProvider - Maintenance', () => {
     mockApi = createMockChurchToolsApi(MODULE_ID);
     provider = new ChurchToolsStorageProvider(MODULE_ID, mockApi.client);
     mockApi.seedCategory({
-      id: CATEGORY_ID,
+      id: ASSET_TYPE_ID,
       name: 'Lighting',
       shorty: 'light',
       description: null,

@@ -1,10 +1,11 @@
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useMemo } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Center, Loader, Stack, Text } from '@mantine/core';
 import { Navigation } from './components/layout/Navigation';
 import { QuickScanModal } from './components/scanner/QuickScanModal';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { appRoutes } from './router';
+import { useFeatureSettingsStore } from './stores';
 
 /**
  * Loading fallback component for lazy-loaded routes
@@ -25,11 +26,31 @@ function PageLoader() {
  */
 function AppRoutes() {
   const location = useLocation();
+  const { bookingsEnabled, kitsEnabled, maintenanceEnabled } = useFeatureSettingsStore((state) => ({
+    bookingsEnabled: state.bookingsEnabled,
+    kitsEnabled: state.kitsEnabled,
+    maintenanceEnabled: state.maintenanceEnabled,
+  }));
+
+  const filteredRoutes = useMemo(() => {
+    return appRoutes.filter(({ path }) => {
+      if (!bookingsEnabled && path.startsWith('/bookings')) {
+        return false;
+      }
+      if (!kitsEnabled && path.startsWith('/kits')) {
+        return false;
+      }
+      if (!maintenanceEnabled && path.startsWith('/maintenance')) {
+        return false;
+      }
+      return true;
+    });
+  }, [bookingsEnabled, kitsEnabled, maintenanceEnabled]);
   
   return (
     <Suspense fallback={<PageLoader />}>
       <Routes key={location.pathname}>
-        {appRoutes.map(({ path, Component }) => (
+        {filteredRoutes.map(({ path, Component }) => (
           <Route key={path} path={path} element={<Component />} />
         ))}
         <Route path="*" element={<Navigate to="/" replace />} />

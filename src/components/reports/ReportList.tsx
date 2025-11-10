@@ -5,6 +5,7 @@
  */
 
 import { Card, SimpleGrid, Text, Title, Group, ThemeIcon } from '@mantine/core';
+import { useMemo } from 'react';
 import {
   IconChartLine,
   IconCalendarCheck,
@@ -12,6 +13,7 @@ import {
   IconHistory,
 } from '@tabler/icons-react';
 import { useNavigate } from 'react-router-dom';
+import { useFeatureSettingsStore } from '../../stores';
 
 interface Report {
   id: string;
@@ -57,6 +59,22 @@ const AVAILABLE_REPORTS: Report[] = [
  */
 export function ReportList() {
   const navigate = useNavigate();
+  const { bookingsEnabled, maintenanceEnabled } = useFeatureSettingsStore((state) => ({
+    bookingsEnabled: state.bookingsEnabled,
+    maintenanceEnabled: state.maintenanceEnabled,
+  }));
+
+  const reports = useMemo(() => {
+    return AVAILABLE_REPORTS.filter((report) => {
+      if (report.id === 'bookings' && !bookingsEnabled) {
+        return false;
+      }
+      if (report.id === 'maintenance' && !maintenanceEnabled) {
+        return false;
+      }
+      return true;
+    });
+  }, [bookingsEnabled, maintenanceEnabled]);
 
   return (
     <div>
@@ -65,7 +83,7 @@ export function ReportList() {
       </Title>
 
       <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} spacing="md">
-        {AVAILABLE_REPORTS.map((report) => (
+        {reports.map((report) => (
           <Card
             key={report.id}
             shadow="sm"

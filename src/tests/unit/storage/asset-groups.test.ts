@@ -85,7 +85,8 @@ class MockChurchToolsAPIClient implements Partial<ChurchToolsAPIClient> {
 }
 
 const MODULE_ID = '1'
-const ASSET_CATEGORY_ID = 'asset-cat-1'
+const ASSET_TYPE_ID = 'asset-type-1'
+const ASSET_TYPE = { id: ASSET_TYPE_ID, name: 'Audio Equipment' }
 
 describe('ChurchToolsStorageProvider - Asset Groups', () => {
   let client: MockChurchToolsAPIClient
@@ -94,7 +95,7 @@ describe('ChurchToolsStorageProvider - Asset Groups', () => {
   beforeEach(() => {
     client = new MockChurchToolsAPIClient()
     client.addCategory({
-      id: ASSET_CATEGORY_ID,
+      id: ASSET_TYPE_ID,
       name: 'Audio Equipment',
       shorty: 'audio',
       description: '',
@@ -114,12 +115,13 @@ describe('ChurchToolsStorageProvider - Asset Groups', () => {
       status: overrides.status ?? 'available',
       location: overrides.location ?? 'Warehouse',
       bookable: overrides.bookable ?? true,
-      category: overrides.category ?? { id: ASSET_CATEGORY_ID, name: 'Audio Equipment' },
+      assetType: overrides.assetType ?? ASSET_TYPE,
       customFieldValues: overrides.customFieldValues ?? {},
       isParent: overrides.isParent ?? false,
       childAssetIds: overrides.childAssetIds ?? [],
       assetGroup: overrides.assetGroup,
       fieldSources: overrides.fieldSources,
+      ...overrides,
     })
   }
 
@@ -127,7 +129,7 @@ describe('ChurchToolsStorageProvider - Asset Groups', () => {
     return provider.createAssetGroup({
       groupNumber: overrides.groupNumber ?? 'AG-900',
       name: overrides.name ?? 'Test Group',
-      category: overrides.category ?? { id: ASSET_CATEGORY_ID, name: 'Audio Equipment' },
+      assetType: overrides.assetType ?? ASSET_TYPE,
       manufacturer: overrides.manufacturer,
       model: overrides.model,
       description: overrides.description,
@@ -146,7 +148,7 @@ describe('ChurchToolsStorageProvider - Asset Groups', () => {
     const group = await provider.createAssetGroup({
       groupNumber: 'AG-001',
       name: 'Wireless Microphones',
-      category: { id: ASSET_CATEGORY_ID, name: 'Audio Equipment' },
+      assetType: ASSET_TYPE,
       inheritanceRules: {},
       customFieldRules: {},
     })
@@ -154,7 +156,7 @@ describe('ChurchToolsStorageProvider - Asset Groups', () => {
     expect(group.id).toBeDefined()
     expect(group.memberCount).toBe(0)
     expect(group.schemaVersion).toBe(CURRENT_SCHEMA_VERSION)
-    expect(group.category.id).toBe(ASSET_CATEGORY_ID)
+    expect(group.assetType.id).toBe(ASSET_TYPE_ID)
   })
 
   it('adds an asset to a group and tracks membership', async () => {
@@ -166,7 +168,7 @@ describe('ChurchToolsStorageProvider - Asset Groups', () => {
       status: 'available',
       location: 'Rack A',
       bookable: true,
-      category: { id: ASSET_CATEGORY_ID, name: 'Audio Equipment' },
+      assetType: ASSET_TYPE,
       customFieldValues: {},
       isParent: false,
       childAssetIds: [],
@@ -175,7 +177,7 @@ describe('ChurchToolsStorageProvider - Asset Groups', () => {
     const group = await provider.createAssetGroup({
       groupNumber: 'AG-100',
       name: 'Receiver Kits',
-      category: { id: ASSET_CATEGORY_ID, name: 'Audio Equipment' },
+      assetType: ASSET_TYPE,
       inheritanceRules: {},
       customFieldRules: {},
     })
@@ -197,7 +199,7 @@ describe('ChurchToolsStorageProvider - Asset Groups', () => {
       status: 'available',
       location: 'Case B',
       bookable: true,
-      category: { id: ASSET_CATEGORY_ID, name: 'Audio Equipment' },
+      assetType: ASSET_TYPE,
       customFieldValues: {},
       isParent: false,
       childAssetIds: [],
@@ -206,7 +208,7 @@ describe('ChurchToolsStorageProvider - Asset Groups', () => {
     const group = await provider.createAssetGroup({
       groupNumber: 'AG-200',
       name: 'Stage Mics',
-      category: { id: ASSET_CATEGORY_ID, name: 'Audio Equipment' },
+      assetType: ASSET_TYPE,
       inheritanceRules: {},
       customFieldRules: {},
       memberAssetIds: [asset.id],

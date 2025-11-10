@@ -75,12 +75,12 @@ describe('ChurchToolsStorageProvider - Categories', () => {
     expect(updateEntry?.changes?.some((change) => change.field === 'name')).toBe(true);
   });
 
-  it('refuses to delete a category that still has assets', async () => {
+  it('refuses to delete an asset type that still has assets', async () => {
     vi.spyOn(provider, 'getAssets').mockResolvedValueOnce([
       { id: 'asset-0' } as Asset,
     ]);
 
-    await expect(provider.deleteAssetType('cat-1')).rejects.toThrow(/Cannot delete category/);
+    await expect(provider.deleteAssetType('cat-1')).rejects.toThrow(/Cannot delete asset type/);
   });
 
   it('deletes an empty category and logs history', async () => {

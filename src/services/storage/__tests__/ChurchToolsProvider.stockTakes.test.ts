@@ -5,10 +5,10 @@ import { EdgeCaseError } from '../../../types/edge-cases';
 import type { AssetCreate } from '../../../types/entities';
 
 const MODULE_ID = '42';
-const CATEGORY_ID = '101';
+const ASSET_TYPE_ID = '101';
 
 const baseAssetInput: AssetCreate = {
-  category: { id: CATEGORY_ID, name: 'Stage Gear' },
+  assetType: { id: ASSET_TYPE_ID, name: 'Stage Gear' },
   name: 'Generic Asset',
   description: 'Test asset',
   manufacturer: 'Acme',
@@ -29,7 +29,7 @@ describe('ChurchToolsStorageProvider - Stock Takes', () => {
     provider = new ChurchToolsStorageProvider(MODULE_ID, mockApi.client);
 
     mockApi.seedCategory({
-      id: CATEGORY_ID,
+      id: ASSET_TYPE_ID,
       name: 'Stage Gear',
       shorty: 'stage',
       description: null,

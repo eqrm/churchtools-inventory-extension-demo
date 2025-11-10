@@ -30,7 +30,7 @@ function buildRows(asset: Asset): AssignmentRow[] {
       personId: asset.inUseBy?.personId,
       name: asset.inUseBy?.personName,
       description: sinceDescription,
-      emptyLabel: 'No active booking',
+      emptyLabel: 'Not currently assigned',
     },
     {
       key: 'createdBy',

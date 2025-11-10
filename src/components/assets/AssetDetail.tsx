@@ -70,6 +70,7 @@ import { AssetGroupDetail } from '../asset-groups/AssetGroupDetail';
 import { ConvertAssetToGroupModal } from '../asset-groups/ConvertAssetToGroupModal';
 import { JoinAssetGroupModal } from '../asset-groups/JoinAssetGroupModal';
 import { useAssetGroup, useRemoveAssetFromGroup } from '../../hooks/useAssetGroups';
+import { useFeatureSettingsStore } from '../../stores';
 
 interface AssetDetailProps {
   assetId: string;
@@ -96,6 +97,7 @@ export function AssetDetail({ assetId, onEdit, onClose }: AssetDetailProps) {
   const maintenanceHistoryCount = history.filter(entry => entry.action === 'maintenance-performed').length;
   const removeAssetFromGroup = useRemoveAssetFromGroup();
   const { data: assetGroupDetail } = useAssetGroup(asset?.assetGroup?.id);
+  const maintenanceEnabled = useFeatureSettingsStore((state) => state.maintenanceEnabled);
   const [searchParams, setSearchParams] = useSearchParams();
   const routeGroupId = searchParams.get('groupId');
   const routeShowGroup = searchParams.get('showGroup');
@@ -279,19 +281,21 @@ export function AssetDetail({ assetId, onEdit, onClose }: AssetDetailProps) {
         onClose={() => setConvertToParentOpened(false)}
         asset={asset}
       />
-      <Modal
-        opened={maintenanceFormOpened}
-        onClose={() => setMaintenanceFormOpened(false)}
-        title="Record Maintenance"
-        size="lg"
-      >
-        <MaintenanceRecordForm
-          assetId={assetId}
-          assetNumber={asset.assetNumber}
-          assetName={asset.name}
-          onSuccess={() => setMaintenanceFormOpened(false)}
-        />
-      </Modal>
+      {maintenanceEnabled && (
+        <Modal
+          opened={maintenanceFormOpened}
+          onClose={() => setMaintenanceFormOpened(false)}
+          title="Record Maintenance"
+          size="lg"
+        >
+          <MaintenanceRecordForm
+            assetId={assetId}
+            assetNumber={asset.assetNumber}
+            assetName={asset.name}
+            onSuccess={() => setMaintenanceFormOpened(false)}
+          />
+        </Modal>
+      )}
       {asset.assetGroup && (
         <Modal
           opened={groupDetailOpened}
@@ -360,14 +364,16 @@ export function AssetDetail({ assetId, onEdit, onClose }: AssetDetailProps) {
           <Tabs.Tab value="overview" leftSection={<IconInfoCircle size={16} />}>
             Overview
           </Tabs.Tab>
-          <Tabs.Tab value="maintenance" leftSection={<IconTools size={16} />}>
-            Maintenance History
-            {maintenanceHistoryCount > 0 && (
-              <Badge size="sm" circle ml="xs">
-                {maintenanceHistoryCount}
-              </Badge>
-            )}
-          </Tabs.Tab>
+          {maintenanceEnabled && (
+            <Tabs.Tab value="maintenance" leftSection={<IconTools size={16} />}>
+              Maintenance History
+              {maintenanceHistoryCount > 0 && (
+                <Badge size="sm" circle ml="xs">
+                  {maintenanceHistoryCount}
+                </Badge>
+              )}
+            </Tabs.Tab>
+          )}
           <Tabs.Tab value="history" leftSection={<IconHistory size={16} />}>
             History
             {history.length > 0 && (
@@ -603,57 +609,58 @@ export function AssetDetail({ assetId, onEdit, onClose }: AssetDetailProps) {
                   </Card>
                 )}
 
-                {/* T181: Maintenance Section */}
-                <Card withBorder>
-                  <Stack gap="md">
-                    <Group justify="space-between">
-                      <Group gap="xs">
-                        <Title order={4}>Maintenance</Title>
-                        {maintenanceSchedule && (
-                          <MaintenanceReminderBadge schedule={maintenanceSchedule} />
-                        )}
+                {maintenanceEnabled && (
+                  <Card withBorder>
+                    <Stack gap="md">
+                      <Group justify="space-between">
+                        <Group gap="xs">
+                          <Title order={4}>Maintenance</Title>
+                          {maintenanceSchedule && (
+                            <MaintenanceReminderBadge schedule={maintenanceSchedule} />
+                          )}
+                        </Group>
+                        <Button
+                          size="sm"
+                          variant="light"
+                          onClick={() => setMaintenanceFormOpened(true)}
+                        >
+                          Record Maintenance
+                        </Button>
                       </Group>
-                      <Button
-                        size="sm"
-                        variant="light"
-                        onClick={() => setMaintenanceFormOpened(true)}
-                      >
-                        Record Maintenance
-                      </Button>
-                    </Group>
-                    <Divider />
+                      <Divider />
 
-                    {maintenanceSchedule && (
-                      <Box>
-                        <Text size="xs" c="dimmed" tt="uppercase" fw={700} mb="xs">
-                          Schedule
-                        </Text>
-                        <Text size="sm">{formatScheduleDescription(maintenanceSchedule)}</Text>
-                        {maintenanceSchedule.nextDue && (
-                          <Text size="xs" c="dimmed" mt="xs">
-                            Next due: {new Date(maintenanceSchedule.nextDue).toLocaleDateString()}
+                      {maintenanceSchedule && (
+                        <Box>
+                          <Text size="xs" c="dimmed" tt="uppercase" fw={700} mb="xs">
+                            Schedule
                           </Text>
-                        )}
-                      </Box>
-                    )}
+                          <Text size="sm">{formatScheduleDescription(maintenanceSchedule)}</Text>
+                          {maintenanceSchedule.nextDue && (
+                            <Text size="xs" c="dimmed" mt="xs">
+                              Next due: {new Date(maintenanceSchedule.nextDue).toLocaleDateString()}
+                            </Text>
+                          )}
+                        </Box>
+                      )}
 
-                    {maintenanceRecords.length > 0 ? (
-                      <Box>
-                        <Text size="xs" c="dimmed" tt="uppercase" fw={700} mb="xs">
-                          Recent Maintenance
-                        </Text>
-                        <MaintenanceRecordList records={maintenanceRecords.slice(0, 5)} />
-                        {maintenanceRecords.length > 5 && (
-                          <Text size="xs" c="dimmed" mt="xs">
-                            Showing 5 of {maintenanceRecords.length} records
+                      {maintenanceRecords.length > 0 ? (
+                        <Box>
+                          <Text size="xs" c="dimmed" tt="uppercase" fw={700} mb="xs">
+                            Recent Maintenance
                           </Text>
-                        )}
-                      </Box>
-                    ) : (
-                      <Text size="sm" c="dimmed">No maintenance records yet</Text>
-                    )}
-                  </Stack>
-                </Card>
+                          <MaintenanceRecordList records={maintenanceRecords.slice(0, 5)} />
+                          {maintenanceRecords.length > 5 && (
+                            <Text size="xs" c="dimmed" mt="xs">
+                              Showing 5 of {maintenanceRecords.length} records
+                            </Text>
+                          )}
+                        </Box>
+                      ) : (
+                        <Text size="sm" c="dimmed">No maintenance records yet</Text>
+                      )}
+                    </Stack>
+                  </Card>
+                )}
               </Stack>
             </Grid.Col>
 
@@ -664,9 +671,11 @@ export function AssetDetail({ assetId, onEdit, onClose }: AssetDetailProps) {
           </Grid>
         </Tabs.Panel>
 
-        <Tabs.Panel value="maintenance" pt="md">
-          <AssetMaintenanceHistory assetId={assetId} assetName={asset.name} />
-        </Tabs.Panel>
+        {maintenanceEnabled && (
+          <Tabs.Panel value="maintenance" pt="md">
+            <AssetMaintenanceHistory assetId={assetId} assetName={asset.name} />
+          </Tabs.Panel>
+        )}
 
         <Tabs.Panel value="history" pt="md">
           <Stack gap="lg">

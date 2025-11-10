@@ -3,10 +3,10 @@ import { ChurchToolsStorageProvider } from '../ChurchToolsProvider';
 import { createMockChurchToolsApi } from './mockChurchToolsApiClient';
 
 const MODULE_ID = '42';
-const CATEGORY_ID = '101';
+const ASSET_TYPE_ID = '101';
 
 const createAssetInput = () => ({
-  category: { id: CATEGORY_ID, name: 'Stage Gear' },
+  assetType: { id: ASSET_TYPE_ID, name: 'Stage Gear' },
   name: 'Camera A',
   description: '4K cinema camera',
   manufacturer: 'Canon',
@@ -26,7 +26,7 @@ describe('ChurchToolsStorageProvider - Kits', () => {
     mockApi = createMockChurchToolsApi(MODULE_ID);
     provider = new ChurchToolsStorageProvider(MODULE_ID, mockApi.client);
     mockApi.seedCategory({
-      id: CATEGORY_ID,
+      id: ASSET_TYPE_ID,
       name: 'Stage Gear',
       shorty: 'stage',
       description: null,

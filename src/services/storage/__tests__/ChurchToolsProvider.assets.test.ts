@@ -5,10 +5,10 @@ import type { Booking } from '../../../types/entities';
 import { EdgeCaseError } from '../../../types/edge-cases';
 
 const MODULE_ID = '42';
-const CATEGORY_ID = '101';
+const ASSET_TYPE_ID = '101';
 
 const createAssetInput = () => ({
-  category: { id: CATEGORY_ID, name: 'Stage Gear' },
+  assetType: { id: ASSET_TYPE_ID, name: 'Stage Gear' },
   name: 'Camera A',
   description: '4K cinema camera',
   manufacturer: 'Canon',
@@ -28,7 +28,7 @@ describe('ChurchToolsStorageProvider - Assets', () => {
     mockApi = createMockChurchToolsApi(MODULE_ID);
     provider = new ChurchToolsStorageProvider(MODULE_ID, mockApi.client);
     mockApi.seedCategory({
-      id: CATEGORY_ID,
+      id: ASSET_TYPE_ID,
       name: 'Stage Gear',
       shorty: 'stage',
       description: null,
@@ -42,7 +42,7 @@ describe('ChurchToolsStorageProvider - Assets', () => {
   });
 
   const getStoredAssetPayload = (assetId: string): Record<string, unknown> => {
-    const records = mockApi.getDataValues(CATEGORY_ID);
+    const records = mockApi.getDataValues(ASSET_TYPE_ID);
     const record = records.find((entry) => String(entry.id) === assetId);
     if (!record) {
       throw new Error(`Unable to locate stored asset ${assetId}`);

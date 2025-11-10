@@ -1,5 +1,5 @@
 import { Container, Stack, Tabs, Title } from '@mantine/core';
-import { IconBarcode, IconHash, IconMapPin, IconBuilding, IconTag, IconTerminal2 } from '@tabler/icons-react';
+import { IconBarcode, IconHash, IconMapPin, IconBuilding, IconTag, IconTerminal2, IconToggleLeft } from '@tabler/icons-react';
 import { useState } from 'react';
 import { PrefixSettingsPanel } from '../components/settings/PrefixSettingsPanel';
 import { LocationSettings } from '../components/settings/LocationSettings';
@@ -10,6 +10,7 @@ import { ScannerModelForm } from '../components/settings/ScannerModelForm';
 import type { ScannerModel, ScannerModelCreate } from '../types/entities';
 import { DeveloperToolsCard } from '../components/settings/DeveloperToolsCard';
 import { isDemoToolsEnabled } from '../utils/environment/flags';
+import { FeatureToggleSettings } from '../components/settings/FeatureToggleSettings';
 
 /**
  * Settings page for organization-wide configuration (T227a, T290)
@@ -136,6 +137,9 @@ function SettingsTabs({ scannerModels, onAddModel, onEditModel, onDeleteModel }:
         <Tabs.Tab value="locations" leftSection={<IconMapPin size={16} />}>
           Locations
         </Tabs.Tab>
+        <Tabs.Tab value="modules" leftSection={<IconToggleLeft size={16} />}>
+          Modules
+        </Tabs.Tab>
         <Tabs.Tab value="scanners" leftSection={<IconBarcode size={16} />}>
           Scanners
         </Tabs.Tab>
@@ -158,6 +162,10 @@ function SettingsTabs({ scannerModels, onAddModel, onEditModel, onDeleteModel }:
 
       <Tabs.Panel value="locations" pt="md">
         <LocationSettings />
+      </Tabs.Panel>
+
+      <Tabs.Panel value="modules" pt="md">
+        <FeatureToggleSettings />
       </Tabs.Panel>
 
       <Tabs.Panel value="scanners" pt="md">

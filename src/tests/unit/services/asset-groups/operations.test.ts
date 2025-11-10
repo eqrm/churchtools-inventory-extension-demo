@@ -9,6 +9,7 @@ import {
 import { DEFAULT_ASSET_GROUP_INHERITANCE_RULES } from '../../../../services/asset-groups/constants'
 
 const BASE_TIMESTAMP = '2024-01-01T00:00:00Z'
+const BASE_ASSET_TYPE = { id: 'assetType-1', name: 'Audio' as const }
 
 function createTestAsset(overrides: Partial<Asset> = {}): Asset {
   return {
@@ -18,7 +19,7 @@ function createTestAsset(overrides: Partial<Asset> = {}): Asset {
     manufacturer: 'Shure',
     model: 'QLXD',
     description: 'Wireless receiver pack',
-    category: { id: 'category-1', name: 'Audio' },
+    assetType: BASE_ASSET_TYPE,
     status: 'available',
     location: 'Warehouse',
     bookable: true,
@@ -42,7 +43,7 @@ function createTestGroup(overrides: Partial<AssetGroup> = {}): AssetGroup {
     id: 'group-1',
     groupNumber: 'AG-001',
     name: 'Wireless Pack Group',
-    category: { id: 'category-1', name: 'Audio' },
+    assetType: BASE_ASSET_TYPE,
     inheritanceRules: { ...DEFAULT_ASSET_GROUP_INHERITANCE_RULES },
     customFieldRules: {},
     memberAssetIds: [],
@@ -101,6 +102,7 @@ describe('asset group operations', () => {
     expect(provider.createAssetGroup).toHaveBeenCalledWith(
       expect.objectContaining({
         groupNumber: asset.assetNumber,
+        assetType: asset.assetType,
         memberAssetIds: [asset.id],
         manufacturer: asset.manufacturer,
       }),
@@ -113,7 +115,7 @@ describe('asset group operations', () => {
           manufacturer: 'group',
           model: 'group',
           description: 'group',
-          category: 'group',
+          assetType: 'group',
         }),
       }),
     )
@@ -150,7 +152,7 @@ describe('asset group operations', () => {
       group.id,
       1,
       expect.objectContaining({
-        category: group.category,
+        assetType: group.assetType,
         manufacturer: group.manufacturer,
         customFieldValues: {
           cf1: 'Shared',
@@ -160,7 +162,7 @@ describe('asset group operations', () => {
           manufacturer: 'group',
           model: 'group',
           description: 'group',
-          category: 'group',
+          assetType: 'group',
         }),
       }),
     )
