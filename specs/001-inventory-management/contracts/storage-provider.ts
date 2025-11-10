@@ -41,12 +41,12 @@ import type {
  */
 export interface IStorageProvider {
   // ============================================================================
-  // Asset Categories
+  // Asset Types
   // ============================================================================
   
   /**
-   * Get all asset categories
-   * @returns Array of all categories
+   * Get all asset Types
+   * @returns Array of all Types
    */
   getAssetTypes(): Promise<AssetCategory[]>
   
