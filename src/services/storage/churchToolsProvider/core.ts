@@ -8,6 +8,47 @@ import type {
 } from '../../../types/entities'
 import { normalizeCategoryIconValue } from '../../../utils/iconMigrationMap'
 
+interface AssetTypeStoragePayload {
+  customFields: CustomFieldDefinition[]
+  assetNameTemplate?: string
+  mainImage?: string | null
+}
+
+function parseAssetTypeData(data: unknown): AssetTypeStoragePayload {
+  if (typeof data !== 'string' || data.trim().length === 0) {
+    return { customFields: [] }
+  }
+
+  try {
+    const parsed = JSON.parse(data) as unknown
+
+    if (Array.isArray(parsed)) {
+      return {
+        customFields: parsed as CustomFieldDefinition[],
+      }
+    }
+
+    if (parsed && typeof parsed === 'object') {
+      const payload = parsed as Partial<AssetTypeStoragePayload>
+      const customFields = Array.isArray(payload.customFields)
+        ? (payload.customFields as CustomFieldDefinition[])
+        : []
+      const assetNameTemplate = typeof payload.assetNameTemplate === 'string' ? payload.assetNameTemplate : undefined
+      const mainImage = typeof payload.mainImage === 'string' ? payload.mainImage : undefined
+
+      return {
+        customFields,
+        assetNameTemplate,
+        mainImage,
+      }
+    }
+  } catch (error) {
+    console.error('Error parsing category data:', error)
+  }
+
+  return { customFields: [] }
+}
+
 export class ChurchToolsStorageProvider {
   public readonly moduleId: string
   public readonly apiClient: ChurchToolsAPIClient
@@ -29,16 +70,10 @@ export class ChurchToolsStorageProvider {
 
   public mapToAssetType(data: unknown): AssetType {
     const raw = data as Record<string, unknown>
-    let customFields: CustomFieldDefinition[] = []
-
-    if (raw && typeof raw['data'] === 'string') {
-      try {
-        customFields = JSON.parse(raw['data']) as CustomFieldDefinition[]
-      } catch (error) {
-        console.error('Error parsing category data:', error)
-        customFields = []
-      }
-    }
+  const parsedData = parseAssetTypeData(raw['data'])
+    const customFields = parsedData.customFields ?? []
+    const assetNameTemplate = parsedData.assetNameTemplate
+    const mainImage = parsedData.mainImage ?? undefined
 
     const rawIcon = typeof raw['description'] === 'string' ? (raw['description'] as string).trim() : undefined
     const normalizedIcon = rawIcon ? normalizeCategoryIconValue(rawIcon) ?? rawIcon : undefined
@@ -48,6 +83,8 @@ export class ChurchToolsStorageProvider {
       name: raw['name'] as string,
       icon: normalizedIcon ?? rawIcon,
       customFields,
+      assetNameTemplate,
+      mainImage,
       createdBy: (raw['createdBy'] || 'system') as string,
       createdByName: (raw['createdByName'] || 'System') as string,
       createdAt: (raw['createdAt'] || new Date().toISOString()) as string,
@@ -94,6 +131,7 @@ export class ChurchToolsStorageProvider {
       assetNumber: asset['assetNumber'] as string,
       name: asset['name'] as string,
       description: asset['description'] as string | undefined,
+      mainImage: typeof asset['mainImage'] === 'string' ? (asset['mainImage'] as string) : undefined,
       assetType: {
         id: assetType.id,
         name: assetType.name,

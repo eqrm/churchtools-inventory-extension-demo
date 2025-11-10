@@ -6,8 +6,41 @@ import type {
   AssetTypeCreate,
   AssetTypeUpdate,
   ChangeHistoryEntry,
+  CustomFieldDefinition,
 } from '../../../types/entities';
 import { normalizeCategoryIconValue } from '../../../utils/iconMigrationMap';
+
+function buildCategoryDataPayload(params: {
+  customFields: CustomFieldDefinition[];
+  assetNameTemplate?: string | null;
+  mainImage?: string | null;
+}): string | null {
+  const payload: {
+    customFields: CustomFieldDefinition[];
+    assetNameTemplate?: string | null;
+    mainImage?: string | null;
+  } = {
+    customFields: params.customFields,
+  };
+
+  if (params.assetNameTemplate !== undefined) {
+    payload.assetNameTemplate = params.assetNameTemplate;
+  }
+
+  if (params.mainImage !== undefined) {
+    payload.mainImage = params.mainImage;
+  }
+
+  if (
+    payload.customFields.length === 0 &&
+    !payload.assetNameTemplate &&
+    params.mainImage === undefined
+  ) {
+    return null;
+  }
+
+  return JSON.stringify(payload);
+}
 
 export interface AssetTypeDependencies {
   moduleId: string;
@@ -54,13 +87,18 @@ export async function createAssetType(
 
   const rawIconInput = typeof data.icon === 'string' ? data.icon.trim() : undefined;
   const normalizedIcon = rawIconInput ? normalizeCategoryIconValue(rawIconInput) ?? rawIconInput : undefined;
+  const dataPayload = buildCategoryDataPayload({
+    customFields: data.customFields,
+    assetNameTemplate: data.assetNameTemplate,
+    mainImage: data.mainImage,
+  });
 
   const payload = {
     customModuleId: Number(deps.moduleId),
     name: data.name,
     shorty,
     description: normalizedIcon ?? null,
-    data: data.customFields.length > 0 ? JSON.stringify(data.customFields) : null,
+    data: dataPayload,
   };
 
   const created = await deps.apiClient.createDataCategory(deps.moduleId, payload);
@@ -90,19 +128,25 @@ export async function updateAssetType(
   const normalizedIcon = rawIconInput ? normalizeCategoryIconValue(rawIconInput) ?? rawIconInput : undefined;
   const descriptionValue = data.icon === undefined ? existing.icon ?? null : normalizedIcon ?? null;
 
+  const nextCustomFields = data.customFields ?? existing.customFields;
+  const nextAssetNameTemplate =
+    data.assetNameTemplate === undefined ? existing.assetNameTemplate : data.assetNameTemplate;
+  const nextMainImage = data.mainImage === undefined ? existing.mainImage : data.mainImage;
+
+  const dataPayload = buildCategoryDataPayload({
+    customFields: nextCustomFields,
+    assetNameTemplate: nextAssetNameTemplate,
+    mainImage: nextMainImage,
+  });
+
   const payload: Record<string, unknown> = {
     id: Number(id),
     customModuleId: Number(deps.moduleId),
     name: data.name ?? existing.name,
     shorty: existing.name.toLowerCase().replace(/[^a-z0-9]/g, '').substring(0, 20),
     description: descriptionValue,
+    data: dataPayload,
   };
-
-  if (data.customFields !== undefined) {
-    payload['data'] = data.customFields.length > 0 ? JSON.stringify(data.customFields) : null;
-  } else {
-    payload['data'] = existing.customFields.length > 0 ? JSON.stringify(existing.customFields) : null;
-  }
 
   const updated = await deps.apiClient.updateDataCategory(deps.moduleId, id, payload);
   const assetType = deps.mapToAssetType(updated);

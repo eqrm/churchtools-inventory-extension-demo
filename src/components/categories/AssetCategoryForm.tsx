@@ -29,6 +29,7 @@ import {
   type AutoNumberingPreview,
   type AutoNumberingSource,
 } from '../../services/assets/autoNumbering';
+import { MainImageUpload } from '../common/MainImageUpload';
 
 interface AssetTypeFormProps {
   category?: AssetType;
@@ -55,15 +56,17 @@ export function AssetTypeForm({ category, initialData, onSuccess, onCancel }: As
     icon?: string;
     assetNameTemplate?: string;
     customFields: CustomFieldDefinition[];
+    mainImage: string | null;
   }>({
     initialValues: {
       name: category?.name || initialData?.name || '',
       icon: category?.icon || initialData?.icon || '',
-  assetNameTemplate: category?.assetNameTemplate ?? '%Manufacturer% %Model% %Asset Number%',
+      assetNameTemplate: category?.assetNameTemplate ?? '%Manufacturer% %Model% %Asset Number%',
       customFields: category?.customFields || (initialData?.customFields.map((field, index) => ({
         ...field,
         id: `field-${Date.now().toString()}-${index.toString()}`,
       }))) || [],
+      mainImage: category?.mainImage ?? null,
     },
     validate: {
       name: (value) => {
@@ -88,6 +91,8 @@ export function AssetTypeForm({ category, initialData, onSuccess, onCancel }: As
         name: category.name,
         icon: category.icon || '',
         customFields: category.customFields,
+        assetNameTemplate: category.assetNameTemplate ?? '%Manufacturer% %Model% %Asset Number%',
+        mainImage: category.mainImage ?? null,
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -101,6 +106,7 @@ export function AssetTypeForm({ category, initialData, onSuccess, onCancel }: As
           icon: values.icon || undefined,
           assetNameTemplate: values.assetNameTemplate || undefined,
           customFields: values.customFields,
+          mainImage: values.mainImage,
         };
 
         const updated = await updateAssetType.mutateAsync({
@@ -119,6 +125,7 @@ export function AssetTypeForm({ category, initialData, onSuccess, onCancel }: As
           icon: values.icon || undefined,
           assetNameTemplate: values.assetNameTemplate || undefined,
           customFields: values.customFields,
+          mainImage: values.mainImage ?? undefined,
         };
         const created = await createAssetType.mutateAsync(categoryData);
         notifications.show({
@@ -213,6 +220,16 @@ export function AssetTypeForm({ category, initialData, onSuccess, onCancel }: As
             Optional icon to represent this category
           </Text>
         </Stack>
+
+        <MainImageUpload
+          label="Main image"
+          description="Displayed in category cards and asset suggestions."
+          value={form.values.mainImage}
+          onChange={(next) => {
+            form.setFieldValue('mainImage', next);
+          }}
+          disabled={isPending}
+        />
 
         <Divider label="Custom Fields" labelPosition="left" />
 

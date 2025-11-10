@@ -35,7 +35,7 @@ import { generateAssetNameFromTemplate, DEFAULT_ASSET_NAME_TEMPLATE } from '../.
 import { MASTER_DATA_DEFINITIONS, normalizeMasterDataName } from '../../utils/masterData';
 import { CustomFieldInput } from './CustomFieldInput';
 import { MasterDataSelectInput } from '../common/MasterDataSelectInput';
-// Photo features removed due to storage size constraints
+import { MainImageUpload } from '../common/MainImageUpload';
 import type { Asset, AssetCreate, AssetGroupFieldSource, AssetStatus, CustomFieldValue } from '../../types/entities';
 import { validateCustomFieldValue } from '../../utils/validators';
 import { ASSET_STATUS_OPTIONS } from '../../constants/assetStatuses';
@@ -54,6 +54,7 @@ interface AssetFormValues {
   manufacturer?: string;
   model?: string;
   description?: string;
+  mainImage: string | null;
   assetTypeId: string;
   prefixId?: string; // T272: Asset prefix selection
   status: AssetStatus;
@@ -88,8 +89,9 @@ export function AssetForm({ asset, onSuccess, onCancel }: AssetFormProps) {
       name: asset?.name || '',
       manufacturer: asset?.manufacturer || '',
       model: asset?.model || '',
-  description: asset?.description || '',
-  assetTypeId: asset?.assetType.id || '',
+      description: asset?.description || '',
+      mainImage: asset?.mainImage ?? null,
+      assetTypeId: asset?.assetType.id || '',
       prefixId: '', // Default to first prefix or empty
       status: asset?.status || 'available',
       location: asset?.location || '',
@@ -112,7 +114,7 @@ export function AssetForm({ asset, onSuccess, onCancel }: AssetFormProps) {
         }
         return null;
       },
-  assetTypeId: (value) => (!value ? 'Asset type is required' : null),
+      assetTypeId: (value) => (!value ? 'Asset type is required' : null),
     },
   });
 
@@ -396,6 +398,7 @@ export function AssetForm({ asset, onSuccess, onCancel }: AssetFormProps) {
             parentAssetId: values.parentAssetId || undefined,
             bookable: values.bookable, // T070: Include bookable status
             customFieldValues: values.customFieldValues,
+            mainImage: values.mainImage ?? null,
             isParent: asset.isParent,
             childAssetIds: asset.childAssetIds,
             barcode: asset.barcode,
@@ -436,6 +439,10 @@ export function AssetForm({ asset, onSuccess, onCancel }: AssetFormProps) {
           prefixId: values.prefixId || undefined, // T272: Pass selected prefix
           fieldSources: assetGroup ? fieldSources : undefined,
         };
+
+        if (values.mainImage !== null) {
+          newAssetData.mainImage = values.mainImage;
+        }
 
         // T092-T096: Handle multi-asset creation
         if (values.isParent && values.quantity >= 2) {
@@ -694,6 +701,16 @@ export function AssetForm({ asset, onSuccess, onCancel }: AssetFormProps) {
                   Currently overriding the shared description from {assetGroup.name}.
                 </Text>
               )}
+            </Grid.Col>
+
+            <Grid.Col span={12}>
+              <MainImageUpload
+                label="Main Image"
+                description="Displayed in asset lists and detail views."
+                value={form.values.mainImage}
+                onChange={(next) => form.setFieldValue('mainImage', next)}
+                disabled={isLoading}
+              />
             </Grid.Col>
 
             {/* T092: Parent Asset Checkbox */}

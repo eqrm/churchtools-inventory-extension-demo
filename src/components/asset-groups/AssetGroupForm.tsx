@@ -32,6 +32,7 @@ import {
 import { InheritanceRuleEditor } from './InheritanceRuleEditor';
 import { CustomFieldInput } from '../assets/CustomFieldInput';
 import { useAssetGroupTemplates } from '../../hooks/useAssetGroupTemplates';
+import { MainImageUpload } from '../common/MainImageUpload';
 
 interface AssetGroupFormProps {
   group?: AssetGroup;
@@ -47,6 +48,7 @@ interface AssetGroupFormValues {
   manufacturer?: string;
   model?: string;
   description?: string;
+  mainImage: string | null;
   inheritanceRules: Record<string, AssetGroupInheritanceRule>;
   customFieldRules: Record<string, AssetGroupInheritanceRule>;
   sharedCustomFields: Record<string, CustomFieldValue>;
@@ -104,6 +106,7 @@ export function AssetGroupForm({ group, onSuccess, onCancel }: AssetGroupFormPro
     manufacturer: group?.manufacturer ?? '',
     model: group?.model ?? '',
     description: group?.description ?? '',
+    mainImage: group?.mainImage ?? null,
     inheritanceRules: mergeDefaults(group?.inheritanceRules ?? {}),
     customFieldRules: { ...(group?.customFieldRules ?? {}) },
     sharedCustomFields: { ...(group?.sharedCustomFields ?? {}) } as Record<string, CustomFieldValue>,
@@ -317,8 +320,11 @@ export function AssetGroupForm({ group, onSuccess, onCancel }: AssetGroupFormPro
       let result: AssetGroup;
 
       if (group) {
+        const mainImageUpdate: string | null | undefined =
+          values.mainImage === null ? null : values.mainImage ?? undefined;
         const updatePayload: AssetGroupUpdate = {
           ...basePayload,
+          mainImage: mainImageUpdate,
         };
         result = await updateGroup.mutateAsync({ id: group.id, data: updatePayload });
         notifications.show({
@@ -329,6 +335,7 @@ export function AssetGroupForm({ group, onSuccess, onCancel }: AssetGroupFormPro
       } else {
         const createPayload: AssetGroupCreate = {
           ...basePayload,
+          mainImage: values.mainImage ?? undefined,
         };
         result = await createGroup.mutateAsync(createPayload);
         notifications.show({
@@ -455,12 +462,23 @@ export function AssetGroupForm({ group, onSuccess, onCancel }: AssetGroupFormPro
               </Stack>
             </Grid.Col>
             <Grid.Col span={{ base: 12, md: 6 }}>
-              <Textarea
-                label="Description"
-                minRows={6}
-                placeholder="Provide details about this asset model"
-                {...form.getInputProps('description')}
-              />
+              <Stack gap="sm">
+                <Textarea
+                  label="Description"
+                  minRows={6}
+                  placeholder="Provide details about this asset model"
+                  {...form.getInputProps('description')}
+                />
+                <MainImageUpload
+                  label="Main image"
+                  description="Displayed in asset model lists and detail views."
+                  value={form.values.mainImage}
+                  onChange={(next) => {
+                    form.setFieldValue('mainImage', next);
+                  }}
+                  disabled={isSubmitting}
+                />
+              </Stack>
             </Grid.Col>
           </Grid>
 

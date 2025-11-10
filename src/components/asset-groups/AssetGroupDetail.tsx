@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
   ActionIcon,
+  AspectRatio,
   Badge,
   Box,
   Button,
   Card,
+  Image,
   Grid,
   Group,
   Menu,
@@ -282,7 +284,19 @@ export function AssetGroupDetail({ groupId, onEditGroup, onGroupCleared }: Asset
   return (
     <Stack gap="md">
       <Card withBorder>
-        <Stack gap="md">
+        {group.mainImage && (
+          <Card.Section>
+            <AspectRatio ratio={16 / 9}>
+              <Image
+                src={group.mainImage}
+                alt={`${group.name} main visual`}
+                fit="cover"
+              />
+            </AspectRatio>
+          </Card.Section>
+        )}
+        <Card.Section inheritPadding>
+          <Stack gap="md">
           <Group justify="space-between" align="flex-start">
             <Stack gap="xs">
               <AssetGroupBadge group={group} withName />
@@ -408,6 +422,7 @@ export function AssetGroupDetail({ groupId, onEditGroup, onGroupCleared }: Asset
             </Grid.Col>
           </Grid>
         </Stack>
+        </Card.Section>
       </Card>
 
       {group.barcodeHistory && group.barcodeHistory.length > 0 && (

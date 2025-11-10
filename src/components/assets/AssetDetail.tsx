@@ -15,6 +15,8 @@ import {
   Textarea,
   Title,
   Tooltip,
+  AspectRatio,
+  Image,
   Avatar,
   ActionIcon,
   Collapse,
@@ -405,7 +407,7 @@ export function AssetDetail({ assetId, onEdit, onClose }: AssetDetailProps) {
 
                 {asset.assetGroup ? (
                   <Card withBorder>
-                    <Stack gap="sm">
+                    <Stack gap="md">
                       <Group justify="space-between" align="flex-start">
                         <Group gap="xs" align="center">
                           <IconUsers size={18} />
@@ -488,62 +490,72 @@ export function AssetDetail({ assetId, onEdit, onClose }: AssetDetailProps) {
 
                 {/* Basic Information */}
                 <Card withBorder>
-                  <Stack gap="md">
-                    <Title order={4}>Basic Information</Title>
-                    <Divider />
-                    
-                    <Grid>
-                      <Grid.Col span={6}>
-                        <InfoRow
-                          icon={<IconHash size={16} />}
-                          label="Asset Number"
-                          value={<Text fw={600}>{asset.assetNumber}</Text>}
+                  {asset.mainImage && (
+                    <Card.Section>
+                      <AspectRatio ratio={16 / 9}>
+                        <Image
+                          src={asset.mainImage}
+                          alt={`${asset.name} main image`}
+                          fit="cover"
                         />
-                      </Grid.Col>
-                      <Grid.Col span={6}>
-                        <InfoRow
-                          icon={<IconTag size={16} />}
-                          label="Type"
-                          value={<Badge variant="light">{asset.assetType.name}</Badge>}
-                          fieldKey="category"
-                        />
-                      </Grid.Col>
-                      <Grid.Col span={6}>
-                        <InfoRow
-                          icon={<IconLocation size={16} />}
-                          label="Location"
-                          value={asset.location}
-                        />
-                      </Grid.Col>
-                      {asset.barcode && (
+                      </AspectRatio>
+                    </Card.Section>
+                  )}
+                  <Card.Section inheritPadding>
+                    <Stack gap="md">
+                      <Title order={4}>Basic Information</Title>
+                      <Divider />
+                      
+                      <Grid>
                         <Grid.Col span={6}>
                           <InfoRow
-                            icon={<IconPackage size={16} />}
-                            label="Barcode"
-                            value={asset.barcode}
+                            icon={<IconHash size={16} />}
+                            label="Asset Number"
+                            value={<Text fw={600}>{asset.assetNumber}</Text>}
                           />
                         </Grid.Col>
-                      )}
-                    </Grid>
+                        <Grid.Col span={6}>
+                          <InfoRow
+                            icon={<IconTag size={16} />}
+                            label="Type"
+                            value={<Badge variant="light">{asset.assetType.name}</Badge>}
+                            fieldKey="category"
+                          />
+                        </Grid.Col>
+                        <Grid.Col span={6}>
+                          <InfoRow
+                            icon={<IconLocation size={16} />}
+                            label="Location"
+                            value={asset.location}
+                          />
+                        </Grid.Col>
+                        {asset.barcode && (
+                          <Grid.Col span={6}>
+                            <InfoRow
+                              icon={<IconPackage size={16} />}
+                              label="Barcode"
+                              value={asset.barcode}
+                            />
+                          </Grid.Col>
+                        )}
+                      </Grid>
 
-                    {asset.description && (
-                      <Box>
-                        <Group gap={4} align="center" mb="xs">
-                          <Text size="xs" c="dimmed" tt="uppercase" fw={700}>
-                            Description
-                          </Text>
-                          {renderFieldSourceIndicator('description')}
-                        </Group>
-                        <Text size="sm">{asset.description}</Text>
-                      </Box>
-                    )}
-                  </Stack>
+                      {asset.description && (
+                        <Box>
+                          <Group gap={4} align="center" mb="xs">
+                            <Text size="xs" c="dimmed" tt="uppercase" fw={700}>
+                              Description
+                            </Text>
+                            {renderFieldSourceIndicator('description')}
+                          </Group>
+                          <Text size="sm">{asset.description}</Text>
+                        </Box>
+                      )}
+                    </Stack>
+                  </Card.Section>
                 </Card>
 
                 <AssetAssignmentList asset={asset} />
-
-                {/* Asset Photos */}
-                {/* Photos removed: Photo storage and gallery are disabled due to customdata size limits. */}
 
                 {/* Product Information */}
                 {(asset.manufacturer || asset.model) && (

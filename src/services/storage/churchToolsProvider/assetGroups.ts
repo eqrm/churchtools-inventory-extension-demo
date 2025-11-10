@@ -101,6 +101,7 @@ function mapToAssetGroup(dataValue: unknown): AssetGroup {
     model: parsed['model'] ? String(parsed['model']) : undefined,
     modelNumber: parsed['modelNumber'] ? String(parsed['modelNumber']) : undefined,
     description: parsed['description'] ? String(parsed['description']) : undefined,
+  mainImage: typeof parsed['mainImage'] === 'string' ? String(parsed['mainImage']) : undefined,
     inheritanceRules: (parsed['inheritanceRules'] as AssetGroup['inheritanceRules']) ?? {},
     sharedCustomFields: parsed['sharedCustomFields'] as Record<string, unknown> | undefined,
     customFieldRules: (parsed['customFieldRules'] as AssetGroup['customFieldRules']) ?? {},
@@ -191,6 +192,7 @@ export async function createAssetGroup(
     model: data.model,
     modelNumber: data.modelNumber,
     description: data.description,
+    mainImage: data.mainImage ?? undefined,
     inheritanceRules: data.inheritanceRules ?? {},
     sharedCustomFields: data.sharedCustomFields,
     customFieldRules: data.customFieldRules ?? {},
@@ -272,6 +274,10 @@ export async function updateAssetGroup(
     new Set((data.memberAssetIds ?? existing.memberAssetIds).map((assetId) => String(assetId))),
   );
   const memberCount = data.memberCount ?? memberAssetIds.length;
+  const hasMainImageUpdate = Object.prototype.hasOwnProperty.call(data, 'mainImage');
+  const mainImageForStorage = hasMainImageUpdate
+    ? data.mainImage ?? null
+    : existing.mainImage ?? undefined;
 
   const updatedGroup: AssetGroup = {
     ...existing,
@@ -283,6 +289,10 @@ export async function updateAssetGroup(
     lastModifiedAt: new Date().toISOString(),
     schemaVersion: data.schemaVersion ?? existing.schemaVersion ?? CURRENT_SCHEMA_VERSION,
   };
+
+  if (hasMainImageUpdate) {
+    updatedGroup.mainImage = data.mainImage ?? undefined;
+  }
 
   if (data.groupNumber !== undefined) {
     const trimmed = data.groupNumber?.trim();
@@ -299,6 +309,7 @@ export async function updateAssetGroup(
 
   const serializedGroup = {
     ...updatedGroup,
+    mainImage: mainImageForStorage,
     category: updatedGroup.assetType,
     categoryId: updatedGroup.assetType.id,
     categoryName: updatedGroup.assetType.name,

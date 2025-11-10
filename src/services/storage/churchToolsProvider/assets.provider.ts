@@ -234,6 +234,8 @@ async function createParentAsset(params: {
   const assetNumber = `${provider.globalPrefix}-${baseNumber}`
   const now = new Date().toISOString()
 
+  const includeMainImage = Object.prototype.hasOwnProperty.call(data, 'mainImage')
+
   const assetData = {
     assetNumber,
     name: data.name,
@@ -250,6 +252,7 @@ async function createParentAsset(params: {
     parentAssetId: undefined,
     childAssetIds: childIds,
     customFieldValues: data.customFieldValues,
+  mainImage: includeMainImage ? data.mainImage ?? null : undefined,
     schemaVersion: CURRENT_SCHEMA_VERSION,
     createdBy: userId,
     createdByName: userName,
@@ -285,6 +288,7 @@ async function createChildAssets(params: {
     const childNumber = String(parseInt(baseNumber, 10) + index).padStart(3, '0')
     const childAssetNumber = `${provider.globalPrefix}-${childNumber}`
     const now = new Date().toISOString()
+    const includeMainImage = Object.prototype.hasOwnProperty.call(data, 'mainImage')
 
     const childData = {
       assetNumber: childAssetNumber,
@@ -302,6 +306,7 @@ async function createChildAssets(params: {
       parentAssetId: parentId,
       childAssetIds: [],
       customFieldValues: { ...(data.customFieldValues ?? {}) },
+  mainImage: includeMainImage ? data.mainImage ?? null : undefined,
       schemaVersion: CURRENT_SCHEMA_VERSION,
       createdBy: userId,
       createdByName: userName,

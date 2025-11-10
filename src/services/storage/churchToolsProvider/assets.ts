@@ -94,6 +94,8 @@ export async function createAsset(
     assetNumber = `${deps.globalPrefix}-${nextNumber}`;
   }
 
+  const includeMainImage = Object.prototype.hasOwnProperty.call(data, 'mainImage');
+
   const assetData = {
     assetNumber,
     name: data.name,
@@ -115,6 +117,7 @@ export async function createAsset(
     assetGroupNumber: data.assetGroup?.groupNumber,
     assetGroupName: data.assetGroup?.name,
     fieldSources: data.fieldSources ?? {},
+  mainImage: includeMainImage ? data.mainImage ?? null : undefined,
     schemaVersion: data.schemaVersion ?? CURRENT_SCHEMA_VERSION,
     createdBy: user.id,
     createdByName: `${user.firstName} ${user.lastName}`,
@@ -236,6 +239,11 @@ function mergeAssetData(
   const hasChildIdsUpdate = Object.prototype.hasOwnProperty.call(data, 'childAssetIds');
   const updatedChildIds = hasChildIdsUpdate ? (data.childAssetIds ?? []) : previous.childAssetIds ?? [];
 
+  const hasMainImageUpdate = Object.prototype.hasOwnProperty.call(data, 'mainImage');
+  const updatedMainImage = hasMainImageUpdate
+    ? data.mainImage ?? null
+    : previous.mainImage ?? undefined;
+
   return {
     assetNumber: previous.assetNumber,
     name: data.name ?? previous.name,
@@ -251,6 +259,7 @@ function mergeAssetData(
     customFieldValues: data.customFieldValues ?? previous.customFieldValues,
     parentAssetId: data.parentAssetId ?? previous.parentAssetId,
     isParent: data.isParent ?? previous.isParent,
+    mainImage: updatedMainImage,
     bookable: data.bookable ?? previous.bookable,
     childAssetIds: updatedChildIds,
     assetGroup: updatedAssetGroup,
@@ -289,6 +298,7 @@ async function recordAssetChanges(
     'customFieldValues',
     'parentAssetId',
     'isParent',
+    'mainImage',
   ];
 
   for (const field of fieldsToTrack) {

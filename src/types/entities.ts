@@ -56,6 +56,8 @@ export interface AssetType {
    * Example: "%Manufacturer% %Model% %Asset Number%"
    */
   assetNameTemplate?: string
+  /** Inline base64 image (data URL) used as the primary visual for this asset type */
+  mainImage?: string
   customFields: CustomFieldDefinition[]
   createdBy: string
   createdByName: string
@@ -71,7 +73,11 @@ export type AssetTypeCreate = Omit<
   'id' | 'createdBy' | 'createdByName' | 'createdAt' | 'lastModifiedBy' | 'lastModifiedByName' | 'lastModifiedAt'
 >
 
-export type AssetTypeUpdate = Partial<Omit<AssetType, 'id' | 'createdBy' | 'createdByName' | 'createdAt'>>
+export type AssetTypeUpdate = Partial<
+  Omit<AssetType, 'id' | 'createdBy' | 'createdByName' | 'createdAt' | 'mainImage'>
+> & {
+  mainImage?: string | null
+}
 
 export interface CustomFieldDefinition {
   id: UUID
@@ -125,6 +131,8 @@ export interface Asset {
   manufacturer?: string
   model?: string
   description?: string
+  /** Inline base64 image (data URL) shown as the asset's main picture */
+  mainImage?: string
   assetType: {
     id: UUID
     name: string
@@ -204,11 +212,12 @@ export type AssetCreate = Omit<
 }
 
 export type AssetUpdate = Partial<
-  Omit<Asset, 'id' | 'assetNumber' | 'createdBy' | 'createdByName' | 'createdAt'>
+  Omit<Asset, 'id' | 'assetNumber' | 'createdBy' | 'createdByName' | 'createdAt' | 'mainImage'>
 > & {
   assetGroup?: AssetGroupReference | null
   fieldSources?: Record<string, AssetGroupFieldSource> | null
   childAssetIds?: UUID[] | null
+  mainImage?: string | null
 }
 
 export interface AssetFilters {
@@ -253,6 +262,8 @@ export interface AssetGroup {
   model?: string
   modelNumber?: string
   description?: string
+  /** Inline base64 image used as the primary visual for this asset model */
+  mainImage?: string
   inheritanceRules: Record<string, AssetGroupInheritanceRule>
   sharedCustomFields?: Record<string, unknown>
   customFieldRules?: Record<string, AssetGroupInheritanceRule>
@@ -278,10 +289,11 @@ export type AssetGroupCreate = Omit<
 }
 
 export type AssetGroupUpdate = Partial<
-  Omit<AssetGroup, 'id' | 'createdBy' | 'createdByName' | 'createdAt'>
+  Omit<AssetGroup, 'id' | 'createdBy' | 'createdByName' | 'createdAt' | 'mainImage'>
 > & {
   memberAssetIds?: UUID[]
   memberCount?: number
+  mainImage?: string | null
 }
 
 export interface AssetGroupFilters {
