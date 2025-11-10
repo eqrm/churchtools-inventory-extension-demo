@@ -36,6 +36,7 @@
 - [ ] **Code Quality**: ESLint configured, formatting standards defined, modularity planned
 - [ ] **Performance Budget**: Bundle size projected < 200 KB, load time < 1s analyzed
 - [ ] **Testing Strategy**: Manual testing plan documented, automated testing scope defined if needed
+- [ ] **TDD Workflow**: For features requiring automated tests, RED-GREEN-REFACTOR cycle planned
 - [ ] **Environment Config**: Sensitive data handling via .env planned, no hardcoded secrets
 
 ## Project Structure

@@ -1,21 +1,30 @@
 <!--
 Sync Impact Report:
+Version Change: 1.0.0 → 1.1.0
+Amendment Date: 2025-11-10
+
+Principles Added:
+  V. Test Driven Development - Write failing tests before implementation
+
+Principles Modified:
+  - Testing Standards section expanded with TDD guidance and requirements
+
+Templates Requiring Updates:
+  ✅ plan-template.md - Constitution Check already includes testing strategy gate
+  ✅ spec-template.md - User scenarios already support acceptance criteria
+  ✅ tasks-template.md - Already includes TDD pattern (tests first, must fail, then implement)
+  
+Follow-up Actions:
+  - None. Templates already aligned with TDD principle.
+
+Previous Report (1.0.0):
 Version Change: Initial → 1.0.0
 Created: 2025-10-18
-
 New Principles Established:
   I. Type Safety First - Leveraging TypeScript strict mode
   II. User Experience Consistency - ChurchTools integration standards
   III. Code Quality Standards - ESLint, formatting, and maintainability
   IV. Performance Budget - Bundle size and runtime performance requirements
-
-Templates Updated:
-  ✅ plan-template.md - Constitution Check section populated with specific gates from principles
-  ✅ spec-template.md - Already contains user scenarios and success criteria sections (no changes needed)
-  ✅ tasks-template.md - Added Constitution Compliance Gates to Phase 2 and Pre-Deployment Quality Gates to final phase
-
-Follow-up Actions:
-  - None. All templates now align with established principles.
 -->
 
 # ChurchTools Inventory Extension Constitution
@@ -71,9 +80,53 @@ The extension MUST respect strict performance budgets to ensure fast load times:
 **Rationale**: ChurchTools is used by churches globally, including regions with limited
 internet connectivity. Slow extensions degrade the entire ChurchTools experience.
 
+### V. Test Driven Development
+
+When implementing features that require automated testing, development MUST follow the TDD cycle:
+
+1. **RED**: Write a failing test that defines the desired behavior
+2. **GREEN**: Write minimal code to make the test pass
+3. **REFACTOR**: Improve code quality while keeping tests passing
+
+**TDD MUST be used for**:
+- Complex business logic and data transformations
+- API integrations and data persistence layers
+- Critical user workflows (booking, maintenance, asset management)
+- Features handling sensitive data or permissions
+
+**TDD is RECOMMENDED for**:
+- Utility functions and helper methods
+- State management logic
+- Validation and error handling routines
+
+**When TDD can be SKIPPED**:
+- Simple UI components with minimal logic
+- Prototypes or experimental features (document as technical debt)
+- One-off scripts or build tooling
+
+**Requirements**:
+- Tests MUST fail before implementation begins (verify RED state)
+- Commit test file separately before implementation code
+- Test names MUST clearly describe expected behavior
+- Each test MUST verify one specific behavior or scenario
+- Avoid testing implementation details; test observable behavior
+
+**Rationale**: TDD prevents defects, clarifies requirements, and produces well-designed,
+testable code. Tests written after implementation often miss edge cases and become
+maintenance burdens. The RED-GREEN-REFACTOR cycle ensures tests actually validate
+behavior rather than documenting what code happens to do.
+
 ## Testing Standards
 
 All features MUST include appropriate testing based on complexity and risk:
+
+### Test Driven Development (TDD)
+When automated testing is required (see Principle V), follow the RED-GREEN-REFACTOR cycle:
+- **Write the test first** - Define expected behavior before implementation
+- **Verify test fails** - Confirm the test catches the missing functionality (RED)
+- **Implement minimally** - Write just enough code to pass the test (GREEN)
+- **Refactor** - Improve design while maintaining passing tests
+- **Commit tests separately** - Tests should be committed before implementation code
 
 ### Manual Testing (Minimum Requirement)
 - Every feature MUST be manually tested in both development and production modes
@@ -90,9 +143,13 @@ All features MUST include appropriate testing based on complexity and risk:
 - Features handling sensitive data (permissions, user data)
 - Complex calculations or data transformations
 - Critical workflows that block primary use cases
+- API integration layers and data persistence
+- State management and business logic services
 
-**Rationale**: Testing prevents regressions and builds confidence. Manual testing is always
-required; automated tests are an investment that pays off for complex or critical features.
+**Rationale**: TDD prevents defects and clarifies requirements. Manual testing is always
+required for UX validation; automated tests are an investment that pays off for complex
+or critical features. The RED-GREEN-REFACTOR discipline ensures tests actually validate
+behavior rather than documenting what code happens to do.
 
 ## Development Workflow
 
@@ -104,6 +161,8 @@ required; automated tests are an investment that pays off for complex or critica
   - No console.log statements or debug code in production
   - Bundle size impact is acceptable (check build output)
   - Manual testing has been performed
+  - For TDD features: Tests were committed before implementation
+  - For TDD features: Tests initially failed (RED), then passed (GREEN)
 
 ### Build and Deployment
 - Production builds MUST use `npm run build` (TypeScript compilation + Vite bundling)
@@ -137,7 +196,12 @@ and architectural decisions MUST comply with these principles.
 - Repeated violations without justification indicate need for principle revision
 
 ### Version History
-Initial ratification established core principles for code quality, UX consistency, type safety,
-and performance budgets appropriate for a ChurchTools extension project.
 
-**Version**: 1.0.0 | **Ratified**: 2025-10-18 | **Last Amended**: 2025-10-18
+**v1.1.0** (2025-11-10): Added Principle V (Test Driven Development) establishing RED-GREEN-REFACTOR
+cycle requirements for features requiring automated testing. Expanded Testing Standards section
+with TDD workflow guidance and code review checkpoints.
+
+**v1.0.0** (2025-10-18): Initial ratification established core principles for code quality, UX consistency,
+type safety, and performance budgets appropriate for a ChurchTools extension project.
+
+**Version**: 1.1.0 | **Ratified**: 2025-10-18 | **Last Amended**: 2025-11-10
