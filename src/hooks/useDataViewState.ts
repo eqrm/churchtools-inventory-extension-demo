@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { DataTableSortStatus } from 'mantine-datatable';
 import type { DataViewMode } from '../components/dataView/types';
 
 function cloneFilters<T>(value: T): T {
@@ -22,7 +21,7 @@ function cloneFilters<T>(value: T): T {
     return value;
 }
 
-export interface UseDataViewStateOptions<TFilters, TSort extends DataTableSortStatus<unknown> | undefined> {
+export interface UseDataViewStateOptions<TFilters, TSort> {
     storageKey: string;
     initialFilters?: TFilters;
     initialFiltersKey?: string;
@@ -34,7 +33,7 @@ export interface UseDataViewStateOptions<TFilters, TSort extends DataTableSortSt
     getActiveFilterCount?: (filters: TFilters) => number;
 }
 
-export interface UseDataViewStateResult<TFilters, TSort extends DataTableSortStatus<unknown> | undefined> {
+export interface UseDataViewStateResult<TFilters, TSort> {
     viewMode: DataViewMode;
     setViewMode: (mode: DataViewMode) => void;
     filters: TFilters;
@@ -51,7 +50,7 @@ export interface UseDataViewStateResult<TFilters, TSort extends DataTableSortSta
     pageSizeOptions: number[];
 }
 
-export function useDataViewState<TFilters extends Record<string, unknown>, TSort extends DataTableSortStatus<unknown> | undefined = undefined>(
+export function useDataViewState<TFilters extends Record<string, unknown>, TSort = undefined>(
     options: UseDataViewStateOptions<TFilters, TSort>,
 ): UseDataViewStateResult<TFilters, TSort> {
     const {

@@ -19,9 +19,9 @@ const BOOKING_PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
 const BOOKING_PAGE_SIZE_STORAGE_KEY = 'booking-list-page-size';
 const DEFAULT_BOOKING_PAGE_SIZE = 20;
 
-type BookingViewFilters = BookingFilters & {
+interface BookingViewFilters extends BookingFilters, Record<string, unknown> {
   search?: string;
-};
+}
 
 interface BookingListProps {
   onBookingClick?: (bookingId: string) => void;

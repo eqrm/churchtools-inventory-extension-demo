@@ -11,6 +11,7 @@ import {
   IconPackage,
   IconChartBar,
   IconTool,
+  IconUsersGroup,
 } from '@tabler/icons-react';
 import { Link, useLocation } from 'react-router-dom';
 import type { ReactNode, MouseEvent as ReactMouseEvent } from 'react';
@@ -104,6 +105,16 @@ export function Navigation({ children, onScanClick }: NavigationProps) {
           leftSection={<IconBox size={20} />}
           active={routeIsActive('/assets')}
           onClick={(event) => handleNavClick(event, { label: 'Assets', route: '/assets' })}
+        />
+
+        <NavLink
+          data-nav-label="Asset Models"
+          component={Link}
+          to="/asset-groups"
+          label="Asset Models"
+          leftSection={<IconUsersGroup size={20} />}
+          active={routeIsActive('/asset-groups')}
+          onClick={(event) => handleNavClick(event, { label: 'Asset Models', route: '/asset-groups' })}
         />
 
         <NavLink

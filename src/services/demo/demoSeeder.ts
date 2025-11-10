@@ -1,6 +1,6 @@
 import type {
     Asset,
-    AssetCategory,
+    AssetType,
     AssetCreate,
     AssetPrefix,
     Booking,
@@ -168,7 +168,7 @@ type DemoSeederProvider = {
     force?: boolean;
 };
 
-type CategorySeed = {
+type AssetTypeSeed = {
     slug: string;
     name: string;
     icon?: string;
@@ -197,7 +197,7 @@ type ChildAssetSeed = {
 
 type AssetSeed = {
     slug: string;
-    category: string;
+    assetTypeSlug: string;
     prefixSlug?: string;
     name: string;
     manufacturer?: string;
@@ -212,7 +212,7 @@ type AssetSeed = {
 
 type KitPoolRequirementSeed = {
     quantity: number;
-    categorySlug?: string;
+    assetTypeSlug?: string;
     parentAssetSlug?: string;
     filters?: Record<string, unknown>;
 };
@@ -258,13 +258,13 @@ type StockTakeSeed = {
     nameReason?: string;
     scope:
         | { type: 'all' }
-        | { type: 'category'; categorySlugs: string[] }
+        | { type: 'assetType'; assetTypeSlugs: string[] }
         | { type: 'location'; locations: string[] }
         | { type: 'custom'; assetSlugs: string[] };
 };
 
 interface DemoSeedOutcome {
-    categories: AssetCategory[];
+    assetTypes: AssetType[];
     assets: Asset[];
     assetPrefixes: AssetPrefix[];
     bookings: Booking[];
@@ -318,7 +318,7 @@ const MASTER_DATA_SEEDS: Record<MasterDataEntity, string[]> = {
     maintenanceCompanies: ['TechCare Services', 'CleanOps Facility', 'BrightSpark Electrical'],
 };
 
-const CATEGORY_SEEDS: CategorySeed[] = [
+const ASSET_TYPE_SEEDS: AssetTypeSeed[] = [
     {
         slug: 'electronics',
         name: 'Electronics & AV',
@@ -413,7 +413,7 @@ const ASSET_PREFIX_SEEDS: AssetPrefixSeed[] = [
 const ASSET_SEEDS: AssetSeed[] = [
     {
         slug: 'demo-camera',
-        category: 'electronics',
+        assetTypeSlug: 'electronics',
         prefixSlug: 'cam',
         name: 'Panasonic GH6 Camera',
         manufacturer: 'Panasonic',
@@ -425,7 +425,7 @@ const ASSET_SEEDS: AssetSeed[] = [
     },
     {
         slug: 'demo-microphone',
-        category: 'electronics',
+        assetTypeSlug: 'electronics',
         prefixSlug: 'aud',
         name: 'Shure Wireless Microphone',
         manufacturer: 'Shure',
@@ -437,7 +437,7 @@ const ASSET_SEEDS: AssetSeed[] = [
     },
     {
         slug: 'demo-streaming-rack',
-        category: 'electronics',
+        assetTypeSlug: 'electronics',
         prefixSlug: 'cam',
         name: 'Weekend Streaming Rack',
         manufacturer: 'Blackmagic Design',
@@ -470,7 +470,7 @@ const ASSET_SEEDS: AssetSeed[] = [
     },
     {
         slug: 'demo-folding-chair',
-        category: 'furniture',
+        assetTypeSlug: 'furniture',
         prefixSlug: 'fur',
         name: 'Stackable Folding Chair',
         manufacturer: 'ComfortSeat',
@@ -482,7 +482,7 @@ const ASSET_SEEDS: AssetSeed[] = [
     },
     {
         slug: 'demo-hospitality-kit',
-        category: 'furniture',
+        assetTypeSlug: 'furniture',
         prefixSlug: 'fur',
         name: 'Hospitality Display Bundle',
         manufacturer: 'ComfortSeat',
@@ -524,7 +524,7 @@ const ASSET_SEEDS: AssetSeed[] = [
     },
     {
         slug: 'demo-drill',
-        category: 'work-tools',
+        assetTypeSlug: 'work-tools',
         name: 'Bosch Hammer Drill',
         manufacturer: 'Bosch',
         model: 'GBH 2-26',
@@ -535,7 +535,7 @@ const ASSET_SEEDS: AssetSeed[] = [
     },
     {
         slug: 'demo-scissor-lift',
-        category: 'work-tools',
+        assetTypeSlug: 'work-tools',
         name: 'Portable Scissor Lift',
         manufacturer: 'LiftMaster',
         model: 'LM-12',
@@ -546,7 +546,7 @@ const ASSET_SEEDS: AssetSeed[] = [
     },
     {
         slug: 'demo-coffee-maker',
-        category: 'appliances',
+        assetTypeSlug: 'appliances',
         name: 'Keurig Commercial Brewer',
         manufacturer: 'Keurig',
         model: 'K-3500',
@@ -725,7 +725,7 @@ const STOCK_TAKE_SEEDS: StockTakeSeed[] = [
         status: 'completed',
         startOffsetDays: -14,
         nameReason: 'Quarterly electronics audit',
-        scope: { type: 'category', categorySlugs: ['electronics'] },
+        scope: { type: 'assetType', assetTypeSlugs: ['electronics'] },
     },
     {
         slug: 'hospitality-refresh',
@@ -782,7 +782,7 @@ async function resolvePerson(provider: IStorageProvider, fallback?: PersonInfo |
 }
 
 function buildAssetPayload(
-    category: AssetCategory,
+    assetType: AssetType,
     seed: AssetSeed | ChildAssetSeed,
     options?: { prefixId?: string; parentAssetId?: string; isParent?: boolean; customFieldValues?: Record<string, CustomFieldValue> },
 ): AssetCreate {
@@ -791,10 +791,10 @@ function buildAssetPayload(
         manufacturer: seed.manufacturer,
         model: seed.model,
         description: seed.description,
-        category: {
-            id: category.id,
-            name: category.name,
-            icon: category.icon,
+        assetType: {
+            id: assetType.id,
+            name: assetType.name,
+            icon: assetType.icon,
         },
         status: seed.status ?? 'available',
         location: seed.location,
@@ -963,32 +963,32 @@ async function seedAssetPrefixes(
     return { prefixes: created, map };
 }
 
-async function seedCategories(
+async function seedAssetTypes(
     provider: IStorageProvider,
     timestamp: string,
-): Promise<{ categories: AssetCategory[]; map: Map<string, AssetCategory> }> {
-    const categories: AssetCategory[] = [];
-    const map = new Map<string, AssetCategory>();
+): Promise<{ assetTypes: AssetType[]; map: Map<string, AssetType> }> {
+    const assetTypes: AssetType[] = [];
+    const map = new Map<string, AssetType>();
 
-    for (const seed of CATEGORY_SEEDS) {
-        const category = await provider.createCategory({
+    for (const seed of ASSET_TYPE_SEEDS) {
+        const assetType = await provider.createAssetType({
             name: seed.name,
             icon: seed.icon,
             assetNameTemplate: seed.assetNameTemplate,
             customFields: seed.customFields,
         });
-        categories.push(category);
-        map.set(seed.slug, category);
-        await tagDemoEntity('category', category.id, timestamp);
+        assetTypes.push(assetType);
+        map.set(seed.slug, assetType);
+        await tagDemoEntity('category', assetType.id, timestamp);
     }
 
-    return { categories, map };
+    return { assetTypes, map };
 }
 
 async function seedAssets(
     provider: IStorageProvider,
     timestamp: string,
-    categoryMap: Map<string, AssetCategory>,
+    assetTypeMap: Map<string, AssetType>,
     prefixMap: Map<string, AssetPrefix>,
     baseDate: Date,
     person: PersonInfo | null,
@@ -997,13 +997,13 @@ async function seedAssets(
     const map = new Map<string, Asset>();
 
     for (const seed of ASSET_SEEDS) {
-        const category = categoryMap.get(seed.category);
-        if (!category) {
+        const assetType = assetTypeMap.get(seed.assetTypeSlug);
+        if (!assetType) {
             continue;
         }
 
         const customFieldValues = buildCustomFieldValues(seed.slug, baseDate, person);
-        const payload = buildAssetPayload(category, seed, {
+        const payload = buildAssetPayload(assetType, seed, {
             prefixId: seed.prefixSlug ? prefixMap.get(seed.prefixSlug)?.id : undefined,
             isParent: seed.isParent ?? false,
             customFieldValues,
@@ -1018,7 +1018,7 @@ async function seedAssets(
         if (seed.isParent && seed.children && seed.children.length > 0) {
             for (const childSeed of seed.children) {
                 const childValues = buildCustomFieldValues(childSeed.slug, baseDate, person);
-                const childPayload = buildAssetPayload(category, childSeed, {
+                const childPayload = buildAssetPayload(assetType, childSeed, {
                     parentAssetId: created.id,
                     customFieldValues: childValues,
                     isParent: false,
@@ -1048,7 +1048,7 @@ async function seedAssets(
 async function seedKits(
     provider: IStorageProvider,
     timestamp: string,
-    categoryMap: Map<string, AssetCategory>,
+    assetTypeMap: Map<string, AssetType>,
     assetMap: Map<string, Asset>,
 ): Promise<{ kits: Kit[]; map: Map<string, Kit> }> {
     const kits: Kit[] = [];
@@ -1073,24 +1073,24 @@ async function seedKits(
                         throw new Error(`Kit pool requirement references unknown parent asset slug "${pool.parentAssetSlug}"`);
                     }
                     return {
-                        categoryId: parentAsset.category.id,
-                        categoryName: parentAsset.category.name,
+                        assetTypeId: parentAsset.assetType.id,
+                        assetTypeName: parentAsset.assetType.name,
                         quantity: pool.quantity,
                         filters: { ...(pool.filters ?? {}), parentAssetId: parentAsset.id },
                     };
                 }
 
-                if (!pool.categorySlug) {
-                    throw new Error('Kit pool requirement missing categorySlug or parentAssetSlug');
+                if (!pool.assetTypeSlug) {
+                    throw new Error('Kit pool requirement missing assetTypeSlug or parentAssetSlug');
                 }
 
-                const category = categoryMap.get(pool.categorySlug);
-                if (!category) {
-                    throw new Error(`Kit pool requirement references unknown category slug "${pool.categorySlug}"`);
+                const assetType = assetTypeMap.get(pool.assetTypeSlug);
+                if (!assetType) {
+                    throw new Error(`Kit pool requirement references unknown asset type slug "${pool.assetTypeSlug}"`);
                 }
                 return {
-                    categoryId: category.id,
-                    categoryName: category.name,
+                    assetTypeId: assetType.id,
+                    assetTypeName: assetType.name,
                     quantity: pool.quantity,
                     filters: pool.filters,
                 };
@@ -1220,7 +1220,7 @@ async function seedStockTakes(
     provider: IStorageProvider,
     timestamp: string,
     baseDate: Date,
-    categoryMap: Map<string, AssetCategory>,
+    assetTypeMap: Map<string, AssetType>,
     assetMap: Map<string, Asset>,
     person: PersonInfo | null,
 ): Promise<StockTakeSession[]> {
@@ -1231,11 +1231,11 @@ async function seedStockTakes(
     for (const seed of STOCK_TAKE_SEEDS) {
         let scope: StockTakeSessionCreate['scope'];
         switch (seed.scope.type) {
-            case 'category':
+            case 'assetType':
                 scope = {
-                    type: 'category',
-                    categoryIds: seed.scope.categorySlugs
-                        .map(slug => categoryMap.get(slug)?.id)
+                    type: 'assetType',
+                    assetTypeIds: seed.scope.assetTypeSlugs
+                        .map((assetTypeSlug) => assetTypeMap.get(assetTypeSlug)?.id)
                         .filter((id): id is string => Boolean(id)),
                 };
                 break;
@@ -1269,7 +1269,7 @@ async function seedStockTakes(
 
         if (seed.status === 'completed') {
             // Add a sample scan for the first asset in the scope if available
-            const targetAsset = scope.type === 'category'
+            const targetAsset = scope.type === 'assetType'
                 ? assetMap.get('demo-camera')
                 : scope.type === 'location'
                     ? assetMap.get('demo-hospitality-table')
@@ -1429,7 +1429,7 @@ export async function seedDemoData(options: DemoSeederProvider = {}): Promise<De
 
     if (metadata.seededAt && !options.force && !versionMismatch) {
         return {
-            categories: [],
+            assetTypes: [],
             assets: [],
             assetPrefixes: [],
             bookings: [],
@@ -1448,15 +1448,15 @@ export async function seedDemoData(options: DemoSeederProvider = {}): Promise<De
     await seedPersonReferenceCaches(seedPerson);
 
     const { prefixes, map: prefixMap } = await seedAssetPrefixes(provider, timestamp);
-    const { categories, map: categoryMap } = await seedCategories(provider, timestamp);
-    const { assets, map: assetMap } = await seedAssets(provider, timestamp, categoryMap, prefixMap, baseDate, seedPerson);
-    const { kits, map: kitMap } = await seedKits(provider, timestamp, categoryMap, assetMap);
+    const { assetTypes, map: assetTypeMap } = await seedAssetTypes(provider, timestamp);
+    const { assets, map: assetMap } = await seedAssets(provider, timestamp, assetTypeMap, prefixMap, baseDate, seedPerson);
+    const { kits, map: kitMap } = await seedKits(provider, timestamp, assetTypeMap, assetMap);
     const bookingSeedResult = await seedBookings(provider, timestamp, baseDate, assetMap, kitMap, seedPerson);
     const maintenanceSeedResult = await seedMaintenanceRecords(provider, timestamp, baseDate, assetMap, seedPerson);
 
     await seedChangeHistory(provider, assetMap, kitMap, bookingSeedResult.map, maintenanceSeedResult.map);
 
-    const stockTakes = await seedStockTakes(provider, timestamp, baseDate, categoryMap, assetMap, seedPerson);
+    const stockTakes = await seedStockTakes(provider, timestamp, baseDate, assetTypeMap, assetMap, seedPerson);
 
     await seedMasterDataFromConstants(assets);
 
@@ -1469,10 +1469,10 @@ export async function seedDemoData(options: DemoSeederProvider = {}): Promise<De
     });
 
     return {
-        categories,
+        assetTypes,
         assets,
         assetPrefixes: prefixes,
-    bookings: bookingSeedResult.bookings,
+        bookings: bookingSeedResult.bookings,
         kits,
         maintenanceRecords: maintenanceSeedResult.records,
         stockTakes,
@@ -1512,7 +1512,7 @@ export async function resetDemoData(options: DemoSeederProvider = {}): Promise<D
                     await provider.deleteAssetPrefix(record.entityId);
                     break;
                 case 'category':
-                    await provider.deleteCategory(record.entityId);
+                    await provider.deleteAssetType(record.entityId);
                     break;
                 default:
                     break;

@@ -9,6 +9,8 @@ const DashboardPage = lazy(() => import('../pages/DashboardPage').then(M => ({ d
 const CategoriesPage = lazy(() => import('../pages/CategoriesPage').then(M => ({ default: M.CategoriesPage })));
 const AssetsPage = lazy(() => import('../pages/AssetsPage').then(M => ({ default: M.AssetsPage })));
 const AssetDetailPage = lazy(() => import('../pages/AssetDetailPage').then(M => ({ default: M.AssetDetailPage })));
+const AssetGroupsPage = lazy(() => import('../pages/AssetGroupsPage').then(M => ({ default: M.AssetGroupsPage })));
+const AssetGroupDetailPage = lazy(() => import('../pages/AssetGroupDetailPage').then(M => ({ default: M.AssetGroupDetailPage })));
 const BookingsPage = lazy(() => import('../pages/BookingsPage').then(M => ({ default: M.BookingsPage })));
 const BookingDetailPage = lazy(() => import('../pages/BookingDetailPage').then(M => ({ default: M.BookingDetailPage })));
 const BookingCalendarPage = lazy(() => import('../pages/BookingCalendarPage').then(M => ({ default: M.BookingCalendarPage })));
@@ -27,6 +29,8 @@ export const appRoutes: AppRoute[] = [
     { path: '/categories', Component: CategoriesPage },
     { path: '/assets', Component: AssetsPage },
     { path: '/assets/:id', Component: AssetDetailPage },
+    { path: '/asset-groups', Component: AssetGroupsPage },
+    { path: '/asset-groups/:id', Component: AssetGroupDetailPage },
     { path: '/bookings', Component: BookingsPage },
     { path: '/bookings/:id', Component: BookingDetailPage },
     { path: '/bookings-calendar', Component: BookingCalendarPage },

@@ -49,49 +49,85 @@ export function QuickScanModal({ opened, onClose }: QuickScanModalProps) {
   const isMac = /Mac|iPhone|iPad|iPod/.test(navigator.userAgent);
   const scanShortcut = isMac ? '⌘S' : 'Alt+S';
 
-  const handleScan = (scannedCode: string) => {
+  const handleScan = (rawCode: string) => {
+    const scannedCode = rawCode.trim();
+    if (!scannedCode) {
+      provideScanErrorFeedback('Scan code is empty');
+      return;
+    }
+
     if (!storage) {
       provideScanErrorFeedback('Storage provider not available');
       return;
     }
-    
-    // Look up asset by barcode (async wrapped)
-    const promise = storage.getAssets().then((assets) => {
-      // First try to find by barcode (for reassigned barcodes)
-      let asset = assets.find(a => a.barcode === scannedCode);
-      
-      // Fallback to asset number if not found by barcode
-      if (!asset) {
-        asset = assets.find(a => a.assetNumber === scannedCode);
-      }
-      
-      if (!asset) {
-        provideScanErrorFeedback(`Asset not found: ${scannedCode}`);
+
+    const lookupPromise = (async () => {
+      const [assets, groups] = await Promise.all([
+        storage.getAssets(),
+        storage.getAssetGroups(),
+      ]);
+
+      const normalizedCode = scannedCode.toLowerCase();
+
+      const matchedAsset = assets.find((asset) => {
+        const barcodeMatches = asset.barcode?.toLowerCase() === normalizedCode;
+        const assetNumberMatches = asset.assetNumber?.toLowerCase() === normalizedCode;
+        return barcodeMatches || assetNumberMatches;
+      });
+
+      if (matchedAsset) {
+        addScan({
+          type: 'asset',
+          code: scannedCode,
+          assetId: matchedAsset.id,
+          assetNumber: matchedAsset.assetNumber,
+          assetName: matchedAsset.name,
+          groupId: matchedAsset.assetGroup?.id,
+          groupName: matchedAsset.assetGroup?.name,
+          scannedAt: new Date().toISOString(),
+        });
+
+        provideScanSuccessFeedback(matchedAsset.assetNumber, matchedAsset.name);
+
+        const targetPath = matchedAsset.assetGroup?.id
+          ? `/assets/${matchedAsset.id}?groupId=${matchedAsset.assetGroup.id}`
+          : `/assets/${matchedAsset.id}`;
+
+        navigate(targetPath);
+        onClose();
         return;
       }
 
-      // Add to scan history
-      addScan({
-        assetNumber: scannedCode,
-        assetId: asset.id,
-        assetName: asset.name,
-        scannedAt: new Date().toISOString(),
+      const matchedGroup = groups.find((group) => {
+        const barcodeMatches = group.barcode?.toLowerCase() === normalizedCode;
+        const numberMatches = group.groupNumber?.toLowerCase() === normalizedCode;
+        return barcodeMatches || numberMatches;
       });
 
-      // Provide success feedback
-      provideScanSuccessFeedback(scannedCode, asset.name);
+      if (matchedGroup) {
+        addScan({
+          type: 'group',
+          code: scannedCode,
+          groupId: matchedGroup.id,
+          groupNumber: matchedGroup.groupNumber,
+          groupName: matchedGroup.name,
+          scannedAt: new Date().toISOString(),
+        });
 
-      // Navigate to asset detail
-      navigate(`/assets/${asset.id}`);
+        const identifier = matchedGroup.groupNumber ?? matchedGroup.barcode ?? matchedGroup.name;
+        provideScanSuccessFeedback(identifier, matchedGroup.name);
+        navigate(`/asset-groups?groupId=${matchedGroup.id}`);
+        onClose();
+        return;
+      }
 
-      // Close modal
-      onClose();
-    }).catch((err: unknown) => {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to lookup asset';
+      provideScanErrorFeedback(`No asset or group found for code: ${scannedCode}`);
+    })().catch((err: unknown) => {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to lookup code';
       provideScanErrorFeedback(errorMessage);
     });
-    
-    void promise;
+
+    void lookupPromise;
   };
 
   const handleError = (error: string) => {
@@ -125,7 +161,7 @@ export function QuickScanModal({ opened, onClose }: QuickScanModalProps) {
     >
       <Stack gap="md">
         <Text size="sm" c="dimmed">
-          Scan a barcode or enter a barcode/asset number to quickly view asset details
+          Scan a barcode or enter an asset/group number to jump directly to inventory or group details
         </Text>
 
         {/* Scanner Selection */}
@@ -157,7 +193,7 @@ export function QuickScanModal({ opened, onClose }: QuickScanModalProps) {
         {/* Manual Entry Fallback */}
         <ScannerInput
           onScan={handleScan}
-          placeholder="Or enter barcode/asset number manually..."
+          placeholder="Or enter barcode / asset number / group number manually..."
           label="Manual Entry"
           buttonText="Lookup"
           autoFocus={false}

@@ -21,7 +21,7 @@ import { useCurrentUser } from '../../hooks/useCurrentUser';
 import { CustomFieldDefinitionInput } from './CustomFieldDefinitionInput';
 import { CustomFieldPreview } from './CustomFieldPreview';
 import { IconPicker } from './IconPicker';
-import type { AssetCategory, CustomFieldDefinition, CategoryCreate, CategoryUpdate } from '../../types/entities';
+import type { AssetType, CustomFieldDefinition, AssetTypeCreate, AssetTypeUpdate } from '../../types/entities';
 import {
   getStoredModuleDefaultPrefixId,
   getStoredPersonDefaultPrefixId,
@@ -30,21 +30,21 @@ import {
   type AutoNumberingSource,
 } from '../../services/assets/autoNumbering';
 
-interface AssetCategoryFormProps {
-  category?: AssetCategory;
+interface AssetTypeFormProps {
+  category?: AssetType;
   initialData?: {
     name: string;
     icon?: string;
     customFields: Omit<CustomFieldDefinition, 'id'>[];
   };
-  onSuccess?: (category: AssetCategory) => void;
+  onSuccess?: (category: AssetType) => void;
   onCancel?: () => void;
 }
 
-export function AssetCategoryForm({ category, initialData, onSuccess, onCancel }: AssetCategoryFormProps) {
+export function AssetTypeForm({ category, initialData, onSuccess, onCancel }: AssetTypeFormProps) {
   const isEditing = !!category;
-  const createCategory = useCreateCategory();
-  const updateCategory = useUpdateCategory();
+  const createAssetType = useCreateCategory();
+  const updateAssetType = useUpdateCategory();
   const { data: prefixes = [], isLoading: prefixesLoading } = useAssetPrefixes();
   const { data: currentUser } = useCurrentUser();
   const currentUserId = currentUser?.id ?? null;
@@ -96,14 +96,14 @@ export function AssetCategoryForm({ category, initialData, onSuccess, onCancel }
   const handleSubmit = async (values: typeof form.values) => {
     try {
       if (isEditing) {
-        const payload: CategoryUpdate = {
+        const payload: AssetTypeUpdate = {
           name: values.name,
           icon: values.icon || undefined,
           assetNameTemplate: values.assetNameTemplate || undefined,
           customFields: values.customFields,
         };
 
-        const updated = await updateCategory.mutateAsync({
+        const updated = await updateAssetType.mutateAsync({
           id: category.id,
           data: payload,
         });
@@ -114,13 +114,13 @@ export function AssetCategoryForm({ category, initialData, onSuccess, onCancel }
         });
         onSuccess?.(updated);
       } else {
-        const categoryData: CategoryCreate = {
+        const categoryData: AssetTypeCreate = {
           name: values.name,
           icon: values.icon || undefined,
           assetNameTemplate: values.assetNameTemplate || undefined,
           customFields: values.customFields,
         };
-        const created = await createCategory.mutateAsync(categoryData);
+        const created = await createAssetType.mutateAsync(categoryData);
         notifications.show({
           title: 'Success',
           message: `Category "${created.name}" has been created`,
@@ -152,7 +152,7 @@ export function AssetCategoryForm({ category, initialData, onSuccess, onCancel }
     form.removeListItem('customFields', index);
   };
 
-  const isPending = createCategory.isPending || updateCategory.isPending;
+  const isPending = createAssetType.isPending || updateAssetType.isPending;
 
   useEffect(() => {
     let cancelled = false;

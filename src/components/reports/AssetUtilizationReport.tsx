@@ -6,7 +6,7 @@
  */
 
 import { useState } from 'react';
-import { Paper, Title, Group, Button, Select, Stack, Text, Loader } from '@mantine/core';
+import { Paper, Title, Group, Button, Select, Stack, Text, Loader, SegmentedControl } from '@mantine/core';
 import DateRangeCalendar from '../common/DateRangeCalendar'
 import { DataTable } from 'mantine-datatable';
 import { IconDownload, IconFilter } from '@tabler/icons-react';
@@ -14,7 +14,13 @@ import { subMonths, startOfMonth, endOfMonth } from 'date-fns';
 import { useAssets } from '../../hooks/useAssets';
 import { useBookings } from '../../hooks/useBookings';
 import { useCategories } from '../../hooks/useCategories';
-import { calculateAssetUtilization, type AssetUtilizationData } from '../../utils/reportCalculations';
+import { useAssetGroups } from '../../hooks/useAssetGroups';
+import {
+  calculateAssetUtilization,
+  aggregateGroupUtilization,
+  type AssetUtilizationData,
+  type AssetGroupUtilizationData,
+} from '../../utils/reportCalculations';
 import { exportUtilizationToCSV } from '../../utils/exportCSV';
 
 /**
@@ -23,20 +29,20 @@ import { exportUtilizationToCSV } from '../../utils/exportCSV';
 function UtilizationFilters({
   dateRange,
   setDateRange,
-  selectedCategory,
-  setSelectedCategory,
+  selectedAssetTypeId,
+  setSelectedAssetTypeId,
   selectedLocation,
   setSelectedLocation,
-  categories,
+  assetTypes,
   locations,
 }: {
   dateRange: [Date | null, Date | null];
   setDateRange: (range: [Date | null, Date | null]) => void;
-  selectedCategory: string | null;
-  setSelectedCategory: (category: string | null) => void;
+  selectedAssetTypeId: string | null;
+  setSelectedAssetTypeId: (assetTypeId: string | null) => void;
   selectedLocation: string | null;
   setSelectedLocation: (location: string | null) => void;
-  categories: Array<{ value: string; label: string }>;
+  assetTypes: Array<{ value: string; label: string }>;
   locations: string[];
 }) {
   return (
@@ -61,11 +67,11 @@ function UtilizationFilters({
         </div>
 
         <Select
-          label="Kategorie"
-          placeholder="Alle Kategorien"
-          data={categories}
-          value={selectedCategory}
-          onChange={setSelectedCategory}
+          label="Asset-Typ"
+          placeholder="Alle Asset-Typen"
+          data={assetTypes}
+          value={selectedAssetTypeId}
+          onChange={setSelectedAssetTypeId}
           clearable
           style={{ flex: 1 }}
         />
@@ -108,8 +114,8 @@ function UtilizationTable({ data }: { data: AssetUtilizationData[] }) {
           width: 200,
         },
         {
-          accessor: 'categoryName',
-          title: 'Kategorie',
+          accessor: 'assetTypeName',
+          title: 'Asset-Typ',
           width: 150,
         },
         {
@@ -149,6 +155,69 @@ function UtilizationTable({ data }: { data: AssetUtilizationData[] }) {
   );
 }
 
+function GroupUtilizationTable({ data }: { data: AssetGroupUtilizationData[] }) {
+  return (
+    <DataTable
+      withTableBorder
+      withColumnBorders
+      striped
+      highlightOnHover
+      records={data}
+      idAccessor="groupId"
+      columns={[
+        {
+          accessor: 'groupNumber',
+          title: 'Gruppe',
+          width: 150,
+        },
+        {
+          accessor: 'groupName',
+          title: 'Name',
+          width: 220,
+        },
+        {
+          accessor: 'memberCount',
+          title: 'Mitglieder',
+          width: 120,
+          textAlign: 'right',
+        },
+        {
+          accessor: 'bookingCount',
+          title: 'Buchungen',
+          width: 120,
+          textAlign: 'right',
+        },
+        {
+          accessor: 'totalDaysBooked',
+          title: 'Gebuchte Tage',
+          width: 140,
+          textAlign: 'right',
+        },
+        {
+          accessor: 'averageUtilization',
+          title: 'Ø Auslastung',
+          width: 140,
+          textAlign: 'right',
+          render: (row) => `${row.averageUtilization}%`,
+        },
+        {
+          accessor: 'lastBookedDate',
+          title: 'Letzte Buchung',
+          width: 150,
+          render: (row) =>
+            row.lastBookedDate
+              ? new Date(row.lastBookedDate).toLocaleDateString('de-DE')
+              : '-',
+        },
+      ]}
+      sortStatus={{
+        columnAccessor: 'averageUtilization',
+        direction: 'desc',
+      }}
+    />
+  );
+}
+
 /**
  * AssetUtilizationReport Component
  */
@@ -157,22 +226,29 @@ export function AssetUtilizationReport() {
     startOfMonth(subMonths(new Date(), 3)),
     endOfMonth(new Date()),
   ]);
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedAssetTypeId, setSelectedAssetTypeId] = useState<string | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'assets' | 'groups'>('assets');
 
   const { data: assets, isLoading: assetsLoading, error: assetsError } = useAssets();
   const { data: bookings, isLoading: bookingsLoading, error: bookingsError } = useBookings();
-  const { data: categories } = useCategories();
+  const { data: assetTypes } = useCategories();
+  const {
+    data: assetGroups = [],
+    isLoading: assetGroupsLoading,
+    error: assetGroupsError,
+  } = useAssetGroups();
 
-  if (assetsLoading || bookingsLoading) return <Loader />;
+  if (assetsLoading || bookingsLoading || assetGroupsLoading) return <Loader />;
   if (assetsError) return <Text c="red">Fehler beim Laden der Inventargegenstände</Text>;
   if (bookingsError) return <Text c="red">Fehler beim Laden der Buchungen</Text>;
+  if (assetGroupsError) return <Text c="red">Fehler beim Laden der Asset-Gruppen</Text>;
   if (!assets || !bookings) return null;
 
   // Filter assets
   let filteredAssets = assets;
-  if (selectedCategory) {
-    filteredAssets = filteredAssets.filter((a) => a.category?.id === selectedCategory);
+  if (selectedAssetTypeId) {
+    filteredAssets = filteredAssets.filter((a) => a.assetType?.id === selectedAssetTypeId);
   }
   if (selectedLocation) {
     filteredAssets = filteredAssets.filter((a) => a.location === selectedLocation);
@@ -186,6 +262,16 @@ export function AssetUtilizationReport() {
     dateRange[1] || new Date()
   );
 
+  const groupUtilizationData = dateRange[0] && dateRange[1]
+    ? aggregateGroupUtilization(
+        filteredAssets,
+        utilizationData,
+        assetGroups,
+        dateRange[0],
+        dateRange[1]
+      )
+    : [];
+
   // Extract unique locations
   const locations = Array.from(new Set(assets.map((a) => a.location).filter(Boolean))) as string[];
 
@@ -193,26 +279,46 @@ export function AssetUtilizationReport() {
     <Stack gap="md">
       <Group justify="space-between">
         <Title order={2}>Inventar-Auslastung</Title>
-        <Button
-          leftSection={<IconDownload size={16} />}
-          onClick={() => exportUtilizationToCSV(utilizationData)}
-        >
-          Exportieren
-        </Button>
+        <Group gap="sm">
+          <SegmentedControl
+            value={viewMode}
+            onChange={(value) => setViewMode(value as 'assets' | 'groups')}
+            data={[
+              { value: 'assets', label: 'Assets' },
+              { value: 'groups', label: 'Gruppen' },
+            ]}
+          />
+          {viewMode === 'assets' && (
+            <Button
+              leftSection={<IconDownload size={16} />}
+              onClick={() => exportUtilizationToCSV(utilizationData)}
+            >
+              Exportieren
+            </Button>
+          )}
+        </Group>
       </Group>
 
       <UtilizationFilters
         dateRange={dateRange}
         setDateRange={setDateRange}
-        selectedCategory={selectedCategory}
-        setSelectedCategory={setSelectedCategory}
+        selectedAssetTypeId={selectedAssetTypeId}
+        setSelectedAssetTypeId={setSelectedAssetTypeId}
         selectedLocation={selectedLocation}
         setSelectedLocation={setSelectedLocation}
-        categories={categories?.map((c) => ({ value: c.id, label: c.name })) || []}
+        assetTypes={assetTypes?.map((type) => ({ value: type.id, label: type.name })) || []}
         locations={locations}
       />
 
-      <UtilizationTable data={utilizationData} />
+      {viewMode === 'assets' ? (
+        <UtilizationTable data={utilizationData} />
+      ) : groupUtilizationData.length > 0 ? (
+        <GroupUtilizationTable data={groupUtilizationData} />
+      ) : (
+        <Text size="sm" c="dimmed">
+          Keine Gruppen-Aktivität für den gewählten Zeitraum gefunden.
+        </Text>
+      )}
     </Stack>
   );
 }

@@ -16,10 +16,10 @@ interface StockTakeSessionListProps {
   initialStatus?: StockTakeStatus;
 }
 
-type StockTakeViewFilters = {
+interface StockTakeViewFilters extends Record<string, unknown> {
   search?: string;
   status?: StockTakeStatus;
-};
+}
 
 function getActiveStockTakeFilterCount(filters: StockTakeViewFilters): number {
   let count = 0;

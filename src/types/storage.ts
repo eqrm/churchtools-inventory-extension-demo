@@ -13,9 +13,13 @@ import type {
   AssetCreate,
   AssetUpdate,
   AssetFilters,
-  AssetCategory,
-  CategoryCreate,
-  CategoryUpdate,
+  AssetType,
+  AssetTypeCreate,
+  AssetTypeUpdate,
+  AssetGroup,
+  AssetGroupCreate,
+  AssetGroupUpdate,
+  AssetGroupFilters,
   Booking,
   BookingCreate,
   BookingUpdate,
@@ -34,8 +38,21 @@ import type {
   ChangeHistoryEntry,
   SavedView,
   SavedViewCreate,
-  PersonInfo
+  PersonInfo,
+  UUID
 } from './entities'
+
+export interface GroupBookingCreate {
+  groupId: UUID
+  assetIds: UUID[]
+  booking: Omit<BookingCreate, 'asset' | 'kit' | 'quantity' | 'allocatedChildAssets'>
+  stopOnError?: boolean
+}
+
+export interface GroupBookingResult {
+  successes: Array<{ assetId: UUID; booking: Booking }>
+  failures: Array<{ assetId: UUID; error: string }>
+}
 
 /**
  * Core storage provider interface
@@ -43,43 +60,43 @@ import type {
  */
 export interface IStorageProvider {
   // ============================================================================
-  // Asset Categories
+  // Asset Types
   // ============================================================================
   
   /**
-   * Get all asset categories
-   * @returns Array of all categories
+   * Get all asset types
+   * @returns Array of all asset types
    */
-  getCategories(): Promise<AssetCategory[]>
+  getAssetTypes(): Promise<AssetType[]>
   
   /**
-   * Get a single category by ID
-   * @param id - Category ID
-   * @returns Category or null if not found
+   * Get a single asset type by ID
+   * @param id - Asset type ID
+   * @returns Asset type or null if not found
    */
-  getCategory(id: string): Promise<AssetCategory | null>
+  getAssetType(id: string): Promise<AssetType | null>
   
   /**
-   * Create a new asset category
-   * @param category - Category data without ID
-   * @returns Created category with generated ID
+   * Create a new asset type
+   * @param assetType - Asset type data without ID
+   * @returns Created asset type with generated ID
    */
-  createCategory(category: CategoryCreate): Promise<AssetCategory>
+  createAssetType(assetType: AssetTypeCreate): Promise<AssetType>
   
   /**
-   * Update an existing category
-   * @param id - Category ID
-   * @param category - Partial category data to update
-   * @returns Updated category
+   * Update an existing asset type
+   * @param id - Asset type ID
+   * @param assetType - Partial asset type data to update
+   * @returns Updated asset type
    */
-  updateCategory(id: string, category: CategoryUpdate): Promise<AssetCategory>
+  updateAssetType(id: string, assetType: AssetTypeUpdate): Promise<AssetType>
   
   /**
-   * Delete a category
-   * Note: Should fail if assets exist in this category
-   * @param id - Category ID
+   * Delete an asset type
+   * Note: Should fail if assets exist for this type
+   * @param id - Asset type ID
    */
-  deleteCategory(id: string): Promise<void>
+  deleteAssetType(id: string): Promise<void>
   
   // ============================================================================
   // Assets
@@ -157,6 +174,87 @@ export interface IStorageProvider {
   searchAssets(query: string): Promise<Asset[]>
   
   // ============================================================================
+  // Asset Groups
+  // ============================================================================
+
+  /**
+   * List asset groups with optional filtering
+   */
+  getAssetGroups(filters?: AssetGroupFilters): Promise<AssetGroup[]>
+
+  /**
+   * Get a single asset group by ID
+   */
+  getAssetGroup(id: string): Promise<AssetGroup | null>
+
+  /**
+   * Create a new asset group definition
+   */
+  createAssetGroup(data: AssetGroupCreate): Promise<AssetGroup>
+
+  /**
+   * Update an existing asset group
+   */
+  updateAssetGroup(id: string, data: AssetGroupUpdate): Promise<AssetGroup>
+
+  /**
+   * Delete an asset group, optionally reassigning members
+   */
+  deleteAssetGroup(id: string, options?: { reassignAssets?: boolean }): Promise<void>
+
+  /**
+   * Associate an asset with a group
+   */
+  addAssetToGroup(assetId: string, groupId: string): Promise<Asset>
+
+  /**
+   * Remove an asset from its group
+   */
+  removeAssetFromGroup(assetId: string): Promise<Asset>
+
+  /**
+   * Remove all members while keeping the group definition
+   */
+  dissolveAssetGroup(id: string): Promise<AssetGroup>
+
+  /**
+   * Regenerate the barcode for an asset group using the shared reassignment flow
+   */
+  regenerateAssetGroupBarcode(id: string, reason?: string, customBarcode?: string): Promise<AssetGroup>
+
+  /**
+   * Move an asset from its current group to another group
+   */
+  reassignAssetToGroup(assetId: string, targetGroupId: string): Promise<Asset>
+
+  /**
+   * Bulk-create assets assigned to a group
+   */
+  bulkCreateAssetsForGroup(groupId: string, count: number, baseData?: Partial<AssetCreate>): Promise<Asset[]>
+
+  /**
+   * Apply updates to all members of an asset group
+   */
+  bulkUpdateGroupMembers(
+    groupId: string,
+    update: AssetUpdate,
+    options?: { clearOverrides?: boolean }
+  ): Promise<Asset[]>
+
+  /**
+   * Get all assets that are members of a group
+   */
+  getGroupMembers(groupId: string): Promise<Asset[]>
+
+  /**
+   * Resolve the value for a field, considering group inheritance
+   */
+  resolveAssetFieldValue(
+    assetId: string,
+    fieldKey: string
+  ): Promise<{ value: unknown; source: 'group' | 'local' | 'override' }>
+
+  // ============================================================================
   // Bookings
   // ============================================================================
   
@@ -199,6 +297,11 @@ export interface IStorageProvider {
    * @throws Error if asset is not available
    */
   createBooking(booking: BookingCreate): Promise<Booking>
+
+  /**
+   * Create bookings for multiple assets within a group using shared booking data
+   */
+  createGroupBooking(request: GroupBookingCreate): Promise<GroupBookingResult>
   
   /**
    * Update a booking

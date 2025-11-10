@@ -162,8 +162,8 @@ export class ChurchToolsAPIClient {
     /**
      * Get a single data category
      */
-    async getDataCategory(moduleId: string, categoryId: string): Promise<unknown> {
-        return await this.get<unknown>(`/custommodules/${moduleId}/customdatacategories/${categoryId}`);
+    async getDataCategory(moduleId: string, assetTypeId: string): Promise<unknown> {
+        return await this.get<unknown>(`/custommodules/${moduleId}/customdatacategories/${assetTypeId}`);
     }
 
     /**
@@ -176,50 +176,50 @@ export class ChurchToolsAPIClient {
     /**
      * Update a data category
      */
-    async updateDataCategory(moduleId: string, categoryId: string, data: unknown): Promise<unknown> {
-        return await this.put<unknown>(`/custommodules/${moduleId}/customdatacategories/${categoryId}`, data);
+    async updateDataCategory(moduleId: string, assetTypeId: string, data: unknown): Promise<unknown> {
+        return await this.put<unknown>(`/custommodules/${moduleId}/customdatacategories/${assetTypeId}`, data);
     }
 
     /**
      * Delete a data category
      */
-    async deleteDataCategory(moduleId: string, categoryId: string): Promise<void> {
-        await this.deleteRequest(`/custommodules/${moduleId}/customdatacategories/${categoryId}`);
+    async deleteDataCategory(moduleId: string, assetTypeId: string): Promise<void> {
+        await this.deleteRequest(`/custommodules/${moduleId}/customdatacategories/${assetTypeId}`);
     }
 
     /**
      * Get all data values for a category
      */
-    async getDataValues(moduleId: string, categoryId: string): Promise<unknown[]> {
-        return await this.get<unknown[]>(`/custommodules/${moduleId}/customdatacategories/${categoryId}/customdatavalues`);
+    async getDataValues(moduleId: string, assetTypeId: string): Promise<unknown[]> {
+        return await this.get<unknown[]>(`/custommodules/${moduleId}/customdatacategories/${assetTypeId}/customdatavalues`);
     }
 
     /**
      * Get a single data value
      */
-    async getDataValue(moduleId: string, categoryId: string, valueId: string): Promise<unknown> {
-        return await this.get<unknown>(`/custommodules/${moduleId}/customdatacategories/${categoryId}/customdatavalues/${valueId}`);
+    async getDataValue(moduleId: string, assetTypeId: string, valueId: string): Promise<unknown> {
+        return await this.get<unknown>(`/custommodules/${moduleId}/customdatacategories/${assetTypeId}/customdatavalues/${valueId}`);
     }
 
     /**
      * Create a new data value
      */
-    async createDataValue(moduleId: string, categoryId: string, data: unknown): Promise<unknown> {
-        return await this.post<unknown>(`/custommodules/${moduleId}/customdatacategories/${categoryId}/customdatavalues`, data);
+    async createDataValue(moduleId: string, assetTypeId: string, data: unknown): Promise<unknown> {
+        return await this.post<unknown>(`/custommodules/${moduleId}/customdatacategories/${assetTypeId}/customdatavalues`, data);
     }
 
     /**
      * Update a data value
      */
-    async updateDataValue(moduleId: string, categoryId: string, valueId: string, data: unknown): Promise<unknown> {
-        return await this.put<unknown>(`/custommodules/${moduleId}/customdatacategories/${categoryId}/customdatavalues/${valueId}`, data);
+    async updateDataValue(moduleId: string, assetTypeId: string, valueId: string, data: unknown): Promise<unknown> {
+        return await this.put<unknown>(`/custommodules/${moduleId}/customdatacategories/${assetTypeId}/customdatavalues/${valueId}`, data);
     }
 
     /**
      * Delete a data value
      */
-    async deleteDataValue(moduleId: string, categoryId: string, valueId: string): Promise<void> {
-        await this.deleteRequest(`/custommodules/${moduleId}/customdatacategories/${categoryId}/customdatavalues/${valueId}`);
+    async deleteDataValue(moduleId: string, assetTypeId: string, valueId: string): Promise<void> {
+        await this.deleteRequest(`/custommodules/${moduleId}/customdatacategories/${assetTypeId}/customdatavalues/${valueId}`);
     }
 
     /**

@@ -49,18 +49,18 @@ export interface InsufficientKitAvailability {
   kitId: UUID;
   kitName: string;
   required: {
-    categoryId: UUID;
-    categoryName: string;
+    assetTypeId: UUID;
+    assetTypeName: string;
     quantity: number;
   }[];
   available: {
-    categoryId: UUID;
-    categoryName: string;
+    assetTypeId: UUID;
+    assetTypeName: string;
     quantity: number;
   }[];
   shortages: {
-    categoryId: UUID;
-    categoryName: string;
+    assetTypeId: UUID;
+    assetTypeName: string;
     required: number;
     available: number;
     short: number;

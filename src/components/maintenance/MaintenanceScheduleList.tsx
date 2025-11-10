@@ -81,7 +81,7 @@ function getColumns(
         return (
           <Stack gap={2}>
             <Text fw={500}>{asset.assetNumber} · {asset.name}</Text>
-            <Text size="xs" c="dimmed">Kategorie: {asset.category.name}</Text>
+            <Text size="xs" c="dimmed">Kategorie: {asset.assetType.name}</Text>
           </Stack>
         );
       },

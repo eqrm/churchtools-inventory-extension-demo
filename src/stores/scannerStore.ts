@@ -1,14 +1,27 @@
 import { create } from 'zustand';
 
 /**
- * Scan history entry
+ * Scan history entry (supports assets and asset groups)
  */
-interface ScanHistoryEntry {
-    assetNumber: string;
-    assetId: string;
-    assetName: string;
-    scannedAt: string;
-}
+type ScanHistoryEntry =
+        | {
+                type: 'asset';
+                code: string;
+                assetNumber: string;
+                assetId: string;
+                assetName: string;
+                groupId?: string | null;
+                groupName?: string;
+                scannedAt: string;
+            }
+        | {
+                type: 'group';
+                code: string;
+        groupNumber?: string | null;
+                groupId: string;
+                groupName: string;
+                scannedAt: string;
+            };
 
 /**
  * Scanner State Store

@@ -35,11 +35,11 @@ const maintenanceTypeOptions = [
   { value: 'other', label: 'Sonstiges' },
 ];
 
-type MaintenanceViewFilters = {
+interface MaintenanceViewFilters extends Record<string, unknown> {
   search?: string;
   assetId?: string;
   type?: MaintenanceRecord['type'];
-};
+}
 
 function getActiveMaintenanceFilterCount(filters: MaintenanceViewFilters): number {
   let count = 0;

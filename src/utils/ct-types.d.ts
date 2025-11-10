@@ -1495,11 +1495,11 @@ export type CustomModuleCreate = {
     sortKey: number;
 };
 
-export type CustomModuleDataCategory = CustomModuleDataCategoryCreate & {
+export type CustomModuleDataCategory = CustomModuleDataAssetTypeCreate & {
     id: number;
 };
 
-export type CustomModuleDataCategoryCreate = {
+export type CustomModuleDataAssetTypeCreate = {
     customModuleId: number;
     description: string;
     name: string;
@@ -3004,18 +3004,18 @@ export type Group = {
     tags?: Array<Tag>;
 };
 
-export type GroupCategory = GroupCategoryUpdate & {
+export type GroupCategory = GroupAssetTypeUpdate & {
     nameTranslated: string;
 };
 
-export type GroupCategoryCreate = {
+export type GroupAssetTypeCreate = {
     color: CtColor;
     description?: string | null;
     name: string;
     sortKey: number;
 };
 
-export type GroupCategoryUpdate = GroupCategoryCreate & {
+export type GroupAssetTypeUpdate = GroupAssetTypeCreate & {
     id: number;
 };
 
@@ -5816,7 +5816,7 @@ export type SongCategory = {
  */
 export type SongCreate = {
     author?: string | null;
-    categoryId: number;
+    assetTypeId: number;
     ccli?: string | null;
     copyright?: string | null;
     name: string;
@@ -18661,7 +18661,7 @@ export type GetGroupGroupcategoriesResponses = {
 export type GetGroupGroupcategoriesResponse = GetGroupGroupcategoriesResponses[keyof GetGroupGroupcategoriesResponses];
 
 export type PostGroupGroupcategoriesData = {
-    body?: GroupCategoryCreate;
+    body?: GroupAssetTypeCreate;
     path?: never;
     query?: never;
     url: '/group/groupcategories';
@@ -18801,7 +18801,7 @@ export type GetGroupGroupcategoriesGroupCategoryIdResponse =
     GetGroupGroupcategoriesGroupCategoryIdResponses[keyof GetGroupGroupcategoriesGroupCategoryIdResponses];
 
 export type PutGroupGroupcategoriesGroupCategoryIdData = {
-    body?: GroupCategoryUpdate;
+    body?: GroupAssetTypeUpdate;
     path: {
         groupCategoryId: string;
     };

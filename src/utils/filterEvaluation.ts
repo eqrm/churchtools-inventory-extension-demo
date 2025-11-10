@@ -5,7 +5,7 @@ import type { ViewFilter, FilterOperator, Asset } from '../types/entities';
 
 /**
  * Get nested field value from object using dot notation
- * @example getFieldValue(asset, 'category.name') returns asset.category.name
+ * @example getFieldValue(asset, 'category.name') returns asset.assetType.name
  */
 export function getFieldValue(obj: unknown, path: string): unknown {
   if (!obj || typeof obj !== 'object') return undefined;

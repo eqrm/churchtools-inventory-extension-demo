@@ -87,7 +87,7 @@ export function useStockTakeSession(id: string | undefined) {
  * const createSession = useCreateStockTakeSession();
  * 
  * createSession.mutate({
- *   scope: { type: 'category', categoryIds: ['cat-1'] },
+ *   scope: { type: 'category', assetTypeIds: ['cat-1'] },
  *   conductedBy: userId,
  *   conductedByName: userName,
  *   status: 'active',

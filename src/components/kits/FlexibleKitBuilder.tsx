@@ -22,7 +22,7 @@ import { useAssets } from '../../hooks/useAssets';
 import type { Kit } from '../../types/entities';
 
 type PoolRequirement = NonNullable<Kit['poolRequirements']>[number];
-type SelectionMode = 'category' | 'parentAsset';
+type SelectionMode = 'assetType' | 'parentAsset';
 
 interface FlexibleKitBuilderProps {
   value: PoolRequirement[];
@@ -30,15 +30,15 @@ interface FlexibleKitBuilderProps {
 }
 
 export function FlexibleKitBuilder({ value, onChange }: FlexibleKitBuilderProps) {
-  const { data: categories } = useCategories();
+  const { data: assetTypes } = useCategories();
   const { data: parentAssets = [] } = useAssets({ isParent: true });
-  const [mode, setMode] = useState<SelectionMode>('category');
+  const [mode, setMode] = useState<SelectionMode>('assetType');
   const [quantity, setQuantity] = useState<number>(1);
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
+  const [selectedAssetTypeId, setSelectedAssetTypeId] = useState<string>('');
   const [selectedParentAssetId, setSelectedParentAssetId] = useState<string>('');
 
   useEffect(() => {
-    setSelectedCategoryId('');
+    setSelectedAssetTypeId('');
     setSelectedParentAssetId('');
   }, [mode]);
 
@@ -47,8 +47,8 @@ export function FlexibleKitBuilder({ value, onChange }: FlexibleKitBuilderProps)
       parentAssets.map((asset) => ({
         value: asset.id,
         label: `${asset.name} (${asset.assetNumber})`,
-        categoryId: asset.category.id,
-        categoryName: asset.category.name,
+        assetTypeId: asset.assetType.id,
+        assetTypeName: asset.assetType.name,
       })),
     [parentAssets],
   );
@@ -63,16 +63,16 @@ export function FlexibleKitBuilder({ value, onChange }: FlexibleKitBuilderProps)
       return;
     }
 
-    if (mode === 'category') {
-      if (!selectedCategoryId) return;
-      const category = categories?.find((c) => c.id === selectedCategoryId);
-      if (!category) return;
+    if (mode === 'assetType') {
+      if (!selectedAssetTypeId) return;
+      const assetType = assetTypes?.find((type) => type.id === selectedAssetTypeId);
+      if (!assetType) return;
 
       if (
         value.some((pr) => {
           const parentFilterRaw = pr.filters?.['parentAssetId'];
           const parentFilter = typeof parentFilterRaw === 'string' ? parentFilterRaw : undefined;
-          return !parentFilter && pr.categoryId === category.id;
+          return !parentFilter && pr.assetTypeId === assetType.id;
         })
       ) {
         return;
@@ -81,12 +81,12 @@ export function FlexibleKitBuilder({ value, onChange }: FlexibleKitBuilderProps)
       onChange([
         ...value,
         {
-          categoryId: category.id,
-          categoryName: category.name,
+          assetTypeId: assetType.id,
+          assetTypeName: assetType.name,
           quantity,
         },
       ]);
-      setSelectedCategoryId('');
+      setSelectedAssetTypeId('');
     } else {
       if (!selectedParentAssetId) return;
       const parentAssetOption = parentAssetOptions.find((opt) => opt.value === selectedParentAssetId);
@@ -106,8 +106,8 @@ export function FlexibleKitBuilder({ value, onChange }: FlexibleKitBuilderProps)
       onChange([
         ...value,
         {
-          categoryId: parentAssetOption.categoryId,
-          categoryName: parentAssetOption.categoryName,
+          assetTypeId: parentAssetOption.assetTypeId,
+          assetTypeName: parentAssetOption.assetTypeName,
           quantity,
           filters: { parentAssetId: selectedParentAssetId },
         },
@@ -130,7 +130,7 @@ export function FlexibleKitBuilder({ value, onChange }: FlexibleKitBuilderProps)
         value={mode}
         onChange={(val) => setMode(val as SelectionMode)}
         data={[
-          { label: 'Nach Kategorie', value: 'category' },
+          { label: 'Nach Asset-Typ', value: 'assetType' },
           { label: 'Eltern-Asset', value: 'parentAsset' },
         ]}
         size="xs"
@@ -144,10 +144,10 @@ export function FlexibleKitBuilder({ value, onChange }: FlexibleKitBuilderProps)
             const parentAsset = parentAssetId ? parentAssetLookup.get(parentAssetId) : undefined;
             const displayLabel = parentAsset
               ? `${pool.quantity}x ${parentAsset.name}`
-              : `${pool.quantity}x ${pool.categoryName}`;
+              : `${pool.quantity}x ${pool.assetTypeName}`;
 
             return (
-              <Paper key={parentAssetId ?? `${pool.categoryId}-${index}`} p="xs" withBorder>
+              <Paper key={parentAssetId ?? `${pool.assetTypeId}-${index}`} p="xs" withBorder>
                 <Group justify="space-between">
                   <Stack gap={2}>
                     <Text size="sm">{displayLabel}</Text>
@@ -157,7 +157,7 @@ export function FlexibleKitBuilder({ value, onChange }: FlexibleKitBuilderProps)
                           Parent-Asset
                         </Badge>
                         <Text size="xs" c="dimmed">
-                          Kategorie: {pool.categoryName}
+                          Asset-Typ: {pool.assetTypeName}
                         </Text>
                       </Group>
                     )}
@@ -180,12 +180,12 @@ export function FlexibleKitBuilder({ value, onChange }: FlexibleKitBuilderProps)
           onChange={(val) => setQuantity(typeof val === 'number' ? val : 1)}
           style={{ width: 100 }}
         />
-        {mode === 'category' ? (
+        {mode === 'assetType' ? (
           <Select
-            placeholder="Kategorie auswählen"
-            data={categories?.map((c) => ({ value: c.id, label: c.name })) || []}
-            value={selectedCategoryId}
-            onChange={(val) => setSelectedCategoryId(val || '')}
+            placeholder="Asset-Typ auswählen"
+            data={assetTypes?.map((type) => ({ value: type.id, label: type.name })) || []}
+            value={selectedAssetTypeId}
+            onChange={(val) => setSelectedAssetTypeId(val || '')}
             searchable
             style={{ flex: 1 }}
           />
@@ -204,7 +204,7 @@ export function FlexibleKitBuilder({ value, onChange }: FlexibleKitBuilderProps)
           leftSection={<IconPlus size={16} />}
           onClick={handleAddPool}
           disabled={
-            quantity < 1 || (mode === 'category' ? !selectedCategoryId : !selectedParentAssetId)
+            quantity < 1 || (mode === 'assetType' ? !selectedAssetTypeId : !selectedParentAssetId)
           }
         >
           Hinzufügen

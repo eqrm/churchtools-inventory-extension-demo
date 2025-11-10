@@ -24,29 +24,29 @@ import { DataViewLayout } from '../dataView/DataViewLayout';
 import { DataViewTable } from '../dataView/DataViewTable';
 import { useDataViewState } from '../../hooks/useDataViewState';
 import { useCategories, useDeleteCategory, useDuplicateCategory } from '../../hooks/useCategories';
-import type { AssetCategory } from '../../types/entities';
+import type { AssetType } from '../../types/entities';
 import { IconDisplay } from './IconDisplay';
 
-interface AssetCategoryListProps {
-  onEdit?: (category: AssetCategory) => void;
+interface AssetTypeListProps {
+  onEdit?: (category: AssetType) => void;
   headerActions?: ReactNode;
 }
 
-type AssetCategoryViewFilters = {
+type AssetTypeViewFilters = {
   search?: string;
 };
 
-function getActiveCategoryFilterCount(filters: AssetCategoryViewFilters): number {
+function getActiveCategoryFilterCount(filters: AssetTypeViewFilters): number {
   return filters.search ? 1 : 0;
 }
 
 function getColumns(
-  onEdit: AssetCategoryListProps['onEdit'],
-  onDuplicate: (category: AssetCategory) => void,
-  onDelete: (category: AssetCategory) => void,
+  onEdit: AssetTypeListProps['onEdit'],
+  onDuplicate: (category: AssetType) => void,
+  onDelete: (category: AssetType) => void,
   duplicatePending: boolean,
   deletePending: boolean,
-): DataTableColumn<AssetCategory>[] {
+): DataTableColumn<AssetType>[] {
   return [
     {
       accessor: 'icon',
@@ -154,10 +154,10 @@ function getColumns(
   ];
 }
 
-export function AssetCategoryList({ onEdit, headerActions }: AssetCategoryListProps) {
+export function AssetTypeList({ onEdit, headerActions }: AssetTypeListProps) {
   const [filtersOpen, setFiltersOpen] = useState(true);
   const { data: categories = [], isLoading, error } = useCategories();
-  const deleteCategory = useDeleteCategory();
+  const deleteAssetType = useDeleteCategory();
   const duplicateCategory = useDuplicateCategory();
 
   const {
@@ -175,7 +175,7 @@ export function AssetCategoryList({ onEdit, headerActions }: AssetCategoryListPr
     pageSize,
     setPageSize,
     pageSizeOptions,
-  } = useDataViewState<AssetCategoryViewFilters, DataTableSortStatus<AssetCategory>>({
+  } = useDataViewState<AssetTypeViewFilters, DataTableSortStatus<AssetType>>({
     storageKey: 'category-data-view',
     defaultMode: 'table',
     defaultPageSize: 20,
@@ -263,13 +263,13 @@ export function AssetCategoryList({ onEdit, headerActions }: AssetCategoryListPr
     setFiltersOpen((prev) => !prev);
   };
 
-  const handleDelete = useCallback(async (category: AssetCategory) => {
+  const handleDelete = useCallback(async (category: AssetType) => {
     if (!window.confirm(`Are you sure you want to delete "${category.name}"? This action cannot be undone.`)) {
       return;
     }
 
     try {
-      await deleteCategory.mutateAsync(category.id);
+      await deleteAssetType.mutateAsync(category.id);
       notifications.show({
         title: 'Success',
         message: `Category "${category.name}" has been deleted`,
@@ -282,9 +282,9 @@ export function AssetCategoryList({ onEdit, headerActions }: AssetCategoryListPr
         color: 'red',
       });
     }
-  }, [deleteCategory]);
+  }, [deleteAssetType]);
 
-  const handleDuplicate = useCallback(async (category: AssetCategory) => {
+  const handleDuplicate = useCallback(async (category: AssetType) => {
     try {
       const duplicated = await duplicateCategory.mutateAsync({
         id: category.id,
@@ -314,9 +314,9 @@ export function AssetCategoryList({ onEdit, headerActions }: AssetCategoryListPr
         handleDuplicate,
         handleDelete,
         duplicateCategory.isPending,
-        deleteCategory.isPending,
+        deleteAssetType.isPending,
       ),
-    [onEdit, handleDuplicate, handleDelete, duplicateCategory.isPending, deleteCategory.isPending],
+    [onEdit, handleDuplicate, handleDelete, duplicateCategory.isPending, deleteAssetType.isPending],
   );
 
   const filterContent = (
@@ -370,7 +370,7 @@ export function AssetCategoryList({ onEdit, headerActions }: AssetCategoryListPr
       filterContent={filterContent}
     >
       <Card withBorder>
-        <DataViewTable<AssetCategory>
+        <DataViewTable<AssetType>
           records={paginatedCategories}
           columns={columns}
           totalRecords={totalRecords}
