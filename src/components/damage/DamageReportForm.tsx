@@ -1,5 +1,6 @@
 import { Button, Group, Stack, Textarea } from '@mantine/core';
 import { useForm } from '@mantine/form';
+import { useTranslation } from 'react-i18next';
 import { PhotoUpload } from './PhotoUpload';
 
 interface DamageReportFormProps {
@@ -40,6 +41,7 @@ export function DamageReportForm({
   onCancel,
   loading = false,
 }: DamageReportFormProps) {
+  const { t } = useTranslation(['damage', 'common']);
   const form = useForm<DamageReportFormData>({
     initialValues: {
       description: '',
@@ -47,11 +49,12 @@ export function DamageReportForm({
     },
     validate: {
       description: (value) => {
-        if (!value || value.trim().length === 0) {
-          return 'Please describe the damage';
+        const trimmed = value?.trim() ?? '';
+        if (trimmed.length === 0) {
+          return t('damage:form.validation.required');
         }
-        if (value.length < 10) {
-          return 'Description must be at least 10 characters';
+        if (trimmed.length < 10) {
+          return t('damage:form.validation.minLength');
         }
         return null;
       },
@@ -66,8 +69,8 @@ export function DamageReportForm({
     <form onSubmit={handleSubmit}>
       <Stack gap="md">
         <Textarea
-          label="Damage Description"
-          placeholder="Describe the damage in detail..."
+          label={t('damage:form.descriptionLabel')}
+          placeholder={t('damage:form.descriptionPlaceholder')}
           required
           minRows={4}
           maxRows={8}
@@ -85,11 +88,11 @@ export function DamageReportForm({
         <Group justify="flex-end" mt="md">
           {onCancel && (
             <Button variant="subtle" onClick={onCancel} disabled={loading}>
-              Cancel
+              {t('common:actions.cancel')}
             </Button>
           )}
           <Button type="submit" loading={loading} disabled={loading}>
-            Report Damage
+            {t('damage:form.submit')}
           </Button>
         </Group>
       </Stack>

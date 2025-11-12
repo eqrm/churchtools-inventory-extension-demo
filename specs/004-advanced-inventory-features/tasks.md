@@ -129,26 +129,26 @@
 
 ### TDD Tests for User Story 2 (REQUIRED - TDD approach for PhotoStorageService)
 
-- [ ] T049 [P] [US2] Write RED test for compressImage (800x600 @ 0.8 quality) in src/tests/services/PhotoStorageService.test.ts
-- [ ] T050 [P] [US2] Write RED test for rejecting >2MB files in src/tests/services/PhotoStorageService.test.ts
-- [ ] T051 [P] [US2] Write RED test for rejecting >3 files in src/tests/services/PhotoStorageService.test.ts
-- [ ] T052 [P] [US2] Write RED test for storePhotos and retrievePhoto roundtrip in src/tests/services/PhotoStorageService.test.ts
-- [ ] T053 [P] [US2] Write RED test for feature flag switching (Mode A base64 vs Mode B Files API) in src/tests/services/PhotoStorageService.test.ts
+- [X] T049 [P] [US2] Write RED test for compressImage (800x600 @ 0.8 quality) in src/tests/services/PhotoStorageService.test.ts
+- [X] T050 [P] [US2] Write RED test for rejecting >2MB files in src/tests/services/PhotoStorageService.test.ts
+- [X] T051 [P] [US2] Write RED test for rejecting >3 files in src/tests/services/PhotoStorageService.test.ts
+- [X] T052 [P] [US2] Write RED test for storePhotos and retrievePhoto roundtrip in src/tests/services/PhotoStorageService.test.ts
+- [X] T053 [P] [US2] Write RED test for feature flag switching (Mode A base64 vs Mode B Files API) in src/tests/services/PhotoStorageService.test.ts
 
 ### Implementation for User Story 2
 
-- [ ] T054 [US2] Implement PhotoStorageService (GREEN) in src/services/PhotoStorageService.ts - pass all RED tests from T049-T053
-- [ ] T055 [US2] Implement DamageService in src/services/DamageService.ts (createDamageReport, markAsRepaired, getRepairHistory, getBrokenAssets)
-- [ ] T056 [US2] Create Zustand damage store in src/stores/damageStore.ts
-- [ ] T057 [US2] Create useDamageReports hook in src/hooks/useDamageReports.ts
+- [X] T054 [US2] Implement PhotoStorageService (GREEN) in src/services/PhotoStorageService.ts - pass all RED tests from T049-T053
+- [X] T055 [US2] Implement DamageService in src/services/DamageService.ts (createDamageReport, markAsRepaired, getRepairHistory, getBrokenAssets)
+- [X] T056 [US2] Create Zustand damage store in src/stores/damageStore.ts
+- [X] T057 [US2] Create useDamageReports hook in src/hooks/useDamageReports.ts
 - [X] T058 [P] [US2] Create PhotoUpload component in src/components/damage/PhotoUpload.tsx (with compression preview)
 - [X] T059 [P] [US2] Create DamageReportForm component in src/components/damage/DamageReportForm.tsx
 - [X] T060 [P] [US2] Create RepairHistoryTab component in src/components/damage/RepairHistoryTab.tsx
-- [ ] T061 [US2] Add damage locale strings in src/i18n/locales/en/damage.json
+- [X] T061 [US2] Add damage locale strings in src/i18n/locales/en/damage.json
 - [X] T062 [US2] Modify AssetDetail page to include "Mark as Broken" toggle and RepairHistoryTab
-- [ ] T063 [US2] Integrate damage reports with undo service (record create/repair actions)
-- [ ] T064 [US2] Update asset status to "Broken" when damage report created
-- [ ] T065 [US2] REFACTOR: Review PhotoStorageService abstraction for Files API migration readiness
+- [X] T063 [US2] Integrate damage reports with undo service (record create/repair actions)
+- [X] T064 [US2] Update asset status to "Broken" when damage report created
+- [X] T065 [US2] REFACTOR: Review PhotoStorageService abstraction for Files API migration readiness
 
 **Checkpoint**: User Story 2 complete - damage tracking with photos works independently
 

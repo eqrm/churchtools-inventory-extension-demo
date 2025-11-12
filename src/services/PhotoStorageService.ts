@@ -3,7 +3,7 @@
  * Default mode stores compressed base64 strings to align with current backend.
  */
 
-import { compressImageToDataUrl } from '@/utils/imageCompression';
+import { compressImageToDataUrl } from '../utils/imageCompression';
 
 export type PhotoStorageMode = 'base64' | 'files-api';
 
@@ -81,7 +81,7 @@ export class PhotoStorageService {
     }
 
     if (this.mode === 'files-api') {
-  const client = this.requireFilesApiClient();
+      const client = this.requireFilesApiClient();
       const handles: string[] = [];
       for (const file of files) {
         this.ensureFileSize(file);

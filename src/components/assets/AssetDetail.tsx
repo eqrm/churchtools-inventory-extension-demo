@@ -74,9 +74,11 @@ import { JoinAssetGroupModal } from '../asset-groups/JoinAssetGroupModal';
 import { useAssetGroup, useRemoveAssetFromGroup } from '../../hooks/useAssetGroups';
 import { useFeatureSettingsStore } from '../../stores';
 import { RepairHistoryTab } from '../damage/RepairHistoryTab';
+import { DamageReportForm } from '../damage/DamageReportForm';
 import { AssignmentField } from '../assignment/AssignmentField';
 import { AssignmentHistoryTab } from '../assignment/AssignmentHistoryTab';
 import type { PersonResult } from '../assignment/PersonSearch';
+import { useDamageReports } from '../../hooks/useDamageReports';
 
 interface AssetDetailProps {
   assetId: string;
@@ -97,6 +99,7 @@ export function AssetDetail({ assetId, onEdit, onClose }: AssetDetailProps) {
   });
   const [convertToParentOpened, setConvertToParentOpened] = useState(false);
   const [maintenanceFormOpened, setMaintenanceFormOpened] = useState(false);
+  const [damageReportOpened, setDamageReportOpened] = useState(false);
   const [groupDetailOpened, setGroupDetailOpened] = useState(false);
   const [convertGroupOpened, setConvertGroupOpened] = useState(false);
   const [joinGroupOpened, setJoinGroupOpened] = useState(false);
@@ -104,6 +107,7 @@ export function AssetDetail({ assetId, onEdit, onClose }: AssetDetailProps) {
   const removeAssetFromGroup = useRemoveAssetFromGroup();
   const { data: assetGroupDetail } = useAssetGroup(asset?.assetGroup?.id);
   const maintenanceEnabled = useFeatureSettingsStore((state) => state.maintenanceEnabled);
+  const { createReport, markReportAsRepaired, isCreating } = useDamageReports(assetId);
   const [searchParams, setSearchParams] = useSearchParams();
   const routeGroupId = searchParams.get('groupId');
   const routeShowGroup = searchParams.get('showGroup');
@@ -302,6 +306,27 @@ export function AssetDetail({ assetId, onEdit, onClose }: AssetDetailProps) {
           />
         </Modal>
       )}
+      <Modal
+        opened={damageReportOpened}
+        onClose={() => setDamageReportOpened(false)}
+        title="Report Damage"
+        size="lg"
+      >
+        <DamageReportForm
+          assetId={assetId}
+          onSubmit={async (data) => {
+            await createReport(data);
+            setDamageReportOpened(false);
+            notifications.show({
+              title: 'Damage Report Created',
+              message: 'The damage report has been recorded and the asset has been marked as broken.',
+              color: 'green',
+            });
+          }}
+          onCancel={() => setDamageReportOpened(false)}
+          loading={isCreating}
+        />
+      </Modal>
       {asset.assetGroup && (
         <Modal
           opened={groupDetailOpened}
@@ -345,6 +370,17 @@ export function AssetDetail({ assetId, onEdit, onClose }: AssetDetailProps) {
                 onClick={() => setConvertToParentOpened(true)}
               >
                 Convert to Parent
+              </Button>
+            )}
+            {asset.status !== 'broken' && (
+              <Button
+                variant="light"
+                color="red"
+                size="sm"
+                leftSection={<IconTools size={16} />}
+                onClick={() => setDamageReportOpened(true)}
+              >
+                Mark as Broken
               </Button>
             )}
             {onEdit && (
@@ -701,9 +737,14 @@ export function AssetDetail({ assetId, onEdit, onClose }: AssetDetailProps) {
 
         <Tabs.Panel value="damage" pt="md">
           <RepairHistoryTab
-            damageReports={[]}
-            onMarkRepaired={(_reportId, _repairNotes) => {
-              // TODO: Implement when DamageService is available
+            assetId={assetId}
+            onMarkRepaired={async (reportId, repairNotes) => {
+              await markReportAsRepaired(reportId, { repairNotes });
+              notifications.show({
+                title: 'Asset Repaired',
+                message: 'The damage report has been marked as repaired.',
+                color: 'green',
+              });
             }}
             loading={false}
           />
