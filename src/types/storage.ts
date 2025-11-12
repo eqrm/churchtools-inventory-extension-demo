@@ -41,6 +41,11 @@ import type {
   PersonInfo,
   UUID
 } from './entities'
+import type {
+  DamageReportCreateInput,
+  DamageRepairInput,
+  DamageReportRecord,
+} from './damage'
 
 export interface GroupBookingCreate {
   groupId: UUID
@@ -513,6 +518,40 @@ export interface IStorageProvider {
     updates?: Partial<Omit<MaintenanceCalendarHold, 'id' | 'planId' | 'assetId' | 'startDate' | 'endDate' | 'createdAt'>>
   ): Promise<MaintenanceCalendarHold>
   
+  // ============================================================================
+  // Damage Reports
+  // ============================================================================
+
+  /**
+   * Get damage reports for a specific asset ordered by reportedAt descending
+   */
+  getDamageReports(assetId: UUID): Promise<DamageReportRecord[]>
+
+  /**
+   * Get a single damage report by its identifier
+   */
+  getDamageReport(reportId: UUID): Promise<DamageReportRecord | null>
+
+  /**
+   * Create a damage report record for an asset
+   */
+  createDamageReport(assetId: UUID, data: DamageReportCreateInput): Promise<DamageReportRecord>
+
+  /**
+   * Mark an existing damage report as repaired with notes and metadata
+   */
+  markDamageReportAsRepaired(reportId: UUID, repair: DamageRepairInput): Promise<DamageReportRecord>
+
+  /**
+   * Update damage report fields (internal use for undo/maintenance)
+   */
+  updateDamageReport(reportId: UUID, updates: Partial<DamageReportRecord>): Promise<DamageReportRecord>
+
+  /**
+   * Delete a damage report (reserved for undo scenarios)
+   */
+  deleteDamageReport(reportId: UUID): Promise<void>
+
   // ============================================================================
   // Stock Take
   // ============================================================================

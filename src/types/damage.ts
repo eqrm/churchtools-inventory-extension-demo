@@ -1,4 +1,4 @@
-import type { ISOTimestamp, UUID } from './entities';
+import type { AssetStatus, ISOTimestamp, UUID } from './entities';
 
 export type DamageStatus = 'broken' | 'repaired';
 
@@ -22,4 +22,43 @@ export interface DamageReport {
   repairedByName?: string;
   repairedAt?: ISOTimestamp;
   repairNotes?: string;
+}
+
+export interface DamageReportRecord {
+  id: UUID;
+  assetId: UUID;
+  description: string;
+  photoHandles: string[];
+  status: DamageStatus;
+  reportedBy: UUID;
+  reportedByName?: string;
+  reportedAt: ISOTimestamp;
+  repairedBy?: UUID;
+  repairedByName?: string;
+  repairedAt?: ISOTimestamp;
+  repairNotes?: string;
+  createdAt: ISOTimestamp;
+  updatedAt: ISOTimestamp;
+}
+
+export interface DamageReportCreateInput {
+  description: string;
+  photoHandles: string[];
+  reportedBy: UUID;
+  reportedByName?: string;
+  reportedAt: ISOTimestamp;
+  status?: DamageStatus;
+}
+
+export interface DamageRepairInput {
+  repairNotes: string;
+  repairedBy: UUID;
+  repairedByName?: string;
+  repairedAt: ISOTimestamp;
+}
+
+export interface DamageUndoContext {
+  assetId: UUID;
+  assetStatus?: AssetStatus;
+  photoHandles?: string[];
 }

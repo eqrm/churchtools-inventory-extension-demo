@@ -20,7 +20,7 @@
 **Duration**: 2-3 days  
 **Purpose**: Install dependencies, configure infrastructure, define all type contracts
 
-- [ ] **B001** Install new dependencies (Dexie.js v3, i18next v23, react-i18next v13, @tanstack/react-virtual v3, xstate v5, @dnd-kit/core v6)
+- [ ] **B001** Install new dependencies (Dexie.js v3, i18next v23, react-i18next v13, @tanstack/react-virtual v3, xstate v5, @dnd-kit/core v6, @dnd-kit/sortable v6, @dnd-kit/utilities v6, react-day-picker v9, @axe-core/react v4, jest-axe v8)
 - [ ] **B002** Configure i18next with English locale files in src/i18n/config.ts
 - [ ] **B003** Create IndexedDB database schema using Dexie.js in src/services/db/UndoDatabase.ts
 - [ ] **B004** Create IndexedDB database for settings versions in src/services/db/SettingsDatabase.ts

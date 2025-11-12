@@ -11,5 +11,6 @@ import './stockTakes.provider'
 import './savedViews.provider'
 import './assetPrefixes.provider'
 import './people.provider'
+import './damage.provider'
 
 export { ChurchToolsStorageProvider }

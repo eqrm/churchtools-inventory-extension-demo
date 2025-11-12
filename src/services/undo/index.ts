@@ -4,11 +4,42 @@ import type { UndoActionType } from '../../types/undo';
 import { backgroundJobService } from '../BackgroundJobService';
 import { churchToolsAPIClient } from '../api/ChurchToolsAPIClient';
 
-const handlerRegistry: Partial<Record<UndoActionType, UndoHandler>> = {};
+type HandlerBucket = Partial<Record<UndoActionType, UndoHandler[]>>;
+
+const handlerBuckets: HandlerBucket = {};
+
+async function runHandlers(actionType: UndoActionType, action: Parameters<UndoHandler>[0]): Promise<void> {
+  const handlers = handlerBuckets[actionType];
+  if (!handlers || handlers.length === 0) {
+    throw new Error(`No undo handler registered for action type: ${actionType}`);
+  }
+
+  for (const handler of handlers) {
+    await handler(action);
+  }
+}
+
+const aggregatedHandlers: Partial<Record<UndoActionType, UndoHandler>> = {
+  create: async (action) => {
+    await runHandlers('create', action);
+  },
+  update: async (action) => {
+    await runHandlers('update', action);
+  },
+  delete: async (action) => {
+    await runHandlers('delete', action);
+  },
+  'status-change': async (action) => {
+    await runHandlers('status-change', action);
+  },
+  compound: async (action) => {
+    await runHandlers('compound', action);
+  },
+};
 
 const serviceOptions: UndoServiceOptions = {
   db: getUndoDatabase(),
-  handlers: handlerRegistry,
+  handlers: aggregatedHandlers,
   retentionHours: 24,
   getCurrentActor: async () => {
     const actor = await churchToolsAPIClient.getCurrentUser();
@@ -37,11 +68,12 @@ export function getUndoService(): UndoService {
 }
 
 export function registerUndoHandler(actionType: UndoActionType, handler: UndoHandler): void {
-  handlerRegistry[actionType] = handler;
+  const bucket = handlerBuckets[actionType] ?? [];
+  handlerBuckets[actionType] = [...bucket, handler];
 }
 
 export function unregisterUndoHandler(actionType: UndoActionType): void {
-  handlerRegistry[actionType] = undefined;
+  handlerBuckets[actionType] = [];
 }
 
 export async function recordUndoAction(action: UndoableActionInput): Promise<string> {
