@@ -73,6 +73,10 @@ import { ConvertAssetToGroupModal } from '../asset-groups/ConvertAssetToGroupMod
 import { JoinAssetGroupModal } from '../asset-groups/JoinAssetGroupModal';
 import { useAssetGroup, useRemoveAssetFromGroup } from '../../hooks/useAssetGroups';
 import { useFeatureSettingsStore } from '../../stores';
+import { RepairHistoryTab } from '../damage/RepairHistoryTab';
+import { AssignmentField } from '../assignment/AssignmentField';
+import { AssignmentHistoryTab } from '../assignment/AssignmentHistoryTab';
+import type { PersonResult } from '../assignment/PersonSearch';
 
 interface AssetDetailProps {
   assetId: string;
@@ -376,6 +380,12 @@ export function AssetDetail({ assetId, onEdit, onClose }: AssetDetailProps) {
               )}
             </Tabs.Tab>
           )}
+          <Tabs.Tab value="damage" leftSection={<IconTools size={16} />}>
+            Damage & Repairs
+          </Tabs.Tab>
+          <Tabs.Tab value="assignment" leftSection={<IconUser size={16} />}>
+            Assignment
+          </Tabs.Tab>
           <Tabs.Tab value="history" leftSection={<IconHistory size={16} />}>
             History
             {history.length > 0 && (
@@ -688,6 +698,43 @@ export function AssetDetail({ assetId, onEdit, onClose }: AssetDetailProps) {
             <AssetMaintenanceHistory assetId={assetId} assetName={asset.name} />
           </Tabs.Panel>
         )}
+
+        <Tabs.Panel value="damage" pt="md">
+          <RepairHistoryTab
+            damageReports={[]}
+            onMarkRepaired={(_reportId, _repairNotes) => {
+              // TODO: Implement when DamageService is available
+            }}
+            loading={false}
+          />
+        </Tabs.Panel>
+
+        <Tabs.Panel value="assignment" pt="md">
+          <Stack gap="md">
+            <AssignmentField
+              currentAssignment={null}
+              onSearchPerson={async (query: string): Promise<PersonResult[]> => {
+                // TODO: Implement ChurchTools person search when service is available
+                const response = await personSearchService.search({ query, limit: 10 });
+                return response.results.map((r: PersonSearchResult) => ({
+                  id: r.id,
+                  firstName: r.firstName,
+                  lastName: r.lastName,
+                  email: r.email,
+                  avatarUrl: r.avatarUrl,
+                }));
+              }}
+              onAssign={(_personId, _personName) => {
+                // TODO: Implement when AssignmentService is available
+              }}
+              onCheckIn={() => {
+                // TODO: Implement when AssignmentService is available
+              }}
+              loading={false}
+            />
+            <AssignmentHistoryTab history={[]} />
+          </Stack>
+        </Tabs.Panel>
 
         <Tabs.Panel value="history" pt="md">
           <Stack gap="lg">

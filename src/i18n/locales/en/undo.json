@@ -1,0 +1,16 @@
+{
+  "modalTitle": "Undo History",
+  "openHistoryTooltip": "Undo history",
+  "openHistoryAria": "Open undo history",
+  "emptyState": {
+    "title": "No recent actions to undo"
+  },
+  "actionLabel": "{{actionType}} {{entityType}}",
+  "actions": {
+    "undo": "Undo"
+  },
+  "labels": {
+    "undone": "Undo applied",
+    "expired": "Expired (cannot undo)"
+  }
+}

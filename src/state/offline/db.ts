@@ -1,4 +1,4 @@
-import Dexie, { type EntityTable } from 'dexie';
+import Dexie, { type Table } from 'dexie';
 import type { UUID, ISOTimestamp } from '../../types/entities';
 import type { SyncConflict } from '../../types/sync';
 import type { HistoryEntityType, HistoryEvent } from '../../utils/history/types';
@@ -76,14 +76,14 @@ export interface HistoryCursorRecord {
 }
 
 export class InventoryOfflineDatabase extends Dexie {
-    stockTakeSessions!: EntityTable<StockTakeSession, 'id'>;
-    stockTakeScans!: EntityTable<StockTakeScan, 'id'>;
-    syncConflicts!: EntityTable<SyncConflict, 'id'>;
-    personCache!: EntityTable<PersonCacheRecord, 'id'>;
-    demoMetadata!: EntityTable<DemoMetadataRecord, 'id'>;
-    demoEntities!: EntityTable<DemoEntityRecord, 'id'>;
-    historyEvents!: EntityTable<HistoryEventCacheRecord, 'id'>;
-    historyCursors!: EntityTable<HistoryCursorRecord, 'id'>;
+    stockTakeSessions!: Table<StockTakeSession, string>;
+    stockTakeScans!: Table<StockTakeScan, string>;
+    syncConflicts!: Table<SyncConflict, string>;
+    personCache!: Table<PersonCacheRecord, string>;
+    demoMetadata!: Table<DemoMetadataRecord, string>;
+    demoEntities!: Table<DemoEntityRecord, string>;
+    historyEvents!: Table<HistoryEventCacheRecord, string>;
+    historyCursors!: Table<HistoryCursorRecord, string>;
 
     constructor() {
         super('churchtools-inventory-offline');
@@ -107,7 +107,7 @@ export class InventoryOfflineDatabase extends Dexie {
                 historyCursors: 'id, entityType, lastFetchedAt',
             })
             .upgrade(async tx => {
-                const table = tx.table('demoMetadata') as EntityTable<DemoMetadataRecord, 'id'>;
+                const table = tx.table('demoMetadata') as Table<DemoMetadataRecord, string>;
                 await table.put({ id: 'global', seededAt: null, seedVersion: null });
             });
     }
@@ -267,8 +267,11 @@ export async function getCachedHistoryEvents(
         .toArray();
 
     return items
-        .sort((a, b) => new Date(b.occurredAt).getTime() - new Date(a.occurredAt).getTime())
-        .map(item => item.payload);
+        .sort(
+            (a: HistoryEventCacheRecord, b: HistoryEventCacheRecord) =>
+                new Date(b.occurredAt).getTime() - new Date(a.occurredAt).getTime(),
+        )
+        .map((item: HistoryEventCacheRecord) => item.payload);
 }
 
 export async function getHistoryCursor(

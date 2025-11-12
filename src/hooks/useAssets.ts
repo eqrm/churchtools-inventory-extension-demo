@@ -2,6 +2,49 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useStorageProvider } from './useStorageProvider';
 import type { Asset, AssetCreate, AssetUpdate, AssetFilters } from '../types/entities';
 
+function normalizeAssetUpdate(update: AssetUpdate): Partial<Asset> {
+  const {
+    mainImage,
+    assetGroup,
+    fieldSources,
+    childAssetIds,
+    kitId,
+    modelId,
+    tagIds,
+    inheritedTagIds,
+    ...rest
+  } = update;
+
+  const normalized: Partial<Asset> = { ...(rest as Partial<Asset>) };
+
+  if (Object.prototype.hasOwnProperty.call(update, 'mainImage')) {
+    normalized.mainImage = mainImage ?? undefined;
+  }
+  if (Object.prototype.hasOwnProperty.call(update, 'assetGroup')) {
+    normalized.assetGroup = assetGroup ?? undefined;
+  }
+  if (Object.prototype.hasOwnProperty.call(update, 'fieldSources')) {
+    normalized.fieldSources = fieldSources ?? undefined;
+  }
+  if (Object.prototype.hasOwnProperty.call(update, 'childAssetIds')) {
+    normalized.childAssetIds = childAssetIds ?? undefined;
+  }
+  if (Object.prototype.hasOwnProperty.call(update, 'kitId')) {
+    normalized.kitId = kitId ?? undefined;
+  }
+  if (Object.prototype.hasOwnProperty.call(update, 'modelId')) {
+    normalized.modelId = modelId ?? undefined;
+  }
+  if (Object.prototype.hasOwnProperty.call(update, 'tagIds')) {
+    normalized.tagIds = tagIds ?? undefined;
+  }
+  if (Object.prototype.hasOwnProperty.call(update, 'inheritedTagIds')) {
+    normalized.inheritedTagIds = inheritedTagIds ?? undefined;
+  }
+
+  return normalized;
+}
+
 /**
  * Query key factory for assets
  */
@@ -171,9 +214,10 @@ export function useUpdateAsset() {
 
       // Optimistically update
       if (previousAsset) {
+        const normalizedData = normalizeAssetUpdate(data);
         queryClient.setQueryData<Asset>(assetKeys.detail(id), {
           ...previousAsset,
-          ...data,
+          ...normalizedData,
           lastModifiedAt: new Date().toISOString(),
         });
       }

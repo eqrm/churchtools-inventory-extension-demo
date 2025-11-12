@@ -1,12 +1,14 @@
 /**
  * Core Entity Type Definitions
- * 
+ *
  * This file contains all TypeScript type definitions for entities in the
  * inventory management system. These types are used throughout the application
  * for strong type safety.
- * 
+ *
  * @module contracts/entities
  */
+
+import type { InheritedTag } from './tag'
 
 // ============================================================================
 // Base Types
@@ -140,6 +142,12 @@ export interface Asset {
   }
   status: AssetStatus
   location?: string
+  kitId?: UUID
+  modelId?: UUID
+  tagIds?: UUID[]
+  inheritedTagIds?: UUID[]
+  inheritedTags?: InheritedTag[]
+  currentAssignmentId?: UUID
   inUseBy?: {
     personId: string
     personName: string
@@ -182,6 +190,9 @@ export type AssetStatus =
   | 'available'
   | 'in-use'
   | 'broken'
+  | 'in-maintenance'
+  | 'retired'
+  | 'disposed'
   | 'in-repair'
   | 'installed'
   | 'sold'
@@ -209,6 +220,10 @@ export type AssetCreate = Omit<
   prefixId?: string     // T272: ID of the AssetPrefix to use for numbering
   fieldSources?: Record<string, AssetGroupFieldSource>
   childAssetIds?: UUID[]
+  kitId?: UUID
+  modelId?: UUID
+  tagIds?: UUID[]
+  inheritedTagIds?: UUID[]
 }
 
 export type AssetUpdate = Partial<
@@ -218,6 +233,10 @@ export type AssetUpdate = Partial<
   fieldSources?: Record<string, AssetGroupFieldSource> | null
   childAssetIds?: UUID[] | null
   mainImage?: string | null
+  kitId?: UUID | null
+  modelId?: UUID | null
+  tagIds?: UUID[] | null
+  inheritedTagIds?: UUID[] | null
 }
 
 export interface AssetFilters {

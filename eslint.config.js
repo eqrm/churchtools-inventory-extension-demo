@@ -6,15 +6,16 @@ import tseslint from 'typescript-eslint'
 
 export default tseslint.config(
   {
+    // Patterns migrated from legacy .eslintignore and existing config
     ignores: [
-      'node_modules',
-      'dist',
-      'dist-ssr',
-      '.vite',
-      'build',
-      'coverage', // Exclude coverage reports from linting
-      'html', // Exclude test HTML reports
-      'releases',
+      'node_modules/**',
+      'dist/**',
+      'dist-ssr/**',
+      '.vite/**',
+      'build/**',
+      'coverage/**', // Exclude coverage reports from linting
+      'html', // Exclude generated HTML reports
+      'releases/**',
       'specs/**', // Exclude specification contracts from linting
       'src/utils/ct-types.d.ts', // Third-party ChurchTools type definitions
       '*.config.ts', // Config files (vite.config.ts, etc.)

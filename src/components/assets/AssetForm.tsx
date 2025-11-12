@@ -16,8 +16,10 @@ import {
   Title,
   Badge,
   Text,
+  Modal,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
+import { useDisclosure } from '@mantine/hooks';
 import { notifications } from '@mantine/notifications';
 import { IconDeviceFloppy, IconUsersGroup, IconX } from '@tabler/icons-react';
 import { useCategories, useCategory } from '../../hooks/useCategories';
@@ -82,6 +84,10 @@ export function AssetForm({ asset, onSuccess, onCancel }: AssetFormProps) {
   const { data: currentUser } = useCurrentUser();
   const assetGroup = asset?.assetGroup;
   const { data: assetGroupDetail } = useAssetGroup(assetGroup?.id);
+  
+  // T064: Confirmation dialog for status changes on assigned assets
+  const [confirmOpened, { open: openConfirm, close: closeConfirm }] = useDisclosure(false);
+  const [pendingStatus, setPendingStatus] = useState<AssetStatus | null>(null);
 
 
   const form = useForm<AssetFormValues>({
@@ -345,6 +351,35 @@ export function AssetForm({ asset, onSuccess, onCancel }: AssetFormProps) {
     });
   };
 
+  // T064: Handler for status changes with confirmation for assigned assets
+  const handleStatusChange = (newStatus: string | null) => {
+    if (!newStatus) return;
+    
+    const typedStatus = newStatus as AssetStatus;
+    
+    // If asset is currently assigned and status is being changed, show confirmation
+    if (asset?.currentAssignmentId && typedStatus !== form.values.status) {
+      setPendingStatus(typedStatus);
+      openConfirm();
+    } else {
+      // No assignment or no change, update directly
+      form.setFieldValue('status', typedStatus);
+    }
+  };
+
+  const confirmStatusChange = () => {
+    if (pendingStatus) {
+      form.setFieldValue('status', pendingStatus);
+      setPendingStatus(null);
+    }
+    closeConfirm();
+  };
+
+  const cancelStatusChange = () => {
+    setPendingStatus(null);
+    closeConfirm();
+  };
+
   const handleSubmit = async (values: AssetFormValues) => {
     try {
       // Ensure manufacturer/model values are persisted to localStorage-backed lists
@@ -589,7 +624,9 @@ export function AssetForm({ asset, onSuccess, onCancel }: AssetFormProps) {
                 placeholder="Select status"
                 required
                 data={[...ASSET_STATUS_OPTIONS]}
-                {...form.getInputProps('status')}
+                value={form.values.status}
+                onChange={handleStatusChange}
+                error={form.errors['status']}
               />
             </Grid.Col>
 
@@ -820,6 +857,29 @@ export function AssetForm({ asset, onSuccess, onCancel }: AssetFormProps) {
           </Group>
         </Stack>
       </form>
+
+      {/* T064: Confirmation modal for status changes on assigned assets */}
+      <Modal
+        opened={confirmOpened}
+        onClose={cancelStatusChange}
+        title="Confirm Status Change"
+        centered
+      >
+        <Stack gap="md">
+          <Text>
+            This asset is currently assigned. Changing the status may affect the assignment.
+            Are you sure you want to continue?
+          </Text>
+          <Group justify="flex-end">
+            <Button variant="subtle" onClick={cancelStatusChange}>
+              Cancel
+            </Button>
+            <Button onClick={confirmStatusChange}>
+              Confirm Change
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
     </Card>
   );
 }

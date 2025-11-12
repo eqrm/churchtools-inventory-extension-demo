@@ -279,9 +279,27 @@ export async function updateAssetGroup(
     ? data.mainImage ?? null
     : existing.mainImage ?? undefined;
 
+  const { mainImage, memberAssetIds: incomingMemberAssetIds, memberCount: incomingMemberCount, ...rest } = data;
+
+  const sanitizedData: Partial<AssetGroup> = {
+    ...rest,
+  };
+
+  if (hasMainImageUpdate) {
+    sanitizedData.mainImage = mainImage ?? undefined;
+  }
+
+  if (incomingMemberAssetIds) {
+    sanitizedData.memberAssetIds = incomingMemberAssetIds;
+  }
+
+  if (incomingMemberCount !== undefined) {
+    sanitizedData.memberCount = incomingMemberCount;
+  }
+
   const updatedGroup: AssetGroup = {
     ...existing,
-    ...data,
+    ...sanitizedData,
     memberAssetIds,
     memberCount,
     lastModifiedBy: user.id,
@@ -291,7 +309,7 @@ export async function updateAssetGroup(
   };
 
   if (hasMainImageUpdate) {
-    updatedGroup.mainImage = data.mainImage ?? undefined;
+    updatedGroup.mainImage = sanitizedData.mainImage;
   }
 
   if (data.groupNumber !== undefined) {

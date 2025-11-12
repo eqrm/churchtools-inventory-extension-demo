@@ -1,0 +1,30 @@
+{
+  "app": {
+    "name": "ChurchTools Inventory",
+    "loading": "Loading...",
+    "error": "Something went wrong."
+  },
+  "actions": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "close": "Close",
+    "retry": "Try again",
+    "undo": "Undo",
+    "redo": "Redo"
+  },
+  "status": {
+    "success": "Success",
+    "failure": "Failure",
+    "pending": "Pending"
+  },
+  "filters": {
+    "title": "Filters",
+    "apply": "Apply Filters",
+    "reset": "Reset"
+  },
+  "notifications": {
+    "saved": "Changes saved successfully.",
+    "error": "Unable to complete the requested action.",
+    "undoCompleted": "Action was reverted."
+  }
+}
