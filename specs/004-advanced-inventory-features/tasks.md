@@ -8,6 +8,9 @@
 
 **Organization**: Tasks split into **Backend Track** (B-series) and **Frontend Track** (F-series) for parallel development.
 
+**Last Updated**: 2025-01-20  
+**Update**: Added 54 new tasks from 9 supplementary requirement documents (DESIGN_SYSTEM.md, DELETION_POLICY.md, ERROR_HANDLING.md, ROUTING.md, API_ERROR_HANDLING.md, SCHEMA_VERSIONING.md, BULK_OPERATIONS.md, DATE_VALIDATION.md, RATE_LIMITING.md). Total task count increased from 201 to 255 tasks. See Phase 16 for new requirements.
+
 ## Task Numbering System
 - **B### = Backend Tasks**: Services, stores, hooks, types, utilities, tests
 - **F### = Frontend Tasks**: React components, pages, UI integration
@@ -30,6 +33,10 @@
 - [X] T003 [P] Create IndexedDB database schema using Dexie.js in src/services/db/UndoDatabase.ts
 - [X] T004 [P] Create IndexedDB database for settings versions in src/services/db/SettingsDatabase.ts
 - [X] T005 [P] Setup background job service skeleton in src/services/BackgroundJobService.ts
+- [ ] T006 [P] Install p-queue library for rate limiting (`npm install p-queue`) [RATE_LIMITING.md]
+- [ ] T007 [P] Install Zod v3 for schema validation (`npm install zod`) [SCHEMA_VERSIONING.md, ERROR_HANDLING.md]
+- [ ] T008 [P] Configure React Router v6 in src/router/index.tsx [ROUTING.md]
+- [ ] T009 [P] Create design system tokens file in src/theme/tokens.ts (spacing, colors, typography) [DESIGN_SYSTEM.md]
 
 **Constitution Compliance Gates**:
 - [X] TypeScript strict mode verified in tsconfig.json
@@ -45,26 +52,36 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [X] T006 [P] Create UndoAction type definitions in src/types/undo.ts
-- [X] T007 [P] Create DamageReport type definitions in src/types/damage.ts
-- [X] T008 [P] Create Assignment type definitions in src/types/assignment.ts
-- [X] T009 [P] Create FixedKit type definitions in src/types/kit.ts
-- [X] T010 [P] Create AssetModel type definitions in src/types/model.ts
-- [X] T011 [P] Create Tag type definitions in src/types/tag.ts
-- [X] T012 [P] Create DataView and FilterCondition type definitions in src/types/view.ts
-- [X] T013 [P] Create MaintenanceCompany, MaintenanceRule, WorkOrder type definitions in src/types/maintenance.ts
-- [X] T014 [P] Create SettingsVersion type definitions in src/types/settings.ts
-- [X] T015 Modify Asset entity in src/types/asset.ts (add kitId, modelId, tags, inheritedTags, currentAssignmentId, expand status enum)
-- [X] T016 [P] Create image compression utility in src/utils/imageCompression.ts
-- [X] T017 [P] Create base64 encoding/decoding utilities in src/utils/base64Utils.ts
-- [X] T018 [P] Create state machine helper utilities in src/utils/stateMachine.ts
-- [X] T019 [P] Create relative date calculation utilities in src/utils/dateUtils.ts
-- [X] T020 [P] Add English translations for common terms in src/i18n/locales/en/common.json
+- [X] T010 [P] Create UndoAction type definitions in src/types/undo.ts
+- [X] T011 [P] Create DamageReport type definitions in src/types/damage.ts
+- [X] T012 [P] Create Assignment type definitions in src/types/assignment.ts
+- [X] T013 [P] Create FixedKit type definitions in src/types/kit.ts
+- [X] T014 [P] Create AssetModel type definitions in src/types/model.ts
+- [X] T015 [P] Create Tag type definitions in src/types/tag.ts
+- [X] T016 [P] Create DataView and FilterCondition type definitions in src/types/view.ts
+- [X] T017 [P] Create MaintenanceCompany, MaintenanceRule, WorkOrder type definitions in src/types/maintenance.ts
+- [X] T018 [P] Create SettingsVersion type definitions in src/types/settings.ts
+- [X] T019 Modify Asset entity in src/types/asset.ts (add kitId, modelId, tags, inheritedTags, currentAssignmentId, expand status enum)
+- [X] T020 [P] Create image compression utility in src/utils/imageCompression.ts
+- [X] T021 [P] Create base64 encoding/decoding utilities in src/utils/base64Utils.ts
+- [X] T022 [P] Create state machine helper utilities in src/utils/stateMachine.ts
+- [X] T023 [P] Create relative date calculation utilities in src/utils/dateUtils.ts
+- [X] T024 [P] Add English translations for common terms in src/i18n/locales/en/common.json
+- [ ] T025 [P] Create Zod schema definitions for all entities in src/schemas/ (Asset, Kit, DamageReport, etc.) [SCHEMA_VERSIONING.md]
+- [ ] T026 [P] Create type-safe route builders in src/router/routes.ts [ROUTING.md]
+- [ ] T027 [P] Create ChurchToolsRequestQueue class in src/services/ChurchToolsRequestQueue.ts [RATE_LIMITING.md]
+- [ ] T028 [P] Configure Axios with base URL and interceptors in src/services/api/axiosConfig.ts [API_ERROR_HANDLING.md]
+- [ ] T029 [P] Create error code mapping utilities in src/utils/errorCodes.ts (ERR_ASSET_001 pattern) [ERROR_HANDLING.md]
+- [ ] T030 [P] Create soft delete utilities in src/utils/softDelete.ts [DELETION_POLICY.md]
+- [ ] T031 [P] Create date validation utilities in src/utils/dateValidation.ts (0-730 past, 1-365 future) [DATE_VALIDATION.md]
+- [ ] T032 [P] Create bulk operation queue service in src/services/BulkOperationService.ts [BULK_OPERATIONS.md]
 
 **Constitution Compliance Gates**:
 - [ ] All type definitions use explicit types (no `any` without justification)
 - [ ] Asset entity modifications preserve backward compatibility
 - [ ] Utilities include JSDoc comments
+- [ ] All Zod schemas validated with test cases [SCHEMA_VERSIONING.md]
+- [ ] ESLint rules configured for JSDoc requirement [ERROR_HANDLING.md]
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -80,25 +97,25 @@
 
 **NOTE: Write these tests FIRST, ensure they FAIL (RED) before implementation**
 
-- [X] T021 [P] [US1] Write RED test for recordAction (simple create/update/delete) in src/tests/services/UndoService.test.ts
-- [X] T022 [P] [US1] Write RED test for recordCompoundAction (kit + sub-assets) in src/tests/services/UndoService.test.ts
-- [X] T023 [P] [US1] Write RED test for undoAction (create/update/delete scenarios) in src/tests/services/UndoService.test.ts
-- [X] T024 [P] [US1] Write RED test for rejecting expired undo (>24 hours) in src/tests/services/UndoService.test.ts
-- [X] T025 [P] [US1] Write RED test for rejecting already-undone actions in src/tests/services/UndoService.test.ts
-- [X] T026 [P] [US1] Write RED test for getUserUndoHistory (limit 50) in src/tests/services/UndoService.test.ts
-- [X] T027 [P] [US1] Write RED test for cleanupExpired (removes only expired) in src/tests/services/UndoService.test.ts
+- [X] T033 [P] [US1] Write RED test for recordAction (simple create/update/delete) in src/tests/services/UndoService.test.ts
+- [X] T034 [P] [US1] Write RED test for recordCompoundAction (kit + sub-assets) in src/tests/services/UndoService.test.ts
+- [X] T035 [P] [US1] Write RED test for undoAction (create/update/delete scenarios) in src/tests/services/UndoService.test.ts
+- [X] T036 [P] [US1] Write RED test for rejecting expired undo (>24 hours) in src/tests/services/UndoService.test.ts
+- [X] T037 [P] [US1] Write RED test for rejecting already-undone actions in src/tests/services/UndoService.test.ts
+- [X] T038 [P] [US1] Write RED test for getUserUndoHistory (limit 50) in src/tests/services/UndoService.test.ts
+- [X] T039 [P] [US1] Write RED test for cleanupExpired (removes only expired) in src/tests/services/UndoService.test.ts
 
 ### Implementation for User Story 1
 
-- [X] T028 [US1] Implement UndoService (GREEN) in src/services/UndoService.ts - pass all RED tests from T021-T027
-- [X] T029 [US1] Create Zustand undo store in src/stores/undoStore.ts
-- [X] T030 [US1] Create useUndo hook in src/hooks/useUndo.ts (wraps UndoService with React Query)
-- [X] T031 [P] [US1] Create UndoHistory component in src/components/undo/UndoHistory.tsx
-- [X] T032 [P] [US1] Create UndoButton component in src/components/undo/UndoButton.tsx
-- [X] T033 [US1] Add undo locale strings in src/i18n/locales/en/undo.json
-- [X] T034 [US1] Integrate UndoHistory into existing layout (sidebar or header)
-- [X] T035 [US1] Register undo cleanup job in BackgroundJobService (24-hour retention)
-- [X] T036 [US1] REFACTOR: Review UndoService code quality and simplify if needed
+- [X] T040 [US1] Implement UndoService (GREEN) in src/services/UndoService.ts - pass all RED tests from T033-T039
+- [X] T041 [US1] Create Zustand undo store in src/stores/undoStore.ts
+- [X] T042 [US1] Create useUndo hook in src/hooks/useUndo.ts (wraps UndoService with React Query)
+- [X] T043 [P] [US1] Create UndoHistory component in src/components/undo/UndoHistory.tsx
+- [X] T044 [P] [US1] Create UndoButton component in src/components/undo/UndoButton.tsx
+- [X] T045 [US1] Add undo locale strings in src/i18n/locales/en/undo.json
+- [X] T046 [US1] Integrate UndoHistory into existing layout (sidebar or header)
+- [X] T047 [US1] Register undo cleanup job in BackgroundJobService (24-hour retention)
+- [X] T048 [US1] REFACTOR: Review UndoService code quality and simplify if needed
 
 **Checkpoint**: User Story 1 complete - undo functionality works independently for any entity
 
@@ -112,26 +129,26 @@
 
 ### TDD Tests for User Story 2 (REQUIRED - TDD approach for PhotoStorageService)
 
-- [ ] T037 [P] [US2] Write RED test for compressImage (800x600 @ 0.8 quality) in src/tests/services/PhotoStorageService.test.ts
-- [ ] T038 [P] [US2] Write RED test for rejecting >2MB files in src/tests/services/PhotoStorageService.test.ts
-- [ ] T039 [P] [US2] Write RED test for rejecting >3 files in src/tests/services/PhotoStorageService.test.ts
-- [ ] T040 [P] [US2] Write RED test for storePhotos and retrievePhoto roundtrip in src/tests/services/PhotoStorageService.test.ts
-- [ ] T041 [P] [US2] Write RED test for feature flag switching (Mode A base64 vs Mode B Files API) in src/tests/services/PhotoStorageService.test.ts
+- [ ] T049 [P] [US2] Write RED test for compressImage (800x600 @ 0.8 quality) in src/tests/services/PhotoStorageService.test.ts
+- [ ] T050 [P] [US2] Write RED test for rejecting >2MB files in src/tests/services/PhotoStorageService.test.ts
+- [ ] T051 [P] [US2] Write RED test for rejecting >3 files in src/tests/services/PhotoStorageService.test.ts
+- [ ] T052 [P] [US2] Write RED test for storePhotos and retrievePhoto roundtrip in src/tests/services/PhotoStorageService.test.ts
+- [ ] T053 [P] [US2] Write RED test for feature flag switching (Mode A base64 vs Mode B Files API) in src/tests/services/PhotoStorageService.test.ts
 
 ### Implementation for User Story 2
 
-- [ ] T042 [US2] Implement PhotoStorageService (GREEN) in src/services/PhotoStorageService.ts - pass all RED tests from T037-T041
-- [ ] T043 [US2] Implement DamageService in src/services/DamageService.ts (createDamageReport, markAsRepaired, getRepairHistory, getBrokenAssets)
-- [ ] T044 [US2] Create Zustand damage store in src/stores/damageStore.ts
-- [ ] T045 [US2] Create useDamageReports hook in src/hooks/useDamageReports.ts
-- [X] T046 [P] [US2] Create PhotoUpload component in src/components/damage/PhotoUpload.tsx (with compression preview)
-- [X] T047 [P] [US2] Create DamageReportForm component in src/components/damage/DamageReportForm.tsx
-- [X] T048 [P] [US2] Create RepairHistoryTab component in src/components/damage/RepairHistoryTab.tsx
-- [ ] T049 [US2] Add damage locale strings in src/i18n/locales/en/damage.json
-- [X] T050 [US2] Modify AssetDetail page to include "Mark as Broken" toggle and RepairHistoryTab
-- [ ] T051 [US2] Integrate damage reports with undo service (record create/repair actions)
-- [ ] T052 [US2] Update asset status to "Broken" when damage report created
-- [ ] T053 [US2] REFACTOR: Review PhotoStorageService abstraction for Files API migration readiness
+- [ ] T054 [US2] Implement PhotoStorageService (GREEN) in src/services/PhotoStorageService.ts - pass all RED tests from T049-T053
+- [ ] T055 [US2] Implement DamageService in src/services/DamageService.ts (createDamageReport, markAsRepaired, getRepairHistory, getBrokenAssets)
+- [ ] T056 [US2] Create Zustand damage store in src/stores/damageStore.ts
+- [ ] T057 [US2] Create useDamageReports hook in src/hooks/useDamageReports.ts
+- [X] T058 [P] [US2] Create PhotoUpload component in src/components/damage/PhotoUpload.tsx (with compression preview)
+- [X] T059 [P] [US2] Create DamageReportForm component in src/components/damage/DamageReportForm.tsx
+- [X] T060 [P] [US2] Create RepairHistoryTab component in src/components/damage/RepairHistoryTab.tsx
+- [ ] T061 [US2] Add damage locale strings in src/i18n/locales/en/damage.json
+- [X] T062 [US2] Modify AssetDetail page to include "Mark as Broken" toggle and RepairHistoryTab
+- [ ] T063 [US2] Integrate damage reports with undo service (record create/repair actions)
+- [ ] T064 [US2] Update asset status to "Broken" when damage report created
+- [ ] T065 [US2] REFACTOR: Review PhotoStorageService abstraction for Files API migration readiness
 
 **Checkpoint**: User Story 2 complete - damage tracking with photos works independently
 
@@ -145,18 +162,18 @@
 
 ### Implementation for User Story 3 (Manual testing, TDD not required per contracts)
 
-- [ ] T054 [US3] Implement AssignmentService in src/services/AssignmentService.ts (assignAsset, checkInAsset, getAssignmentHistory, getCurrentAssignment, getUserAssignments)
-- [ ] T055 [US3] Create Zustand assignment store in src/stores/assignmentStore.ts
-- [ ] T056 [US3] Create useAssignments hook in src/hooks/useAssignments.ts
-- [ ] T057 [US3] Create useChurchToolsSearch hook in src/hooks/useChurchToolsSearch.ts (debounced person/group search)
-- [X] T058 [P] [US3] Create PersonSearch component in src/components/assignment/PersonSearch.tsx (autocomplete with ChurchTools API)
-- [X] T059 [P] [US3] Create AssignmentField component in src/components/assignment/AssignmentField.tsx
-- [X] T060 [P] [US3] Create AssignmentHistoryTab component in src/components/assignment/AssignmentHistoryTab.tsx
-- [ ] T061 [US3] Add assignment locale strings in src/i18n/locales/en/assignment.json
-- [X] T062 [US3] Modify AssetDetail page to include AssignmentField and AssignmentHistoryTab
-- [ ] T063 [US3] Implement asset status auto-update (Available ↔ In Use) on assignment/check-in
-- [X] T064 [US3] Add confirmation popup when changing status of assigned asset
-- [ ] T065 [US3] Integrate assignments with undo service (record assignment/check-in actions)
+- [ ] T066 [US3] Implement AssignmentService in src/services/AssignmentService.ts (assignAsset, checkInAsset, getAssignmentHistory, getCurrentAssignment, getUserAssignments)
+- [ ] T067 [US3] Create Zustand assignment store in src/stores/assignmentStore.ts
+- [ ] T068 [US3] Create useAssignments hook in src/hooks/useAssignments.ts
+- [ ] T069 [US3] Create useChurchToolsSearch hook in src/hooks/useChurchToolsSearch.ts (debounced person/group search)
+- [X] T070 [P] [US3] Create PersonSearch component in src/components/assignment/PersonSearch.tsx (autocomplete with ChurchTools API)
+- [X] T071 [P] [US3] Create AssignmentField component in src/components/assignment/AssignmentField.tsx
+- [X] T072 [P] [US3] Create AssignmentHistoryTab component in src/components/assignment/AssignmentHistoryTab.tsx
+- [ ] T073 [US3] Add assignment locale strings in src/i18n/locales/en/assignment.json
+- [X] T074 [US3] Modify AssetDetail page to include AssignmentField and AssignmentHistoryTab
+- [ ] T075 [US3] Implement asset status auto-update (Available ↔ In Use) on assignment/check-in
+- [X] T076 [US3] Add confirmation popup when changing status of assigned asset
+- [ ] T077 [US3] Integrate assignments with undo service (record assignment/check-in actions)
 
 **Checkpoint**: User Story 3 complete - asset assignment with ChurchTools integration works independently
 
@@ -424,6 +441,80 @@
 - [ ] T201 Security review (XSS prevention in photo upload, input validation)
 - [ ] T202 Run quickstart.md validation checklist
 
+---
+
+## Phase 16: New Requirements from Supplementary Documents
+
+**Purpose**: Implement requirements from the 9 supplementary documentation files
+
+### Design System Implementation [DESIGN_SYSTEM.md]
+
+- [ ] T203 [P] Create Mantine theme configuration in src/theme/mantineTheme.ts with approved tokens
+- [ ] T204 [P] Document component patterns in Storybook (optional)
+- [ ] T205 [P] Run Lighthouse accessibility audit on all pages (target ≥90)
+- [ ] T206 [P] Verify WCAG 2.1 Level AA contrast ratios (4.5:1 text, 3:1 UI)
+
+### Error Handling & Validation [ERROR_HANDLING.md, SCHEMA_VERSIONING.md]
+
+- [ ] T207 [P] Create error notification components in src/components/errors/
+- [ ] T208 [P] Add Zod validation to all form submissions
+- [ ] T209 [P] Write schema migration functions for each entity version
+- [ ] T210 [P] Create schema version detection utility
+- [ ] T211 [P] Add ESLint rule for JSDoc coverage
+- [ ] T212 [P] Write tests for schema migrations (v1.0 → v1.1 → v2.0)
+
+### Routing & Navigation [ROUTING.md]
+
+- [ ] T213 [P] Implement breadcrumb auto-generation component
+- [ ] T214 [P] Create 404 and 403 error pages
+- [ ] T215 [P] Add deep linking support with query parameters
+- [ ] T216 [P] Implement protected routes with permission guards
+- [ ] T217 [P] Add route testing utilities
+
+### API Error Handling & Rate Limiting [API_ERROR_HANDLING.md, RATE_LIMITING.md]
+
+- [ ] T218 [P] Implement exponential backoff with jitter for retries
+- [ ] T219 [P] Create status-specific error handlers (401/403/429/5xx)
+- [ ] T220 [P] Add request queue with priority system (high/medium/low)
+- [ ] T221 [P] Implement rate limit detection from response headers
+- [ ] T222 [P] Create rate limit banner UI component
+- [ ] T223 [P] Add rate limit monitoring and metrics
+- [ ] T224 [P] Configure TanStack Query retry behavior (staleTime: 60s, cacheTime: 5min)
+- [ ] T225 [P] Write tests for retry logic and error handlers
+
+### Bulk Operations [BULK_OPERATIONS.md]
+
+- [ ] T226 [P] Implement bulk selection UI (checkboxes, select all, range select)
+- [ ] T227 [P] Create bulk actions menu dropdown
+- [ ] T228 [P] Implement bulk operation progress dialog with cancel
+- [ ] T229 [P] Add bulk operation results summary with retry
+- [ ] T230 [P] Implement keyboard shortcuts (Ctrl+A, Shift+Click, Escape)
+- [ ] T231 [P] Add virtual scrolling for 1000+ items
+- [ ] T232 [P] Write tests for bulk operations (1000-item limit, partial success)
+
+### Date Validation & Handling [DATE_VALIDATION.md]
+
+- [ ] T233 [P] Implement relative date range helpers (last 0-730 days, next 1-365 days)
+- [ ] T234 [P] Create quick date filter buttons (Today, Yesterday, Last 7 Days, etc.)
+- [ ] T235 [P] Add custom date range input with validation
+- [ ] T236 [P] Implement timezone conversion (store UTC, display local)
+- [ ] T237 [P] Handle month-end edge cases (Jan 31 + 1 month = Feb 28/29)
+- [ ] T238 [P] Write tests for date validation and edge cases (leap years, DST)
+
+### Deletion Policy [DELETION_POLICY.md]
+
+- [ ] T239 [P] Implement soft delete for all entities (add deletedAt timestamp)
+- [ ] T240 [P] Create entity-specific cascade rules
+- [ ] T241 [P] Add 90-day cleanup job for soft-deleted records
+- [ ] T242 [P] Implement "Restore" functionality in trash view
+- [ ] T243 [P] Write tests for soft delete and cascade behavior
+
+**Checkpoint**: All supplementary requirements implemented
+
+---
+
+## Pre-Deployment Quality Gates
+
 **Pre-Deployment Quality Gates**:
 - [ ] TypeScript compilation passes with no errors (`npm run type-check`)
 - [ ] All ESLint rules passing with no warnings (`npm run lint`)
@@ -437,6 +528,8 @@
 - [ ] API error handling verified (network failures, rate limits)
 - [ ] Performance budget met (<1s initial load on 3G, <100ms interactions)
 - [ ] Accessibility check (keyboard navigation, ARIA labels, screen reader support)
+- [ ] Lighthouse score ≥90 for accessibility [DESIGN_SYSTEM.md]
+- [ ] All 9 supplementary requirement documents validated
 - [ ] Version number updated in package.json
 - [ ] Changelog/release notes prepared
 
@@ -452,6 +545,7 @@
   - User stories can proceed in parallel (if staffed) OR sequentially by priority
 - **Cleanup (Phase 14)**: Can start any time after US1 complete
 - **Polish (Phase 15)**: Depends on all desired user stories being complete
+- **Supplementary Requirements (Phase 16)**: Can start in parallel with user stories after Phase 2, some tasks integrate with specific user stories
 
 ### User Story Dependencies
 
@@ -555,17 +649,24 @@ Task T032: Create UndoButton component
 
 ### Recommended MVP Scope (Deliver Value Fast)
 
-**Minimum Viable Product (4-6 weeks)**:
-1. Complete Phase 1: Setup (1-2 days)
-2. Complete Phase 2: Foundational (2-3 days)
+**Minimum Viable Product (5-7 weeks)**:
+1. Complete Phase 1: Setup (2-3 days) - **9 tasks including new deps**
+2. Complete Phase 2: Foundational (3-4 days) - **23 tasks including new infrastructure**
 3. Complete Phase 3: User Story 1 - Undo (1 week, TDD required)
 4. Complete Phase 4: User Story 2 - Damage Tracking (1 week, TDD required)
 5. Complete Phase 5: User Story 3 - Assignment (4-5 days)
 6. Complete Phase 6: User Story 7 - Data Views (1 week, TDD recommended)
-7. Complete Phase 14: Cleanup (2-3 days)
-8. Complete Phase 15: Polish (2-3 days)
+7. Complete Phase 16 (Subset): Core supplementary requirements (1 week)
+   - Design system setup (T203-T206): 2 days
+   - Error handling & Zod validation (T207-T208): 2 days
+   - Routing & navigation (T213-T216): 1 day
+   - API error handling & rate limiting (T218-T224): 2 days
+8. Complete Phase 14: Cleanup (2-3 days)
+9. Complete Phase 15: Polish (2-3 days)
 
-**Result**: Working inventory system with undo, damage tracking, assignments, and powerful data views
+**Result**: Working inventory system with undo, damage tracking, assignments, powerful data views, and production-ready error handling, routing, and rate limiting
+
+**Total MVP Tasks**: ~120 tasks (was ~90, added 30 from supplementary requirements)
 
 ### Incremental Delivery (Add Features Over Time)
 
@@ -614,10 +715,10 @@ Each developer owns their stories end-to-end (tests, services, UI, integration)
 
 ## Total Task Count
 
-- **Setup**: 5 tasks
-- **Foundational**: 15 tasks
+- **Setup**: 9 tasks (was 5, added 4 from supplementary docs)
+- **Foundational**: 23 tasks (was 15, added 8 from supplementary docs)
 - **User Story 1 (Undo)**: 16 tasks (7 RED tests + 9 implementation)
-- **User Story 2 (Damage)**: 16 tasks (5 RED tests + 11 implementation)
+- **User Story 2 (Damage)**: 17 tasks (5 RED tests + 12 implementation)
 - **User Story 3 (Assignment)**: 12 tasks
 - **User Story 7 (Data Views)**: 22 tasks (4 RED tests + 18 implementation)
 - **User Story 4 (Kits)**: 23 tasks (8 RED tests + 15 implementation)
@@ -629,9 +730,19 @@ Each developer owns their stories end-to-end (tests, services, UI, integration)
 - **User Story 11 (Settings)**: 11 tasks
 - **Cleanup**: 7 tasks
 - **Polish**: 7 tasks
+- **Supplementary Requirements (Phase 16)**: 41 tasks (NEW - from 9 supplementary documents)
 
-**Grand Total**: 201 tasks
+**Grand Total**: 255 tasks (was 201, added 54 from supplementary documents)
 
-**Parallel Opportunities**: 60+ tasks marked [P] can run in parallel within their phases
+**Parallel Opportunities**: 90+ tasks marked [P] can run in parallel within their phases (was 60+)
 
-**MVP Subset**: ~90 tasks (Phase 1-6 + Phase 14-15) for P1 features only
+**MVP Subset**: ~120 tasks (Phase 1-6 + Phase 14-16 supplementary subset) for P1 features only (was ~90)
+
+**Key Additions from Supplementary Documents**:
+- Design System: 4 tasks (Mantine theme, Storybook, accessibility audits)
+- Error Handling & Validation: 6 tasks (Zod schemas, migrations, ESLint rules)
+- Routing & Navigation: 5 tasks (breadcrumbs, error pages, deep linking)
+- API Error Handling & Rate Limiting: 8 tasks (retry logic, rate limits, monitoring)
+- Bulk Operations: 7 tasks (selection UI, progress dialogs, keyboard shortcuts)
+- Date Validation: 6 tasks (relative dates, timezones, edge cases)
+- Deletion Policy: 5 tasks (soft delete, cascade rules, cleanup jobs)
