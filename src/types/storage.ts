@@ -42,6 +42,12 @@ import type {
   UUID
 } from './entities'
 import type {
+  AssignmentCreateInput,
+  AssignmentRecord,
+  AssignmentTargetType,
+  AssignmentUpdateInput,
+} from './assignment'
+import type {
   DamageReportCreateInput,
   DamageRepairInput,
   DamageReportRecord,
@@ -551,6 +557,44 @@ export interface IStorageProvider {
    * Delete a damage report (reserved for undo scenarios)
    */
   deleteDamageReport(reportId: UUID): Promise<void>
+
+  // ============================================================================
+  // Assignments
+  // ============================================================================
+
+  /**
+   * Get all assignments for an asset ordered by assignedAt descending
+   */
+  getAssignments(assetId: UUID): Promise<AssignmentRecord[]>
+
+  /**
+   * Get a single assignment by ID
+   */
+  getAssignment(assignmentId: UUID): Promise<AssignmentRecord | null>
+
+  /**
+   * Create assignment entry for an asset
+   */
+  createAssignment(assetId: UUID, data: AssignmentCreateInput): Promise<AssignmentRecord>
+
+  /**
+   * Update existing assignment entry
+   */
+  updateAssignment(assignmentId: UUID, updates: AssignmentUpdateInput): Promise<AssignmentRecord>
+
+  /**
+   * Delete assignment record (undo tooling)
+   */
+  deleteAssignment(assignmentId: UUID): Promise<void>
+
+  /**
+   * Get assignments for a target (person or group)
+   */
+  getAssignmentsForTarget(
+    targetId: UUID,
+    targetType: AssignmentTargetType,
+    options?: { includeReturned?: boolean }
+  ): Promise<AssignmentRecord[]>
 
   // ============================================================================
   // Stock Take

@@ -11,6 +11,8 @@ interface UndoHistoryProps {
   onUndo: (actionId: string) => void;
   /** Whether undo operation is in progress */
   loading?: boolean;
+  /** Currently undoing action id for per-row loader */
+  undoingActionId?: string;
 }
 
 /**
@@ -28,7 +30,7 @@ interface UndoHistoryProps {
  * />
  * ```
  */
-export function UndoHistory({ actions, onUndo, loading = false }: UndoHistoryProps) {
+export function UndoHistory({ actions, onUndo, loading = false, undoingActionId }: UndoHistoryProps) {
   const { t } = useTranslation('undo');
 
   if (actions.length === 0) {
@@ -49,6 +51,8 @@ export function UndoHistory({ actions, onUndo, loading = false }: UndoHistoryPro
           const isExpired = action.expiresAt && new Date(action.expiresAt) < new Date();
           const isUndone = action.undoStatus === 'reverted';
           const canUndo = !isExpired && !isUndone;
+          const isActionLoading = undoingActionId ? undoingActionId === action.actionId : false;
+          const isDisabled = loading || isActionLoading;
 
           // Build action description
           const description = t('actionLabel', {
@@ -70,8 +74,8 @@ export function UndoHistory({ actions, onUndo, loading = false }: UndoHistoryPro
                       size="xs"
                       variant="subtle"
                       onClick={() => onUndo(action.actionId)}
-                      loading={loading}
-                      disabled={loading}
+                      loading={isActionLoading}
+                      disabled={isDisabled}
                     >
                       {t('actions.undo')}
                     </Button>

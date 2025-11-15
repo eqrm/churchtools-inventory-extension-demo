@@ -1,6 +1,6 @@
-import type { ISOTimestamp, UUID } from './entities';
+import type { ISOTimestamp, UUID, KitInheritanceProperty } from './entities';
 
-export type InheritedProperty = 'location' | 'status' | 'tags';
+export type InheritedProperty = KitInheritanceProperty;
 
 export interface PropertyInheritanceSettings {
   location: boolean;

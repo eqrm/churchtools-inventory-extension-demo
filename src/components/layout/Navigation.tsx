@@ -41,6 +41,7 @@ export function Navigation({ children, onScanClick }: NavigationProps) {
     undoAction,
     isLoading: isUndoHistoryLoading,
     isMutating: isUndoMutating,
+    undoingActionId,
     error: undoError,
     refetch: refetchUndoHistory,
   } = useUndoHistory();
@@ -253,6 +254,7 @@ export function Navigation({ children, onScanClick }: NavigationProps) {
             await undoAction(actionId);
           }}
           loading={isUndoHistoryLoading || isUndoMutating}
+          undoingActionId={undoingActionId}
         />
       </Modal>
     </AppShell>

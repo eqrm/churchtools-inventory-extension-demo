@@ -8,10 +8,12 @@ pnpm-debug.log*
 lerna-debug.log*
 
 .env
+.env.*
 node_modules
 dist
 dist-node
 dist-ssr
+build
 coverage
 .vite
 *.local
@@ -22,6 +24,7 @@ coverage
 !.vscode/extensions.json
 .idea
 .DS_Store
+Thumbs.db
 *.suo
 *.ntvs*
 *.njsproj

@@ -21,6 +21,7 @@ import {
   ActionIcon,
   Collapse,
   useMantineTheme,
+  Menu,
 } from '@mantine/core';
 import {
   IconCalendar,
@@ -42,15 +43,18 @@ import {
   IconUsersPlus,
   IconUsers,
   IconTags,
+  IconDots,
 } from '@tabler/icons-react';
 import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { notifications } from '@mantine/notifications';
 import { useAsset, useAssets, useRegenerateBarcode } from '../../hooks/useAssets';
 import { useChangeHistory } from '../../hooks/useChangeHistory';
 import { useMaintenanceRecords, useMaintenanceSchedule } from '../../hooks/useMaintenance';
 import { useCategories } from '../../hooks/useCategories';
-import { AssetStatusBadge } from './AssetStatusBadge';
+import { useAssignments } from '../../hooks/useAssignments';
+import { AssetStatusMenu } from './AssetStatusMenu';
 import { personSearchService } from '../../services/person/PersonSearchService';
 import type { PersonSearchResult } from '../../services/person/PersonSearchService';
 import { BarcodeDisplay } from '../scanner/BarcodeDisplay';
@@ -59,14 +63,11 @@ import { ChangeHistoryList } from './ChangeHistoryList';
 import { ParentAssetLink } from './ParentAssetLink';
 import { ChildAssetsList } from './ChildAssetsList';
 import { ParentSummaryStatistics } from './ParentSummaryStatistics';
-import { ConvertToParentModal } from './ConvertToParentModal';
 import { AssetMaintenanceHistory } from './AssetMaintenanceHistory';
 import { MaintenanceRecordList } from '../maintenance/MaintenanceRecordList';
-import { MaintenanceRecordForm } from '../maintenance/MaintenanceRecordForm';
 import { MaintenanceReminderBadge } from '../maintenance/MaintenanceReminderBadge';
 import { formatScheduleDescription } from '../../utils/maintenanceCalculations';
-import type { Asset, AssetGroupFieldSource } from '../../types/entities';
-import { AssetAssignmentList } from './AssetAssignmentList';
+import type { Asset, AssetGroupFieldSource, AssetStatus } from '../../types/entities';
 import { AssetGroupBadge } from '../asset-groups/AssetGroupBadge';
 import { AssetGroupDetail } from '../asset-groups/AssetGroupDetail';
 import { ConvertAssetToGroupModal } from '../asset-groups/ConvertAssetToGroupModal';
@@ -74,11 +75,12 @@ import { JoinAssetGroupModal } from '../asset-groups/JoinAssetGroupModal';
 import { useAssetGroup, useRemoveAssetFromGroup } from '../../hooks/useAssetGroups';
 import { useFeatureSettingsStore } from '../../stores';
 import { RepairHistoryTab } from '../damage/RepairHistoryTab';
-import { DamageReportForm } from '../damage/DamageReportForm';
-import { AssignmentField } from '../assignment/AssignmentField';
-import { AssignmentHistoryTab } from '../assignment/AssignmentHistoryTab';
-import type { PersonResult } from '../assignment/PersonSearch';
+import { DamageReportForm, type DamageReportFormData } from '../damage/DamageReportForm';
 import { useDamageReports } from '../../hooks/useDamageReports';
+import { AssignmentField } from '../assignment/AssignmentField';
+import type { PersonResult } from '../assignment/PersonSearch';
+import type { AssignmentTarget } from '../../types/assignment';
+import { useUpdateAsset } from '../../hooks/useAssets';
 
 interface AssetDetailProps {
   assetId: string;
@@ -97,21 +99,24 @@ export function AssetDetail({ assetId, onEdit, onClose }: AssetDetailProps) {
     const saved = localStorage.getItem(`churchtools-inventory-barcode-history-expanded-${assetId}`);
     return saved ? JSON.parse(saved) : false;
   });
-  const [convertToParentOpened, setConvertToParentOpened] = useState(false);
-  const [maintenanceFormOpened, setMaintenanceFormOpened] = useState(false);
-  const [damageReportOpened, setDamageReportOpened] = useState(false);
   const [groupDetailOpened, setGroupDetailOpened] = useState(false);
   const [convertGroupOpened, setConvertGroupOpened] = useState(false);
   const [joinGroupOpened, setJoinGroupOpened] = useState(false);
-  const maintenanceHistoryCount = history.filter(entry => entry.action === 'maintenance-performed').length;
+  const [damageModalOpened, setDamageModalOpened] = useState(false);
   const removeAssetFromGroup = useRemoveAssetFromGroup();
   const { data: assetGroupDetail } = useAssetGroup(asset?.assetGroup?.id);
   const maintenanceEnabled = useFeatureSettingsStore((state) => state.maintenanceEnabled);
-  const { createReport, markReportAsRepaired, isCreating } = useDamageReports(assetId);
+  const { markReportAsRepaired, createDamageReport, isCreatingReport, isRepairing } = useDamageReports(assetId);
+  const { t: tDamage } = useTranslation('damage');
   const [searchParams, setSearchParams] = useSearchParams();
   const routeGroupId = searchParams.get('groupId');
   const routeShowGroup = searchParams.get('showGroup');
   const assetGroupId = asset?.assetGroup?.id ?? null;
+
+  // Assignment hooks
+  const { currentAssignment, assignToTarget, checkIn, isAssigning, isCheckingIn } = useAssignments(assetId);
+  const updateAsset = useUpdateAsset();
+  const assignmentFieldRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!assetGroupId) {
@@ -286,47 +291,6 @@ export function AssetDetail({ assetId, onEdit, onClose }: AssetDetailProps) {
 
   return (
     <>
-      <ConvertToParentModal
-        opened={convertToParentOpened}
-        onClose={() => setConvertToParentOpened(false)}
-        asset={asset}
-      />
-      {maintenanceEnabled && (
-        <Modal
-          opened={maintenanceFormOpened}
-          onClose={() => setMaintenanceFormOpened(false)}
-          title="Record Maintenance"
-          size="lg"
-        >
-          <MaintenanceRecordForm
-            assetId={assetId}
-            assetNumber={asset.assetNumber}
-            assetName={asset.name}
-            onSuccess={() => setMaintenanceFormOpened(false)}
-          />
-        </Modal>
-      )}
-      <Modal
-        opened={damageReportOpened}
-        onClose={() => setDamageReportOpened(false)}
-        title="Report Damage"
-        size="lg"
-      >
-        <DamageReportForm
-          assetId={assetId}
-          onSubmit={async (data) => {
-            await createReport(data);
-            setDamageReportOpened(false);
-            notifications.show({
-              title: 'Damage Report Created',
-              message: 'The damage report has been recorded and the asset has been marked as broken.',
-              color: 'green',
-            });
-          }}
-          onCancel={() => setDamageReportOpened(false)}
-          loading={isCreating}
-        />
-      </Modal>
       {asset.assetGroup && (
         <Modal
           opened={groupDetailOpened}
@@ -349,6 +313,42 @@ export function AssetDetail({ assetId, onEdit, onClose }: AssetDetailProps) {
         onClose={() => setJoinGroupOpened(false)}
         onJoined={handleGroupJoined}
       />
+      <Modal
+        opened={damageModalOpened}
+        onClose={() => setDamageModalOpened(false)}
+        title={tDamage('modal.title')}
+        size="md"
+      >
+        <DamageReportForm
+          assetId={assetId}
+          onSubmit={async (data: DamageReportFormData) => {
+            try {
+              await createDamageReport(data);
+              // Also update asset status to broken
+              await updateAsset.mutateAsync({
+                id: asset.id,
+                data: { status: 'broken' },
+              });
+              setDamageModalOpened(false);
+              notifications.show({
+                title: tDamage('notifications.reportSuccessTitle'),
+                message: tDamage('notifications.reportSuccessMessage'),
+                color: 'green',
+              });
+            } catch (error) {
+              const fallbackMessage = tDamage('notifications.reportErrorMessage');
+              const message = error instanceof Error && error.message ? error.message : fallbackMessage;
+              notifications.show({
+                title: tDamage('notifications.reportErrorTitle'),
+                message,
+                color: 'red',
+              });
+            }
+          }}
+          onCancel={() => setDamageModalOpened(false)}
+          loading={isCreatingReport}
+        />
+      </Modal>
       <Stack gap="md">
         <Group justify="space-between">
           <Group>
@@ -360,29 +360,39 @@ export function AssetDetail({ assetId, onEdit, onClose }: AssetDetailProps) {
                 </ActionIcon>
               </Tooltip>
             </Group>
-            <AssetStatusBadge status={asset.status} size="md" />
+            <AssetStatusMenu
+              asset={asset}
+              size="md"
+              onStatusChange={async (newStatus: AssetStatus) => {
+                try {
+                  await updateAsset.mutateAsync({
+                    id: asset.id,
+                    data: { status: newStatus },
+                  });
+                  notifications.show({
+                    title: 'Status Updated',
+                    message: `Asset status changed to ${newStatus}`,
+                    color: 'green',
+                  });
+                } catch (error) {
+                  notifications.show({
+                    title: 'Error',
+                    message: error instanceof Error ? error.message : 'Failed to update status',
+                    color: 'red',
+                  });
+                }
+              }}
+              onAssignClick={() => {
+                // Scroll to assignment field
+                assignmentFieldRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              }}
+              onBrokenClick={() => {
+                // Open damage report modal when user wants to mark as broken
+                setDamageModalOpened(true);
+              }}
+            />
           </Group>
           <Group>
-            {!asset.isParent && !asset.parentAssetId && (
-              <Button
-                variant="light"
-                size="sm"
-                onClick={() => setConvertToParentOpened(true)}
-              >
-                Convert to Parent
-              </Button>
-            )}
-            {asset.status !== 'broken' && (
-              <Button
-                variant="light"
-                color="red"
-                size="sm"
-                leftSection={<IconTools size={16} />}
-                onClick={() => setDamageReportOpened(true)}
-              >
-                Mark as Broken
-              </Button>
-            )}
             {onEdit && (
               <Button
                 variant="default"
@@ -391,6 +401,30 @@ export function AssetDetail({ assetId, onEdit, onClose }: AssetDetailProps) {
               >
                 Edit
               </Button>
+            )}
+            {!asset.assetGroup && (
+              <Menu shadow="md" width={220} position="bottom-end" withinPortal>
+                <Menu.Target>
+                  <ActionIcon variant="default" size="lg">
+                    <IconDots size={16} />
+                  </ActionIcon>
+                </Menu.Target>
+                <Menu.Dropdown>
+                  <Menu.Label>Asset Model Actions</Menu.Label>
+                  <Menu.Item
+                    leftSection={<IconUsersPlus size={16} />}
+                    onClick={() => setConvertGroupOpened(true)}
+                  >
+                    Create Asset Model
+                  </Menu.Item>
+                  <Menu.Item
+                    leftSection={<IconUsersGroup size={16} />}
+                    onClick={() => setJoinGroupOpened(true)}
+                  >
+                    Join Existing Model
+                  </Menu.Item>
+                </Menu.Dropdown>
+              </Menu>
             )}
             {onClose && (
               <Button variant="subtle" onClick={onClose}>
@@ -406,21 +440,8 @@ export function AssetDetail({ assetId, onEdit, onClose }: AssetDetailProps) {
           <Tabs.Tab value="overview" leftSection={<IconInfoCircle size={16} />}>
             Overview
           </Tabs.Tab>
-          {maintenanceEnabled && (
-            <Tabs.Tab value="maintenance" leftSection={<IconTools size={16} />}>
-              Maintenance History
-              {maintenanceHistoryCount > 0 && (
-                <Badge size="sm" circle ml="xs">
-                  {maintenanceHistoryCount}
-                </Badge>
-              )}
-            </Tabs.Tab>
-          )}
-          <Tabs.Tab value="damage" leftSection={<IconTools size={16} />}>
-            Damage & Repairs
-          </Tabs.Tab>
-          <Tabs.Tab value="assignment" leftSection={<IconUser size={16} />}>
-            Assignment
+          <Tabs.Tab value="maintenance-damage" leftSection={<IconTools size={16} />}>
+            {maintenanceEnabled ? 'Maintenance & Damage' : 'Damage & Repairs'}
           </Tabs.Tab>
           <Tabs.Tab value="history" leftSection={<IconHistory size={16} />}>
             History
@@ -515,21 +536,6 @@ export function AssetDetail({ assetId, onEdit, onClose }: AssetDetailProps) {
                       <Text size="sm" c="dimmed">
                         This asset is not part of an asset model. Create a model to share fields across similar assets or join an existing model.
                       </Text>
-                      <Group gap="xs">
-                        <Button
-                          leftSection={<IconUsersPlus size={16} />}
-                          onClick={() => setConvertGroupOpened(true)}
-                        >
-                          Create Asset Model
-                        </Button>
-                        <Button
-                          variant="light"
-                          leftSection={<IconUsersGroup size={16} />}
-                          onClick={() => setJoinGroupOpened(true)}
-                        >
-                          Join Existing Model
-                        </Button>
-                      </Group>
                     </Stack>
                   </Card>
                 )}
@@ -601,7 +607,68 @@ export function AssetDetail({ assetId, onEdit, onClose }: AssetDetailProps) {
                   </Card.Section>
                 </Card>
 
-                <AssetAssignmentList asset={asset} />
+                {/* People Section - Assignment */}
+                <Card withBorder ref={assignmentFieldRef}>
+                  <Stack gap="md">
+                    <Title order={4}>People</Title>
+                    <Divider />
+                    <AssignmentField
+                      currentAssignment={currentAssignment}
+                      onSearchPerson={async (query: string): Promise<PersonResult[]> => {
+                        const response = await personSearchService.search({ query, limit: 10, domainTypes: ['person'] });
+                        return response.results.map((r: PersonSearchResult) => ({
+                          id: r.id,
+                          firstName: r.firstName,
+                          lastName: r.lastName,
+                          email: r.email,
+                          avatarUrl: r.avatarUrl,
+                        }));
+                      }}
+                      onAssign={async (personId: string, personName: string) => {
+                        try {
+                          const target: AssignmentTarget = {
+                            type: 'person',
+                            id: personId,
+                            name: personName,
+                          };
+                          await assignToTarget(target);
+                          notifications.show({
+                            title: 'Asset Assigned',
+                            message: `Assigned to ${personName}`,
+                            color: 'green',
+                          });
+                        } catch (error) {
+                          notifications.show({
+                            title: 'Error',
+                            message: error instanceof Error ? error.message : 'Failed to assign asset',
+                            color: 'red',
+                          });
+                        }
+                      }}
+                      onCheckIn={async () => {
+                        try {
+                          await checkIn();
+                          notifications.show({
+                            title: 'Asset Checked In',
+                            message: 'Asset has been checked in',
+                            color: 'green',
+                          });
+                        } catch (error) {
+                          notifications.show({
+                            title: 'Error',
+                            message: error instanceof Error ? error.message : 'Failed to check in asset',
+                            color: 'red',
+                          });
+                        }
+                      }}
+                      loading={isAssigning || isCheckingIn}
+                      createdByName={asset.createdByName}
+                      createdAt={asset.createdAt}
+                      lastModifiedByName={asset.lastModifiedByName}
+                      lastModifiedAt={asset.lastModifiedAt}
+                    />
+                  </Stack>
+                </Card>
 
                 {/* Product Information */}
                 {(asset.manufacturer || asset.model) && (
@@ -677,13 +744,6 @@ export function AssetDetail({ assetId, onEdit, onClose }: AssetDetailProps) {
                             <MaintenanceReminderBadge schedule={maintenanceSchedule} />
                           )}
                         </Group>
-                        <Button
-                          size="sm"
-                          variant="light"
-                          onClick={() => setMaintenanceFormOpened(true)}
-                        >
-                          Record Maintenance
-                        </Button>
                       </Group>
                       <Divider />
 
@@ -729,51 +789,38 @@ export function AssetDetail({ assetId, onEdit, onClose }: AssetDetailProps) {
           </Grid>
         </Tabs.Panel>
 
-        {maintenanceEnabled && (
-          <Tabs.Panel value="maintenance" pt="md">
-            <AssetMaintenanceHistory assetId={assetId} assetName={asset.name} />
-          </Tabs.Panel>
-        )}
+        <Tabs.Panel value="maintenance-damage" pt="md">
+          <Stack gap="lg">
+            {/* Maintenance History Section */}
+            {maintenanceEnabled && (
+              <Card withBorder>
+                <Stack gap="md">
+                  <Title order={4}>Maintenance History</Title>
+                  <Divider />
+                  <AssetMaintenanceHistory assetId={assetId} assetName={asset.name} />
+                </Stack>
+              </Card>
+            )}
 
-        <Tabs.Panel value="damage" pt="md">
-          <RepairHistoryTab
-            assetId={assetId}
-            onMarkRepaired={async (reportId, repairNotes) => {
-              await markReportAsRepaired(reportId, { repairNotes });
-              notifications.show({
-                title: 'Asset Repaired',
-                message: 'The damage report has been marked as repaired.',
-                color: 'green',
-              });
-            }}
-            loading={false}
-          />
-        </Tabs.Panel>
-
-        <Tabs.Panel value="assignment" pt="md">
-          <Stack gap="md">
-            <AssignmentField
-              currentAssignment={null}
-              onSearchPerson={async (query: string): Promise<PersonResult[]> => {
-                // TODO: Implement ChurchTools person search when service is available
-                const response = await personSearchService.search({ query, limit: 10 });
-                return response.results.map((r: PersonSearchResult) => ({
-                  id: r.id,
-                  firstName: r.firstName,
-                  lastName: r.lastName,
-                  email: r.email,
-                  avatarUrl: r.avatarUrl,
-                }));
-              }}
-              onAssign={(_personId, _personName) => {
-                // TODO: Implement when AssignmentService is available
-              }}
-              onCheckIn={() => {
-                // TODO: Implement when AssignmentService is available
-              }}
-              loading={false}
-            />
-            <AssignmentHistoryTab history={[]} />
+            {/* Damage & Repairs Section */}
+            <Card withBorder>
+              <Stack gap="md">
+                <Title order={4}>Damage & Repairs</Title>
+                <Divider />
+                <RepairHistoryTab
+                  assetId={assetId}
+                  onMarkRepaired={async (reportId, repairNotes) => {
+                    await markReportAsRepaired(reportId, { repairNotes });
+                    notifications.show({
+                      title: 'Asset Repaired',
+                      message: 'The damage report has been marked as repaired.',
+                      color: 'green',
+                    });
+                  }}
+                  loading={isRepairing}
+                />
+              </Stack>
+            </Card>
           </Stack>
         </Tabs.Panel>
 

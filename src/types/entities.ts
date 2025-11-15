@@ -428,15 +428,27 @@ export interface BookingFilters {
 // Equipment Kit
 // ============================================================================
 
+export type KitInheritanceProperty = 'location' | 'status' | 'tags'
+
+export type KitCompletenessStatus = 'complete' | 'incomplete'
+
 export interface Kit {
   id: UUID
   name: string
   description?: string
   type: KitType
+  location?: string
+  status?: AssetStatus
+  tags?: UUID[]
+  inheritedProperties?: KitInheritanceProperty[]
+  completenessStatus?: KitCompletenessStatus
+  assemblyDate?: ISOTimestamp
+  disassemblyDate?: ISOTimestamp | null
   boundAssets?: {
     assetId: UUID
     assetNumber: string
     name: string
+    inherits?: Partial<Record<KitInheritanceProperty, boolean>>
   }[]
   poolRequirements?: {
     assetTypeId: UUID
@@ -457,10 +469,24 @@ export type KitType = 'fixed' | 'flexible'
 
 export type KitCreate = Pick<
   Kit,
-  'name' | 'description' | 'type' | 'boundAssets' | 'poolRequirements'
+  | 'name'
+  | 'description'
+  | 'type'
+  | 'boundAssets'
+  | 'poolRequirements'
+  | 'location'
+  | 'status'
+  | 'tags'
+  | 'inheritedProperties'
+  | 'completenessStatus'
+  | 'assemblyDate'
+  | 'disassemblyDate'
 >
 
-export type KitUpdate = Partial<KitCreate>
+export type KitUpdate = Partial<KitCreate> & {
+  disassemblyDate?: ISOTimestamp | null
+  completenessStatus?: KitCompletenessStatus
+}
 
 export interface MaintenanceRecord {
   id: UUID

@@ -13,6 +13,7 @@ import { initializeChurchToolsStorageProvider } from './services/churchTools/sto
 import { churchToolsAPIClient } from './services/api/ChurchToolsAPIClient';
 import { getModuleId } from './hooks/useStorageProvider';
 import App from './App';
+import { initI18n } from './i18n/config';
 
 // Import Mantine styles
 import '@mantine/core/styles.css';
@@ -69,6 +70,9 @@ if (import.meta.env.MODE === 'development' && username && password) {
 
 // Initialize offline database (T019 - IndexedDB setup for offline stocktake)
 await initializeOfflineDb();
+
+// Initialize translations before rendering UI
+await initI18n();
 
 try {
     const schemaVersioning = new SchemaVersioningService();

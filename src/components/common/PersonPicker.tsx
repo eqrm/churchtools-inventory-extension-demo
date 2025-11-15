@@ -4,7 +4,7 @@
  * Purpose: Searchable person picker with avatar display
  */
 
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import { TextInput, Paper, Stack, Group, Avatar, Text, Loader, ActionIcon } from '@mantine/core'
 import { IconSearch, IconX } from '@tabler/icons-react'
 import { usePersonSearch } from '../../hooks/usePersonSearch'
@@ -41,6 +41,17 @@ export function PersonPicker(props: PersonPickerProps) {
 
   const { results, loading, error: searchError, search } = usePersonSearch()
 
+  const uniqueResults = useMemo(() => {
+    const seen = new Set<string>()
+    return results.filter((person) => {
+      if (seen.has(person.id)) {
+        return false
+      }
+      seen.add(person.id)
+      return true
+    })
+  }, [results])
+
   useEffect(() => {
     if (searchQuery.length >= 2) {
       search(searchQuery)
@@ -71,7 +82,7 @@ export function PersonPicker(props: PersonPickerProps) {
     setSearchQuery('')
   }, [onChange])
 
-  const showNoResults = open && !loading && searchQuery.length >= 2 && results.length === 0
+  const showNoResults = open && !loading && searchQuery.length >= 2 && uniqueResults.length === 0
 
   return (
     <div ref={wrapperRef} style={{ position: 'relative' }}>
@@ -119,10 +130,10 @@ export function PersonPicker(props: PersonPickerProps) {
         />
       )}
 
-      {open && results.length > 0 && (
+      {open && uniqueResults.length > 0 && (
         <Paper shadow="md" p="xs" style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 1000, marginTop: 4, maxHeight: 300, overflowY: 'auto' }}>
           <Stack gap="xs">
-            {results.map((person) => (
+            {uniqueResults.map((person) => (
               <Paper key={person.id} p="xs" style={{ cursor: 'pointer' }} onClick={() => handleSelect(person)}>
                 <Group gap="sm">
                   <Avatar src={person.avatarUrl} alt={person.displayName} radius="xl" size="sm">

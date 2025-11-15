@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo, type RefObject } from 'react';
 import { Autocomplete, Group, Avatar, Text, Loader } from '@mantine/core';
 import { useDebouncedValue } from '@mantine/hooks';
 import { IconUser } from '@tabler/icons-react';
@@ -26,6 +26,10 @@ interface PersonSearchProps {
   label?: string;
   /** Whether field is required */
   required?: boolean;
+  /** Input reference for focus control */
+  inputRef?: RefObject<HTMLInputElement>;
+  /** Whether the field should autofocus on mount */
+  autoFocus?: boolean;
 }
 
 /**
@@ -53,6 +57,8 @@ export function PersonSearch({
   disabled = false,
   label,
   required = false,
+  inputRef,
+  autoFocus = false,
 }: PersonSearchProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedQuery] = useDebouncedValue(searchQuery, 300);
@@ -102,19 +108,36 @@ export function PersonSearch({
     }
   }, [value]);
 
+  const options = useMemo(() => {
+    const seen = new Set<string>();
+    return results
+      .map((person) => {
+        const label = `${person.firstName} ${person.lastName}`.trim();
+        return {
+          value: label,
+          label,
+          email: person.email,
+          avatarUrl: person.avatarUrl,
+        };
+      })
+      .filter((option) => {
+        if (seen.has(option.value)) {
+          return false;
+        }
+        seen.add(option.value);
+        return true;
+      });
+  }, [results]);
+
   return (
     <Autocomplete
+      ref={inputRef ?? undefined}
       label={label}
       placeholder={placeholder}
       value={searchQuery}
       onChange={setSearchQuery}
       onOptionSubmit={handleChange}
-      data={results.map((person) => ({
-        value: `${person.firstName} ${person.lastName}`,
-        label: `${person.firstName} ${person.lastName}`,
-        email: person.email,
-        avatarUrl: person.avatarUrl,
-      }))}
+      data={options}
       renderOption={({ option }) => {
         const item = option as { value: string; label: string; email?: string; avatarUrl?: string };
         return (
@@ -136,6 +159,7 @@ export function PersonSearch({
       rightSection={loading ? <Loader size="xs" /> : null}
       disabled={disabled}
       required={required}
+  autoFocus={autoFocus}
       limit={10}
       maxDropdownHeight={300}
     />

@@ -3,11 +3,14 @@ import type {
   Asset,
   AssetType,
   AssetFilters,
+  AssetStatus,
   Booking,
   BookingFilters,
   ChangeHistoryEntry,
   Kit,
+  KitCompletenessStatus,
   KitCreate,
+  KitInheritanceProperty,
   KitUpdate,
 } from '../../../types/entities';
 import { CURRENT_SCHEMA_VERSION } from '../../migrations/constants';
@@ -17,6 +20,50 @@ export type KitAvailabilityResult = {
   unavailableAssets?: string[];
   reason?: string;
 };
+
+const INHERITABLE_PROPERTIES: KitInheritanceProperty[] = ['location', 'status', 'tags'];
+
+function normalizeInheritedProperties(
+  properties?: KitInheritanceProperty[] | null,
+): KitInheritanceProperty[] {
+  if (!properties?.length) {
+    return [];
+  }
+  const unique = new Set<KitInheritanceProperty>();
+  for (const property of properties) {
+    if (INHERITABLE_PROPERTIES.includes(property)) {
+      unique.add(property);
+    }
+  }
+  return Array.from(unique);
+}
+
+function normalizeTags(raw?: unknown): string[] {
+  if (!Array.isArray(raw)) {
+    return [];
+  }
+  return raw.filter((value): value is string => typeof value === 'string' && value.trim().length > 0);
+}
+
+function normalizeBoundAssetInheritance(boundAssets?: Kit['boundAssets'] | null): Kit['boundAssets'] | undefined {
+  if (!boundAssets) {
+    return boundAssets ?? undefined;
+  }
+
+  return boundAssets.map((asset) => {
+    const inherits: Partial<Record<KitInheritanceProperty, boolean>> = {};
+    for (const property of INHERITABLE_PROPERTIES) {
+      const value = asset.inherits?.[property];
+      if (typeof value === 'boolean') {
+        inherits[property] = value;
+      }
+    }
+    return {
+      ...asset,
+      inherits: Object.keys(inherits).length ? inherits : undefined,
+    };
+  });
+}
 
 export interface KitDependencies {
   moduleId: string;
@@ -76,8 +123,22 @@ export async function createKit(deps: KitDependencies, data: KitCreate): Promise
   }
 
   const now = new Date().toISOString();
+  const inheritedProperties = normalizeInheritedProperties(data.inheritedProperties);
+  const tags = normalizeTags(data.tags);
+  const boundAssets = normalizeBoundAssetInheritance(data.boundAssets);
+  const kitStatus: AssetStatus = data.status ?? 'available';
+  const completeness: KitCompletenessStatus = data.completenessStatus ?? 'complete';
+
   const kitPayload = {
     ...data,
+    location: data.location ?? null,
+    status: kitStatus,
+    tags,
+    inheritedProperties,
+    boundAssets,
+    completenessStatus: completeness,
+    assemblyDate: data.type === 'fixed' ? data.assemblyDate ?? now : data.assemblyDate,
+    disassemblyDate: data.disassemblyDate ?? null,
     createdBy: user.id,
     createdByName: user.name,
     createdAt: now,
@@ -85,7 +146,7 @@ export async function createKit(deps: KitDependencies, data: KitCreate): Promise
     lastModifiedByName: user.name,
     lastModifiedAt: now,
     schemaVersion: CURRENT_SCHEMA_VERSION,
-  };
+  } satisfies Record<string, unknown>;
 
   const valueData = {
     dataCategoryId: Number(category.id),
@@ -126,14 +187,39 @@ export async function updateKit(deps: KitDependencies, id: string, data: KitUpda
   }
 
   const now = new Date().toISOString();
+  const inheritedProperties =
+    data.inheritedProperties !== undefined
+      ? normalizeInheritedProperties(data.inheritedProperties)
+      : normalizeInheritedProperties(existing.inheritedProperties);
+  const tags = data.tags !== undefined ? normalizeTags(data.tags) : normalizeTags(existing.tags);
+  const boundAssets =
+    data.boundAssets !== undefined
+      ? normalizeBoundAssetInheritance(data.boundAssets)
+      : normalizeBoundAssetInheritance(existing.boundAssets);
+  const kitStatus: AssetStatus = data.status ?? existing.status ?? 'available';
+  const completeness: KitCompletenessStatus =
+    data.completenessStatus ?? existing.completenessStatus ?? 'complete';
+  const location = data.location ?? existing.location ?? null;
+  const assemblyDate = existing.assemblyDate ?? (existing.type === 'fixed' ? existing.createdAt : undefined);
+  const disassemblyDate =
+    data.disassemblyDate !== undefined ? data.disassemblyDate ?? null : existing.disassemblyDate ?? null;
+
   const updatedPayload = {
     ...existing,
     ...data,
+    location,
+    status: kitStatus,
+    tags,
+    inheritedProperties,
+    boundAssets,
+    completenessStatus: completeness,
+    assemblyDate,
+    disassemblyDate,
     lastModifiedBy: user.id,
     lastModifiedByName: user.name,
     lastModifiedAt: now,
     schemaVersion: existing.schemaVersion ?? CURRENT_SCHEMA_VERSION,
-  };
+  } satisfies Record<string, unknown>;
 
   const valueData = {
     id: Number(id),
@@ -248,7 +334,16 @@ function mapToKit(value: unknown): Kit {
     name: String(data['name']),
     description: data['description'] ? String(data['description']) : undefined,
     type: data['type'] as Kit['type'],
-    boundAssets: data['boundAssets'] as Kit['boundAssets'],
+    location: (data['location'] as string) ?? undefined,
+    status: (data['status'] as AssetStatus) ?? 'available',
+    tags: normalizeTags(data['tags']),
+    inheritedProperties: normalizeInheritedProperties(
+      data['inheritedProperties'] as KitInheritanceProperty[] | null | undefined,
+    ),
+    completenessStatus: (data['completenessStatus'] as KitCompletenessStatus) ?? 'complete',
+    assemblyDate: data['assemblyDate'] as string | undefined,
+    disassemblyDate: (data['disassemblyDate'] as string | null) ?? null,
+  boundAssets: normalizeBoundAssetInheritance(data['boundAssets'] as Kit['boundAssets']),
     poolRequirements: data['poolRequirements'] as Kit['poolRequirements'],
     createdBy: String(data['createdBy']),
     createdByName: String(data['createdByName']),

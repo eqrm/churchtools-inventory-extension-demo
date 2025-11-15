@@ -1,0 +1,83 @@
+{
+  "modes": {
+    "table": "Table",
+    "gallery": "Gallery",
+    "kanban": "Kanban",
+    "calendar": "Calendar"
+  },
+  "header": {
+    "filter": "Filter",
+    "savedViewsPlaceholder": "Saved views",
+    "noSavedViewsPlaceholder": "No saved views",
+    "createSavedView": "Save view",
+    "manageSavedView": "Manage saved view",
+    "renameSavedView": "Rename",
+    "deleteSavedView": "Delete",
+    "savedViewsOpen": "Show all saved views",
+    "nothingFound": "No results"
+  },
+  "filterPanel": {
+    "title": "Filters",
+    "badgeLabel": "{{count}}",
+    "reset": "Reset",
+    "add": "Add filter",
+  "remove": "Remove filter",
+    "empty": "No filters are active.",
+    "apply": "Apply",
+    "fieldPlaceholder": "Select field",
+    "operatorPlaceholder": "Operator",
+    "unsupported": "This field does not support this filter type.",
+    "unsupportedNumber": "This field does not support a numeric filter.",
+    "unsupportedDate": "This field does not support a date filter.",
+    "unsupportedTag": "This field does not support a tag filter.",
+    "unsupportedBoolean": "This field does not support a boolean filter.",
+    "textPlaceholder": "Enter value",
+    "numberMinPlaceholder": "Min",
+    "numberMaxPlaceholder": "Max",
+    "dateAbsolute": "Absolute",
+    "dateRelative": "Relative",
+    "dateLast": "Last",
+    "dateNext": "Next",
+    "dateUnitDays": "Days",
+    "dateUnitWeeks": "Weeks",
+    "dateUnitMonths": "Months",
+    "booleanTrue": "Yes",
+    "booleanFalse": "No",
+    "noAdditionalValue": "No additional value required.",
+    "noOptions": "No options available."
+  },
+  "grouping": {
+    "title": "Grouping",
+    "clear": "Remove grouping",
+    "fieldPlaceholder": "Select field",
+    "orderLabel": "Order",
+    "emptyLabel": "Empty label",
+    "groupsTitle": "Groups",
+    "resetCollapsed": "Expand all groups",
+    "expandGroup": "Expand group",
+    "collapseGroup": "Collapse group",
+    "ascending": "Ascending",
+    "descending": "Descending",
+    "groupLabel": "{{label}}",
+    "emptyGroup": "Empty group"
+  },
+  "pagination": {
+    "label": "Results",
+    "none": "none",
+    "summary": "{{start}}-{{end}} of {{total}}",
+    "currentCount": "current {{count}}",
+    "perPage": "{{count}} / page"
+  },
+  "gallery": {
+    "empty": "No records available",
+    "summary": "Showing {{start}}-{{end}} of {{total}}"
+  },
+  "kanban": {
+    "empty": "No records available",
+    "columnEmpty": "No items",
+    "loadMore": "Load more"
+  },
+  "table": {
+    "summary": "Showing {{start}}-{{end}} of {{total}}"
+  }
+}

@@ -141,7 +141,11 @@ export class ChurchToolsStorageProvider {
       model: asset['model'] as string | undefined,
       status: (asset['status'] as Asset['status']) || 'available',
       location: asset['location'] as string | undefined,
-      inUseBy: asset['inUseBy'] as Asset['inUseBy'],
+  currentAssignmentId: asset['currentAssignmentId'] ? String(asset['currentAssignmentId']) : undefined,
+      inUseBy:
+        asset['inUseBy'] && typeof asset['inUseBy'] === 'object'
+          ? (asset['inUseBy'] as Asset['inUseBy'])
+          : undefined,
       barcode: asset['barcode'] as string,
       qrCode: asset['qrCode'] as string,
       barcodeHistory: asset['barcodeHistory'] as Asset['barcodeHistory'],

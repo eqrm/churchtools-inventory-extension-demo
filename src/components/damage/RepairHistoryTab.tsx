@@ -1,7 +1,7 @@
 import { Alert, Badge, Box, Button, Group, Image, Modal, Paper, Stack, Text, Textarea, Timeline } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { IconAlertCircle, IconCheck, IconTool } from '@tabler/icons-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { formatDateTime } from '../../utils/formatters';
 import { useDamageReports } from '../../hooks/useDamageReports';
@@ -11,7 +11,7 @@ interface RepairHistoryTabProps {
   /** Asset ID to show damage history for */
   assetId: string;
   /** Callback when marking a report as repaired */
-  onMarkRepaired?: (reportId: string, repairNotes: string) => void;
+  onMarkRepaired?: (reportId: string, repairNotes: string) => Promise<void> | void;
   /** Whether repair operation is in progress */
   loading?: boolean;
 }
@@ -42,23 +42,56 @@ export function RepairHistoryTab({
   const { t: tCommon } = useTranslation('common');
   const [selectedReport, setSelectedReport] = useState<DamageReport | null>(null);
   const [repairNotes, setRepairNotes] = useState('');
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [repairModalOpened, { open: openRepairModal, close: closeRepairModal }] = useDisclosure(false);
   
   // Fetch damage reports for this asset
-  const { reports: damageReports, isLoading, error } = useDamageReports(assetId);
+  const {
+    reports: damageReports,
+    isLoading,
+    error,
+    markReportAsRepaired: markReportAsRepairedMutation,
+    isRepairing,
+  } = useDamageReports(assetId);
+
+  const isBusy = useMemo(() => loading || isRepairing || isSubmitting, [loading, isRepairing, isSubmitting]);
 
   const handleOpenRepairModal = (report: DamageReport) => {
     setSelectedReport(report);
     setRepairNotes('');
+    setSubmitError(null);
     openRepairModal();
   };
 
-  const handleSubmitRepair = () => {
-    if (selectedReport && onMarkRepaired) {
-      onMarkRepaired(selectedReport.id, repairNotes);
+  const handleSubmitRepair = async () => {
+    if (!selectedReport) {
+      return;
+    }
+
+    const trimmedNotes = repairNotes.trim();
+    if (trimmedNotes.length === 0) {
+      setSubmitError(t('timeline.markAsRepairedHint'));
+      return;
+    }
+
+    setSubmitError(null);
+    setIsSubmitting(true);
+    try {
+      const submission = onMarkRepaired
+        ? onMarkRepaired(selectedReport.id, trimmedNotes)
+        : markReportAsRepairedMutation(selectedReport.id, { repairNotes: trimmedNotes });
+
+      await submission;
+
       closeRepairModal();
       setSelectedReport(null);
       setRepairNotes('');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : t('notifications.reportErrorMessage');
+      setSubmitError(message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -173,13 +206,13 @@ export function RepairHistoryTab({
                     </Alert>
                   )}
 
-                  {!isRepaired && onMarkRepaired && (
+                  {!isRepaired && (
                     <Group justify="flex-end" mt="xs">
                       <Button
                         size="xs"
                         leftSection={<IconTool size={14} />}
                         onClick={() => handleOpenRepairModal(report)}
-                        disabled={loading}
+                        disabled={isBusy}
                       >
                         {t('timeline.markAsRepaired')}
                       </Button>
@@ -199,6 +232,9 @@ export function RepairHistoryTab({
         size="md"
       >
         <Stack gap="md">
+          {submitError && (
+            <Alert color="red" radius="md">{submitError}</Alert>
+          )}
           <Text size="sm" c="dimmed">
             {t('timeline.markAsRepairedHint')}
           </Text>
@@ -209,14 +245,14 @@ export function RepairHistoryTab({
             minRows={4}
             value={repairNotes}
             onChange={(e) => setRepairNotes(e.currentTarget.value)}
-            disabled={loading}
+            disabled={isBusy}
           />
 
           <Group justify="flex-end" mt="md">
-            <Button variant="subtle" onClick={closeRepairModal} disabled={loading}>
+            <Button variant="subtle" onClick={closeRepairModal} disabled={isBusy}>
               {tCommon('actions.cancel')}
             </Button>
-            <Button onClick={handleSubmitRepair} loading={loading} disabled={loading || !repairNotes.trim()}>
+            <Button onClick={handleSubmitRepair} loading={isBusy} disabled={isBusy || !repairNotes.trim()}>
               {t('timeline.markAsRepairedSubmit')}
             </Button>
           </Group>

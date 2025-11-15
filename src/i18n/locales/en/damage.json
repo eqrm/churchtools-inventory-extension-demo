@@ -44,5 +44,14 @@
   "status": {
     "broken": "Broken",
     "repaired": "Repaired"
+  },
+  "modal": {
+    "title": "Report Damage"
+  },
+  "notifications": {
+    "reportSuccessTitle": "Damage Reported",
+    "reportSuccessMessage": "The damage has been reported and asset status changed to broken.",
+    "reportErrorTitle": "Error",
+    "reportErrorMessage": "Failed to report damage"
   }
 }

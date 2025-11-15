@@ -162,18 +162,18 @@
 
 ### Implementation for User Story 3 (Manual testing, TDD not required per contracts)
 
-- [ ] T066 [US3] Implement AssignmentService in src/services/AssignmentService.ts (assignAsset, checkInAsset, getAssignmentHistory, getCurrentAssignment, getUserAssignments)
-- [ ] T067 [US3] Create Zustand assignment store in src/stores/assignmentStore.ts
-- [ ] T068 [US3] Create useAssignments hook in src/hooks/useAssignments.ts
-- [ ] T069 [US3] Create useChurchToolsSearch hook in src/hooks/useChurchToolsSearch.ts (debounced person/group search)
+- [X] T066 [US3] Implement AssignmentService in src/services/AssignmentService.ts (assignAsset, checkInAsset, getAssignmentHistory, getCurrentAssignment, getUserAssignments)
+- [X] T067 [US3] Create Zustand assignment store in src/stores/assignmentStore.ts
+- [X] T068 [US3] Create useAssignments hook in src/hooks/useAssignments.ts
+- [X] T069 [US3] Refactor usePersonSearch hook to support person/group search with debouncing
 - [X] T070 [P] [US3] Create PersonSearch component in src/components/assignment/PersonSearch.tsx (autocomplete with ChurchTools API)
 - [X] T071 [P] [US3] Create AssignmentField component in src/components/assignment/AssignmentField.tsx
 - [X] T072 [P] [US3] Create AssignmentHistoryTab component in src/components/assignment/AssignmentHistoryTab.tsx
 - [ ] T073 [US3] Add assignment locale strings in src/i18n/locales/en/assignment.json
 - [X] T074 [US3] Modify AssetDetail page to include AssignmentField and AssignmentHistoryTab
-- [ ] T075 [US3] Implement asset status auto-update (Available ↔ In Use) on assignment/check-in
+- [X] T075 [US3] Implement asset status auto-update (Available ↔ In Use) on assignment/check-in
 - [X] T076 [US3] Add confirmation popup when changing status of assigned asset
-- [ ] T077 [US3] Integrate assignments with undo service (record assignment/check-in actions)
+- [X] T077 [US3] Integrate assignments with undo service (record assignment/check-in actions)
 
 **Checkpoint**: User Story 3 complete - asset assignment with ChurchTools integration works independently
 
@@ -187,31 +187,31 @@
 
 ### TDD Tests for User Story 7 (Recommended for filter execution logic)
 
-- [ ] T066 [P] [US7] Write tests for applyFilters (text, date, tag, number, empty filters) in src/tests/services/DataViewService.test.ts
-- [ ] T067 [P] [US7] Write tests for relative date resolution (last 7 days, next 30 days) in src/tests/services/DataViewService.test.ts
-- [ ] T068 [P] [US7] Write tests for applySorts (single and multi-field) in src/tests/services/DataViewService.test.ts
-- [ ] T069 [P] [US7] Write tests for groupAssets logic in src/tests/services/DataViewService.test.ts
+- [X] T066 [P] [US7] Write tests for applyFilters (text, date, tag, number, empty filters) in src/tests/services/DataViewService.test.ts
+- [X] T067 [P] [US7] Write tests for relative date resolution (last 7 days, next 30 days) in src/tests/services/DataViewService.test.ts
+- [X] T068 [P] [US7] Write tests for applySorts (single and multi-field) in src/tests/services/DataViewService.test.ts
+- [X] T069 [P] [US7] Write tests for groupAssets logic in src/tests/services/DataViewService.test.ts
 
 ### Implementation for User Story 7
 
-- [ ] T070 [US7] Implement DataViewService (pass tests T066-T069) in src/services/DataViewService.ts (createView, updateView, deleteView, getUserViews, applyFilters, applySorts, groupAssets)
-- [ ] T071 [US7] Create Zustand data view store in src/stores/dataViewStore.ts
-- [ ] T072 [US7] Create useDataViews hook in src/hooks/useDataViews.ts
-- [ ] T073 [P] [US7] Create ViewSelector component in src/components/views/ViewSelector.tsx (tabs for table/gallery/kanban/calendar)
-- [ ] T074 [P] [US7] Create FilterBuilder component in src/components/views/FilterBuilder.tsx (modal with filter DSL UI)
-- [ ] T075 [P] [US7] Create GroupingControls component in src/components/views/GroupingControls.tsx
-- [ ] T076 [P] [US7] Create DataViewList component in src/components/views/DataViewList.tsx (saved views)
-- [ ] T077 [US7] Create VirtualTable component using @tanstack/react-virtual in src/components/views/table/VirtualTable.tsx
-- [ ] T078 [P] [US7] Create GalleryGrid component in src/components/views/gallery/GalleryGrid.tsx
-- [ ] T079 [P] [US7] Create PaginationControls component in src/components/views/gallery/PaginationControls.tsx (24 items/page)
-- [ ] T080 [US7] Create KanbanBoard component using @dnd-kit/core in src/components/views/kanban/KanbanBoard.tsx
-- [ ] T081 [P] [US7] Create DraggableCard component in src/components/views/kanban/DraggableCard.tsx
-- [ ] T082 [P] [US7] Create CalendarView component in src/components/views/calendar/CalendarView.tsx (wrapper for existing calendar lib)
-- [ ] T083 [US7] Add views locale strings in src/i18n/locales/en/views.json
-- [ ] T084 [US7] Modify AssetList page to integrate ViewSelector and FilterBuilder
-- [ ] T085 [US7] Implement collapsed group state persistence in dataViewStore
-- [ ] T086 [US7] Integrate kanban drag-and-drop with undo service (record status changes)
-- [ ] T087 [US7] Implement adaptive pagination (Gallery 24/page, Table virtual 100 window, Kanban 20/column, Calendar none)
+- [X] T070 [US7] Implement DataViewService (pass tests T066-T069) in src/services/DataViewService.ts (createView, updateView, deleteView, getUserViews, applyFilters, applySorts, groupAssets)
+- [X] T071 [US7] Create Zustand data view store in src/stores/dataViewStore.ts
+- [X] T072 [US7] Create useDataViews hook in src/hooks/useDataViews.ts
+- [X] T073 [P] [US7] Create ViewSelector component in src/components/views/ViewSelector.tsx (tabs for table/gallery/kanban/calendar)
+- [X] T074 [P] [US7] Create FilterBuilder component in src/components/views/FilterBuilder.tsx (modal with filter DSL UI)
+- [X] T075 [P] [US7] Create GroupingControls component in src/components/views/GroupingControls.tsx
+- [X] T076 [P] [US7] Create DataViewList component in src/components/views/DataViewList.tsx (saved views)
+- [X] T077 [US7] Create VirtualTable component using @tanstack/react-virtual in src/components/views/table/VirtualTable.tsx
+- [X] T078 [P] [US7] Create GalleryGrid component in src/components/views/gallery/GalleryGrid.tsx
+- [X] T079 [P] [US7] Create PaginationControls component in src/components/views/gallery/PaginationControls.tsx (24 items/page)
+- [X] T080 [US7] Create KanbanBoard component using @dnd-kit/core in src/components/views/kanban/KanbanBoard.tsx
+- [X] T081 [P] [US7] Create DraggableCard component in src/components/views/kanban/DraggableCard.tsx
+- [X] T082 [P] [US7] Create CalendarView component in src/components/views/calendar/CalendarView.tsx (wrapper for existing calendar lib)
+- [X] T083 [US7] Add views locale strings in src/i18n/locales/en/views.json
+- [X] T084 [US7] Modify AssetList page to integrate ViewSelector and FilterBuilder
+- [X] T085 [US7] Implement collapsed group state persistence in dataViewStore
+- [X] T086 [US7] Integrate kanban drag-and-drop with undo service (record status changes)
+- [X] T087 [US7] Implement adaptive pagination (Gallery 24/page, Table virtual 100 window, Kanban 20/column, Calendar none)
 
 **Checkpoint**: User Story 7 complete - all view types with filters/sorts/grouping work independently
 
@@ -225,18 +225,18 @@
 
 ### TDD Tests for User Story 4 (REQUIRED - TDD approach for PropertyInheritanceService)
 
-- [ ] T088 [P] [US4] Write RED test for getInheritedProperties calculation in src/tests/services/PropertyInheritanceService.test.ts
-- [ ] T089 [P] [US4] Write RED test for isPropertyInherited detection in src/tests/services/PropertyInheritanceService.test.ts
-- [ ] T090 [P] [US4] Write RED test for propagateKitChange (location) in src/tests/services/PropertyInheritanceService.test.ts
-- [ ] T091 [P] [US4] Write RED test for propagateKitChange (status) in src/tests/services/PropertyInheritanceService.test.ts
-- [ ] T092 [P] [US4] Write RED test for propagateKitChange (tags) in src/tests/services/PropertyInheritanceService.test.ts
-- [ ] T093 [P] [US4] Write RED test for unlockInheritedProperties on disassembly in src/tests/services/PropertyInheritanceService.test.ts
-- [ ] T094 [P] [US4] Write RED test for compound undo action recording in src/tests/services/PropertyInheritanceService.test.ts
-- [ ] T095 [P] [US4] Write RED test for rejecting non-inherited property propagation in src/tests/services/PropertyInheritanceService.test.ts
+- [X] T088 [P] [US4] Write RED test for getInheritedProperties calculation in src/tests/services/PropertyInheritanceService.test.ts
+- [X] T089 [P] [US4] Write RED test for isPropertyInherited detection in src/tests/services/PropertyInheritanceService.test.ts
+- [X] T090 [P] [US4] Write RED test for propagateKitChange (location) in src/tests/services/PropertyInheritanceService.test.ts
+- [X] T091 [P] [US4] Write RED test for propagateKitChange (status) in src/tests/services/PropertyInheritanceService.test.ts
+- [X] T092 [P] [US4] Write RED test for propagateKitChange (tags) in src/tests/services/PropertyInheritanceService.test.ts
+- [X] T093 [P] [US4] Write RED test for unlockInheritedProperties on disassembly in src/tests/services/PropertyInheritanceService.test.ts
+- [X] T094 [P] [US4] Write RED test for compound undo action recording in src/tests/services/PropertyInheritanceService.test.ts
+- [X] T095 [P] [US4] Write RED test for rejecting non-inherited property propagation in src/tests/services/PropertyInheritanceService.test.ts
 
 ### Implementation for User Story 4
 
-- [ ] T096 [US4] Implement PropertyInheritanceService (GREEN) in src/services/PropertyInheritanceService.ts - pass all RED tests from T088-T095
+- [X] T096 [US4] Implement PropertyInheritanceService (GREEN) in src/services/PropertyInheritanceService.ts - pass all RED tests from T088-T095
 - [ ] T097 [US4] Implement KitService in src/services/KitService.ts (createKit, updateKit, deleteKit, assembleKit, disassembleKit, getKitSubAssets)
 - [ ] T098 [US4] Create Zustand kit store in src/stores/kitStore.ts
 - [ ] T099 [US4] Create useKits hook in src/hooks/useKits.ts

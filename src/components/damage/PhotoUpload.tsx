@@ -5,6 +5,7 @@ import { IconAlertCircle, IconPhoto, IconUpload, IconX } from '@tabler/icons-rea
 import { useTranslation } from 'react-i18next';
 
 import { formatFileSize } from '../../utils/formatters';
+import { compressImageToDataUrl } from '../../utils/imageCompression';
 
 interface PhotoUploadProps {
 	photos: string[];
@@ -15,7 +16,7 @@ interface PhotoUploadProps {
 }
 
 const DEFAULT_MAX_PHOTOS = 3;
-const DEFAULT_MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
+const DEFAULT_MAX_FILE_SIZE = 15 * 1024 * 1024; // 15MB upload limit
 
 /**
  * Allows selecting up to three photos while simulating compression feedback.
@@ -56,21 +57,9 @@ export function PhotoUpload({
 
 			for (const file of files) {
 				try {
-					setCompressionProgress((prev) => ({ ...prev, [file.name]: 0 }));
-
-					const reader = new FileReader();
-					const base64 = await new Promise<string>((resolve, reject) => {
-						reader.onload = () => {
-							setCompressionProgress((prev) => ({ ...prev, [file.name]: 50 }));
-							setTimeout(() => {
-								setCompressionProgress((prev) => ({ ...prev, [file.name]: 100 }));
-								resolve(reader.result as string);
-							}, 500);
-						};
-						reader.onerror = reject;
-						reader.readAsDataURL(file);
-					});
-
+					setCompressionProgress((prev) => ({ ...prev, [file.name]: 10 }));
+					const base64 = await compressImageToDataUrl(file);
+					setCompressionProgress((prev) => ({ ...prev, [file.name]: 100 }));
 					generatedPhotos.push(base64);
 
 					setTimeout(() => {
@@ -78,10 +67,16 @@ export function PhotoUpload({
 							const { [file.name]: _removed, ...rest } = prev;
 							return rest;
 						});
-					}, 1000);
+					}, 800);
 				} catch (uploadError) {
-								console.error('Photo upload error', uploadError);
-					setError(t('photoUpload.error.processFailed', { name: file.name }));
+					console.error('Photo upload error', uploadError);
+					const fallback = t('photoUpload.error.processFailed', { name: file.name });
+					const message = uploadError instanceof Error ? uploadError.message : fallback;
+					setCompressionProgress((prev) => {
+						const { [file.name]: _removed, ...rest } = prev;
+						return rest;
+					});
+					setError(message || fallback);
 				}
 			}
 

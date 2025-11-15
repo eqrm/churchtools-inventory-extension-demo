@@ -102,7 +102,16 @@ function RootLayout() {
 
 function buildRouter() {
     const baseUrlFromEnv = (import.meta as unknown as { env?: Record<string, string | undefined> }).env?.['BASE_URL'];
-    const basename = baseUrlFromEnv && baseUrlFromEnv.length > 0 ? baseUrlFromEnv : '/';
+    const normalizeBasename = (value?: string): string => {
+        if (!value || value === '/') {
+            return '/';
+        }
+
+        const trimmed = value.replace(/\/*$/, '');
+        return trimmed.length > 0 ? trimmed : '/';
+    };
+
+    const basename = normalizeBasename(baseUrlFromEnv);
 
     return createBrowserRouter(
         [

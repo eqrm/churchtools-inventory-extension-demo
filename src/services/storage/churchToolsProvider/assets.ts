@@ -244,6 +244,11 @@ function mergeAssetData(
     ? data.mainImage ?? null
     : previous.mainImage ?? undefined;
 
+  const hasInUseByUpdate = Object.prototype.hasOwnProperty.call(data, 'inUseBy');
+  const updatedInUseBy = hasInUseByUpdate
+    ? (data.inUseBy ?? null)
+    : previous.inUseBy ?? undefined;
+
   return {
     assetNumber: previous.assetNumber,
     name: data.name ?? previous.name,
@@ -252,7 +257,10 @@ function mergeAssetData(
     model: data.model ?? previous.model,
     status: data.status ?? previous.status,
     location: data.location ?? previous.location,
-    inUseBy: data.inUseBy ?? previous.inUseBy,
+    inUseBy: updatedInUseBy,
+    currentAssignmentId: Object.prototype.hasOwnProperty.call(data, 'currentAssignmentId')
+      ? data.currentAssignmentId ?? null
+      : previous.currentAssignmentId ?? null,
     barcode: data.barcode ?? previous.barcode,
     qrCode: data.qrCode ?? previous.qrCode,
     barcodeHistory: data.barcodeHistory ?? previous.barcodeHistory,
@@ -293,6 +301,7 @@ async function recordAssetChanges(
     'status',
     'location',
     'inUseBy',
+    'currentAssignmentId',
     'barcode',
     'qrCode',
     'customFieldValues',

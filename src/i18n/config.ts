@@ -5,12 +5,14 @@ import { initReactI18next } from 'react-i18next';
 import common from './locales/en/common.json';
 import damage from './locales/en/damage.json';
 import undo from './locales/en/undo.json';
+import views from './locales/en/views.json';
 
 const resources: Resource = {
   en: {
     common,
     damage,
     undo,
+    views,
   },
 };
 
@@ -25,8 +27,8 @@ export const initI18n = async (): Promise<void> => {
     lng: 'en',
     fallbackLng: 'en',
     debug: import.meta.env.DEV,
-    defaultNS: 'common',
-    ns: ['common', 'damage', 'undo'],
+  defaultNS: 'common',
+  ns: ['common', 'damage', 'undo', 'views'],
     resources,
     interpolation: {
       escapeValue: false,

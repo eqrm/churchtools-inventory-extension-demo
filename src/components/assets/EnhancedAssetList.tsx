@@ -26,8 +26,8 @@ import { notifications } from '@mantine/notifications';
 import type { Asset, AssetFilters, SavedView } from '../../types/entities';
 import { useAssets } from '../../hooks/useAssets';
 import { useUIStore } from '../../stores/uiStore';
-import { ViewModeSelector } from '../reports/ViewModeSelector';
-import { FilterBuilder } from '../reports/FilterBuilder';
+import { ViewSelector } from '../views/ViewSelector';
+import { FilterBuilder } from '../views/FilterBuilder';
 import { SavedViewForm } from '../reports/SavedViewForm';
 import { SavedViewsList } from '../reports/SavedViewsList';
 import { AssetGalleryView } from './AssetGalleryView';
@@ -192,6 +192,8 @@ export function EnhancedAssetList({ onView, onEdit, onCreateNew }: EnhancedAsset
             initialFilters={legacyFilters}
             hideFilterButton
             filtersOpen={filtersPanelOpen}
+            hideViewSelector
+            hideAdvancedFilters
           />
         );
       case 'gallery':
@@ -210,6 +212,8 @@ export function EnhancedAssetList({ onView, onEdit, onCreateNew }: EnhancedAsset
             initialFilters={legacyFilters}
             hideFilterButton
             filtersOpen={filtersPanelOpen}
+            hideViewSelector
+            hideAdvancedFilters
           />
         );
       default:
@@ -221,6 +225,8 @@ export function EnhancedAssetList({ onView, onEdit, onCreateNew }: EnhancedAsset
             initialFilters={legacyFilters}
             hideFilterButton
             filtersOpen={filtersPanelOpen}
+            hideViewSelector
+            hideAdvancedFilters
           />
         );
     }
@@ -233,8 +239,8 @@ export function EnhancedAssetList({ onView, onEdit, onCreateNew }: EnhancedAsset
         <Title order={2}>Inventar</Title>
 
         <Group>
-          {/* T209: ViewModeSelector integration */}
-          <ViewModeSelector value={viewMode} onChange={setViewMode} />
+          {/* T209: ViewSelector integration */}
+          <ViewSelector value={viewMode} onChange={setViewMode} />
 
           {/* T212: Saved views quick access */}
           <Menu position="bottom-end" shadow="md">

@@ -58,7 +58,8 @@ export function BookingForm({ booking, kitId, onSuccess, onCancel }: BookingForm
       lastName: booking.bookingForName?.split(' ').slice(1).join(' ') || '',
       displayName: booking.bookingForName || '',
       email: undefined,
-      avatarUrl: undefined
+      avatarUrl: undefined,
+      type: 'person'
     } : null
   )
 

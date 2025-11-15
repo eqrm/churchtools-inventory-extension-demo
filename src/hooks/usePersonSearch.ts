@@ -4,8 +4,12 @@
  * Purpose: React hook for person search with debouncing
  */
 
-import { useState, useEffect, useCallback } from 'react'
-import { personSearchService, type PersonSearchResult } from '../services/person/PersonSearchService'
+import { useState, useEffect, useCallback, useMemo } from 'react'
+import {
+  personSearchService,
+  type PersonSearchResult,
+  type ChurchToolsDomainType,
+} from '../services/person/PersonSearchService'
 
 interface UsePersonSearchOptions {
   /** Minimum characters before searching (default: 2) */
@@ -14,6 +18,8 @@ interface UsePersonSearchOptions {
   debounceMs?: number
   /** Maximum results to fetch (default: 10) */
   limit?: number
+  /** ChurchTools domain types to query (default: ['person']) */
+  domainTypes?: ChurchToolsDomainType[]
 }
 
 interface UsePersonSearchResult {
@@ -38,7 +44,8 @@ export function usePersonSearch(options: UsePersonSearchOptions = {}): UsePerson
   const {
     minChars = 2,
     debounceMs = 300,
-    limit = 10
+    limit = 10,
+    domainTypes = ['person']
   } = options
 
   const [query, setQuery] = useState('')
@@ -46,6 +53,19 @@ export function usePersonSearch(options: UsePersonSearchOptions = {}): UsePerson
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [fromCache, setFromCache] = useState(false)
+
+  const domainKey = useMemo(() => {
+    const copy = [...domainTypes]
+    copy.sort()
+    return copy.join(',')
+  }, [domainTypes])
+
+  const normalizedDomainTypes = useMemo(() => {
+    if (!domainKey) {
+      return ['person'] as ChurchToolsDomainType[]
+    }
+    return domainKey.split(',').filter(Boolean) as ChurchToolsDomainType[]
+  }, [domainKey])
 
   /**
    * T034: Debounced search effect
@@ -63,7 +83,7 @@ export function usePersonSearch(options: UsePersonSearchOptions = {}): UsePerson
       setError(null)
 
       try {
-        const response = await personSearchService.search({ query, limit })
+  const response = await personSearchService.search({ query, limit, domainTypes: normalizedDomainTypes })
         setResults(response.results)
         setFromCache(response.fromCache)
       } catch (err) {
@@ -79,7 +99,7 @@ export function usePersonSearch(options: UsePersonSearchOptions = {}): UsePerson
 
     const timeoutId = setTimeout(executeSearch, debounceMs)
     return () => clearTimeout(timeoutId)
-  }, [query, minChars, debounceMs, limit])
+  }, [query, minChars, debounceMs, limit, domainKey, normalizedDomainTypes])
 
   const search = useCallback((newQuery: string) => setQuery(newQuery), [])
   const clear = useCallback(() => {

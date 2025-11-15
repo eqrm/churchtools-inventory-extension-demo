@@ -1,4 +1,5 @@
 import type { ChurchToolsAPIClient } from '../../api/ChurchToolsAPIClient';
+import { ChurchToolsAPIError } from '../../api/ChurchToolsAPIError';
 import type { AssetType, ChangeHistoryEntry } from '../../../types/entities';
 import type {
   DamageReportCreateInput,
@@ -40,6 +41,14 @@ export async function getDamageReport(
     const value = await deps.apiClient.getDataValue(deps.moduleId, category.id, reportId);
     return mapToDamageReportRecord(value);
   } catch (error) {
+    if (error instanceof ChurchToolsAPIError && error.is(405)) {
+      console.warn(`[Damage] getDataValue returned 405 for damage report ${reportId}, falling back to list endpoint.`);
+      const values = await deps.apiClient.getDataValues(deps.moduleId, category.id);
+      const records = values.map((value) => mapToDamageReportRecord(value));
+      const match = records.find((record) => record.id === reportId);
+      return match ?? null;
+    }
+
     console.warn(`[Damage] Failed to fetch damage report ${reportId}:`, error);
     return null;
   }
