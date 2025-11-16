@@ -7,7 +7,6 @@ import { useMemo } from 'react';
 import { Badge, Group, Text } from '@mantine/core';
 import type { DataTableColumn } from 'mantine-datatable';
 import { format } from 'date-fns';
-import { de } from 'date-fns/locale';
 import type { MaintenanceRecord } from '../../types/entities';
 import { DataViewTable } from '../dataView/DataViewTable';
 
@@ -31,13 +30,13 @@ export function MaintenanceTypeBadge({ type }: { type: MaintenanceRecord['type']
   };
 
   const labels = {
-    inspection: 'Inspektion',
-    cleaning: 'Reinigung',
-    repair: 'Reparatur',
-    calibration: 'Kalibrierung',
-    testing: 'Prüfung',
+    inspection: 'Inspection',
+    cleaning: 'Cleaning',
+    repair: 'Repair',
+    calibration: 'Calibration',
+    testing: 'Testing',
     compliance: 'Compliance',
-    other: 'Sonstiges',
+    other: 'Other',
   };
 
   return (
@@ -55,19 +54,19 @@ export function getMaintenanceRecordColumns(): DataTableColumn<MaintenanceRecord
   return [
     {
       accessor: 'date',
-      title: 'Datum',
+      title: 'Date',
       sortable: true,
-      render: (record: MaintenanceRecord) => format(new Date(record.date), 'dd.MM.yyyy', { locale: de }),
+      render: (record: MaintenanceRecord) => format(new Date(record.date), 'MM/dd/yyyy'),
     },
     {
       accessor: 'type',
-      title: 'Typ',
+      title: 'Type',
       sortable: true,
       render: (record: MaintenanceRecord) => <MaintenanceTypeBadge type={record.type} />,
     },
     {
       accessor: 'description',
-      title: 'Beschreibung',
+      title: 'Description',
       render: (record: MaintenanceRecord) => (
         <Text size="sm" lineClamp={2}>
           {record.description}
@@ -76,22 +75,22 @@ export function getMaintenanceRecordColumns(): DataTableColumn<MaintenanceRecord
     },
     {
       accessor: 'performedByName',
-      title: 'Durchgeführt von',
+      title: 'Performed by',
       sortable: true,
     },
     {
       accessor: 'cost',
-      title: 'Kosten',
+      title: 'Cost',
       sortable: true,
       render: (record: MaintenanceRecord) => (record.cost ? `${record.cost.toFixed(2)} €` : '-'),
     },
     {
       accessor: 'nextDueDate',
-      title: 'Nächste Wartung',
+      title: 'Next maintenance',
       sortable: true,
       render: (record: MaintenanceRecord) =>
         record.nextDueDate
-          ? format(new Date(record.nextDueDate), 'dd.MM.yyyy', { locale: de })
+          ? format(new Date(record.nextDueDate), 'MM/dd/yyyy')
           : '-',
     },
   ];
@@ -116,10 +115,10 @@ export function MaintenanceRecordList({ records, onRecordClick }: MaintenanceRec
           : undefined
       }
       rowStyle={() => (onRecordClick ? { cursor: 'pointer' } : undefined)}
-      noRecordsText="Keine Wartungseinträge vorhanden"
+      noRecordsText="No maintenance records found"
       emptyState={
         <Group justify="center" p="xl">
-          <Text c="dimmed">Keine Wartungseinträge vorhanden</Text>
+          <Text c="dimmed">No maintenance records found</Text>
         </Group>
       }
     />

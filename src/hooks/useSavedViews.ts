@@ -71,14 +71,14 @@ export function useCreateSavedView() {
         queryClient.invalidateQueries({ queryKey: savedViewKeys.list(currentUser.id) });
       }
       notifications.show({
-        title: 'Ansicht gespeichert',
-        message: 'Die Ansicht wurde erfolgreich gespeichert',
+        title: 'View saved',
+        message: 'The view was saved successfully',
         color: 'green',
       });
     },
     onError: (error: Error) => {
       notifications.show({
-        title: 'Fehler beim Speichern',
+        title: 'Failed to save view',
         message: error.message,
         color: 'red',
       });
@@ -105,14 +105,14 @@ export function useUpdateSavedView() {
       }
       queryClient.invalidateQueries({ queryKey: savedViewKeys.detail(id) });
       notifications.show({
-        title: 'Ansicht aktualisiert',
-        message: 'Die Ansicht wurde erfolgreich aktualisiert',
+        title: 'View updated',
+        message: 'The view was updated successfully',
         color: 'green',
       });
     },
     onError: (error: Error) => {
       notifications.show({
-        title: 'Fehler beim Aktualisieren',
+        title: 'Failed to update view',
         message: error.message,
         color: 'red',
       });
@@ -138,14 +138,14 @@ export function useDeleteSavedView() {
         queryClient.invalidateQueries({ queryKey: savedViewKeys.list(currentUser.id) });
       }
       notifications.show({
-        title: 'Ansicht gelöscht',
-        message: 'Die Ansicht wurde erfolgreich gelöscht',
+        title: 'View deleted',
+        message: 'The view was deleted successfully',
         color: 'green',
       });
     },
     onError: (error: Error) => {
       notifications.show({
-        title: 'Fehler beim Löschen',
+        title: 'Failed to delete view',
         message: error.message,
         color: 'red',
       });

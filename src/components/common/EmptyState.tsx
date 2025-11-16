@@ -13,7 +13,7 @@ interface EmptyStateProps {
  * Shows an empty state with icon and message
  */
 export function EmptyState({
-    title = 'Keine Daten',
+    title = 'No data',
     message,
     icon = <IconMoodEmpty size={48} stroke={1.5} />,
     action,

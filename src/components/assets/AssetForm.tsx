@@ -26,6 +26,7 @@ import { useCategories, useCategory } from '../../hooks/useCategories';
 import { useCreateAsset, useCreateMultiAsset, useUpdateAsset } from '../../hooks/useAssets';
 import { useAssetPrefixes } from '../../hooks/useAssetPrefixes';
 import { useCurrentUser } from '../../hooks/useCurrentUser';
+import { useAssetModels } from '../../hooks/useAssetModels';
 import {
   getStoredModuleDefaultPrefixId,
   getStoredPersonDefaultPrefixId,
@@ -38,6 +39,7 @@ import { MASTER_DATA_DEFINITIONS, normalizeMasterDataName } from '../../utils/ma
 import { CustomFieldInput } from './CustomFieldInput';
 import { MasterDataSelectInput } from '../common/MasterDataSelectInput';
 import { MainImageUpload } from '../common/MainImageUpload';
+import { ModelTemplateSelector } from '../models/ModelTemplateSelector';
 import type { Asset, AssetCreate, AssetGroupFieldSource, AssetStatus, CustomFieldValue } from '../../types/entities';
 import { validateCustomFieldValue } from '../../utils/validators';
 import { ASSET_STATUS_OPTIONS } from '../../constants/assetStatuses';
@@ -73,6 +75,7 @@ export function AssetForm({ asset, onSuccess, onCancel }: AssetFormProps) {
   const isEditing = Boolean(asset);
   const { data: categories = [] } = useCategories();
   const { data: prefixes = [] } = useAssetPrefixes();
+  const { models } = useAssetModels();
   const { names: locationNames, addItem: addLocation } = useMasterData(MASTER_DATA_DEFINITIONS.locations);
   const { names: manufacturerNames, addItem: addManufacturer } = useMasterData(
     MASTER_DATA_DEFINITIONS.manufacturers
@@ -88,6 +91,9 @@ export function AssetForm({ asset, onSuccess, onCancel }: AssetFormProps) {
   // T064: Confirmation dialog for status changes on assigned assets
   const [confirmOpened, { open: openConfirm, close: closeConfirm }] = useDisclosure(false);
   const [pendingStatus, setPendingStatus] = useState<AssetStatus | null>(null);
+
+  // T118: Model template selection
+  const [selectedModelId, setSelectedModelId] = useState<string | null>(null);
 
 
   const form = useForm<AssetFormValues>({
@@ -380,6 +386,55 @@ export function AssetForm({ asset, onSuccess, onCancel }: AssetFormProps) {
     closeConfirm();
   };
 
+  // T118: Handle model template selection
+  const handleModelSelect = useCallback((modelId: string | null) => {
+    setSelectedModelId(modelId);
+    
+    if (!modelId) {
+      return;
+    }
+
+    const selectedModel = models.find((m) => m.id === modelId);
+    if (!selectedModel) {
+      return;
+    }
+
+    // Pre-fill form fields from model defaults
+    if (selectedModel.manufacturer) {
+      form.setFieldValue('manufacturer', selectedModel.manufacturer);
+    }
+    if (selectedModel.modelNumber) {
+      form.setFieldValue('model', selectedModel.modelNumber);
+    }
+
+    // Apply default values from model
+    if (selectedModel.defaultValues) {
+      const { purchasePrice: _purchasePrice, location, notes, ...customDefaults } = selectedModel.defaultValues as {
+        purchasePrice?: number;
+        location?: string;
+        notes?: string;
+        [key: string]: unknown;
+      };
+
+      if (location) {
+        form.setFieldValue('location', location);
+      }
+      if (notes) {
+        form.setFieldValue('description', notes);
+      }
+
+      // Apply custom field defaults
+      Object.entries(customDefaults).forEach(([key, value]) => {
+        if (value !== undefined) {
+          form.setFieldValue('customFieldValues', {
+            ...form.values.customFieldValues,
+            [key]: value,
+          });
+        }
+      });
+    }
+  }, [models, form]);
+
   const handleSubmit = async (values: AssetFormValues) => {
     try {
       // Ensure manufacturer/model values are persisted to localStorage-backed lists
@@ -596,6 +651,19 @@ export function AssetForm({ asset, onSuccess, onCancel }: AssetFormProps) {
                 {...form.getInputProps('assetTypeId')}
               />
             </Grid.Col>
+
+            {/* T118: Model Template Selector - only show when creating new assets */}
+            {!isEditing && models.length > 0 && (
+              <Grid.Col span={{ base: 12, md: 6 }}>
+                <ModelTemplateSelector
+                  models={models}
+                  selectedModelId={selectedModelId}
+                  onSelect={handleModelSelect}
+                  assetTypeId={form.values.assetTypeId || undefined}
+                  disabled={!form.values.assetTypeId}
+                />
+              </Grid.Col>
+            )}
 
             {/* T272: Asset Prefix Selector */}
             {!isEditing && prefixes.length > 0 && (

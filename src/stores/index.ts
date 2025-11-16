@@ -13,4 +13,5 @@ export { useScannerStore } from './scannerStore';
 export { useFeatureSettingsStore } from './featureSettingsStore';
 export { useUndoStore } from './undoStore';
 export { useDataViewStore } from './dataViewStore';
+export { useSettingsStore } from './settingsStore';
 

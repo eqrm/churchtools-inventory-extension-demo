@@ -99,7 +99,7 @@ export function useDataViews(options?: UseDataViewsOptions): UseDataViewsResult 
       setViews(data);
       return data;
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Unbekannter Fehler beim Laden der Ansichten.';
+      const message = err instanceof Error ? err.message : 'Unknown error while loading saved views.';
       setError(message);
       throw err;
     } finally {

@@ -18,7 +18,7 @@ export function MaintenanceDashboard() {
   const { data: allSchedules, isLoading: schedulesLoading } = useMaintenanceSchedules();
 
   if (overdueLoading || schedulesLoading) {
-    return <Text c="dimmed">Lade Wartungsdaten...</Text>;
+    return <Text c="dimmed">Loading maintenance data...</Text>;
   }
 
   const upcoming = (allSchedules || []).filter(s => {
@@ -28,10 +28,10 @@ export function MaintenanceDashboard() {
 
   return (
     <Stack gap="lg">
-      <Title order={2}><Group gap="xs"><IconTool />Wartungsübersicht</Group></Title>
+      <Title order={2}><Group gap="xs"><IconTool />Maintenance overview</Group></Title>
 
       {overdueSchedules && overdueSchedules.length > 0 && (
-        <Alert color="red" icon={<IconAlertTriangle />} title="Überfällige Wartungen">
+        <Alert color="red" icon={<IconAlertTriangle />} title="Overdue maintenance">
           <Stack gap="xs">
             {overdueSchedules.map(schedule => (
               <Group key={schedule.id} justify="space-between">
@@ -48,7 +48,7 @@ export function MaintenanceDashboard() {
       {upcoming.length > 0 && (
         <Card>
           <Stack gap="sm">
-            <Group gap="xs"><IconClock /><Text fw={600}>Anstehend (30 Tage)</Text></Group>
+            <Group gap="xs"><IconClock /><Text fw={600}>Upcoming (30 days)</Text></Group>
             {upcoming.map(schedule => (
               <Group key={schedule.id} justify="space-between">
                 <Text size="sm">Asset {schedule.assetId}</Text>
@@ -62,15 +62,15 @@ export function MaintenanceDashboard() {
       <Card>
         <Group gap="xl">
           <div>
-            <Text size="xs" c="dimmed">Überfällig</Text>
+            <Text size="xs" c="dimmed">Overdue</Text>
             <Text size="xl" fw={700} c="red">{overdueSchedules?.length || 0}</Text>
           </div>
           <div>
-            <Text size="xs" c="dimmed">Anstehend</Text>
+            <Text size="xs" c="dimmed">Upcoming</Text>
             <Text size="xl" fw={700} c="yellow">{upcoming.length}</Text>
           </div>
           <div>
-            <Text size="xs" c="dimmed">Geplant</Text>
+            <Text size="xs" c="dimmed">Scheduled</Text>
             <Text size="xl" fw={700}>{allSchedules?.length || 0}</Text>
           </div>
         </Group>

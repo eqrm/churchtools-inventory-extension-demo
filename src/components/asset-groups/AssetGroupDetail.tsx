@@ -144,7 +144,7 @@ export function AssetGroupDetail({ groupId, onEditGroup, onGroupCleared }: Asset
     }
   };
 
-  const resetBarcodeModalState = () => {
+  const resetBarcodeDialogState = () => {
     setRegenerateModalOpen(false);
     setScannedBarcode('');
     setRegenerateReason('');
@@ -185,7 +185,7 @@ export function AssetGroupDetail({ groupId, onEditGroup, onGroupCleared }: Asset
             message: `${group.name} now uses the new barcode.`,
             color: 'green',
           });
-          resetBarcodeModalState();
+          resetBarcodeDialogState();
         },
         onError: (error) => {
           notifications.show({
@@ -500,7 +500,7 @@ export function AssetGroupDetail({ groupId, onEditGroup, onGroupCleared }: Asset
 
       <Modal
         opened={regenerateModalOpen}
-        onClose={resetBarcodeModalState}
+        onClose={resetBarcodeDialogState}
         title="Reassign Barcode"
         centered
         size="md"
@@ -542,7 +542,7 @@ export function AssetGroupDetail({ groupId, onEditGroup, onGroupCleared }: Asset
           />
 
           <Group justify="flex-end" gap="xs">
-            <Button variant="default" onClick={resetBarcodeModalState}>
+            <Button variant="default" onClick={resetBarcodeDialogState}>
               Cancel
             </Button>
             <Button

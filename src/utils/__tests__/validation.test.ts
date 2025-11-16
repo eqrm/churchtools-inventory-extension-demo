@@ -58,13 +58,13 @@ describe('validators', () => {
     });
 
     it('should return error for empty input', () => {
-      expect(validateAssetNumber('')).toBe('Asset-Nummer ist erforderlich');
-      expect(validateAssetNumber('   ')).toBe('Asset-Nummer ist erforderlich');
+      expect(validateAssetNumber('')).toBe('Asset number is required');
+      expect(validateAssetNumber('   ')).toBe('Asset number is required');
     });
 
     it('should return error for invalid format', () => {
-      expect(validateAssetNumber('abc')).toBe('Asset-Nummer muss 1-5 Ziffern enthalten');
-      expect(validateAssetNumber('123456')).toBe('Asset-Nummer muss 1-5 Ziffern enthalten');
+      expect(validateAssetNumber('abc')).toBe('Asset number must contain 1-5 digits');
+      expect(validateAssetNumber('123456')).toBe('Asset number must contain 1-5 digits');
     });
   });
 
@@ -80,7 +80,7 @@ describe('validators', () => {
     });
 
     it('should reject non-ASCII characters', () => {
-      expect(isValidBarcode('Ä')).toBe(false);
+      expect(isValidBarcode('Ω')).toBe(false);
       expect(isValidBarcode('中文')).toBe(false);
     });
   });
@@ -170,13 +170,13 @@ describe('validators', () => {
     });
 
     it('should return error for empty string', () => {
-      expect(validateRequired('', 'Field')).toBe('Field ist erforderlich');
-      expect(validateRequired('   ', 'Field')).toBe('Field ist erforderlich');
+      expect(validateRequired('', 'Field')).toBe('Field is required');
+      expect(validateRequired('   ', 'Field')).toBe('Field is required');
     });
 
     it('should return error for null/undefined', () => {
-      expect(validateRequired(null, 'Field')).toBe('Field ist erforderlich');
-      expect(validateRequired(undefined, 'Field')).toBe('Field ist erforderlich');
+      expect(validateRequired(null, 'Field')).toBe('Field is required');
+      expect(validateRequired(undefined, 'Field')).toBe('Field is required');
     });
   });
 
@@ -188,7 +188,7 @@ describe('validators', () => {
 
     it('should return error when length is insufficient', () => {
       const error = validateMinLength('ab', 3, 'Field');
-      expect(error).toBe('Field muss mindestens 3 Zeichen lang sein');
+      expect(error).toBe('Field must be at least 3 characters long');
     });
   });
 
@@ -200,7 +200,7 @@ describe('validators', () => {
 
     it('should return error when length exceeds limit', () => {
       const error = validateMaxLength('abcd', 3, 'Field');
-      expect(error).toBe('Field darf höchstens 3 Zeichen lang sein');
+      expect(error).toBe('Field must be at most 3 characters long');
     });
   });
 
@@ -213,12 +213,12 @@ describe('validators', () => {
 
     it('should return error for zero', () => {
       const error = validatePositiveNumber(0, 'Field');
-      expect(error).toBe('Field muss eine positive Zahl sein');
+      expect(error).toBe('Field must be a positive number');
     });
 
     it('should return error for negative numbers', () => {
       const error = validatePositiveNumber(-1, 'Field');
-      expect(error).toBe('Field muss eine positive Zahl sein');
+      expect(error).toBe('Field must be a positive number');
     });
   });
 
@@ -231,7 +231,7 @@ describe('validators', () => {
 
     it('should return error for negative numbers', () => {
       const error = validateNonNegativeNumber(-1, 'Field');
-      expect(error).toBe('Field darf nicht negativ sein');
+      expect(error).toBe('Field cannot be negative');
     });
   });
 
@@ -266,7 +266,7 @@ describe('validators', () => {
 
     it('should return error for invalid URLs', () => {
       const error = validateURL('not a url');
-      expect(error).toBe('Bitte geben Sie eine gültige URL ein (z.B. https://example.com)');
+      expect(error).toBe('Please enter a valid URL (e.g., https://example.com)');
     });
   });
 
@@ -275,7 +275,7 @@ describe('validators', () => {
       it('should return error for empty required text field', () => {
         const field = { type: 'text', required: true };
         const error = validateCustomFieldValue('', field, 'Field');
-        expect(error).toBe('Field ist erforderlich');
+        expect(error).toBe('Field is required');
       });
 
       it('should return null for filled required text field', () => {
@@ -294,19 +294,19 @@ describe('validators', () => {
     describe('text fields', () => {
       it('should validate minLength', () => {
         const field = { type: 'text', required: false, validation: { minLength: 3 } };
-        expect(validateCustomFieldValue('ab', field, 'Field')).toContain('mindestens 3');
+        expect(validateCustomFieldValue('ab', field, 'Field')).toContain('at least 3');
         expect(validateCustomFieldValue('abc', field, 'Field')).toBe(null);
       });
 
       it('should validate maxLength', () => {
         const field = { type: 'text', required: false, validation: { maxLength: 3 } };
-        expect(validateCustomFieldValue('abcd', field, 'Field')).toContain('höchstens 3');
+        expect(validateCustomFieldValue('abcd', field, 'Field')).toContain('at most 3');
         expect(validateCustomFieldValue('abc', field, 'Field')).toBe(null);
       });
 
       it('should validate pattern', () => {
         const field = { type: 'text', required: false, validation: { pattern: '^[A-Z]+$' } };
-        expect(validateCustomFieldValue('abc', field, 'Field')).toContain('Format');
+        expect(validateCustomFieldValue('abc', field, 'Field')).toContain('required format');
         expect(validateCustomFieldValue('ABC', field, 'Field')).toBe(null);
       });
     });
@@ -314,14 +314,14 @@ describe('validators', () => {
     describe('number fields', () => {
       it('should validate min value', () => {
         const field = { type: 'number', required: false, validation: { min: 0 } };
-        expect(validateCustomFieldValue(-1, field, 'Field')).toContain('mindestens 0');
+        expect(validateCustomFieldValue(-1, field, 'Field')).toContain('at least 0');
         expect(validateCustomFieldValue(0, field, 'Field')).toBe(null);
         expect(validateCustomFieldValue(5, field, 'Field')).toBe(null);
       });
 
       it('should validate max value', () => {
         const field = { type: 'number', required: false, validation: { max: 10 } };
-        expect(validateCustomFieldValue(11, field, 'Field')).toContain('höchstens 10');
+        expect(validateCustomFieldValue(11, field, 'Field')).toContain('at most 10');
         expect(validateCustomFieldValue(10, field, 'Field')).toBe(null);
         expect(validateCustomFieldValue(5, field, 'Field')).toBe(null);
       });
@@ -330,7 +330,7 @@ describe('validators', () => {
     describe('select fields', () => {
       it('should validate against options', () => {
         const field = { type: 'select', required: false, options: ['A', 'B', 'C'] };
-        expect(validateCustomFieldValue('D', field, 'Field')).toContain('verfügbaren Optionen');
+        expect(validateCustomFieldValue('D', field, 'Field')).toContain('available options');
         expect(validateCustomFieldValue('A', field, 'Field')).toBe(null);
       });
     });
@@ -338,7 +338,7 @@ describe('validators', () => {
     describe('multi-select fields', () => {
       it('should validate array values against options', () => {
         const field = { type: 'multi-select', required: false, options: ['A', 'B', 'C'] };
-        expect(validateCustomFieldValue(['A', 'D'], field, 'Field')).toContain('ungültige Optionen');
+        expect(validateCustomFieldValue(['A', 'D'], field, 'Field')).toContain('invalid options');
         expect(validateCustomFieldValue(['A', 'B'], field, 'Field')).toBe(null);
       });
     });
@@ -346,7 +346,7 @@ describe('validators', () => {
     describe('date fields', () => {
       it('should validate date format', () => {
         const field = { type: 'date', required: false };
-        expect(validateCustomFieldValue('invalid', field, 'Field')).toContain('gültiges Datum');
+        expect(validateCustomFieldValue('invalid', field, 'Field')).toContain('valid date');
         expect(validateCustomFieldValue('2025-01-01', field, 'Field')).toBe(null);
       });
     });
@@ -354,7 +354,7 @@ describe('validators', () => {
     describe('checkbox fields', () => {
       it('should validate boolean type', () => {
         const field = { type: 'checkbox', required: false };
-        expect(validateCustomFieldValue('not boolean', field, 'Field')).toContain('true oder false');
+        expect(validateCustomFieldValue('not boolean', field, 'Field')).toContain('true or false');
         expect(validateCustomFieldValue(true, field, 'Field')).toBe(null);
         expect(validateCustomFieldValue(false, field, 'Field')).toBe(null);
       });
@@ -363,7 +363,7 @@ describe('validators', () => {
     describe('URL fields', () => {
       it('should validate URL format', () => {
         const field = { type: 'url', required: false };
-        expect(validateCustomFieldValue('not a url', field, 'Field')).toContain('gültige URL');
+        expect(validateCustomFieldValue('not a url', field, 'Field')).toContain('valid URL');
         expect(validateCustomFieldValue('https://example.com', field, 'Field')).toBe(null);
       });
     });

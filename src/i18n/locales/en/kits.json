@@ -1,0 +1,159 @@
+{
+  "list": {
+    "title": "Equipment kits",
+    "filters": {
+      "searchLabel": "Search",
+      "searchPlaceholder": "Search kits by name or description",
+      "typeLabel": "Kit type",
+      "typePlaceholder": "All types",
+      "clear": "Clear filters"
+    },
+    "table": {
+      "name": "Name",
+      "type": "Type",
+      "status": "Status",
+      "completeness": "Completeness",
+      "typeFixed": "Fixed",
+      "typeFlexible": "Flexible",
+      "pagination": "Showing {{from}} to {{to}} of {{total}} kits",
+      "empty": "No kits found",
+      "emptyFiltered": "No kits match your filters"
+    },
+    "empty": {
+      "title": "No kits yet",
+      "message": "Create your first kit to bundle recurring equipment."
+    },
+    "error": "Unable to load kits.",
+    "actions": {
+      "create": "Create kit"
+    }
+  },
+  "detail": {
+    "loading": "Loading kit details...",
+    "error": "Unable to load kit details.",
+    "notFound": "Kit not found.",
+    "overviewTitle": "Kit overview",
+    "typeFixed": "Fixed kit",
+    "typeFlexible": "Flexible kit",
+    "statusLabel": "Status",
+    "locationLabel": "Location",
+    "locationUnset": "Not set",
+    "tagsLabel": "Tags",
+    "completenessLabel": "Completeness",
+    "completenessComplete": "Complete",
+    "completenessIncomplete": "Incomplete",
+    "inheritanceHeading": "Inherited properties",
+    "inheritanceEmpty": "No inherited properties configured.",
+    "tags": {
+      "directBadge": "{{count}} direct",
+      "inheritedBadge": "Inherited from kit"
+    },
+    "boundAssetsHeading": "Bound assets",
+    "subAssetsHeading": "Sub-assets",
+    "poolRequirementsHeading": "Pool requirements",
+    "poolRequirement": "{{quantity}} × {{name}}",
+    "poolRequirementFilter": "Custom filter active",
+    "timestamps": {
+      "assembled": "Assembled on {{date}}",
+      "disassembled": "Disassembled on {{date}}"
+    },
+    "subAssets": {
+      "columns": {
+        "asset": "Asset",
+        "status": "Status",
+        "location": "Location",
+        "tags": "Tags"
+      },
+      "empty": "No assets are currently bound to this kit."
+    },
+    "actions": {
+      "book": "Book kit",
+      "edit": "Edit kit",
+      "disassemble": "Disassemble kit"
+    },
+    "messages": {
+      "disassembleConfirm": "Disassemble this kit? Sub-assets will become independent and inherited values unlock.",
+      "disassembleSuccess": "Kit disassembled. Sub-assets are now independent.",
+      "disassembleError": "Unable to disassemble kit."
+    },
+    "modal": {
+      "bookTitle": "Book {{name}}"
+    }
+  },
+  "pages": {
+    "createModalTitle": "Create equipment kit"
+  },
+  "form": {
+    "fields": {
+      "nameLabel": "Kit name",
+      "namePlaceholder": "e.g. Sunday service audio",
+      "typeLabel": "Kit type",
+      "typeDescription": {
+        "fixed": "Bind specific assets that always travel together.",
+        "flexible": "Reserve assets from a pool when the kit is booked."
+      },
+      "typeOptions": {
+        "fixed": "Fixed (specific assets)",
+        "flexible": "Flexible (pool-based)"
+      },
+      "descriptionLabel": "Description",
+      "descriptionPlaceholder": "Describe when or where this kit is used...",
+      "locationLabel": "Default location",
+      "locationPlaceholder": "e.g. Main campus warehouse",
+      "statusLabel": "Default status",
+      "statusPlaceholder": "Select default status"
+    },
+    "inheritance": {
+      "heading": "Inherited properties",
+      "description": "Choose which properties stay locked on sub-assets.",
+      "location": "Location",
+      "status": "Status",
+      "tags": "Tags"
+    },
+    "flexible": {
+      "heading": "Pool Requirements",
+      "mode": {
+        "assetType": "By asset type",
+        "parentAsset": "By parent asset"
+      },
+      "parentBadge": "Parent asset",
+      "assetTypeLabel": "Asset type: {{name}}",
+      "quantityPlaceholder": "Quantity",
+      "assetTypePlaceholder": "Select asset type",
+      "parentAssetPlaceholder": "Select parent asset",
+      "nothingFound": "No matching assets",
+      "emptyState": "No pool requirements defined yet"
+    },
+    "fixed": {
+      "heading": "Bound assets",
+      "selectPlaceholder": "Select asset",
+      "emptyState": "No assets added yet"
+    },
+    "actions": {
+      "addPool": "Add requirement",
+      "addAsset": "Add asset",
+      "cancel": "Cancel",
+      "create": "Create kit",
+      "update": "Save changes"
+    },
+    "validation": {
+      "nameRequired": "Name is required",
+      "typeRequired": "Type is required"
+    },
+    "notifications": {
+      "createTitle": "Kit created",
+      "createMessage": "The kit is ready to use.",
+      "updateTitle": "Kit updated",
+      "updateMessage": "Changes saved successfully.",
+      "errorTitle": "Unable to save kit"
+    }
+  },
+  "inheritance": {
+    "tooltipGeneric": "Value locked by inheritance",
+    "tooltipWithSource": "Inherited from {{source}}"
+  },
+  "availability": {
+    "available": "Available",
+    "unavailable": "Unavailable"
+  }
+}

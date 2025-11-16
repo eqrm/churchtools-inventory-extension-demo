@@ -156,8 +156,8 @@ export function EnhancedAssetList({ onView, onEdit, onCreateNew }: EnhancedAsset
     if (view.groupBy) setGroupBy(view.groupBy);
     setShowSavedViews(false);
     notifications.show({
-      title: 'Ansicht geladen',
-      message: `Ansicht "${view.name}" wurde angewendet`,
+      title: 'View loaded',
+      message: `View "${view.name}" applied`,
       color: 'blue',
     });
   };
@@ -236,7 +236,7 @@ export function EnhancedAssetList({ onView, onEdit, onCreateNew }: EnhancedAsset
     <Stack gap="md">
       {/* Header with ViewModeSelector and actions */}
       <Group justify="space-between">
-        <Title order={2}>Inventar</Title>
+        <Title order={2}>Inventory</Title>
 
         <Group>
           {/* T209: ViewSelector integration */}
@@ -246,13 +246,13 @@ export function EnhancedAssetList({ onView, onEdit, onCreateNew }: EnhancedAsset
           <Menu position="bottom-end" shadow="md">
             <Menu.Target>
               <Button variant="default" leftSection={<IconBookmark size={16} />}>
-                Ansichten
+                Views
               </Button>
             </Menu.Target>
             <Menu.Dropdown>
-              <Menu.Label>Gespeicherte Ansichten</Menu.Label>
+              <Menu.Label>Saved views</Menu.Label>
               <Menu.Item onClick={() => setShowSavedViews(true)}>
-                Alle Ansichten anzeigen...
+                Show all views...
               </Menu.Item>
             </Menu.Dropdown>
           </Menu>
@@ -263,7 +263,7 @@ export function EnhancedAssetList({ onView, onEdit, onCreateNew }: EnhancedAsset
             leftSection={<IconFilter size={16} />}
             onClick={() => setFiltersPanelOpen((prev) => !prev)}
           >
-            Filter {viewFilters.length > 0 && `(${viewFilters.length})`}
+            Filters {viewFilters.length > 0 && `(${viewFilters.length})`}
           </Button>
 
           {/* T211: Save current view button */}
@@ -273,12 +273,12 @@ export function EnhancedAssetList({ onView, onEdit, onCreateNew }: EnhancedAsset
             onClick={handleSaveCurrentView}
             disabled={viewFilters.length === 0}
           >
-            Ansicht speichern
+            Save view
           </Button>
 
           {onCreateNew && (
             <Button leftSection={<IconPlus size={16} />} onClick={onCreateNew}>
-              Neu
+              New
             </Button>
           )}
         </Group>
@@ -298,7 +298,7 @@ export function EnhancedAssetList({ onView, onEdit, onCreateNew }: EnhancedAsset
       <Modal
         opened={showSaveView}
         onClose={() => setShowSaveView(false)}
-        title="Ansicht speichern"
+        title="Save view"
         size="md"
       >
         <SavedViewForm
@@ -310,8 +310,8 @@ export function EnhancedAssetList({ onView, onEdit, onCreateNew }: EnhancedAsset
           onSuccess={() => {
             setShowSaveView(false);
             notifications.show({
-              title: 'Erfolg',
-              message: 'Ansicht wurde gespeichert',
+              title: 'Success',
+              message: 'View saved',
               color: 'green',
             });
           }}
@@ -323,7 +323,7 @@ export function EnhancedAssetList({ onView, onEdit, onCreateNew }: EnhancedAsset
       <Drawer
         opened={showSavedViews}
         onClose={() => setShowSavedViews(false)}
-        title="Gespeicherte Ansichten"
+        title="Saved views"
         position="right"
         size="md"
       >

@@ -1,8 +1,8 @@
 import { padAssetNumber } from '../../utils/assetNumbers';
-import { initializeOfflineDb, offlineDb } from '../../state/offline/db';
 import type { AssetPrefix, PersonInfo } from '../../types/entities';
 
 const MODULE_DEFAULT_PREFIX_STORAGE_KEY = 'inventory.moduleDefaultPrefixId';
+const PERSON_PREFIX_STORAGE_KEY = 'inventory.personDefaultPrefixes';
 
 function getSafeLocalStorage(): Storage | null {
     if (typeof globalThis === 'undefined') {
@@ -17,27 +17,43 @@ function getSafeLocalStorage(): Storage | null {
     }
 }
 
-async function ensureOfflineDbOpen(): Promise<boolean> {
-    if (typeof indexedDB === 'undefined') {
-        return false;
+interface PersonPrefixRecord {
+    prefixId: string | null;
+    updatedAt: string;
+}
+
+function readPersonPrefixMap(): Record<string, PersonPrefixRecord> {
+    const storage = getSafeLocalStorage();
+    if (!storage) {
+        return {};
     }
 
     try {
-        if (!offlineDb.isOpen()) {
-            await initializeOfflineDb();
+        const raw = storage.getItem(PERSON_PREFIX_STORAGE_KEY);
+        if (!raw) {
+            return {};
         }
-        return true;
+        const parsed = JSON.parse(raw) as Record<string, PersonPrefixRecord> | unknown;
+        if (!parsed || typeof parsed !== 'object') {
+            return {};
+        }
+        return parsed as Record<string, PersonPrefixRecord>;
     } catch {
-        return false;
+        return {};
     }
 }
 
-function toPersonCacheSearchText(person: Pick<PersonInfo, 'firstName' | 'lastName' | 'email'>): string {
-    return [person.firstName, person.lastName, person.email]
-        .filter(Boolean)
-        .map(entry => entry?.toLowerCase() ?? '')
-        .join(' ')
-        .trim();
+function writePersonPrefixMap(map: Record<string, PersonPrefixRecord>): void {
+    const storage = getSafeLocalStorage();
+    if (!storage) {
+        return;
+    }
+
+    try {
+        storage.setItem(PERSON_PREFIX_STORAGE_KEY, JSON.stringify(map));
+    } catch {
+        // Ignore persistence failures to keep UX responsive
+    }
 }
 
 export function getStoredModuleDefaultPrefixId(): string | null {
@@ -67,17 +83,8 @@ export async function getStoredPersonDefaultPrefixId(personId: string): Promise<
         return null;
     }
 
-    const dbAvailable = await ensureOfflineDbOpen();
-    if (!dbAvailable) {
-        return null;
-    }
-
-    try {
-        const record = await offlineDb.personCache.get(personId);
-        return record?.defaultPrefixId ?? null;
-    } catch {
-        return null;
-    }
+    const map = readPersonPrefixMap();
+    return map[personId]?.prefixId ?? null;
 }
 
 export async function setStoredPersonDefaultPrefixId(
@@ -88,49 +95,19 @@ export async function setStoredPersonDefaultPrefixId(
         return;
     }
 
-    const dbAvailable = await ensureOfflineDbOpen();
-    if (!dbAvailable) {
+    const now = new Date().toISOString();
+    const map = readPersonPrefixMap();
+
+    if (!prefixId) {
+        if (map[person.id]) {
+            const { [person.id]: _removed, ...remaining } = map;
+            writePersonPrefixMap(remaining);
+        }
         return;
     }
 
-    const now = new Date().toISOString();
-
-    try {
-        const existing = await offlineDb.personCache.get(person.id);
-
-        if (!prefixId) {
-            if (existing) {
-                await offlineDb.personCache.update(person.id, {
-                    defaultPrefixId: null,
-                    defaultPrefixUpdatedAt: now,
-                });
-            }
-            return;
-        }
-
-        if (existing) {
-            await offlineDb.personCache.update(person.id, {
-                defaultPrefixId: prefixId,
-                defaultPrefixUpdatedAt: now,
-                lastUsed: now,
-            });
-            return;
-        }
-
-        await offlineDb.personCache.put({
-            id: person.id,
-            firstName: person.firstName ?? '',
-            lastName: person.lastName ?? '',
-            email: person.email,
-            avatarUrl: person.avatarUrl,
-            searchText: toPersonCacheSearchText(person),
-            lastUsed: now,
-            defaultPrefixId: prefixId,
-            defaultPrefixUpdatedAt: now,
-        });
-    } catch {
-        // Ignore persistence failures to keep UX responsive
-    }
+    map[person.id] = { prefixId, updatedAt: now };
+    writePersonPrefixMap(map);
 }
 
 export type AutoNumberingSource =

@@ -6,6 +6,8 @@ import common from './locales/en/common.json';
 import damage from './locales/en/damage.json';
 import undo from './locales/en/undo.json';
 import views from './locales/en/views.json';
+import kits from './locales/en/kits.json';
+import settingsNamespace from './locales/en/settings.json';
 
 const resources: Resource = {
   en: {
@@ -13,6 +15,8 @@ const resources: Resource = {
     damage,
     undo,
     views,
+    kits,
+    settings: settingsNamespace,
   },
 };
 
@@ -27,8 +31,8 @@ export const initI18n = async (): Promise<void> => {
     lng: 'en',
     fallbackLng: 'en',
     debug: import.meta.env.DEV,
-  defaultNS: 'common',
-  ns: ['common', 'damage', 'undo', 'views'],
+    defaultNS: 'common',
+    ns: ['common', 'damage', 'undo', 'views', 'kits', 'settings'],
     resources,
     interpolation: {
       escapeValue: false,

@@ -1,0 +1,85 @@
+{
+  "versioning": {
+    "title": "Settings History",
+    "description": "Track every export, import, and rollback with full context.",
+    "createButton": "Create Version",
+    "emptyState": "No history yet. Create a version after major changes to keep a snapshot.",
+    "currentBadge": "Current",
+    "rollback": {
+      "action": "Rollback",
+      "confirmation": "Rollback settings to version {{version}}? Current settings will be replaced.",
+      "disabled": "The latest version cannot be rolled back.",
+      "details": "This replaces current settings with the selected snapshot. Summary: {{summary}}"
+    },
+    "rollbackSource": "Rolled back from {{id}}",
+    "table": {
+      "version": "Version",
+      "summary": "Summary",
+      "changedBy": "Changed By",
+      "created": "Created",
+      "expires": "Expires",
+      "actions": "Actions"
+    },
+    "createModal": {
+      "title": "Describe this snapshot",
+      "description": "Use a short summary so future administrators know why this version exists.",
+      "summaryLabel": "Change summary",
+      "summaryPlaceholder": "e.g., After migrating prefixes to production",
+      "cancel": "Cancel",
+      "submit": "Save Version"
+    },
+    "expiry": {
+      "noExpiry": "Unknown",
+      "expired": "Expired",
+      "warning": "Expires in {{days}}d",
+      "active": "Expires in {{days}}d"
+    },
+    "origin": {
+      "manual": "Manual",
+      "import": "Import",
+      "rollback": "Rollback"
+    },
+    "age": {
+      "label": "{{days}}d old",
+      "warning": "{{days}}d old · rotate before 90 days",
+      "critical": "{{days}}d old · retention limit",
+      "expired": "Expired snapshot"
+    },
+    "notifications": {
+      "createSuccessTitle": "Version saved",
+      "createSuccessMessage": "Settings snapshot stored in history.",
+      "createErrorTitle": "Unable to save version",
+      "rollbackSuccessTitle": "Rollback complete",
+      "rollbackSuccessMessage": "Settings restored from version {{version}}.",
+      "rollbackErrorTitle": "Rollback failed",
+      "genericError": "Something went wrong. Please try again."
+    }
+  },
+  "export": {
+    "title": "Export settings",
+    "description": "Download a portable JSON backup that can be imported into another tenant.",
+    "button": "Download JSON",
+    "notifications": {
+      "successTitle": "Export ready",
+      "successMessage": "Settings JSON downloaded.",
+      "errorTitle": "Export failed"
+    }
+  },
+  "import": {
+    "title": "Import settings",
+    "description": "Apply a JSON backup. A history entry and undo action will be recorded automatically.",
+    "fileLabel": "Settings file",
+    "filePlaceholder": "Select a .json backup",
+    "summaryLabel": "Import summary",
+    "summaryPlaceholder": "e.g., Restoring production defaults",
+    "button": "Import JSON",
+    "validation": {
+      "noFile": "Select a JSON file before importing."
+    },
+    "notifications": {
+      "successTitle": "Import complete",
+      "successMessage": "Settings applied successfully.",
+      "errorTitle": "Import failed"
+    }
+  }
+}

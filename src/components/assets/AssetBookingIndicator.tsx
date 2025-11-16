@@ -15,7 +15,7 @@ interface AssetBookingIndicatorProps {
 }
 
 const formatDate = (date: string) => {
-  return new Date(date).toLocaleDateString('de-DE', {
+  return new Date(date).toLocaleDateString('en-US', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
@@ -51,13 +51,13 @@ function EmptyState({ onBookAsset }: { onBookAsset?: () => void }) {
       <Group justify="space-between">
         <Group gap="xs">
           <IconCalendar size={20} />
-          <Text size="sm" fw={500}>Buchungen</Text>
+          <Text size="sm" fw={500}>Bookings</Text>
         </Group>
-        <Badge color="green">Verfügbar</Badge>
+        <Badge color="green">Available</Badge>
       </Group>
       {onBookAsset && (
         <Button fullWidth mt="sm" onClick={onBookAsset}>
-          Asset buchen
+          Book asset
         </Button>
       )}
     </Card>
@@ -81,7 +81,7 @@ export function AssetBookingIndicator({ assetId, onBookAsset }: AssetBookingIndi
       <Stack gap="md">
         <Group gap="xs">
           <IconCalendar size={20} />
-          <Text size="sm" fw={500}>Buchungen</Text>
+          <Text size="sm" fw={500}>Bookings</Text>
         </Group>
 
         {activeBookings.map(booking => (
@@ -90,7 +90,7 @@ export function AssetBookingIndicator({ assetId, onBookAsset }: AssetBookingIndi
 
         {upcomingBookings.length > 0 && (
           <>
-            <Text size="xs" fw={600} tt="uppercase" c="dimmed">Bevorstehend</Text>
+            <Text size="xs" fw={600} tt="uppercase" c="dimmed">Upcoming</Text>
             {upcomingBookings.slice(0, 3).map(booking => (
               <BookingItem key={booking.id} booking={booking} />
             ))}

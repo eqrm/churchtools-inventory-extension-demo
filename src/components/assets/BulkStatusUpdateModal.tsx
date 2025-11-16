@@ -49,7 +49,7 @@ async function updateChildrenStatus(
   return { successCount, errorCount };
 }
 
-function showUpdateNotification(successCount: number, errorCount: number, status: AssetStatus) {
+function showStatusNotification(successCount: number, errorCount: number, status: AssetStatus) {
   if (errorCount === 0) {
     notifications.show({
       title: 'Success',
@@ -84,7 +84,7 @@ export function BulkStatusUpdateModal({
       newStatus,
       updateAsset
     );
-    showUpdateNotification(successCount, errorCount, newStatus);
+    showStatusNotification(successCount, errorCount, newStatus);
     setIsUpdating(false);
     onClose();
   };

@@ -70,6 +70,8 @@ export interface WorkOrderLineItem {
   assetId: UUID;
   completionStatus: 'pending' | 'in-progress' | 'completed';
   completedAt?: ISOTimestamp;
+  scheduledDate?: ISODate; // Per-asset scheduling (T159)
+  notes?: string; // Per-asset notes (T159)
 }
 
 export interface WorkOrderOffer {

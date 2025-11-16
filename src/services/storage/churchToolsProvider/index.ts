@@ -13,5 +13,6 @@ import './assetPrefixes.provider'
 import './people.provider'
 import './damage.provider'
 import './assignment.provider'
+import './models.provider'
 
 export { ChurchToolsStorageProvider }

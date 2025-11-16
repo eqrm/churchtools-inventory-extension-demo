@@ -8,7 +8,6 @@ import { Button, Card, Group, Select, Stack, Text, TextInput } from '@mantine/co
 import { IconFilter, IconPlus, IconSearch } from '@tabler/icons-react';
 import { notifications } from '@mantine/notifications';
 import { format } from 'date-fns';
-import { de } from 'date-fns/locale';
 import type { DataTableColumn, DataTableSortStatus } from 'mantine-datatable';
 import { ListLoadingSkeleton } from '../common/ListLoadingSkeleton';
 import { EmptyState } from '../common/EmptyState';
@@ -26,13 +25,13 @@ interface MaintenanceRecordsSectionProps {
 }
 
 const maintenanceTypeOptions = [
-  { value: 'inspection', label: 'Inspektion' },
-  { value: 'cleaning', label: 'Reinigung' },
-  { value: 'repair', label: 'Reparatur' },
-  { value: 'calibration', label: 'Kalibrierung' },
-  { value: 'testing', label: 'Prüfung' },
+  { value: 'inspection', label: 'Inspection' },
+  { value: 'cleaning', label: 'Cleaning' },
+  { value: 'repair', label: 'Repair' },
+  { value: 'calibration', label: 'Calibration' },
+  { value: 'testing', label: 'Testing' },
   { value: 'compliance', label: 'Compliance' },
-  { value: 'other', label: 'Sonstiges' },
+  { value: 'other', label: 'Other' },
 ];
 
 interface MaintenanceViewFilters extends Record<string, unknown> {
@@ -53,9 +52,9 @@ function getColumns(): DataTableColumn<MaintenanceRecord>[] {
   return [
     {
       accessor: 'date',
-      title: 'Datum',
+      title: 'Date',
       sortable: true,
-      render: (record) => format(new Date(record.date), 'dd.MM.yyyy', { locale: de }),
+      render: (record) => format(new Date(record.date), 'MM/dd/yyyy'),
     },
     {
       accessor: 'asset.assetNumber',
@@ -74,13 +73,13 @@ function getColumns(): DataTableColumn<MaintenanceRecord>[] {
     },
     {
       accessor: 'type',
-      title: 'Typ',
+      title: 'Type',
       sortable: true,
       render: (record) => <MaintenanceTypeBadge type={record.type} />,
     },
     {
       accessor: 'description',
-      title: 'Beschreibung',
+      title: 'Description',
       render: (record) => (
         <Text size="sm" lineClamp={2}>
           {record.description}
@@ -89,22 +88,22 @@ function getColumns(): DataTableColumn<MaintenanceRecord>[] {
     },
     {
       accessor: 'performedByName',
-      title: 'Durchgeführt von',
+      title: 'Performed by',
       sortable: true,
     },
     {
       accessor: 'cost',
-      title: 'Kosten',
+      title: 'Cost',
       sortable: true,
       render: (record) => (record.cost ? `${record.cost.toFixed(2)} €` : '-'),
     },
     {
       accessor: 'nextDueDate',
-      title: 'Nächste Wartung',
+      title: 'Next maintenance',
       sortable: true,
       render: (record) =>
         record.nextDueDate
-          ? format(new Date(record.nextDueDate), 'dd.MM.yyyy', { locale: de })
+          ? format(new Date(record.nextDueDate), 'MM/dd/yyyy')
           : '-',
     },
   ];
@@ -145,7 +144,7 @@ export function MaintenanceRecordsSection({ assets, assetsLoading, onCreateRecor
 
   useEffect(() => {
     if (error) {
-      notifications.show({ title: 'Fehler', message: (error as Error).message, color: 'red' });
+      notifications.show({ title: 'Error', message: (error as Error).message, color: 'red' });
     }
   }, [error]);
 
@@ -250,8 +249,8 @@ export function MaintenanceRecordsSection({ assets, assetsLoading, onCreateRecor
     <Stack gap="md">
       <Group align="flex-end" justify="space-between" wrap="wrap">
         <TextInput
-          label="Suchen"
-          placeholder="Beschreibung oder Asset"
+          label="Search"
+          placeholder="Description or asset"
           leftSection={<IconSearch size={16} />}
           value={filters.search ?? ''}
           onChange={(event) => {
@@ -267,7 +266,7 @@ export function MaintenanceRecordsSection({ assets, assetsLoading, onCreateRecor
         <Group gap="sm" wrap="wrap">
           <Select
             label="Asset"
-            placeholder="Alle Assets"
+            placeholder="All assets"
             leftSection={<IconFilter size={16} />}
             data={assetOptions}
             value={filters.assetId ?? null}
@@ -283,8 +282,8 @@ export function MaintenanceRecordsSection({ assets, assetsLoading, onCreateRecor
           />
 
           <Select
-            label="Typ"
-            placeholder="Alle Typen"
+            label="Type"
+            placeholder="All types"
             leftSection={<IconFilter size={16} />}
             data={maintenanceTypeOptions}
             value={filters.type ?? null}
@@ -299,12 +298,12 @@ export function MaintenanceRecordsSection({ assets, assetsLoading, onCreateRecor
 
           {hasActiveFilters && (
             <Button variant="subtle" onClick={resetFilters}>
-              Alle Filter löschen
+              Clear all filters
             </Button>
           )}
 
           <Button leftSection={<IconPlus size={16} />} onClick={() => onCreateRecord()}>
-            Wartung erfassen
+            Log maintenance
           </Button>
         </Group>
       </Group>
@@ -312,7 +311,7 @@ export function MaintenanceRecordsSection({ assets, assetsLoading, onCreateRecor
   );
 
   const primaryAction = {
-    label: 'Wartung erfassen',
+    label: 'Log maintenance',
     icon: <IconPlus size={16} />,
     onClick: () => onCreateRecord(),
   };
@@ -321,7 +320,7 @@ export function MaintenanceRecordsSection({ assets, assetsLoading, onCreateRecor
 
   return (
     <DataViewLayout
-      title="Wartungsaufzeichnungen"
+      title="Maintenance records"
       mode={viewMode}
       availableModes={['table']}
       onModeChange={setViewMode}
@@ -334,7 +333,7 @@ export function MaintenanceRecordsSection({ assets, assetsLoading, onCreateRecor
     >
       {error ? (
         <Card withBorder>
-          <Text c="red">Fehler beim Laden der Wartungsaufzeichnungen.</Text>
+          <Text c="red">Failed to load maintenance records.</Text>
         </Card>
       ) : isBusy ? (
         <Card withBorder>
@@ -342,15 +341,15 @@ export function MaintenanceRecordsSection({ assets, assetsLoading, onCreateRecor
         </Card>
       ) : totalRecords === 0 ? (
         <EmptyState
-          title="Keine Wartungsaufzeichnungen"
+          title="No maintenance records"
           message={
             filters.search || filters.type || filters.assetId
-              ? 'Keine Wartungsaufzeichnungen entsprechen den aktuellen Filtern.'
-              : 'Erfassen Sie die erste Wartung, um das Protokoll zu starten.'
+              ? 'No maintenance records match the current filters.'
+              : 'Log the first maintenance entry to start the history.'
           }
           action={
             <Button leftSection={<IconPlus size={16} />} onClick={() => onCreateRecord()}>
-              Wartung erfassen
+              Log maintenance
             </Button>
           }
         />
@@ -381,12 +380,12 @@ export function MaintenanceRecordsSection({ assets, assetsLoading, onCreateRecor
               }
             }}
             paginationText={({ from, to, totalRecords: total }) =>
-              `Zeige ${from} bis ${to} von ${total} Wartungsaufzeichnungen`
+              `Showing ${from} to ${to} of ${total} maintenance records`
             }
             noRecordsText={
               hasActiveFilters
-                ? 'Keine Wartungsaufzeichnungen entsprechen den aktuellen Filtern.'
-                : 'Keine Wartungsaufzeichnungen gefunden.'
+                ? 'No maintenance records match the current filters.'
+                : 'No maintenance records found.'
             }
           />
         </Card>

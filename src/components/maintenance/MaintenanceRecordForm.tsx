@@ -22,13 +22,13 @@ interface MaintenanceRecordFormProps {
 }
 
 const maintenanceTypes = [
-  { value: 'inspection', label: 'Inspektion' },
-  { value: 'cleaning', label: 'Reinigung' },
-  { value: 'repair', label: 'Reparatur' },
-  { value: 'calibration', label: 'Kalibrierung' },
-  { value: 'testing', label: 'Prüfung' },
+  { value: 'inspection', label: 'Inspection' },
+  { value: 'cleaning', label: 'Cleaning' },
+  { value: 'repair', label: 'Repair' },
+  { value: 'calibration', label: 'Calibration' },
+  { value: 'testing', label: 'Testing' },
   { value: 'compliance', label: 'Compliance' },
-  { value: 'other', label: 'Sonstiges' },
+  { value: 'other', label: 'Other' },
 ];
 
 /**
@@ -61,15 +61,15 @@ export function MaintenanceRecordForm({
       cost: '',
     },
     validate: {
-      description: (value) => (value.trim() ? null : 'Beschreibung erforderlich'),
+      description: (value) => (value.trim() ? null : 'Description is required'),
     },
   });
 
   const handleSubmit = form.onSubmit(async (values) => {
     if (!currentUser) {
       notifications.show({
-        title: 'Fehler',
-        message: 'Benutzer nicht gefunden',
+        title: 'Error',
+        message: 'User not found',
         color: 'red',
         icon: <IconX />,
       });
@@ -104,26 +104,26 @@ export function MaintenanceRecordForm({
         }
       }
       
-      notifications.show({ title: 'Erfolg', message: 'Wartung erfasst', color: 'green', icon: <IconCheck /> });
+      notifications.show({ title: 'Success', message: 'Maintenance recorded', color: 'green', icon: <IconCheck /> });
       form.reset();
       onSuccess?.();
     } catch (error) {
-      const msg = error instanceof Error ? error.message : 'Fehler beim Speichern';
-      notifications.show({ title: 'Fehler', message: msg, color: 'red', icon: <IconX /> });
+      const msg = error instanceof Error ? error.message : 'Failed to save maintenance record';
+      notifications.show({ title: 'Error', message: msg, color: 'red', icon: <IconX /> });
     }
   });
 
   return (
     <form onSubmit={handleSubmit}>
       <Stack gap="md">
-        <Select label="Wartungstyp" data={maintenanceTypes} required {...form.getInputProps('type')} />
-        <DateInput label="Datum" required {...form.getInputProps('date')} />
-        <TextInput label="Beschreibung" placeholder="z.B. Jährliche Sicherheitsprüfung" required {...form.getInputProps('description')} />
-        <Textarea label="Notizen" placeholder="Zusätzliche Anmerkungen..." minRows={3} {...form.getInputProps('notes')} />
-        <NumberInput label="Kosten (€)" placeholder="0.00" decimalScale={2} min={0} {...form.getInputProps('cost')} />
+        <Select label="Maintenance type" data={maintenanceTypes} required {...form.getInputProps('type')} />
+        <DateInput label="Date" required {...form.getInputProps('date')} />
+        <TextInput label="Description" placeholder="e.g., Annual safety inspection" required {...form.getInputProps('description')} />
+        <Textarea label="Notes" placeholder="Additional notes..." minRows={3} {...form.getInputProps('notes')} />
+        <NumberInput label="Cost (€)" placeholder="0.00" decimalScale={2} min={0} {...form.getInputProps('cost')} />
         <Group justify="flex-end" mt="md">
-          {onCancel && <Button variant="subtle" onClick={onCancel}>Abbrechen</Button>}
-          <Button type="submit" loading={createRecord.isPending}>Wartung erfassen</Button>
+          {onCancel && <Button variant="subtle" onClick={onCancel}>Cancel</Button>}
+          <Button type="submit" loading={createRecord.isPending}>Log maintenance</Button>
         </Group>
       </Stack>
     </form>

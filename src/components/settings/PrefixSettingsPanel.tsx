@@ -116,7 +116,7 @@ export function PrefixSettingsPanel(): JSX.Element {
             <Stack gap={4}>
               <Text fw={600}>Default prefix preferences</Text>
               <Text size="sm" c="dimmed">
-                Pick a module-wide default and optionally store your personal preference. We keep personal defaults in the offline person cache so they follow you across sessions.
+                Pick a module-wide default and optionally store your personal preference. Personal defaults are stored locally so they follow you across sessions.
               </Text>
             </Stack>
           </Group>

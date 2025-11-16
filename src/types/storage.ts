@@ -2,8 +2,8 @@
  * Storage Provider Interface
  * 
  * This is the core abstraction layer for all data operations in the inventory system.
- * Implementations can target ChurchTools Custom Modules API, offline IndexedDB, or
- * future backend systems.
+ * Implementations currently target the ChurchTools Custom Modules API and can be
+ * adapted for future backend systems.
  * 
  * @module contracts/storage-provider
  */
@@ -41,6 +41,7 @@ import type {
   PersonInfo,
   UUID
 } from './entities'
+import type { AssetModel, AssetModelCreate, AssetModelUpdate } from './model'
 import type {
   AssignmentCreateInput,
   AssignmentRecord,
@@ -330,7 +331,7 @@ export interface IStorageProvider {
   cancelBooking(id: string, reason?: string): Promise<void>
 
   /**
-   * Delete a booking record entirely (demo/reset tooling)
+   * Delete a booking record entirely
    * @param id - Booking ID
    */
   deleteBooking(id: string): Promise<void>
@@ -405,7 +406,36 @@ export interface IStorageProvider {
     unavailableAssets?: string[]  // Asset IDs that are booked
     reason?: string
   }>
-  
+
+  // ============================================================================
+  // Asset Models
+  // ============================================================================
+
+  /**
+   * Get all asset model templates
+   */
+  getAssetModels(): Promise<AssetModel[]>
+
+  /**
+   * Get a single asset model by ID
+   */
+  getAssetModel(id: string): Promise<AssetModel | null>
+
+  /**
+   * Create a new asset model template
+   */
+  createAssetModel(data: AssetModelCreate): Promise<AssetModel>
+
+  /**
+   * Update an existing asset model
+   */
+  updateAssetModel(id: string, data: AssetModelUpdate): Promise<AssetModel>
+
+  /**
+   * Delete an asset model template
+   */
+  deleteAssetModel(id: string): Promise<void>
+
   // ============================================================================
   // Maintenance
   // ============================================================================
@@ -791,6 +821,85 @@ export interface IStorageProvider {
    * @returns New sequence number
    */
   incrementPrefixSequence(prefixId: string): Promise<number>
+
+  // ============================================================================
+  // Maintenance Companies, Rules, and Work Orders (T142)
+  // ============================================================================
+
+  /**
+   * Get all maintenance companies
+   */
+  getMaintenanceCompanies(): Promise<import('./maintenance').MaintenanceCompany[]>
+
+  /**
+   * Get a single maintenance company by ID
+   */
+  getMaintenanceCompany(id: UUID): Promise<import('./maintenance').MaintenanceCompany | null>
+
+  /**
+   * Create a new maintenance company
+   */
+  createMaintenanceCompany(data: import('./maintenance').MaintenanceCompany): Promise<import('./maintenance').MaintenanceCompany>
+
+  /**
+   * Update an existing maintenance company
+   */
+  updateMaintenanceCompany(id: UUID, data: import('./maintenance').MaintenanceCompany): Promise<import('./maintenance').MaintenanceCompany>
+
+  /**
+   * Delete a maintenance company
+   */
+  deleteMaintenanceCompany(id: UUID): Promise<void>
+
+  /**
+   * Get all maintenance rules
+   */
+  getMaintenanceRules(): Promise<import('./maintenance').MaintenanceRule[]>
+
+  /**
+   * Get a single maintenance rule by ID
+   */
+  getMaintenanceRule(id: UUID): Promise<import('./maintenance').MaintenanceRule | null>
+
+  /**
+   * Create a new maintenance rule
+   */
+  createMaintenanceRule(data: import('./maintenance').MaintenanceRule): Promise<import('./maintenance').MaintenanceRule>
+
+  /**
+   * Update an existing maintenance rule
+   */
+  updateMaintenanceRule(id: UUID, data: import('./maintenance').MaintenanceRule): Promise<import('./maintenance').MaintenanceRule>
+
+  /**
+   * Delete a maintenance rule
+   */
+  deleteMaintenanceRule(id: UUID): Promise<void>
+
+  /**
+   * Get all work orders
+   */
+  getWorkOrders(): Promise<import('./maintenance').WorkOrder[]>
+
+  /**
+   * Get a single work order by ID
+   */
+  getWorkOrder(id: UUID): Promise<import('./maintenance').WorkOrder | null>
+
+  /**
+   * Create a new work order
+   */
+  createWorkOrder(data: import('./maintenance').WorkOrder): Promise<import('./maintenance').WorkOrder>
+
+  /**
+   * Update an existing work order
+   */
+  updateWorkOrder(id: UUID, data: import('./maintenance').WorkOrder): Promise<import('./maintenance').WorkOrder>
+
+  /**
+   * Delete a work order
+   */
+  deleteWorkOrder(id: UUID): Promise<void>
 }
 
 /**
@@ -813,7 +922,7 @@ export interface StorageProviderConfig {
   /**
    * Provider type
    */
-  type: 'churchtools' | 'offline' | 'mock'
+  type: 'churchtools' | 'mock'
   
   /**
    * ChurchTools-specific config
@@ -822,14 +931,6 @@ export interface StorageProviderConfig {
     moduleId: string              // Custom module ID
     baseUrl: string               // ChurchTools base URL
     apiClient: unknown            // ChurchTools API client instance
-  }
-  
-  /**
-   * Offline-specific config
-   */
-  offline?: {
-    dbName: string                // IndexedDB database name
-    version: number               // Schema version
   }
   
   /**

@@ -410,7 +410,7 @@ export function BookingForm({ booking, kitId, onSuccess, onCancel }: BookingForm
       }
     }
 
-    return "Asset auswählen"
+    return 'Select an asset'
   }
 
   const kitOptions = kits?.map(k => ({ value: k.id, label: k.name })) || []

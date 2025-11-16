@@ -220,15 +220,15 @@ export function AssetKanbanView({ assets }: AssetKanbanViewProps) {
         {
           onSuccess: () => {
             notifications.show({
-              title: 'Status aktualisiert',
+              title: 'Status updated',
               message: `${asset.name} → ${targetGroup.label}`,
               color: 'green',
             });
           },
           onError: (error) => {
-            const message = error instanceof Error ? error.message : 'Unbekannter Fehler';
+            const message = error instanceof Error ? error.message : 'Unknown error';
             notifications.show({
-              title: 'Verschieben fehlgeschlagen',
+              title: 'Failed to move asset',
               message,
               color: 'red',
             });

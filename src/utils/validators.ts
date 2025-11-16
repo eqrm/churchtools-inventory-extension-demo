@@ -14,10 +14,10 @@ export function isValidAssetNumber(value: string): boolean {
  */
 export function validateAssetNumber(value: string): string | null {
     if (!value || value.trim() === '') {
-        return 'Asset-Nummer ist erforderlich';
+        return 'Asset number is required';
     }
     if (!isValidAssetNumber(value)) {
-        return 'Asset-Nummer muss 1-5 Ziffern enthalten';
+        return 'Asset number must contain 1-5 digits';
     }
     return null;
 }
@@ -63,7 +63,7 @@ export function isValidDateRange(start: Date, end: Date): boolean {
  */
 export function validateRequired(value: string | null | undefined, fieldName: string): string | null {
     if (!value || value.trim() === '') {
-        return `${fieldName} ist erforderlich`;
+        return `${fieldName} is required`;
     }
     return null;
 }
@@ -73,7 +73,7 @@ export function validateRequired(value: string | null | undefined, fieldName: st
  */
 export function validateMinLength(value: string, minLength: number, fieldName: string): string | null {
     if (value.length < minLength) {
-        return `${fieldName} muss mindestens ${minLength.toString()} Zeichen lang sein`;
+        return `${fieldName} must be at least ${minLength.toString()} characters long`;
     }
     return null;
 }
@@ -83,7 +83,7 @@ export function validateMinLength(value: string, minLength: number, fieldName: s
  */
 export function validateMaxLength(value: string, maxLength: number, fieldName: string): string | null {
     if (value.length > maxLength) {
-        return `${fieldName} darf höchstens ${maxLength.toString()} Zeichen lang sein`;
+        return `${fieldName} must be at most ${maxLength.toString()} characters long`;
     }
     return null;
 }
@@ -93,7 +93,7 @@ export function validateMaxLength(value: string, maxLength: number, fieldName: s
  */
 export function validatePositiveNumber(value: number, fieldName: string): string | null {
     if (value <= 0) {
-        return `${fieldName} muss eine positive Zahl sein`;
+        return `${fieldName} must be a positive number`;
     }
     return null;
 }
@@ -103,7 +103,7 @@ export function validatePositiveNumber(value: number, fieldName: string): string
  */
 export function validateNonNegativeNumber(value: number, fieldName: string): string | null {
     if (value < 0) {
-        return `${fieldName} darf nicht negativ sein`;
+        return `${fieldName} cannot be negative`;
     }
     return null;
 }
@@ -128,7 +128,7 @@ export function validateURL(value: string): string | null {
         return null; // Empty is valid for optional fields
     }
     if (!isValidURL(value)) {
-        return 'Bitte geben Sie eine gültige URL ein (z.B. https://example.com)';
+        return 'Please enter a valid URL (e.g., https://example.com)';
     }
     return null;
 }
@@ -149,15 +149,15 @@ function isEmptyValue(value: string | number | boolean | string[] | undefined | 
  */
 function validateTextField(value: string, validation: { minLength?: number; maxLength?: number; pattern?: string } | undefined, fieldName: string): string | null {
     if (validation?.minLength && value.length < validation.minLength) {
-        return `${fieldName} muss mindestens ${validation.minLength.toString()} Zeichen lang sein`;
+        return `${fieldName} must be at least ${validation.minLength.toString()} characters long`;
     }
     if (validation?.maxLength && value.length > validation.maxLength) {
-        return `${fieldName} darf höchstens ${validation.maxLength.toString()} Zeichen lang sein`;
+        return `${fieldName} must be at most ${validation.maxLength.toString()} characters long`;
     }
     if (validation?.pattern) {
         const regex = new RegExp(validation.pattern);
         if (!regex.test(value)) {
-            return `${fieldName} entspricht nicht dem erforderlichen Format`;
+            return `${fieldName} does not match the required format`;
         }
     }
     return null;
@@ -168,13 +168,13 @@ function validateTextField(value: string, validation: { minLength?: number; maxL
  */
 function validateNumberField(value: number, validation: { min?: number; max?: number } | undefined, fieldName: string): string | null {
     if (isNaN(value)) {
-        return `${fieldName} muss eine Zahl sein`;
+        return `${fieldName} must be a number`;
     }
     if (validation?.min !== undefined && value < validation.min) {
-        return `${fieldName} muss mindestens ${validation.min.toString()} sein`;
+        return `${fieldName} must be at least ${validation.min.toString()}`;
     }
     if (validation?.max !== undefined && value > validation.max) {
-        return `${fieldName} darf höchstens ${validation.max.toString()} sein`;
+        return `${fieldName} must be at most ${validation.max.toString()}`;
     }
     return null;
 }
@@ -184,12 +184,12 @@ function validateNumberField(value: number, validation: { min?: number; max?: nu
  */
 function validateMultiSelectField(value: string[], options: string[] | undefined, fieldName: string): string | null {
     if (!Array.isArray(value)) {
-        return `${fieldName} muss ein Array sein`;
+        return `${fieldName} must be an array`;
     }
     if (options) {
         const invalidOptions = value.filter(v => !options.includes(v));
         if (invalidOptions.length > 0) {
-            return `${fieldName} enthält ungültige Optionen: ${invalidOptions.join(', ')}`;
+            return `${fieldName} contains invalid options: ${invalidOptions.join(', ')}`;
         }
     }
     return null;
@@ -214,7 +214,7 @@ function validateByFieldType(
             return validateURL(String(value));
         case 'select':
             if (field.options && !field.options.includes(String(value))) {
-                return `${fieldName} muss einer der verfügbaren Optionen sein`;
+                return `${fieldName} must be one of the available options`;
             }
             return null;
         case 'multi-select':
@@ -222,18 +222,18 @@ function validateByFieldType(
         case 'date': {
             const dateValue = new Date(String(value));
             if (isNaN(dateValue.getTime())) {
-                return `${fieldName} muss ein gültiges Datum sein`;
+                return `${fieldName} must be a valid date`;
             }
             return null;
         }
         case 'checkbox':
             if (typeof value !== 'boolean') {
-                return `${fieldName} muss true oder false sein`;
+                return `${fieldName} must be true or false`;
             }
             return null;
         case 'person-reference':
             if (typeof value !== 'string' || value.trim() === '') {
-                return `${fieldName} muss eine gültige Person-Referenz sein`;
+                return `${fieldName} must be a valid person reference`;
             }
             return null;
         default:
@@ -262,7 +262,7 @@ export function validateCustomFieldValue(
 ): string | null {
     // Check required
     if (field.required && isEmptyValue(value)) {
-        return `${fieldName} ist erforderlich`;
+        return `${fieldName} is required`;
     }
 
     // If value is empty and not required, it's valid

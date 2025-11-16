@@ -22,7 +22,7 @@ import { getMasterDataDefinition } from '../../utils/masterData';
 import { useMasterData } from '../../hooks/useMasterDataNames';
 import { formatDateTime } from '../../utils/formatters';
 import type { Asset, MaintenancePlanSchedule } from '../../types/entities';
-import { applyHoldSyncResult, synchronizeMaintenancePlanHolds } from '../../services/maintenance/maintenanceCalendar';
+import { applyHoldSyncResult, syncMaintenancePlanHolds } from '../../services/maintenance/maintenanceCalendar';
 
 const maintenanceCompanyDefinition = getMasterDataDefinition('maintenanceCompanies');
 
@@ -71,12 +71,12 @@ export function MaintenancePlanForm() {
 
     const syncPlanHolds = useCallback(async () => {
         const latestState = useMaintenancePlanStore.getState().state;
-        const result = await synchronizeMaintenancePlanHolds(latestState);
+        const result = await syncMaintenancePlanHolds(latestState);
         applyHoldSyncResult(result, setAssetHold);
         return result;
     }, [setAssetHold]);
 
-    const synchronizeHolds = useCallback(
+    const syncHolds = useCallback(
         async (options: { successMessage?: string; suppressSuccess?: boolean } = {}) => {
             setIsSyncingHolds(true);
             try {
@@ -130,17 +130,17 @@ export function MaintenancePlanForm() {
             return;
         }
 
-        await synchronizeHolds({ successMessage: 'Maintenance window reserved for selected assets.' });
-    }, [advanceStage, notifyWarnings, synchronizeHolds]);
+        await syncHolds({ successMessage: 'Maintenance window reserved for selected assets.' });
+    }, [advanceStage, notifyWarnings, syncHolds]);
 
     const handleResetToDraft = useCallback(async () => {
         advanceStage('draft');
         const latest = useMaintenancePlanStore.getState().state;
 
         if (latest.stage === 'draft') {
-            await synchronizeHolds({ successMessage: 'Maintenance holds released.' });
+            await syncHolds({ successMessage: 'Maintenance holds released.' });
         }
-    }, [advanceStage, synchronizeHolds]);
+    }, [advanceStage, syncHolds]);
 
     const handleCompletePlan = useCallback(async () => {
         advanceStage('completed');
@@ -151,18 +151,18 @@ export function MaintenancePlanForm() {
             return;
         }
 
-        await synchronizeHolds({ successMessage: 'Maintenance plan completed and calendar holds released.' });
-    }, [advanceStage, notifyWarnings, synchronizeHolds]);
+        await syncHolds({ successMessage: 'Maintenance plan completed and calendar holds released.' });
+    }, [advanceStage, notifyWarnings, syncHolds]);
 
     const handleScheduleUpdate = useCallback(
         (partial: Partial<MaintenancePlanSchedule>) => {
             updateSchedule(partial);
             const latest = useMaintenancePlanStore.getState().state;
             if (latest.stage === 'planned') {
-                void synchronizeHolds({ suppressSuccess: true });
+                void syncHolds({ suppressSuccess: true });
             }
         },
-        [updateSchedule, synchronizeHolds],
+        [updateSchedule, syncHolds],
     );
 
     const assetOptions = useMemo(() => {
@@ -227,10 +227,10 @@ export function MaintenancePlanForm() {
 
             const nextState = useMaintenancePlanStore.getState().state;
             if (nextState.stage === 'planned') {
-                void synchronizeHolds({ suppressSuccess: true });
+                void syncHolds({ suppressSuccess: true });
             }
         },
-        [assets, addAssets, removeAsset, selectedAssetIds, synchronizeHolds],
+        [assets, addAssets, removeAsset, selectedAssetIds, syncHolds],
     );
 
     const handleCompanyChange = useCallback(

@@ -66,27 +66,27 @@ function getColumns(
         <Box>
           <Text fw={500}>{assetType.name}</Text>
           <Text size="xs" c="dimmed">
-            Erstellt am {new Date(assetType.createdAt).toLocaleDateString()}
+            Created on {new Date(assetType.createdAt).toLocaleDateString()}
           </Text>
         </Box>
       ),
     },
     {
       accessor: 'customFields',
-      title: 'Eigene Felder',
+      title: 'Custom fields',
       sortable: true,
       render: (assetType) => (
         <Group gap="xs">
           <Text size="sm">{assetType.customFields.length}</Text>
           <Text size="xs" c="dimmed">
-            {assetType.customFields.length === 1 ? 'Feld' : 'Felder'}
+            {assetType.customFields.length === 1 ? 'field' : 'fields'}
           </Text>
         </Group>
       ),
     },
     {
       accessor: 'lastModifiedBy',
-      title: 'Zuletzt geändert',
+      title: 'Last modified',
       render: (assetType) => (
         <Box>
           <Text size="sm">{assetType.lastModifiedByName}</Text>
@@ -122,7 +122,7 @@ function getColumns(
                     onEdit(assetType);
                   }}
                 >
-                  Bearbeiten
+                  Edit
                 </Menu.Item>
               )}
               <Menu.Item
@@ -133,7 +133,7 @@ function getColumns(
                 }}
                 disabled={duplicatePending}
               >
-                Duplizieren
+                Duplicate
               </Menu.Item>
               <Menu.Item
                 color="red"
@@ -144,7 +144,7 @@ function getColumns(
                 }}
                 disabled={deletePending}
               >
-                Löschen
+                Delete
               </Menu.Item>
             </Menu.Dropdown>
           </Menu>
@@ -264,21 +264,21 @@ export function AssetTypeList({ onEdit, headerActions }: AssetTypeListProps) {
   };
 
   const handleDelete = useCallback(async (assetType: AssetType) => {
-    if (!window.confirm(`Soll der Asset-Typ "${assetType.name}" wirklich gelöscht werden?`)) {
+    if (!window.confirm(`Delete asset type "${assetType.name}"? This cannot be undone.`)) {
       return;
     }
 
     try {
       await deleteAssetType.mutateAsync(assetType.id);
       notifications.show({
-        title: 'Erfolgreich',
-        message: `Asset-Typ "${assetType.name}" wurde gelöscht`,
+        title: 'Success',
+        message: `Asset type "${assetType.name}" deleted`,
         color: 'green',
       });
     } catch (err) {
       notifications.show({
-        title: 'Fehler',
-        message: err instanceof Error ? err.message : 'Asset-Typ konnte nicht gelöscht werden',
+        title: 'Error',
+        message: err instanceof Error ? err.message : 'Unable to delete asset type',
         color: 'red',
       });
     }
@@ -294,14 +294,14 @@ export function AssetTypeList({ onEdit, headerActions }: AssetTypeListProps) {
       });
 
       notifications.show({
-        title: 'Erfolgreich',
-        message: `Asset-Typ "${duplicated.name}" wurde erstellt`,
+        title: 'Success',
+        message: `Asset type "${duplicated.name}" duplicated`,
         color: 'green',
       });
     } catch (err) {
       notifications.show({
-        title: 'Fehler',
-        message: err instanceof Error ? err.message : 'Asset-Typ konnte nicht dupliziert werden',
+        title: 'Error',
+        message: err instanceof Error ? err.message : 'Unable to duplicate asset type',
         color: 'red',
       });
     }
@@ -323,8 +323,8 @@ export function AssetTypeList({ onEdit, headerActions }: AssetTypeListProps) {
     <Stack gap="md">
       <Group align="flex-end" justify="space-between" wrap="wrap">
         <TextInput
-          label="Suche"
-          placeholder="Asset-Typen durchsuchen"
+          label="Search"
+          placeholder="Search asset types"
           leftSection={<IconSearch size={16} />}
           value={filters.search ?? ''}
           onChange={(event) => {
@@ -340,7 +340,7 @@ export function AssetTypeList({ onEdit, headerActions }: AssetTypeListProps) {
         {hasActiveFilters && (
           <Group gap="sm">
             <Button variant="subtle" leftSection={<IconFilter size={16} />} onClick={resetFilters}>
-              Filter zurücksetzen
+              Reset filters
             </Button>
           </Group>
         )}
@@ -351,14 +351,14 @@ export function AssetTypeList({ onEdit, headerActions }: AssetTypeListProps) {
   if (error) {
     return (
       <Card withBorder>
-        <Text c="red">Fehler beim Laden der Asset-Typen: {error.message}</Text>
+        <Text c="red">Failed to load asset types: {error.message}</Text>
       </Card>
     );
   }
 
   return (
     <DataViewLayout
-      title="Asset-Typen"
+      title="Asset types"
       mode={viewMode}
       availableModes={['table']}
       onModeChange={setViewMode}
@@ -390,12 +390,12 @@ export function AssetTypeList({ onEdit, headerActions }: AssetTypeListProps) {
           onSortStatusChange={setSortStatus}
           fetching={isLoading}
           paginationText={({ from, to, totalRecords: total }) =>
-            `Zeige ${from} bis ${to} von ${total} Asset-Typen`
+            `Showing ${from} to ${to} of ${total} asset types`
           }
           noRecordsText={
             hasActiveFilters
-              ? 'Keine Asset-Typen entsprechen den Filtern'
-              : 'Noch keine Asset-Typen vorhanden'
+              ? 'No asset types match the current filters'
+              : 'No asset types created yet'
           }
         />
       </Card>

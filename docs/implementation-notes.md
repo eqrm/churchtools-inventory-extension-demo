@@ -2,15 +2,14 @@
 
 ## Overview
 - React 18 + TypeScript 5 project bundled with Vite 5 and Mantine UI 7
-- TanStack Query powers data fetching; Zustand stores keep client state (e.g. maintenance plan, demo metadata)
-- IndexedDB (Dexie) caches prefixes, demo metadata, and person defaults for offline resilience
+- TanStack Query powers data fetching; Zustand stores keep client state (e.g. maintenance plan, undo queue)
+- IndexedDB (Dexie) backs undo/history persistence plus settings version storage while local storage handles prefix defaults
 - ChurchTools storage provider is memoized to avoid duplicate API clients and instrumentation tracks single instantiation
 
-## Demo & Onboarding
-- First-run modal (`DemoDataModal`) offers deterministic demo data seeding backed by `demoSeeder` and tagged entities for clean resets
-- Developer settings expose gated controls (`DeveloperToolsCard`) to reseed or clear demo data in dev mode only (`environment/flags`)
-- Demo metadata persists inside Dexie (`demoMetadataStore`) to prevent re-seeding loops and store dismissal timestamps
-- Unit coverage (`tests/unit/demo/demoSeeder.test.ts`) ensures tagging, reseeding, and cleanup remain deterministic
+## Demo & Onboarding (Retired)
+- FR-008 removed demo seeding flows from production; onboarding now surfaces real inventory only.
+- `DemoDataModal`, developer reseed/reset controls, Dexie-backed metadata, and associated tests were deleted (T191).
+- Deterministic fixture data now lives solely in test helpers when needed.
 
 ## Numbering Transparency
 - Auto-number helper (`services/assets/autoNumbering.ts`) centralises fallback logic, person preference reads/writes, and preview formatting
@@ -30,10 +29,10 @@
 
 ## Documentation & Communication Assets
 - `docs/implementation-notes.md` (this file) consolidates architectural decisions and module responsibilities for quick onboarding
-- README highlights feature set, demo flows, and bundle/testing guardrails; German forum draft summarises release narratives and roadmap
+- README highlights feature set plus bundle/testing guardrails; German forum draft summarises release narratives and roadmap
 - Performance guard: `npm run analyze:bundle` records bundle deltas; QA gates require lint, build, and vitest before release tagging
 
 ## Known Follow-Ups
 - Granular permissions still pending (future release) – booking “on behalf of” currently unrestricted
 - Photos remain disabled to respect CustomData size caps; future integration will pivot to ChurchTools Files API
-- Accessibility audit outstanding for new people components and onboarding modal (tracked in `/docs/testing/accessibility.md` once executed)
+- Accessibility audit outstanding for new people components (tracked in `/docs/testing/accessibility.md` once executed)

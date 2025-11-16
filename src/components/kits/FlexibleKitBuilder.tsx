@@ -20,6 +20,7 @@ import { IconPlus, IconTrash } from '@tabler/icons-react';
 import { useCategories } from '../../hooks/useCategories';
 import { useAssets } from '../../hooks/useAssets';
 import type { Kit } from '../../types/entities';
+import { useTranslation } from 'react-i18next';
 
 type PoolRequirement = NonNullable<Kit['poolRequirements']>[number];
 type SelectionMode = 'assetType' | 'parentAsset';
@@ -36,6 +37,7 @@ export function FlexibleKitBuilder({ value, onChange }: FlexibleKitBuilderProps)
   const [quantity, setQuantity] = useState<number>(1);
   const [selectedAssetTypeId, setSelectedAssetTypeId] = useState<string>('');
   const [selectedParentAssetId, setSelectedParentAssetId] = useState<string>('');
+  const { t } = useTranslation('kits');
 
   useEffect(() => {
     setSelectedAssetTypeId('');
@@ -124,14 +126,14 @@ export function FlexibleKitBuilder({ value, onChange }: FlexibleKitBuilderProps)
 
   return (
     <Stack gap="sm">
-      <Text fw={500}>Pool-Anforderungen</Text>
+      <Text fw={500}>{t('form.flexible.heading')}</Text>
 
       <SegmentedControl
         value={mode}
         onChange={(val) => setMode(val as SelectionMode)}
         data={[
-          { label: 'Nach Asset-Typ', value: 'assetType' },
-          { label: 'Eltern-Asset', value: 'parentAsset' },
+          { label: t('form.flexible.mode.assetType'), value: 'assetType' },
+          { label: t('form.flexible.mode.parentAsset'), value: 'parentAsset' },
         ]}
         size="xs"
       />
@@ -154,10 +156,10 @@ export function FlexibleKitBuilder({ value, onChange }: FlexibleKitBuilderProps)
                     {parentAsset && (
                       <Group gap={6}>
                         <Badge size="xs" color="blue">
-                          Parent-Asset
+                          {t('form.flexible.parentBadge')}
                         </Badge>
                         <Text size="xs" c="dimmed">
-                          Asset-Typ: {pool.assetTypeName}
+                          {t('form.flexible.assetTypeLabel', { name: pool.assetTypeName })}
                         </Text>
                       </Group>
                     )}
@@ -174,7 +176,7 @@ export function FlexibleKitBuilder({ value, onChange }: FlexibleKitBuilderProps)
 
       <Group wrap="nowrap">
         <NumberInput
-          placeholder="Anzahl"
+          placeholder={t('form.flexible.quantityPlaceholder')}
           min={1}
           value={quantity}
           onChange={(val) => setQuantity(typeof val === 'number' ? val : 1)}
@@ -182,7 +184,7 @@ export function FlexibleKitBuilder({ value, onChange }: FlexibleKitBuilderProps)
         />
         {mode === 'assetType' ? (
           <Select
-            placeholder="Asset-Typ auswählen"
+            placeholder={t('form.flexible.assetTypePlaceholder')}
             data={assetTypes?.map((type) => ({ value: type.id, label: type.name })) || []}
             value={selectedAssetTypeId}
             onChange={(val) => setSelectedAssetTypeId(val || '')}
@@ -191,12 +193,12 @@ export function FlexibleKitBuilder({ value, onChange }: FlexibleKitBuilderProps)
           />
         ) : (
           <Select
-            placeholder="Eltern-Asset auswählen"
+            placeholder={t('form.flexible.parentAssetPlaceholder')}
             data={parentAssetOptions}
             value={selectedParentAssetId}
             onChange={(val) => setSelectedParentAssetId(val || '')}
             searchable
-            nothingFoundMessage="Keine passenden Assets"
+            nothingFoundMessage={t('form.flexible.nothingFound')}
             style={{ flex: 1 }}
           />
         )}
@@ -207,13 +209,13 @@ export function FlexibleKitBuilder({ value, onChange }: FlexibleKitBuilderProps)
             quantity < 1 || (mode === 'assetType' ? !selectedAssetTypeId : !selectedParentAssetId)
           }
         >
-          Hinzufügen
+          {t('form.actions.addPool')}
         </Button>
       </Group>
 
       {value.length === 0 && (
         <Text size="sm" c="dimmed">
-          Noch keine Pool-Anforderungen definiert
+          {t('form.flexible.emptyState')}
         </Text>
       )}
     </Stack>

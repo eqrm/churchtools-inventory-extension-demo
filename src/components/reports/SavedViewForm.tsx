@@ -44,7 +44,7 @@ export function SavedViewForm({
       isPublic: existingIsPublic ?? false,
     },
     validate: {
-      name: (value) => (!value ? 'Name ist erforderlich' : null),
+      name: (value) => (!value ? 'Name is required' : null),
     },
   });
 
@@ -80,29 +80,29 @@ export function SavedViewForm({
     <form onSubmit={form.onSubmit(handleSubmit)}>
       <Stack gap="md">
         <TextInput
-          label="Ansichtsname"
-          placeholder="z.B. Verfügbare Audio-Geräte"
+          label="View name"
+          placeholder="e.g., Available audio gear"
           required
           {...form.getInputProps('name')}
         />
 
         <Switch
-          label="Öffentliche Ansicht"
-          description="Andere Benutzer können diese Ansicht sehen und verwenden"
+          label="Public view"
+          description="Other users can see and reuse this view"
           {...form.getInputProps('isPublic', { type: 'checkbox' })}
         />
 
         <Group justify="flex-end" gap="sm">
           {onCancel && (
             <Button variant="default" onClick={onCancel}>
-              Abbrechen
+              Cancel
             </Button>
           )}
           <Button
             type="submit"
             loading={createMutation.isPending || updateMutation.isPending}
           >
-            {existingViewId ? 'Aktualisieren' : 'Speichern'}
+            {existingViewId ? 'Update' : 'Save'}
           </Button>
         </Group>
       </Stack>

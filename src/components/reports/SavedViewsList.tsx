@@ -37,11 +37,11 @@ function ViewCard({
             <Text fw={500}>{view.name}</Text>
             {view.isPublic ? (
               <Badge leftSection={<IconWorld size={12} />} variant="light" size="sm">
-                Öffentlich
+                Public
               </Badge>
             ) : (
               <Badge leftSection={<IconLock size={12} />} variant="light" size="sm" color="gray">
-                Privat
+                Private
               </Badge>
             )}
             <Badge variant="light" size="sm" color="blue">
@@ -49,7 +49,7 @@ function ViewCard({
             </Badge>
           </Group>
           <Text size="xs" c="dimmed">
-            {view.filters.length} Filter • Erstellt von {view.ownerName}
+            {view.filters.length} filters • Created by {view.ownerName}
           </Text>
         </Stack>
 
@@ -67,11 +67,11 @@ function ViewCard({
             <Menu.Dropdown>
               {onEdit && (
                 <Menu.Item leftSection={<IconEdit size={14} />} onClick={onEdit}>
-                  Bearbeiten
+                  Edit
                 </Menu.Item>
               )}
               <Menu.Item leftSection={<IconTrash size={14} />} color="red" onClick={onDelete}>
-                Löschen
+                Delete
               </Menu.Item>
             </Menu.Dropdown>
           </Menu>
@@ -89,19 +89,19 @@ export function SavedViewsList({ onSelectView, onEditView }: SavedViewsListProps
   const deleteMutation = useDeleteSavedView();
 
   const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`Ansicht "${name}" wirklich löschen?`)) return;
+    if (!confirm(`Delete view "${name}"?`)) return;
 
     try {
       await deleteMutation.mutateAsync(id);
       notifications.show({
-        title: 'Erfolg',
-        message: 'Ansicht wurde gelöscht',
+        title: 'Success',
+        message: 'View deleted',
         color: 'green',
       });
     } catch {
       notifications.show({
-        title: 'Fehler',
-        message: 'Ansicht konnte nicht gelöscht werden',
+        title: 'Error',
+        message: 'Unable to delete view',
         color: 'red',
       });
     }
@@ -111,7 +111,7 @@ export function SavedViewsList({ onSelectView, onEditView }: SavedViewsListProps
     return (
       <Group justify="center" p="md">
         <Loader size="sm" />
-        <Text c="dimmed" size="sm">Lade Ansichten...</Text>
+        <Text c="dimmed" size="sm">Loading views…</Text>
       </Group>
     );
   }
@@ -119,7 +119,7 @@ export function SavedViewsList({ onSelectView, onEditView }: SavedViewsListProps
   if (error) {
     return (
       <Text c="red" size="sm" p="md">
-        Fehler beim Laden der Ansichten
+        Failed to load views
       </Text>
     );
   }
@@ -127,7 +127,7 @@ export function SavedViewsList({ onSelectView, onEditView }: SavedViewsListProps
   if (!views || views.length === 0) {
     return (
       <Text c="dimmed" size="sm" p="md" ta="center">
-        Keine gespeicherten Ansichten vorhanden
+        No saved views yet
       </Text>
     );
   }

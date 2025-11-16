@@ -25,7 +25,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/153</span>
+                <span class='fraction'>0/164</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/153</span>
+                <span class='fraction'>0/164</span>
             </div>
         
             
@@ -324,7 +324,22 @@
 <a name='L259'></a><a href='#L259'>259</a>
 <a name='L260'></a><a href='#L260'>260</a>
 <a name='L261'></a><a href='#L261'>261</a>
-<a name='L262'></a><a href='#L262'>262</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<a name='L262'></a><a href='#L262'>262</a>
+<a name='L263'></a><a href='#L263'>263</a>
+<a name='L264'></a><a href='#L264'>264</a>
+<a name='L265'></a><a href='#L265'>265</a>
+<a name='L266'></a><a href='#L266'>266</a>
+<a name='L267'></a><a href='#L267'>267</a>
+<a name='L268'></a><a href='#L268'>268</a>
+<a name='L269'></a><a href='#L269'>269</a>
+<a name='L270'></a><a href='#L270'>270</a>
+<a name='L271'></a><a href='#L271'>271</a>
+<a name='L272'></a><a href='#L272'>272</a>
+<a name='L273'></a><a href='#L273'>273</a>
+<a name='L274'></a><a href='#L274'>274</a>
+<a name='L275'></a><a href='#L275'>275</a>
+<a name='L276'></a><a href='#L276'>276</a>
+<a name='L277'></a><a href='#L277'>277</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -437,6 +452,21 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -650,7 +680,7 @@ import type { PersonInfo, Person } from '../../types/entities';
      */
 <span class="cstat-no" title="statement not covered" >    async deleteRequest(endpoint: string): Promise&lt;void&gt; {</span>
 <span class="cstat-no" title="statement not covered" >        try {</span>
-<span class="cstat-no" title="statement not covered" >            await churchtoolsClient.post(endpoint, { _method: 'DELETE' });</span>
+<span class="cstat-no" title="statement not covered" >            await churchtoolsClient.deleteApi(endpoint, undefined, { needsAuthentication: true });</span>
 <span class="cstat-no" title="statement not covered" >        } catch (error) {</span>
 <span class="cstat-no" title="statement not covered" >            throw this.handleError(error);</span>
 <span class="cstat-no" title="statement not covered" >        }</span>
@@ -702,6 +732,21 @@ import type { PersonInfo, Person } from '../../types/entities';
 <span class="cstat-no" title="statement not covered" >    }</span>
 &nbsp;
     /**
+     * Search for people by query string
+     */
+<span class="cstat-no" title="statement not covered" >    async searchPeople(query: string): Promise&lt;PersonInfo[]&gt; {</span>
+<span class="cstat-no" title="statement not covered" >        const response = await this.get&lt;{ data: Person[] }&gt;(`/persons?search=${encodeURIComponent(query)}`);</span>
+<span class="cstat-no" title="statement not covered" >        return response.data.map((person) =&gt; ({</span>
+<span class="cstat-no" title="statement not covered" >            id: person.id.toString(),</span>
+<span class="cstat-no" title="statement not covered" >            firstName: person.firstName,</span>
+<span class="cstat-no" title="statement not covered" >            lastName: person.lastName,</span>
+<span class="cstat-no" title="statement not covered" >            name: `${person.firstName} ${person.lastName}`.trim(),</span>
+<span class="cstat-no" title="statement not covered" >            email: person.email,</span>
+<span class="cstat-no" title="statement not covered" >            avatarUrl: person.imageUrl,</span>
+<span class="cstat-no" title="statement not covered" >        }));</span>
+<span class="cstat-no" title="statement not covered" >    }</span>
+&nbsp;
+    /**
      * Clear person cache
      */
 <span class="cstat-no" title="statement not covered" >    clearPersonCache(): void {</span>
@@ -734,8 +779,8 @@ import type { PersonInfo, Person } from '../../types/entities';
     /**
      * Get a single data category
      */
-<span class="cstat-no" title="statement not covered" >    async getDataCategory(moduleId: string, categoryId: string): Promise&lt;unknown&gt; {</span>
-<span class="cstat-no" title="statement not covered" >        return await this.get&lt;unknown&gt;(`/custommodules/${moduleId}/customdatacategories/${categoryId}`);</span>
+<span class="cstat-no" title="statement not covered" >    async getDataCategory(moduleId: string, assetTypeId: string): Promise&lt;unknown&gt; {</span>
+<span class="cstat-no" title="statement not covered" >        return await this.get&lt;unknown&gt;(`/custommodules/${moduleId}/customdatacategories/${assetTypeId}`);</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 &nbsp;
     /**
@@ -748,50 +793,50 @@ import type { PersonInfo, Person } from '../../types/entities';
     /**
      * Update a data category
      */
-<span class="cstat-no" title="statement not covered" >    async updateDataCategory(moduleId: string, categoryId: string, data: unknown): Promise&lt;unknown&gt; {</span>
-<span class="cstat-no" title="statement not covered" >        return await this.put&lt;unknown&gt;(`/custommodules/${moduleId}/customdatacategories/${categoryId}`, data);</span>
+<span class="cstat-no" title="statement not covered" >    async updateDataCategory(moduleId: string, assetTypeId: string, data: unknown): Promise&lt;unknown&gt; {</span>
+<span class="cstat-no" title="statement not covered" >        return await this.put&lt;unknown&gt;(`/custommodules/${moduleId}/customdatacategories/${assetTypeId}`, data);</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 &nbsp;
     /**
      * Delete a data category
      */
-<span class="cstat-no" title="statement not covered" >    async deleteDataCategory(moduleId: string, categoryId: string): Promise&lt;void&gt; {</span>
-<span class="cstat-no" title="statement not covered" >        await this.deleteRequest(`/custommodules/${moduleId}/customdatacategories/${categoryId}`);</span>
+<span class="cstat-no" title="statement not covered" >    async deleteDataCategory(moduleId: string, assetTypeId: string): Promise&lt;void&gt; {</span>
+<span class="cstat-no" title="statement not covered" >        await this.deleteRequest(`/custommodules/${moduleId}/customdatacategories/${assetTypeId}`);</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 &nbsp;
     /**
      * Get all data values for a category
      */
-<span class="cstat-no" title="statement not covered" >    async getDataValues(moduleId: string, categoryId: string): Promise&lt;unknown[]&gt; {</span>
-<span class="cstat-no" title="statement not covered" >        return await this.get&lt;unknown[]&gt;(`/custommodules/${moduleId}/customdatacategories/${categoryId}/customdatavalues`);</span>
+<span class="cstat-no" title="statement not covered" >    async getDataValues(moduleId: string, assetTypeId: string): Promise&lt;unknown[]&gt; {</span>
+<span class="cstat-no" title="statement not covered" >        return await this.get&lt;unknown[]&gt;(`/custommodules/${moduleId}/customdatacategories/${assetTypeId}/customdatavalues`);</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 &nbsp;
     /**
      * Get a single data value
      */
-<span class="cstat-no" title="statement not covered" >    async getDataValue(moduleId: string, categoryId: string, valueId: string): Promise&lt;unknown&gt; {</span>
-<span class="cstat-no" title="statement not covered" >        return await this.get&lt;unknown&gt;(`/custommodules/${moduleId}/customdatacategories/${categoryId}/customdatavalues/${valueId}`);</span>
+<span class="cstat-no" title="statement not covered" >    async getDataValue(moduleId: string, assetTypeId: string, valueId: string): Promise&lt;unknown&gt; {</span>
+<span class="cstat-no" title="statement not covered" >        return await this.get&lt;unknown&gt;(`/custommodules/${moduleId}/customdatacategories/${assetTypeId}/customdatavalues/${valueId}`);</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 &nbsp;
     /**
      * Create a new data value
      */
-<span class="cstat-no" title="statement not covered" >    async createDataValue(moduleId: string, categoryId: string, data: unknown): Promise&lt;unknown&gt; {</span>
-<span class="cstat-no" title="statement not covered" >        return await this.post&lt;unknown&gt;(`/custommodules/${moduleId}/customdatacategories/${categoryId}/customdatavalues`, data);</span>
+<span class="cstat-no" title="statement not covered" >    async createDataValue(moduleId: string, assetTypeId: string, data: unknown): Promise&lt;unknown&gt; {</span>
+<span class="cstat-no" title="statement not covered" >        return await this.post&lt;unknown&gt;(`/custommodules/${moduleId}/customdatacategories/${assetTypeId}/customdatavalues`, data);</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 &nbsp;
     /**
      * Update a data value
      */
-<span class="cstat-no" title="statement not covered" >    async updateDataValue(moduleId: string, categoryId: string, valueId: string, data: unknown): Promise&lt;unknown&gt; {</span>
-<span class="cstat-no" title="statement not covered" >        return await this.put&lt;unknown&gt;(`/custommodules/${moduleId}/customdatacategories/${categoryId}/customdatavalues/${valueId}`, data);</span>
+<span class="cstat-no" title="statement not covered" >    async updateDataValue(moduleId: string, assetTypeId: string, valueId: string, data: unknown): Promise&lt;unknown&gt; {</span>
+<span class="cstat-no" title="statement not covered" >        return await this.put&lt;unknown&gt;(`/custommodules/${moduleId}/customdatacategories/${assetTypeId}/customdatavalues/${valueId}`, data);</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 &nbsp;
     /**
      * Delete a data value
      */
-<span class="cstat-no" title="statement not covered" >    async deleteDataValue(moduleId: string, categoryId: string, valueId: string): Promise&lt;void&gt; {</span>
-<span class="cstat-no" title="statement not covered" >        await this.deleteRequest(`/custommodules/${moduleId}/customdatacategories/${categoryId}/customdatavalues/${valueId}`);</span>
+<span class="cstat-no" title="statement not covered" >    async deleteDataValue(moduleId: string, assetTypeId: string, valueId: string): Promise&lt;void&gt; {</span>
+<span class="cstat-no" title="statement not covered" >        await this.deleteRequest(`/custommodules/${moduleId}/customdatacategories/${assetTypeId}/customdatavalues/${valueId}`);</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 &nbsp;
     /**
@@ -853,7 +898,7 @@ import type { PersonInfo, Person } from '../../types/entities';
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-10-20T10:36:40.172Z
+                at 2025-11-16T21:19:09.110Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

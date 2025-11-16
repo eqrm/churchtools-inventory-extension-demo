@@ -32,20 +32,20 @@ export function MaintenanceReminderBadge({ schedule }: MaintenanceReminderBadgeP
     // Overdue
     color = 'red';
     icon = <IconAlertTriangle size={12} />;
-    label = `${Math.abs(days)}d überfällig`;
-    tooltip = `Wartung ist ${Math.abs(days)} Tag(e) überfällig`;
+    label = `${Math.abs(days)}d overdue`;
+    tooltip = `Maintenance is ${Math.abs(days)} day(s) overdue`;
   } else if (days <= schedule.reminderDaysBefore) {
     // Due soon
     color = 'yellow';
     icon = <IconClock size={12} />;
     label = `${days}d`;
-    tooltip = `Wartung fällig in ${days} Tag(en)`;
+    tooltip = `Maintenance due in ${days} day(s)`;
   } else {
     // OK
     color = 'green';
     icon = null;
     label = `${days}d`;
-    tooltip = `Nächste Wartung in ${days} Tag(en)`;
+    tooltip = `Next maintenance in ${days} day(s)`;
   }
 
   return (

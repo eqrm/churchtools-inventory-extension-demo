@@ -289,15 +289,15 @@ export async function cancelBooking(
 ): Promise<void> {
   const booking = await getBooking(deps, id);
   if (!booking) {
-    throw new Error('Buchung nicht gefunden');
+    throw new Error('Booking not found');
   }
 
   if (booking.status === 'completed') {
-    throw new Error('Abgeschlossene Buchungen können nicht storniert werden');
+    throw new Error('Completed bookings cannot be cancelled');
   }
 
   if (booking.status === 'cancelled') {
-    throw new Error('Buchung ist bereits storniert');
+    throw new Error('Booking is already cancelled');
   }
 
   if (booking.status === 'active' && booking.asset) {
@@ -504,32 +504,32 @@ async function validateBookingCreate(
   data: BookingCreate,
 ): Promise<void> {
   if (!data.asset || !data.asset.id) {
-    throw new Error('Asset-Referenz erforderlich');
+    throw new Error('Asset reference is required');
   }
 
   const start = new Date(data.startDate);
   const end = new Date(data.endDate);
 
   if (data.bookingMode === 'date-range' && end <= start) {
-    throw new Error('Enddatum muss nach dem Startdatum liegen');
+    throw new Error('End date must be after the start date');
   }
 
   if (data.bookingMode === 'single-day' && end < start) {
-    throw new Error('Enddatum muss nach dem Startdatum liegen');
+    throw new Error('End date must be after the start date');
   }
 
   const asset = await deps.getAsset(data.asset.id);
   if (!asset) {
-    throw new Error('Asset nicht gefunden');
+    throw new Error('Asset not found');
   }
 
   if (asset.status === 'broken' || asset.status === 'sold' || asset.status === 'destroyed') {
-    throw new Error(`Asset kann nicht gebucht werden (Status: ${asset.status})`);
+    throw new Error(`Asset cannot be booked (status: ${asset.status})`);
   }
 
   const available = await isAssetAvailable(deps, data.asset.id, data.startDate, data.endDate);
   if (!available) {
-    throw new Error('Asset ist für den gewählten Zeitraum nicht verfügbar');
+    throw new Error('Asset is not available for the selected timeframe');
   }
 }
 
@@ -556,7 +556,7 @@ async function prepareBookingData(
   data: BookingCreate,
 ): Promise<Record<string, unknown>> {
   if (!data.asset || !data.asset.id) {
-    throw new Error('Asset ist erforderlich');
+    throw new Error('Asset is required');
   }
 
   const fallbackName = data.requestedByName || data.bookedByName || data.bookingForName || 'Unknown';

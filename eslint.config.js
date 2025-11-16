@@ -23,6 +23,7 @@ export default tseslint.config(
       '*.log',
       '.env',
       '.DS_Store',
+      '*.min.js',
     ],
   },
   {

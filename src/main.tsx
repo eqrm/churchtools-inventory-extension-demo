@@ -7,7 +7,6 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { churchtoolsClient } from '@churchtools/churchtools-client';
 import { theme } from './theme';
 import { validateEnvironment } from './utils/envValidation';
-import { initializeOfflineDb } from './state/offline/db';
 import { runMigrations, registeredMigrations, SchemaVersioningService, BASE_SCHEMA_VERSION, TARGET_SCHEMA_VERSION } from './services/migrations';
 import { initializeChurchToolsStorageProvider } from './services/churchTools/storageProvider';
 import { churchToolsAPIClient } from './services/api/ChurchToolsAPIClient';
@@ -67,9 +66,6 @@ const password = envConfig.VITE_PASSWORD;
 if (import.meta.env.MODE === 'development' && username && password) {
     await churchtoolsClient.post('/login', { username, password });
 }
-
-// Initialize offline database (T019 - IndexedDB setup for offline stocktake)
-await initializeOfflineDb();
 
 // Initialize translations before rendering UI
 await initI18n();

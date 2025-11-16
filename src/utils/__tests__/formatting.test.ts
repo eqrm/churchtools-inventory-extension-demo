@@ -80,7 +80,7 @@ describe('formatters', () => {
       const fiveMinutesAgo = new Date('2025-10-21T11:55:00Z');
       const formatted = formatDistanceToNow(fiveMinutesAgo);
       expect(formatted).toContain('5');
-      expect(formatted).toContain('Minute');
+      expect(formatted.toLowerCase()).toContain('minute');
     });
 
     it('should return N/A for null', () => {
@@ -95,35 +95,35 @@ describe('formatters', () => {
       const twoHoursAgo = new Date('2025-10-21T10:00:00Z');
       const formatted = formatDistanceToNow(twoHoursAgo);
       expect(formatted).toContain('2');
-      expect(formatted).toContain('Stunde');
+      expect(formatted.toLowerCase()).toContain('hour');
     });
 
     it('should handle date strings', () => {
       const formatted = formatDistanceToNow('2025-10-21T10:00:00Z');
-      expect(formatted).toContain('Stunde');
+      expect(formatted.toLowerCase()).toContain('hour');
     });
   });
 
   describe('formatAssetStatus', () => {
-    it('should format all asset statuses in German', () => {
-      expect(formatAssetStatus('available')).toBe('Verfügbar');
-      expect(formatAssetStatus('in-use')).toBe('In Nutzung');
-      expect(formatAssetStatus('broken')).toBe('Defekt');
-      expect(formatAssetStatus('in-repair')).toBe('In Reparatur');
-      expect(formatAssetStatus('installed')).toBe('Installiert');
-      expect(formatAssetStatus('sold')).toBe('Verkauft');
-      expect(formatAssetStatus('destroyed')).toBe('Zerstört');
+    it('should format all asset statuses in English', () => {
+      expect(formatAssetStatus('available')).toBe('Available');
+      expect(formatAssetStatus('in-use')).toBe('In Use');
+      expect(formatAssetStatus('broken')).toBe('Broken');
+      expect(formatAssetStatus('in-repair')).toBe('In Repair');
+      expect(formatAssetStatus('installed')).toBe('Installed');
+      expect(formatAssetStatus('sold')).toBe('Sold');
+      expect(formatAssetStatus('destroyed')).toBe('Destroyed');
     });
   });
 
   describe('formatBookingStatus', () => {
-    it('should format all booking statuses in German', () => {
-      expect(formatBookingStatus('pending')).toBe('Ausstehend');
-      expect(formatBookingStatus('approved')).toBe('Genehmigt');
-      expect(formatBookingStatus('active')).toBe('Aktiv');
-      expect(formatBookingStatus('completed')).toBe('Abgeschlossen');
-      expect(formatBookingStatus('overdue')).toBe('Überfällig');
-      expect(formatBookingStatus('cancelled')).toBe('Storniert');
+    it('should format all booking statuses in English', () => {
+      expect(formatBookingStatus('pending')).toBe('Pending');
+      expect(formatBookingStatus('approved')).toBe('Approved');
+      expect(formatBookingStatus('active')).toBe('Active');
+      expect(formatBookingStatus('completed')).toBe('Completed');
+      expect(formatBookingStatus('overdue')).toBe('Overdue');
+      expect(formatBookingStatus('cancelled')).toBe('Cancelled');
     });
   });
 
@@ -143,31 +143,31 @@ describe('formatters', () => {
       expect(formatPersonName(undefined, 'Smith')).toBe('Smith');
     });
 
-    it('should return Unbekannt for no names', () => {
-      expect(formatPersonName(null, null)).toBe('Unbekannt');
-      expect(formatPersonName(undefined, undefined)).toBe('Unbekannt');
-      expect(formatPersonName(null, undefined)).toBe('Unbekannt');
+    it('should return Unknown for no names', () => {
+      expect(formatPersonName(null, null)).toBe('Unknown');
+      expect(formatPersonName(undefined, undefined)).toBe('Unknown');
+      expect(formatPersonName(null, undefined)).toBe('Unknown');
     });
   });
 
   describe('formatCurrency', () => {
     it('should format positive amounts in EUR', () => {
-      expect(formatCurrency(100)).toBe('100,00\u00A0€');
-      expect(formatCurrency(1000)).toBe('1.000,00\u00A0€');
-      expect(formatCurrency(1234.56)).toBe('1.234,56\u00A0€');
+      expect(formatCurrency(100)).toBe('€100.00');
+      expect(formatCurrency(1000)).toBe('€1,000.00');
+      expect(formatCurrency(1234.56)).toBe('€1,234.56');
     });
 
     it('should format zero', () => {
-      expect(formatCurrency(0)).toBe('0,00\u00A0€');
+      expect(formatCurrency(0)).toBe('€0.00');
     });
 
     it('should format negative amounts', () => {
-      expect(formatCurrency(-100)).toBe('-100,00\u00A0€');
+      expect(formatCurrency(-100)).toBe('-€100.00');
     });
 
     it('should format decimal amounts', () => {
-      expect(formatCurrency(10.99)).toBe('10,99\u00A0€');
-      expect(formatCurrency(0.50)).toBe('0,50\u00A0€');
+      expect(formatCurrency(10.99)).toBe('€10.99');
+      expect(formatCurrency(0.50)).toBe('€0.50');
     });
 
     it('should return N/A for null', () => {
@@ -179,7 +179,7 @@ describe('formatters', () => {
     });
 
     it('should handle large amounts', () => {
-      expect(formatCurrency(1000000)).toBe('1.000.000,00\u00A0€');
+      expect(formatCurrency(1000000)).toBe('€1,000,000.00');
     });
   });
 

@@ -43,17 +43,13 @@ export function isDevelopmentEnvironment(): boolean {
     return getEnvironmentKind() !== 'production';
 }
 
-export function isDemoToolsEnabled(): boolean {
-    const override = parseBooleanFlag(import.meta.env?.['VITE_ENABLE_DEMO_TOOLS']);
-    if (typeof override === 'boolean') {
-        return override;
+export function getBooleanFlag(key: string): boolean | undefined {
+    const rawValue = import.meta.env?.[key];
+    if (typeof rawValue === 'boolean') {
+        return rawValue;
     }
-
-    return false;
-}
-
-export function ensureDemoToolsEnabled(context: string): void {
-    if (!isDemoToolsEnabled()) {
-        throw new Error(`Demo tooling is disabled in this environment (context: ${context}).`);
+    if (typeof rawValue === 'string') {
+        return parseBooleanFlag(rawValue);
     }
+    return undefined;
 }

@@ -26,6 +26,17 @@ export class SettingsDatabase extends Dexie {
 
     return SettingsDatabase.instance;
   }
+
+  public static async resetInstance(): Promise<void> {
+    if (SettingsDatabase.instance) {
+      await SettingsDatabase.instance.delete();
+      SettingsDatabase.instance = null;
+    }
+  }
 }
 
 export const getSettingsDatabase = (): SettingsDatabase => SettingsDatabase.getInstance();
+
+export const resetSettingsDatabase = async (): Promise<void> => {
+  await SettingsDatabase.resetInstance();
+};

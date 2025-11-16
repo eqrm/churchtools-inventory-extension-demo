@@ -21,3 +21,19 @@ export interface AssetModelSummary {
   assetTypeId: UUID;
   tagIds: UUID[];
 }
+
+export type AssetModelCreate = Omit<
+  AssetModel,
+  'id' | 'createdAt' | 'updatedAt' | 'createdByName'
+> & {
+  defaultValues?: Record<string, unknown>;
+  tagIds?: UUID[];
+  createdByName?: string;
+};
+
+export type AssetModelUpdate = Partial<
+  Omit<AssetModel, 'id' | 'createdBy' | 'createdByName' | 'createdAt' | 'updatedAt'>
+> & {
+  defaultValues?: Record<string, unknown>;
+  tagIds?: UUID[];
+};

@@ -23,13 +23,13 @@ export function BookingDetailPage() {
   const [checkInModalOpened, setCheckInModalOpened] = useState(false)
 
   if (isLoading) {
-    return <Text>Lädt...</Text>
+    return <Text>Loading...</Text>
   }
 
   if (!booking || !id) {
     return (
       <Card withBorder>
-        <Text c="red">Buchung nicht gefunden</Text>
+        <Text c="red">Booking not found</Text>
       </Card>
     )
   }
@@ -42,7 +42,7 @@ export function BookingDetailPage() {
           leftSection={<IconArrowLeft size={16} />}
           onClick={() => navigate('/bookings')}
         >
-          Zurück zur Liste
+          Back to list
         </Button>
       </Group>
 
@@ -60,7 +60,7 @@ export function BookingDetailPage() {
       <Modal
         opened={editModalOpened}
         onClose={() => setEditModalOpened(false)}
-        title="Buchung bearbeiten"
+        title="Edit booking"
         size="lg"
       >
         <BookingForm
@@ -74,14 +74,14 @@ export function BookingDetailPage() {
         opened={checkOutModalOpened}
         onClose={() => setCheckOutModalOpened(false)}
         bookingId={booking.id}
-        assetName={booking.asset?.name || 'Unbekanntes Asset'}
+        assetName={booking.asset?.name || 'Unknown asset'}
       />
 
       <CheckInModal
         opened={checkInModalOpened}
         onClose={() => setCheckInModalOpened(false)}
         bookingId={booking.id}
-        assetName={booking.asset?.name || 'Unbekanntes Asset'}
+        assetName={booking.asset?.name || 'Unknown asset'}
       />
     </Stack>
   )

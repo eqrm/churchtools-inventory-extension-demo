@@ -33,10 +33,10 @@
 - [X] T003 [P] Create IndexedDB database schema using Dexie.js in src/services/db/UndoDatabase.ts
 - [X] T004 [P] Create IndexedDB database for settings versions in src/services/db/SettingsDatabase.ts
 - [X] T005 [P] Setup background job service skeleton in src/services/BackgroundJobService.ts
-- [ ] T006 [P] Install p-queue library for rate limiting (`npm install p-queue`) [RATE_LIMITING.md]
-- [ ] T007 [P] Install Zod v3 for schema validation (`npm install zod`) [SCHEMA_VERSIONING.md, ERROR_HANDLING.md]
+- [X] T006 [P] Install p-queue library for rate limiting (`npm install p-queue`) [RATE_LIMITING.md]
+- [X] T007 [P] Install Zod v3 for schema validation (`npm install zod`) [SCHEMA_VERSIONING.md, ERROR_HANDLING.md]
 - [ ] T008 [P] Configure React Router v6 in src/router/index.tsx [ROUTING.md]
-- [ ] T009 [P] Create design system tokens file in src/theme/tokens.ts (spacing, colors, typography) [DESIGN_SYSTEM.md]
+- [X] T009 [P] Create design system tokens file in src/theme/tokens.ts (spacing, colors, typography) [DESIGN_SYSTEM.md]
 
 **Constitution Compliance Gates**:
 - [X] TypeScript strict mode verified in tsconfig.json
@@ -67,14 +67,14 @@
 - [X] T022 [P] Create state machine helper utilities in src/utils/stateMachine.ts
 - [X] T023 [P] Create relative date calculation utilities in src/utils/dateUtils.ts
 - [X] T024 [P] Add English translations for common terms in src/i18n/locales/en/common.json
-- [ ] T025 [P] Create Zod schema definitions for all entities in src/schemas/ (Asset, Kit, DamageReport, etc.) [SCHEMA_VERSIONING.md]
-- [ ] T026 [P] Create type-safe route builders in src/router/routes.ts [ROUTING.md]
-- [ ] T027 [P] Create ChurchToolsRequestQueue class in src/services/ChurchToolsRequestQueue.ts [RATE_LIMITING.md]
-- [ ] T028 [P] Configure Axios with base URL and interceptors in src/services/api/axiosConfig.ts [API_ERROR_HANDLING.md]
-- [ ] T029 [P] Create error code mapping utilities in src/utils/errorCodes.ts (ERR_ASSET_001 pattern) [ERROR_HANDLING.md]
-- [ ] T030 [P] Create soft delete utilities in src/utils/softDelete.ts [DELETION_POLICY.md]
-- [ ] T031 [P] Create date validation utilities in src/utils/dateValidation.ts (0-730 past, 1-365 future) [DATE_VALIDATION.md]
-- [ ] T032 [P] Create bulk operation queue service in src/services/BulkOperationService.ts [BULK_OPERATIONS.md]
+- [X] T025 [P] Create Zod schema definitions for all entities in src/schemas/ (Asset, Kit, DamageReport, etc.) [SCHEMA_VERSIONING.md]
+- [X] T026 [P] Create type-safe route builders in src/router/routes.ts [ROUTING.md]
+- [X] T027 [P] Create ChurchToolsRequestQueue class in src/services/ChurchToolsRequestQueue.ts [RATE_LIMITING.md]
+- [X] T028 [P] Configure Axios with base URL and interceptors in src/services/api/axiosConfig.ts [API_ERROR_HANDLING.md]
+- [X] T029 [P] Create error code mapping utilities in src/utils/errorCodes.ts (ERR_ASSET_001 pattern) [ERROR_HANDLING.md]
+- [X] T030 [P] Create soft delete utilities in src/utils/softDelete.ts [DELETION_POLICY.md]
+- [X] T031 [P] Create date validation utilities in src/utils/dateValidation.ts (0-730 past, 1-365 future) [DATE_VALIDATION.md]
+- [X] T032 [P] Create bulk operation queue service in src/services/BulkOperationService.ts [BULK_OPERATIONS.md]
 
 **Constitution Compliance Gates**:
 - [ ] All type definitions use explicit types (no `any` without justification)
@@ -169,7 +169,7 @@
 - [X] T070 [P] [US3] Create PersonSearch component in src/components/assignment/PersonSearch.tsx (autocomplete with ChurchTools API)
 - [X] T071 [P] [US3] Create AssignmentField component in src/components/assignment/AssignmentField.tsx
 - [X] T072 [P] [US3] Create AssignmentHistoryTab component in src/components/assignment/AssignmentHistoryTab.tsx
-- [ ] T073 [US3] Add assignment locale strings in src/i18n/locales/en/assignment.json
+- [X] T073 [US3] Add assignment locale strings in src/i18n/locales/en/assignment.json
 - [X] T074 [US3] Modify AssetDetail page to include AssignmentField and AssignmentHistoryTab
 - [X] T075 [US3] Implement asset status auto-update (Available ↔ In Use) on assignment/check-in
 - [X] T076 [US3] Add confirmation popup when changing status of assigned asset
@@ -237,20 +237,20 @@
 ### Implementation for User Story 4
 
 - [X] T096 [US4] Implement PropertyInheritanceService (GREEN) in src/services/PropertyInheritanceService.ts - pass all RED tests from T088-T095
-- [ ] T097 [US4] Implement KitService in src/services/KitService.ts (createKit, updateKit, deleteKit, assembleKit, disassembleKit, getKitSubAssets)
-- [ ] T098 [US4] Create Zustand kit store in src/stores/kitStore.ts
-- [ ] T099 [US4] Create useKits hook in src/hooks/useKits.ts
-- [ ] T100 [US4] Create usePropertyInheritance hook in src/hooks/usePropertyInheritance.ts
-- [ ] T101 [P] [US4] Create KitForm component in src/components/kits/KitForm.tsx (with inheritance config checkboxes)
-- [ ] T102 [P] [US4] Create KitDetailView component in src/components/kits/KitDetailView.tsx
-- [ ] T103 [P] [US4] Create PropertyInheritanceIndicator component in src/components/kits/PropertyInheritanceIndicator.tsx (locked field with tooltip)
-- [ ] T104 [US4] Add kits locale strings in src/i18n/locales/en/kits.json
-- [ ] T105 [US4] Create KitList page in src/pages/KitList.tsx
-- [ ] T106 [US4] Create KitDetail page in src/pages/KitDetail.tsx
-- [ ] T107 [US4] Modify AssetDetail page to show PropertyInheritanceIndicator for inherited fields
-- [ ] T108 [US4] Implement completeness status auto-calculation (incomplete if any sub-asset broken)
-- [ ] T109 [US4] Integrate kit operations with undo service (record assembly/disassembly/propagation as compound actions)
-- [ ] T110 [US4] REFACTOR: Review PropertyInheritanceService for edge cases
+- [X] T097 [US4] Implement KitService in src/services/KitService.ts (createKit, updateKit, deleteKit, assembleKit, disassembleKit, getKitSubAssets)
+- [X] T098 [US4] Create Zustand kit store in src/stores/kitStore.ts
+- [X] T099 [US4] Create useKits hook in src/hooks/useKits.ts
+- [X] T100 [US4] Create usePropertyInheritance hook in src/hooks/usePropertyInheritance.ts
+- [X] T101 [P] [US4] Create KitForm component in src/components/kits/KitForm.tsx (with inheritance config checkboxes)
+- [X] T102 [P] [US4] Create KitDetailView component in src/components/kits/KitDetailView.tsx
+- [X] T103 [P] [US4] Create PropertyInheritanceIndicator component in src/components/kits/PropertyInheritanceIndicator.tsx (locked field with tooltip)
+- [X] T104 [US4] Add kits locale strings in src/i18n/locales/en/kits.json
+- [X] T105 [US4] Create KitList page in src/pages/KitList.tsx
+- [X] T106 [US4] Create KitDetail page in src/pages/KitDetail.tsx
+- [X] T107 [US4] Modify AssetDetail page to show PropertyInheritanceIndicator for inherited fields
+- [X] T108 [US4] Implement completeness status auto-calculation (incomplete if any sub-asset broken)
+- [X] T109 [US4] Integrate kit operations with undo service (record assembly/disassembly/propagation as compound actions)
+- [X] T110 [US4] REFACTOR: Review PropertyInheritanceService for edge cases
 
 **Checkpoint**: User Story 4 complete - fixed kits with property inheritance work independently
 
@@ -264,16 +264,16 @@
 
 ### Implementation for User Story 5
 
-- [ ] T111 [US5] Implement AssetModelService in src/services/AssetModelService.ts (createModel, updateModel, deleteModel, getModels, createAssetFromModel)
-- [ ] T112 [US5] Create Zustand model store in src/stores/modelStore.ts
-- [ ] T113 [US5] Create useAssetModels hook in src/hooks/useAssetModels.ts
-- [ ] T114 [P] [US5] Create AssetModelForm component in src/components/models/AssetModelForm.tsx
-- [ ] T115 [P] [US5] Create ModelTemplateSelector component in src/components/models/ModelTemplateSelector.tsx (dropdown in AssetForm)
-- [ ] T116 [US5] Add models locale strings in src/i18n/locales/en/models.json
-- [ ] T117 [US5] Create AssetModelList page in src/pages/AssetModelList.tsx
-- [ ] T118 [US5] Modify AssetForm to include ModelTemplateSelector (pre-fill fields from model)
-- [ ] T119 [US5] Implement tag propagation confirmation prompt when editing model tags
-- [ ] T120 [US5] Integrate model operations with undo service
+- [X] T111 [US5] Implement AssetModelService in src/services/AssetModelService.ts (createModel, updateModel, deleteModel, getModels, createAssetFromModel)
+- [X] T112 [US5] Create Zustand model store in src/stores/modelStore.ts
+- [X] T113 [US5] Create useAssetModels hook in src/hooks/useAssetModels.ts
+- [X] T114 [P] [US5] Create AssetModelForm component in src/components/models/AssetModelForm.tsx
+- [X] T115 [P] [US5] Create ModelTemplateSelector component in src/components/models/ModelTemplateSelector.tsx (dropdown in AssetForm)
+- [X] T116 [US5] Add models locale strings in src/i18n/locales/en/models.json
+- [X] T117 [US5] Create AssetModelList page in src/pages/AssetModelList.tsx
+- [X] T118 [US5] Modify AssetForm to include ModelTemplateSelector (pre-fill fields from model)
+- [X] T119 [US5] Implement tag propagation confirmation prompt when editing model tags
+- [X] T120 [US5] Integrate model operations with undo service
 
 **Checkpoint**: User Story 5 complete - asset models work as templates independently
 
@@ -287,18 +287,18 @@
 
 ### Implementation for User Story 6
 
-- [ ] T121 [US6] Implement TagService in src/services/TagService.ts (createTag, updateTag, deleteTag, getTags, applyTagToEntity, removeTagFromEntity)
-- [ ] T122 [US6] Create Zustand tag store in src/stores/tagStore.ts
-- [ ] T123 [US6] Create useTags hook in src/hooks/useTags.ts
-- [ ] T124 [P] [US6] Create TagInput component in src/components/tags/TagInput.tsx (multi-select with color badges)
-- [ ] T125 [P] [US6] Create InheritedTagBadge component in src/components/tags/InheritedTagBadge.tsx (icon + tooltip showing source)
-- [ ] T126 [P] [US6] Create TagPropagationConfirmation component in src/components/tags/TagPropagationConfirmation.tsx (modal)
-- [ ] T127 [US6] Add tags locale strings in src/i18n/locales/en/tags.json
-- [ ] T128 [US6] Modify AssetDetail page to display TagInput with inherited vs direct tags
-- [ ] T129 [US6] Modify KitDetail page to display TagInput with propagation confirmation
-- [ ] T130 [US6] Implement tag propagation logic (kit → sub-assets, model → created assets)
-- [ ] T131 [US6] Prevent removal of inherited tags from sub-assets (show error tooltip)
-- [ ] T132 [US6] Integrate tag operations with undo service
+- [X] T121 [US6] Implement TagService in src/services/TagService.ts (createTag, updateTag, deleteTag, getTags, applyTagToEntity, removeTagFromEntity)
+- [X] T122 [US6] Create Zustand tag store in src/stores/tagStore.ts
+- [X] T123 [US6] Create useTags hook in src/hooks/useTags.ts
+- [X] T124 [P] [US6] Create TagInput component in src/components/tags/TagInput.tsx (multi-select with color badges)
+- [X] T125 [P] [US6] Create InheritedTagBadge component in src/components/tags/InheritedTagBadge.tsx (icon + tooltip showing source)
+- [X] T126 [P] [US6] Create TagPropagationConfirmation component in src/components/tags/TagPropagationConfirmation.tsx (modal)
+- [X] T127 [US6] Add tags locale strings in src/i18n/locales/en/tags.json
+- [X] T128 [US6] Modify AssetDetail page to display TagInput with inherited vs direct tags
+- [X] T129 [US6] Modify KitDetail page to display TagInput with propagation confirmation
+- [X] T130 [US6] Implement tag propagation logic (kit → sub-assets, model → created assets)
+- [X] T131 [US6] Prevent removal of inherited tags from sub-assets (show error tooltip)
+- [X] T132 [US6] Integrate tag operations with undo service
 
 **Checkpoint**: User Story 6 complete - tagging with inheritance works independently
 
@@ -312,35 +312,35 @@
 
 ### TDD Tests for User Story 9 (REQUIRED - TDD approach for WorkOrderStateMachine)
 
-- [ ] T133 [P] [US9] Write RED test for canTransition (internal valid transitions) in src/tests/services/WorkOrderStateMachine.test.ts
-- [ ] T134 [P] [US9] Write RED test for canTransition (external valid transitions) in src/tests/services/WorkOrderStateMachine.test.ts
-- [ ] T135 [P] [US9] Write RED test for rejecting invalid transitions in src/tests/services/WorkOrderStateMachine.test.ts
-- [ ] T136 [P] [US9] Write RED test for prerequisite validation (assignedTo required for 'assigned') in src/tests/services/WorkOrderStateMachine.test.ts
-- [ ] T137 [P] [US9] Write RED test for state history recording in src/tests/services/WorkOrderStateMachine.test.ts
-- [ ] T138 [P] [US9] Write RED test for reopen capability (completed → in_progress) in src/tests/services/WorkOrderStateMachine.test.ts
-- [ ] T139 [P] [US9] Write RED test for terminal states (done, aborted, obsolete) in src/tests/services/WorkOrderStateMachine.test.ts
+- [X] T133 [P] [US9] Write RED test for canTransition (internal valid transitions) in src/tests/services/WorkOrderStateMachine.test.ts
+- [X] T134 [P] [US9] Write RED test for canTransition (external valid transitions) in src/tests/services/WorkOrderStateMachine.test.ts
+- [X] T135 [P] [US9] Write RED test for rejecting invalid transitions in src/tests/services/WorkOrderStateMachine.test.ts
+- [X] T136 [P] [US9] Write RED test for prerequisite validation (assignedTo required for 'assigned') in src/tests/services/WorkOrderStateMachine.test.ts
+- [X] T137 [P] [US9] Write RED test for state history recording in src/tests/services/WorkOrderStateMachine.test.ts
+- [X] T138 [P] [US9] Write RED test for reopen capability (completed → in_progress) in src/tests/services/WorkOrderStateMachine.test.ts
+- [X] T139 [P] [US9] Write RED test for terminal states (done, aborted, obsolete) in src/tests/services/WorkOrderStateMachine.test.ts
 
 ### Implementation for User Story 9
 
-- [ ] T140 [US9] Implement internal WorkOrderStateMachine using XState (GREEN) in src/services/machines/InternalWorkOrderMachine.ts - pass RED tests T133-T139
-- [ ] T141 [US9] Implement external WorkOrderStateMachine using XState (GREEN) in src/services/machines/ExternalWorkOrderMachine.ts - pass RED tests T134-T139
-- [ ] T142 [US9] Implement MaintenanceService in src/services/MaintenanceService.ts (all company/rule/work order CRUD, detectRuleConflicts, createWorkOrderFromRule, transitionWorkOrderState, markAssetComplete)
-- [ ] T143 [US9] Create Zustand maintenance store in src/stores/maintenanceStore.ts
-- [ ] T144 [US9] Create useMaintenance hook in src/hooks/useMaintenance.ts
-- [ ] T145 [P] [US9] Create MaintenanceCompanyForm component in src/components/maintenance/MaintenanceCompanyForm.tsx
-- [ ] T146 [P] [US9] Create MaintenanceRuleForm component in src/components/maintenance/MaintenanceRuleForm.tsx (applies-to selector)
-- [ ] T147 [P] [US9] Create WorkOrderForm component in src/components/maintenance/WorkOrderForm.tsx
-- [ ] T148 [P] [US9] Create WorkOrderStateTransition component in src/components/maintenance/WorkOrderStateTransition.tsx (shows allowed next states)
-- [ ] T149 [P] [US9] Create OfferManagement component in src/components/maintenance/OfferManagement.tsx (for external work orders)
-- [ ] T150 [US9] Add maintenance locale strings in src/i18n/locales/en/maintenance.json
-- [ ] T151 [US9] Create MaintenanceCompanies page in src/pages/MaintenanceCompanies.tsx
-- [ ] T152 [US9] Create MaintenanceRules page in src/pages/MaintenanceRules.tsx
-- [ ] T153 [US9] Create WorkOrders page in src/pages/WorkOrders.tsx (table/kanban/timeline views)
-- [ ] T154 [US9] Implement rule conflict detection UI (highlight overlapping rules in red)
-- [ ] T155 [US9] Implement work order auto-generation from rules (background job at 00:05)
-- [ ] T156 [US9] Register work order creation job in BackgroundJobService
-- [ ] T157 [US9] Integrate maintenance operations with undo service
-- [ ] T158 [US9] REFACTOR: Review XState machines for state coverage
+- [X] T140 [US9] Implement internal WorkOrderStateMachine using XState (GREEN) in src/services/machines/InternalWorkOrderMachine.ts - pass RED tests T133-T139
+- [X] T141 [US9] Implement external WorkOrderStateMachine using XState (GREEN) in src/services/machines/ExternalWorkOrderMachine.ts - pass RED tests T134-T139
+- [X] T142 [US9] Implement MaintenanceService in src/services/MaintenanceService.ts (all company/rule/work order CRUD, detectRuleConflicts, createWorkOrderFromRule, transitionWorkOrderState, markAssetComplete)
+- [X] T143 [US9] Create Zustand maintenance store in src/stores/maintenanceStore.ts
+- [X] T144 [US9] Create useMaintenance hook in src/hooks/useMaintenance.ts
+- [X] T145 [P] [US9] Create MaintenanceCompanyForm component in src/components/maintenance/MaintenanceCompanyForm.tsx
+- [X] T146 [P] [US9] Create MaintenanceRuleForm component in src/components/maintenance/MaintenanceRuleForm.tsx (applies-to selector)
+- [X] T147 [P] [US9] Create WorkOrderForm component in src/components/maintenance/WorkOrderForm.tsx
+- [X] T148 [P] [US9] Create WorkOrderStateTransition component in src/components/maintenance/WorkOrderStateTransition.tsx (shows allowed next states)
+- [X] T149 [P] [US9] Create OfferManagement component in src/components/maintenance/OfferManagement.tsx (for external work orders)
+- [X] T150 [US9] Add maintenance locale strings in src/i18n/locales/en/maintenance.json
+- [X] T151 [US9] Create MaintenanceCompanies page in src/pages/MaintenanceCompanies.tsx
+- [X] T152 [US9] Create MaintenanceRules page in src/pages/MaintenanceRules.tsx
+- [X] T153 [US9] Create WorkOrders page in src/pages/WorkOrders.tsx (table/kanban/timeline views)
+- [X] T154 [US9] Implement rule conflict detection UI (highlight overlapping rules in red)
+- [X] T155 [US9] Implement work order auto-generation from rules (background job at 00:05)
+- [X] T156 [US9] Register work order creation job in BackgroundJobService
+- [X] T157 [US9] Integrate maintenance operations with undo service
+- [X] T158 [US9] REFACTOR: Review XState machines for state coverage
 
 **Checkpoint**: User Story 9 complete - maintenance management with state machines works independently
 
@@ -354,14 +354,14 @@
 
 ### Implementation for User Story 10 (depends on User Story 9 state machines)
 
-- [ ] T159 [US10] Extend WorkOrderForm for per-asset scheduling in src/components/maintenance/WorkOrderForm.tsx
-- [ ] T160 [P] [US10] Create AssetScheduleTable component in src/components/maintenance/AssetScheduleTable.tsx (shows completion status per asset)
-- [ ] T161 [P] [US10] Create WorkOrderStateHistory component in src/components/maintenance/WorkOrderStateHistory.tsx (timeline)
-- [ ] T162 [US10] Implement markAssetComplete functionality in WorkOrderForm
-- [ ] T163 [US10] Add partial completion indicator ("3/5 assets completed")
-- [ ] T164 [US10] Implement approval workflow (assign approvalResponsible, notify when completed)
-- [ ] T165 [US10] Stub invoicing UI (upload button present but non-functional, shows "Coming Soon")
-- [ ] T166 [US10] Integrate per-asset completion with undo service
+- [X] T159 [US10] Extend WorkOrderForm for per-asset scheduling in src/components/maintenance/WorkOrderForm.tsx
+- [X] T160 [P] [US10] Create AssetScheduleTable component in src/components/maintenance/AssetScheduleTable.tsx (shows completion status per asset)
+- [X] T161 [P] [US10] Create WorkOrderStateHistory component in src/components/maintenance/WorkOrderStateHistory.tsx (timeline)
+- [X] T162 [US10] Implement markAssetComplete functionality in WorkOrderForm
+- [X] T163 [US10] Add partial completion indicator ("3/5 assets completed")
+- [X] T164 [US10] Implement approval workflow (assign approvalResponsible, notify when completed)
+- [X] T165 [US10] Stub invoicing UI (upload button present but non-functional, shows "Coming Soon")
+- [X] T166 [US10] Integrate per-asset completion with undo service
 
 **Checkpoint**: User Story 10 complete - work order tracking with per-asset status works independently
 
@@ -375,17 +375,17 @@
 
 ### Implementation for User Story 8
 
-- [ ] T167 [US8] Create Dashboard page in src/pages/Dashboard.tsx
-- [ ] T168 [P] [US8] Create DashboardGrid layout component in src/components/dashboard/DashboardGrid.tsx
-- [ ] T169 [P] [US8] Create MyAssignedAssets widget in src/components/dashboard/widgets/MyAssignedAssets.tsx
-- [ ] T170 [P] [US8] Create AssetsNeedingAttention widget in src/components/dashboard/widgets/AssetsNeedingAttention.tsx
-- [ ] T171 [P] [US8] Create UpcomingMaintenance widget in src/components/dashboard/widgets/UpcomingMaintenance.tsx
-- [ ] T172 [P] [US8] Create RecentActivityTimeline widget in src/components/dashboard/widgets/RecentActivityTimeline.tsx
-- [ ] T173 [P] [US8] Create UtilizationStats widget in src/components/dashboard/widgets/UtilizationStats.tsx
-- [ ] T174 [P] [US8] Create OverdueWorkOrders widget in src/components/dashboard/widgets/OverdueWorkOrders.tsx
-- [ ] T175 [US8] Add dashboard locale strings in src/i18n/locales/en/dashboard.json
-- [ ] T176 [US8] Link widgets to filtered views (e.g., "View All" opens AssetList with broken filter)
-- [ ] T177 [US8] Implement real-time count updates using TanStack Query
+- [X] T167 [US8] Create Dashboard page in src/pages/Dashboard.tsx
+- [X] T168 [P] [US8] Create DashboardGrid layout component in src/components/dashboard/DashboardGrid.tsx
+- [X] T169 [P] [US8] Create MyAssignedAssets widget in src/components/dashboard/widgets/MyAssignedAssets.tsx
+- [X] T170 [P] [US8] Create AssetsNeedingAttention widget in src/components/dashboard/widgets/AssetsNeedingAttention.tsx
+- [X] T171 [P] [US8] Create UpcomingMaintenance widget in src/components/dashboard/widgets/UpcomingMaintenance.tsx
+- [X] T172 [P] [US8] Create RecentActivityTimeline widget in src/components/dashboard/widgets/RecentActivityTimeline.tsx
+- [X] T173 [P] [US8] Create UtilizationStats widget in src/components/dashboard/widgets/UtilizationStats.tsx
+- [X] T174 [P] [US8] Create OverdueWorkOrders widget in src/components/dashboard/widgets/OverdueWorkOrders.tsx
+- [X] T175 [US8] Add dashboard locale strings in src/i18n/locales/en/dashboard.json
+- [X] T176 [US8] Link widgets to filtered views (e.g., "View All" opens AssetList with broken filter)
+- [X] T177 [US8] Implement real-time count updates using TanStack Query
 
 **Checkpoint**: User Story 8 complete - dashboard displays accurate metrics independently
 
@@ -399,17 +399,17 @@
 
 ### Implementation for User Story 11
 
-- [ ] T178 [US11] Implement SettingsVersionService in src/services/SettingsVersionService.ts (createVersion, getVersionHistory, rollbackToVersion, exportSettings, importSettings, cleanupExpiredVersions)
-- [ ] T179 [US11] Create Zustand settings store in src/stores/settingsStore.ts
-- [ ] T180 [US11] Create useSettingsVersions hook in src/hooks/useSettingsVersions.ts
-- [ ] T181 [P] [US11] Create SettingsVersionHistory component in src/components/settings/SettingsVersionHistory.tsx (table with rollback buttons)
-- [ ] T182 [P] [US11] Create SettingsExportImport component in src/components/settings/SettingsExportImport.tsx (export/import buttons)
-- [ ] T183 [US11] Add settings locale strings in src/i18n/locales/en/settings.json
-- [ ] T184 [US11] Modify Settings page to include SettingsVersionHistory and SettingsExportImport
-- [ ] T185 [US11] Implement JSON schema validation on import (Zod schema)
-- [ ] T186 [US11] Implement version age warning indicator (85-90 days old)
-- [ ] T187 [US11] Register settings cleanup job in BackgroundJobService (90-day retention, preserve latest)
-- [ ] T188 [US11] Integrate settings operations with undo service (record version creation/rollback)
+- [X] T178 [US11] Implement SettingsVersionService in src/services/SettingsVersionService.ts (createVersion, getVersionHistory, rollbackToVersion, exportSettings, importSettings, cleanupExpiredVersions)
+- [X] T179 [US11] Create Zustand settings store in src/stores/settingsStore.ts
+- [X] T180 [US11] Create useSettingsVersions hook in src/hooks/useSettingsVersions.ts
+- [X] T181 [P] [US11] Create SettingsVersionHistory component in src/components/settings/SettingsVersionHistory.tsx (table with rollback buttons)
+- [X] T182 [P] [US11] Create SettingsExportImport component in src/components/settings/SettingsExportImport.tsx (export/import buttons)
+- [X] T183 [US11] Add settings locale strings in src/i18n/locales/en/settings.json
+- [X] T184 [US11] Modify Settings page to include SettingsVersionHistory and SettingsExportImport
+- [X] T185 [US11] Implement JSON schema validation on import (Zod schema)
+- [X] T186 [US11] Implement version age warning indicator (85-90 days old)
+- [X] T187 [US11] Register settings cleanup job in BackgroundJobService (90-day retention, preserve latest)
+- [X] T188 [US11] Integrate settings operations with undo service (record version creation/rollback)
 
 **Checkpoint**: User Story 11 complete - settings versioning with export/import works independently
 
@@ -419,7 +419,7 @@
 
 **Purpose**: Remove legacy code and finalize internationalization
 
-- [ ] T189 [P] Remove asset type template entities and UI (FR-006)
+- [X] T189 [P] Remove asset type template entities and UI (FR-006)
 - [ ] T190 [P] Remove offline database storage and sync logic (FR-007)
 - [ ] T191 [P] Remove demo data seeding (keep only in tests/fixtures/) (FR-008)
 - [ ] T192 Run German text detection script and fix all violations in src/

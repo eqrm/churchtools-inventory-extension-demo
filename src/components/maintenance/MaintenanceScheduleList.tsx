@@ -25,19 +25,19 @@ interface MaintenanceScheduleListProps {
 }
 
 const scheduleTypeOptions = [
-  { value: 'all', label: 'Alle Typen' },
-  { value: 'time-based', label: 'Zeitbasiert' },
-  { value: 'usage-based', label: 'Nutzungsbasiert' },
-  { value: 'event-based', label: 'Ereignisbasiert' },
-  { value: 'fixed-date', label: 'Festes Datum' },
+  { value: 'all', label: 'All types' },
+  { value: 'time-based', label: 'Time-based' },
+  { value: 'usage-based', label: 'Usage-based' },
+  { value: 'event-based', label: 'Event-based' },
+  { value: 'fixed-date', label: 'Fixed date' },
 ];
 
 const statusOptions = [
-  { value: 'all', label: 'Alle Stati' },
-  { value: 'overdue', label: 'Überfällig' },
-  { value: 'due-soon', label: 'Bald fällig' },
-  { value: 'scheduled', label: 'Geplant' },
-  { value: 'unscheduled', label: 'Ohne Fälligkeit' },
+  { value: 'all', label: 'All statuses' },
+  { value: 'overdue', label: 'Overdue' },
+  { value: 'due-soon', label: 'Due soon' },
+  { value: 'scheduled', label: 'Scheduled' },
+  { value: 'unscheduled', label: 'No due date' },
 ];
 
 function determineStatus(schedule: MaintenanceSchedule): 'overdue' | 'due-soon' | 'scheduled' | 'unscheduled' {
@@ -73,7 +73,7 @@ function getColumns(
         if (!asset) {
           return (
             <Stack gap={2}>
-              <Text fw={500}>Unbekanntes Asset</Text>
+              <Text fw={500}>Unknown asset</Text>
               <Text size="xs" c="dimmed">ID: {schedule.assetId}</Text>
             </Stack>
           );
@@ -81,32 +81,32 @@ function getColumns(
         return (
           <Stack gap={2}>
             <Text fw={500}>{asset.assetNumber} · {asset.name}</Text>
-            <Text size="xs" c="dimmed">Kategorie: {asset.assetType.name}</Text>
+            <Text size="xs" c="dimmed">Category: {asset.assetType.name}</Text>
           </Stack>
         );
       },
     },
     {
       accessor: 'scheduleType',
-      title: 'Intervall',
+      title: 'Interval',
       render: (schedule) => (
         <Stack gap={2}>
           <Text size="sm">{formatScheduleDescription(schedule)}</Text>
           {schedule.lastPerformed && (
-            <Text size="xs" c="dimmed">Zuletzt durchgeführt: {new Date(schedule.lastPerformed).toLocaleDateString()}</Text>
+            <Text size="xs" c="dimmed">Last performed: {new Date(schedule.lastPerformed).toLocaleDateString()}</Text>
           )}
         </Stack>
       ),
     },
     {
       accessor: 'nextDue',
-      title: 'Nächste Fälligkeit',
+      title: 'Next due',
       render: (schedule) => (
         <Group gap="sm">
           <MaintenanceReminderBadge schedule={schedule} />
           {schedule.reminderDaysBefore > 0 && (
             <Badge color="blue" variant="light" size="sm">
-              Erinnerung {schedule.reminderDaysBefore} Tage vorher
+              Reminder {schedule.reminderDaysBefore} days before
             </Badge>
           )}
         </Group>
@@ -122,7 +122,7 @@ function getColumns(
         return (
           <Group gap="xs" justify="flex-end" wrap="nowrap">
             {asset && (
-              <Tooltip label="Wartung erfassen">
+              <Tooltip label="Log maintenance">
                 <ActionIcon
                   variant="light"
                   color="green"
@@ -130,13 +130,13 @@ function getColumns(
                     event.stopPropagation();
                     onLogMaintenance(asset, schedule);
                   }}
-                  aria-label="Wartung erfassen"
+                  aria-label="Log maintenance"
                 >
                   <IconTools size={18} />
                 </ActionIcon>
               </Tooltip>
             )}
-            <Tooltip label="Bearbeiten">
+            <Tooltip label="Edit">
               <ActionIcon
                 variant="light"
                 color="blue"
@@ -144,12 +144,12 @@ function getColumns(
                   event.stopPropagation();
                   onEdit(schedule);
                 }}
-                aria-label="Wartungsplan bearbeiten"
+                aria-label="Edit maintenance plan"
               >
                 <IconEdit size={18} />
               </ActionIcon>
             </Tooltip>
-            <Tooltip label="Löschen">
+            <Tooltip label="Delete">
               <ActionIcon
                 variant="subtle"
                 color="red"
@@ -157,7 +157,7 @@ function getColumns(
                   event.stopPropagation();
                   onDelete(schedule);
                 }}
-                aria-label="Wartungsplan löschen"
+                aria-label="Delete maintenance plan"
               >
                 <IconTrash size={18} />
               </ActionIcon>
@@ -235,15 +235,15 @@ export function MaintenanceScheduleList({
     try {
       await deleteSchedule.mutateAsync(scheduleToDelete.id);
       notifications.show({
-        title: 'Wartungsplan gelöscht',
-        message: 'Der Wartungsplan wurde entfernt.',
+        title: 'Maintenance plan deleted',
+        message: 'The maintenance plan was removed.',
         color: 'green',
         icon: <IconCheck />,
       });
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Fehler beim Löschen';
+      const message = err instanceof Error ? err.message : 'Failed to delete maintenance plan';
       notifications.show({
-        title: 'Fehler',
+        title: 'Error',
         message,
         color: 'red',
         icon: <IconAlertCircle />, // intentionally using alert icon
@@ -259,19 +259,19 @@ export function MaintenanceScheduleList({
       <Stack gap="md">
         <Group justify="space-between" align="flex-end" wrap="wrap">
           <TextInput
-            label="Suchen"
-            placeholder="Asset oder Intervall"
+            label="Search"
+            placeholder="Asset or interval"
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.currentTarget.value)}
             style={{ flex: 1, minWidth: 220 }}
             disabled
           />
           <Group gap="sm" wrap="wrap">
-            <Select label="Asset" placeholder="Alle" data={[]} disabled />
-            <Select label="Typ" data={scheduleTypeOptions} value={typeFilter} disabled />
+            <Select label="Asset" placeholder="All" data={[]} disabled />
+            <Select label="Type" data={scheduleTypeOptions} value={typeFilter} disabled />
             <Select label="Status" data={statusOptions} value={statusFilter} disabled />
             <Button leftSection={<IconPlus size={16} />} disabled>
-              Neuer Plan
+              New plan
             </Button>
           </Group>
         </Group>
@@ -283,7 +283,7 @@ export function MaintenanceScheduleList({
   if (error) {
     return (
       <AlertDisplay
-        title="Fehler beim Laden"
+        title="Failed to load"
         message={(error as Error).message}
       />
     );
@@ -295,8 +295,8 @@ export function MaintenanceScheduleList({
     <Stack gap="md">
       <Group justify="space-between" align="flex-end" wrap="wrap">
         <TextInput
-          label="Suchen"
-          placeholder="Asset oder Intervall"
+          label="Search"
+          placeholder="Asset or interval"
           value={searchQuery}
           onChange={(event) => setSearchQuery(event.currentTarget.value)}
           style={{ flex: 1, minWidth: 220 }}
@@ -304,9 +304,9 @@ export function MaintenanceScheduleList({
         <Group gap="sm" wrap="wrap">
           <Select
             label="Asset"
-            placeholder="Alle Assets"
+            placeholder="All assets"
             data={[
-              { value: 'all', label: 'Alle Assets' },
+              { value: 'all', label: 'All assets' },
               ...(assets ?? []).map((asset) => ({
                 value: asset.id,
                 label: `${asset.assetNumber} · ${asset.name}`,
@@ -317,7 +317,7 @@ export function MaintenanceScheduleList({
             searchable
           />
           <Select
-            label="Typ"
+            label="Type"
             data={scheduleTypeOptions}
             value={typeFilter}
             onChange={(value) => setTypeFilter(value ?? 'all')}
@@ -329,18 +329,18 @@ export function MaintenanceScheduleList({
             onChange={(value) => setStatusFilter(value ?? 'all')}
           />
           <Button leftSection={<IconPlus size={16} />} onClick={onCreateSchedule}>
-            Neuer Plan
+            New plan
           </Button>
         </Group>
       </Group>
 
       {filteredSchedules.length === 0 ? (
         <EmptyState
-          title="Keine Wartungspläne"
+          title="No maintenance plans"
           message={searchQuery || typeFilter !== 'all' || assetFilter !== 'all' || statusFilter !== 'all'
-            ? 'Keine Wartungspläne entsprechen den aktuellen Filtern.'
-            : 'Erstellen Sie den ersten Wartungsplan für Ihre Assets.'}
-          action={<Button leftSection={<IconPlus size={16} />} onClick={onCreateSchedule}>Wartungsplan erstellen</Button>}
+            ? 'No maintenance plans match the current filters.'
+            : 'Create the first maintenance plan for your assets.'}
+          action={<Button leftSection={<IconPlus size={16} />} onClick={onCreateSchedule}>Create maintenance plan</Button>}
         />
       ) : (
         <DataTable
@@ -359,12 +359,12 @@ export function MaintenanceScheduleList({
           setDeleteModalOpened(false);
           setScheduleToDelete(null);
         }}
-        title="Wartungsplan löschen"
+        title="Delete maintenance plan"
         centered
       >
         <Stack gap="md">
           <Text>
-            Sind Sie sicher, dass Sie diesen Wartungsplan löschen möchten?
+            Are you sure you want to delete this maintenance plan?
             {scheduleToDelete && (
               <>
                 <br />
@@ -377,14 +377,14 @@ export function MaintenanceScheduleList({
               setDeleteModalOpened(false);
               setScheduleToDelete(null);
             }}>
-              Abbrechen
+              Cancel
             </Button>
             <Button
               color="red"
               onClick={handleConfirmDelete}
               loading={deleteSchedule.isPending}
             >
-              Löschen
+              Delete
             </Button>
           </Group>
         </Stack>

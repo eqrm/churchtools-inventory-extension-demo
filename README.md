@@ -1,12 +1,11 @@
 # ChurchTools Inventory Extension
 
-A production-ready ChurchTools module that delivers end-to-end inventory management: booking lifecycle timelines, maintenance orchestration, configurable numbering, deterministic demo data, and consistent people context across every view.
+A production-ready ChurchTools module that delivers end-to-end inventory management: booking lifecycle timelines, maintenance orchestration, configurable numbering, and consistent people context across every view.
 
 ## Highlights
-- **Guided demo onboarding** – first-run modal seeds deterministic sample data and developer controls allow safe reseeding/reset.
 - **Booking traceability** – shared history timeline, quantity-aware allocator, and unified participant avatars across list, detail, and form flows.
 - **Maintenance plans** – stage-based planning with calendar holds, completion drawer, and technician summaries per asset.
-- **Numbering transparency** – dashboard warning, prefix defaults with Dexie-backed persistence, and live previews in asset/category forms.
+- **Numbering transparency** – dashboard warning, prefix defaults persisted in local storage, and live previews in asset/category forms.
 - **People context** – `PersonAvatar` powers consistent initials/avatars for bookings, assets, and maintenance, backed by cached lookups.
 
 ## Getting Started
@@ -34,9 +33,9 @@ The repo ships with a VS Code dev container. Open the project in VS Code, run **
 | Variable        | Description                                                   |
 |-----------------|---------------------------------------------------------------|
 | `VITE_KEY`      | Module key provided by ChurchTools (e.g. `inventory`)         |
-| `VITE_BASE_URL` | Base URL for your ChurchTools instance (e.g. `https://demo`) |
+| `VITE_BASE_URL` | Base URL for your ChurchTools instance (e.g. `https://example.church.tools`) |
 
-All other configuration is derived from runtime state (TanStack Query, Dexie stores, environment flags).
+All other configuration is derived from runtime state (TanStack Query caches, local storage, and ChurchTools module metadata).
 
 ## Scripts
 | Command                  | Purpose                                                       |
@@ -45,7 +44,7 @@ All other configuration is derived from runtime state (TanStack Query, Dexie sto
 | `npm run build`          | Create production build (TypeScript + Vite)                   |
 | `npm run preview`        | Preview production build locally                              |
 | `npm run lint`           | Run ESLint across `src/` and tests                             |
-| `npm test`               | Execute Vitest unit suites (history, booking, demo seeder, etc.) |
+| `npm test`               | Execute Vitest unit suites (history, booking, maintenance, etc.) |
 | `npm run analyze:bundle` | Generate bundle visualization (`dist/bundle-analysis.html`)   |
 | `npm run deploy`         | Build and package the extension into `releases/`              |
 
@@ -62,13 +61,8 @@ All other configuration is derived from runtime state (TanStack Query, Dexie sto
 
 ### Numbering Transparency
 - Dashboard warning card directs admins to prefix configuration when sequences are missing.
-- Prefix panel persists module + per-person defaults in Dexie/localStorage and surfaces live previews.
+- Prefix panel persists module + per-person defaults in local storage and surfaces live previews.
 - Asset/category forms read shared helpers to keep generated numbers predictable.
-
-### Demo Onboarding
-- First-run modal offers deterministic seeding (categories, assets, bookings, people) tagged for safe cleanup.
-- Developer settings expose dev-gated reset/reseed actions guarded by confirmation prompts.
-- Unit tests verify tagging, reseeding, and metadata persistence.
 
 ## Documentation
 - `docs/implementation-notes.md` – consolidated engineering decisions and module responsibilities.

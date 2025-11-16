@@ -20,10 +20,10 @@ interface MaintenanceScheduleFormProps {
 }
 
 const scheduleTypes = [
-  { value: 'time-based', label: 'Zeitbasiert (Tage/Monate/Jahre)' },
-  { value: 'usage-based', label: 'Nutzungsbasiert (Betriebsstunden)' },
-  { value: 'event-based', label: 'Ereignisbasiert (Anzahl Buchungen)' },
-  { value: 'fixed-date', label: 'Festes Datum (Jährlich)' },
+  { value: 'time-based', label: 'Time-based (days/months/years)' },
+  { value: 'usage-based', label: 'Usage-based (operating hours)' },
+  { value: 'event-based', label: 'Event-based (number of bookings)' },
+  { value: 'fixed-date', label: 'Fixed date (annual)' },
 ];
 
 /**
@@ -64,8 +64,8 @@ export function MaintenanceScheduleForm({ assetId, schedule, onSuccess, onCancel
 
     if (!selectedAssetId) {
       notifications.show({
-        title: 'Fehlende Asset-Auswahl',
-        message: 'Bitte wählen Sie ein Asset für diesen Wartungsplan aus.',
+        title: 'Asset required',
+        message: 'Select an asset for this maintenance plan.',
         color: 'red',
         icon: <IconX />,
       });
@@ -93,18 +93,18 @@ export function MaintenanceScheduleForm({ assetId, schedule, onSuccess, onCancel
     try {
       if (schedule) {
         await updateSchedule.mutateAsync({ id: schedule.id, data: baseData });
-        notifications.show({ title: 'Erfolg', message: 'Wartungsplan aktualisiert', color: 'green', icon: <IconCheck /> });
+        notifications.show({ title: 'Success', message: 'Maintenance plan updated', color: 'green', icon: <IconCheck /> });
       } else {
         await createSchedule.mutateAsync({
           assetId: selectedAssetId,
           ...baseData,
         } as MaintenanceScheduleCreate);
-        notifications.show({ title: 'Erfolg', message: 'Wartungsplan erstellt', color: 'green', icon: <IconCheck /> });
+        notifications.show({ title: 'Success', message: 'Maintenance plan created', color: 'green', icon: <IconCheck /> });
       }
       onSuccess?.();
     } catch (error) {
-      const msg = error instanceof Error ? error.message : 'Fehler beim Speichern';
-      notifications.show({ title: 'Fehler', message: msg, color: 'red', icon: <IconX /> });
+      const msg = error instanceof Error ? error.message : 'Failed to save maintenance plan';
+      notifications.show({ title: 'Error', message: msg, color: 'red', icon: <IconX /> });
     }
   });
 
@@ -116,46 +116,46 @@ export function MaintenanceScheduleForm({ assetId, schedule, onSuccess, onCancel
         {allowAssetSelection && (
           <Select
             label="Asset"
-            placeholder="Asset auswählen"
+            placeholder="Select asset"
             data={assets.map((asset) => ({
               value: asset.id,
               label: `${asset.assetNumber} · ${asset.name}`,
             }))}
             searchable
-            nothingFoundMessage={assetsLoading ? 'Lade Assets...' : 'Kein Asset gefunden'}
+            nothingFoundMessage={assetsLoading ? 'Loading assets…' : 'No assets found'}
             disabled={assetsLoading}
             required
             {...form.getInputProps('selectedAssetId')}
           />
         )}
-        <Select label="Wartungstyp" data={scheduleTypes} required {...form.getInputProps('scheduleType')} />
+        <Select label="Maintenance type" data={scheduleTypes} required {...form.getInputProps('scheduleType')} />
         
         {scheduleType === 'time-based' && (
           <>
-            <NumberInput label="Tage" placeholder="z.B. 30" min={1} {...form.getInputProps('intervalDays')} />
-            <NumberInput label="Monate" placeholder="z.B. 6" min={1} {...form.getInputProps('intervalMonths')} />
-            <NumberInput label="Jahre" placeholder="z.B. 1" min={1} {...form.getInputProps('intervalYears')} />
+            <NumberInput label="Days" placeholder="e.g., 30" min={1} {...form.getInputProps('intervalDays')} />
+            <NumberInput label="Months" placeholder="e.g., 6" min={1} {...form.getInputProps('intervalMonths')} />
+            <NumberInput label="Years" placeholder="e.g., 1" min={1} {...form.getInputProps('intervalYears')} />
           </>
         )}
         
         {scheduleType === 'usage-based' && (
-          <NumberInput label="Betriebsstunden" placeholder="z.B. 100" min={1} required {...form.getInputProps('intervalHours')} />
+          <NumberInput label="Operating hours" placeholder="e.g., 100" min={1} required {...form.getInputProps('intervalHours')} />
         )}
         
         {scheduleType === 'event-based' && (
-          <NumberInput label="Anzahl Buchungen" placeholder="z.B. 50" min={1} required {...form.getInputProps('intervalBookings')} />
+          <NumberInput label="Booking count" placeholder="e.g., 50" min={1} required {...form.getInputProps('intervalBookings')} />
         )}
         
         {scheduleType === 'fixed-date' && (
-          <DateInput label="Datum" placeholder="Jährlich wiederkehrend" required {...form.getInputProps('fixedDate')} />
+          <DateInput label="Date" placeholder="Occurs annually" required {...form.getInputProps('fixedDate')} />
         )}
 
-        <NumberInput label="Erinnerung (Tage vorher)" min={0} required {...form.getInputProps('reminderDaysBefore')} />
+        <NumberInput label="Remind (days before)" min={0} required {...form.getInputProps('reminderDaysBefore')} />
 
         <Group justify="flex-end" mt="md">
-          {onCancel && <Button variant="subtle" onClick={onCancel}>Abbrechen</Button>}
+          {onCancel && <Button variant="subtle" onClick={onCancel}>Cancel</Button>}
           <Button type="submit" loading={createSchedule.isPending || updateSchedule.isPending}>
-            {schedule ? 'Aktualisieren' : 'Erstellen'}
+            {schedule ? 'Update' : 'Create'}
           </Button>
         </Group>
       </Stack>

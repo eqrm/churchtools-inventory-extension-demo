@@ -34,27 +34,27 @@ function ComplianceStats({ data }: { data: ReturnType<typeof calculateMaintenanc
             }
           />
         </Center>
-        <Text ta="center" mt="xs" fw={500}>Compliance-Rate</Text>
+        <Text ta="center" mt="xs" fw={500}>Compliance rate</Text>
       </Paper>
 
       <Paper p="md" withBorder>
         <Text size="xl" fw={700} ta="center">{data.totalAssets}</Text>
-        <Text ta="center" c="dimmed" size="sm">Inventargegenstände gesamt</Text>
+        <Text ta="center" c="dimmed" size="sm">Assets tracked</Text>
       </Paper>
 
       <Paper p="md" withBorder>
         <Text size="xl" fw={700} ta="center" c="green">{data.compliantAssets}</Text>
-        <Text ta="center" c="dimmed" size="sm">Konform</Text>
+        <Text ta="center" c="dimmed" size="sm">Compliant</Text>
       </Paper>
 
       <Paper p="md" withBorder>
         <Text size="xl" fw={700} ta="center" c="red">{data.overdueAssets}</Text>
-        <Text ta="center" c="dimmed" size="sm">Überfällig</Text>
+        <Text ta="center" c="dimmed" size="sm">Overdue</Text>
       </Paper>
 
       <Paper p="md" withBorder>
         <Text size="xl" fw={700} ta="center" c="yellow">{data.upcomingAssets}</Text>
-        <Text ta="center" c="dimmed" size="sm">Anstehend (30 Tage)</Text>
+        <Text ta="center" c="dimmed" size="sm">Due soon (30 days)</Text>
       </Paper>
     </SimpleGrid>
   );
@@ -68,8 +68,8 @@ export function MaintenanceComplianceReport() {
   const { data: schedules, isLoading: schedulesLoading, error: schedulesError } = useMaintenanceSchedules();
 
   if (assetsLoading || schedulesLoading) return <Loader />;
-  if (assetsError) return <Text c="red">Fehler beim Laden der Inventargegenstände</Text>;
-  if (schedulesError) return <Text c="red">Fehler beim Laden der Wartungspläne</Text>;
+  if (assetsError) return <Text c="red">Failed to load assets</Text>;
+  if (schedulesError) return <Text c="red">Failed to load maintenance schedules</Text>;
   if (!assets || !schedules) return null;
 
   const complianceData = calculateMaintenanceCompliance(assets, schedules);
@@ -77,18 +77,18 @@ export function MaintenanceComplianceReport() {
   return (
     <Stack gap="md">
       <Group justify="space-between">
-        <Title order={2}>Wartungs-Compliance</Title>
+        <Title order={2}>Maintenance compliance</Title>
         <Button
           leftSection={<IconDownload size={16} />}
           onClick={() => exportMaintenanceComplianceToCSV(complianceData)}
         >
-          Exportieren
+          Export
         </Button>
       </Group>
 
       <ComplianceStats data={complianceData} />
 
-      <Title order={3} mt="md">Überfällige Wartungen</Title>
+      <Title order={3} mt="md">Overdue maintenance</Title>
 
       <DataTable
         withTableBorder
@@ -99,7 +99,7 @@ export function MaintenanceComplianceReport() {
         columns={[
           {
             accessor: 'assetNumber',
-            title: 'Inventarnummer',
+            title: 'Asset number',
             width: 150,
           },
           {
@@ -109,23 +109,23 @@ export function MaintenanceComplianceReport() {
           },
           {
             accessor: 'scheduleName',
-            title: 'Wartungstyp',
+            title: 'Maintenance type',
             width: 180,
           },
           {
             accessor: 'dueDate',
-            title: 'Fällig am',
+            title: 'Due date',
             width: 150,
-            render: (row) => new Date(row.dueDate).toLocaleDateString('de-DE'),
+            render: (row) => new Date(row.dueDate).toLocaleDateString('en-US'),
           },
           {
             accessor: 'daysOverdue',
-            title: 'Überfällig',
+            title: 'Days overdue',
             width: 130,
             textAlign: 'right',
             render: (row) => (
               <Badge color="red" variant="filled">
-                {row.daysOverdue} Tage
+                {row.daysOverdue} days
               </Badge>
             ),
           },

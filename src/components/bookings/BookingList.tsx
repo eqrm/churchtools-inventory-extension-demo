@@ -208,7 +208,7 @@ function BookingFilterPanel({
           onChange={handleStartChange}
         />
         <DateField
-          label="Ende"
+          label="End"
           placeholder="End date"
           value={localEnd}
           onChange={handleEndChange}
@@ -216,7 +216,7 @@ function BookingFilterPanel({
 
         {hasActiveFilters && (
           <Button variant="subtle" onClick={onResetFilters}>
-            Filter zurücksetzen
+            Reset filters
           </Button>
         )}
       </Group>

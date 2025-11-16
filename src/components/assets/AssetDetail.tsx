@@ -68,6 +68,7 @@ import { MaintenanceRecordList } from '../maintenance/MaintenanceRecordList';
 import { MaintenanceReminderBadge } from '../maintenance/MaintenanceReminderBadge';
 import { formatScheduleDescription } from '../../utils/maintenanceCalculations';
 import type { Asset, AssetGroupFieldSource, AssetStatus } from '../../types/entities';
+import type { Tag, InheritedTag } from '../../types/tag';
 import { AssetGroupBadge } from '../asset-groups/AssetGroupBadge';
 import { AssetGroupDetail } from '../asset-groups/AssetGroupDetail';
 import { ConvertAssetToGroupModal } from '../asset-groups/ConvertAssetToGroupModal';
@@ -81,6 +82,10 @@ import { AssignmentField } from '../assignment/AssignmentField';
 import type { PersonResult } from '../assignment/PersonSearch';
 import type { AssignmentTarget } from '../../types/assignment';
 import { useUpdateAsset } from '../../hooks/useAssets';
+import { PropertyInheritanceIndicator } from '../kits/PropertyInheritanceIndicator';
+import { TagInput } from '../tags/TagInput';
+import { TagListWithInheritance } from '../tags/InheritedTagBadge';
+import { useTags, useEntityTags } from '../../hooks/useTags';
 
 interface AssetDetailProps {
   assetId: string;
@@ -117,6 +122,17 @@ export function AssetDetail({ assetId, onEdit, onClose }: AssetDetailProps) {
   const { currentAssignment, assignToTarget, checkIn, isAssigning, isCheckingIn } = useAssignments(assetId);
   const updateAsset = useUpdateAsset();
   const assignmentFieldRef = useRef<HTMLDivElement>(null);
+
+  // Tags hooks
+  const { tags: availableTags = [], isLoading: tagsLoading } = useTags();
+  const {
+    tags: entityTags,
+    applyTag,
+    removeTag,
+    isApplying,
+    isRemoving,
+  } = useEntityTags('asset', assetId);
+  const { t: tTags } = useTranslation('tags');
 
   useEffect(() => {
     if (!assetGroupId) {
@@ -262,7 +278,19 @@ export function AssetDetail({ assetId, onEdit, onClose }: AssetDetailProps) {
     });
   };
 
-  const InfoRow = ({ icon, label, value, fieldKey }: { icon: React.ReactNode; label: string; value: React.ReactNode; fieldKey?: string }) => (
+  const InfoRow = ({ 
+    icon, 
+    label, 
+    value, 
+    fieldKey,
+    kitInheritanceProperty 
+  }: { 
+    icon: React.ReactNode; 
+    label: string; 
+    value: React.ReactNode; 
+    fieldKey?: string;
+    kitInheritanceProperty?: 'location' | 'status' | 'tags';
+  }) => (
     <Group gap="xs" wrap="nowrap">
       <Box c="dimmed" style={{ display: 'flex', alignItems: 'center' }}>
         {icon}
@@ -273,6 +301,12 @@ export function AssetDetail({ assetId, onEdit, onClose }: AssetDetailProps) {
             {label}
           </Text>
           {fieldKey ? renderFieldSourceIndicator(fieldKey) : null}
+          {kitInheritanceProperty && asset.kitId ? (
+            <PropertyInheritanceIndicator 
+              assetId={asset.id} 
+              property={kitInheritanceProperty} 
+            />
+          ) : null}
         </Group>
         <Box>
           {value ? (
@@ -579,6 +613,7 @@ export function AssetDetail({ assetId, onEdit, onClose }: AssetDetailProps) {
                             icon={<IconLocation size={16} />}
                             label="Location"
                             value={asset.location}
+                            kitInheritanceProperty="location"
                           />
                         </Grid.Col>
                         {asset.barcode && (
@@ -667,6 +702,100 @@ export function AssetDetail({ assetId, onEdit, onClose }: AssetDetailProps) {
                       lastModifiedByName={asset.lastModifiedByName}
                       lastModifiedAt={asset.lastModifiedAt}
                     />
+                  </Stack>
+                </Card>
+
+                {/* Tags Section */}
+                <Card withBorder>
+                  <Stack gap="md">
+                    <Group justify="space-between" align="center">
+                      <Title order={4}>Tags</Title>
+                      <PropertyInheritanceIndicator 
+                        assetId={asset.id} 
+                        property="tags" 
+                      />
+                    </Group>
+                    <Divider />
+
+                    {/* Tag Input for adding/removing tags */}
+                    <TagInput
+                      tags={availableTags}
+                      selectedTagIds={entityTags.map((t) => t.id)}
+                      onChange={async (tagIds) => {
+                        try {
+                          // Find tags to add (in new list but not in current)
+                          const currentIds = entityTags.map((t) => t.id);
+                          const toAdd = tagIds.filter((id) => !currentIds.includes(id));
+                          const toRemove = currentIds.filter((id) => !tagIds.includes(id));
+
+                          // Apply new tags
+                          for (const tagId of toAdd) {
+                            await applyTag(tagId);
+                          }
+
+                          // Remove deselected tags
+                          for (const tagId of toRemove) {
+                            await removeTag(tagId);
+                          }
+
+                          notifications.show({
+                            title: tTags('notifications.tagsUpdatedTitle'),
+                            message: tTags('notifications.tagsUpdatedMessage'),
+                            color: 'green',
+                          });
+                        } catch (error) {
+                          notifications.show({
+                            title: tTags('notifications.updateErrorTitle'),
+                            message: error instanceof Error ? error.message : tTags('notifications.updateErrorMessage'),
+                            color: 'red',
+                          });
+                        }
+                      }}
+                      disabled={isApplying || isRemoving}
+                      isLoading={tagsLoading}
+                      label={tTags('selectTags')}
+                      placeholder={tTags('searchOrCreateTag')}
+                    />
+
+                    {/* Display tags with inheritance indicators */}
+                    {(entityTags.length > 0 || asset.inheritedTags?.length) && (
+                      <Box>
+                        <TagListWithInheritance
+                          directTags={entityTags}
+                          inheritedTags={
+                            asset.inheritedTags?.map((inherited) => {
+                              const tag = availableTags.find((t) => t.id === inherited.tagId);
+                              return tag ? { tag, inheritedFrom: inherited } : null;
+                            }).filter((item): item is { tag: Tag; inheritedFrom: InheritedTag } => item !== null) ?? []
+                          }
+                          onRemoveDirectTag={async (tagId) => {
+                            try {
+                              await removeTag(tagId);
+                              notifications.show({
+                                title: tTags('notifications.removedTitle'),
+                                message: tTags('notifications.removedMessage'),
+                                color: 'green',
+                              });
+                            } catch (error) {
+                              notifications.show({
+                                title: tTags('notifications.removeErrorTitle'),
+                                message: error instanceof Error ? error.message : tTags('notifications.removeErrorMessage'),
+                                color: 'red',
+                              });
+                            }
+                          }}
+                          disabled={isRemoving}
+                          size="md"
+                          showLabels
+                        />
+                      </Box>
+                    )}
+
+                    {entityTags.length === 0 && !asset.inheritedTags?.length && (
+                      <Text size="sm" c="dimmed">
+                        {tTags('emptyState.description')}
+                      </Text>
+                    )}
                   </Stack>
                 </Card>
 

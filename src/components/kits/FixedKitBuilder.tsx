@@ -7,6 +7,7 @@ import { useState } from 'react';
 import { Stack, Text, Button, Group, Select, ActionIcon, Paper } from '@mantine/core';
 import { IconPlus, IconTrash } from '@tabler/icons-react';
 import { useAssets } from '../../hooks/useAssets';
+import { useTranslation } from 'react-i18next';
 
 interface BoundAsset {
   assetId: string;
@@ -22,6 +23,7 @@ interface FixedKitBuilderProps {
 export function FixedKitBuilder({ value, onChange }: FixedKitBuilderProps) {
   const { data: assets } = useAssets({ status: 'available' });
   const [selectedAssetId, setSelectedAssetId] = useState<string>('');
+  const { t } = useTranslation('kits');
 
   const handleAddAsset = () => {
     if (!selectedAssetId) return;
@@ -51,7 +53,7 @@ export function FixedKitBuilder({ value, onChange }: FixedKitBuilderProps) {
 
   return (
     <Stack gap="sm">
-      <Text fw={500}>Feste Assets</Text>
+      <Text fw={500}>{t('form.fixed.heading')}</Text>
       
       {value.length > 0 && (
         <Stack gap="xs">
@@ -76,7 +78,7 @@ export function FixedKitBuilder({ value, onChange }: FixedKitBuilderProps) {
 
       <Group>
         <Select
-          placeholder="Asset auswählen"
+          placeholder={t('form.fixed.selectPlaceholder')}
           data={assets?.map(a => ({ value: a.id, label: `${a.assetNumber} - ${a.name}` })) || []}
           value={selectedAssetId}
           onChange={(val) => setSelectedAssetId(val || '')}
@@ -88,13 +90,13 @@ export function FixedKitBuilder({ value, onChange }: FixedKitBuilderProps) {
           onClick={handleAddAsset}
           disabled={!selectedAssetId}
         >
-          Hinzufügen
+          {t('form.actions.addAsset')}
         </Button>
       </Group>
 
       {value.length === 0 && (
         <Text size="sm" c="dimmed">
-          Noch keine Assets hinzugefügt
+          {t('form.fixed.emptyState')}
         </Text>
       )}
     </Stack>

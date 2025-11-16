@@ -2,11 +2,45 @@ type IdLike = string | number;
 
 const toId = (value: IdLike): string => value.toString();
 
+/**
+ * Route parameter types for query strings
+ */
+export interface RouteParams {
+  status?: string;
+  tags?: string[];
+  sort?: string;
+  order?: 'asc' | 'desc';
+  page?: number;
+  limit?: number;
+  search?: string;
+  location?: string;
+}
+
+/**
+ * Build query string from parameters
+ */
+function buildQueryString(params: Record<string, unknown>): string {
+  const queryParams = new URLSearchParams();
+
+  Object.entries(params).forEach(([key, value]) => {
+    if (value === undefined || value === null) return;
+
+    if (Array.isArray(value)) {
+      queryParams.set(key, value.join(','));
+    } else {
+      queryParams.set(key, String(value));
+    }
+  });
+
+  const queryString = queryParams.toString();
+  return queryString ? `?${queryString}` : '';
+}
+
 export const routes = {
     dashboard: () => '/',
     categories: () => '/categories',
     assets: {
-        list: () => '/assets',
+        list: (params?: RouteParams) => `/assets${params ? buildQueryString(params) : ''}`,
         detail: (assetId: IdLike) => `/assets/${toId(assetId)}`,
         edit: (assetId: IdLike) => `/assets/${toId(assetId)}/edit`,
         history: (assetId: IdLike) => `/assets/${toId(assetId)}/history`,
@@ -70,3 +104,89 @@ export const routes = {
 } as const;
 
 export type RouteBuilders = typeof routes;
+
+/**
+ * Parse query parameters from URL
+ */
+export function parseQueryParams(search: string): RouteParams {
+  const params = new URLSearchParams(search);
+  const result: RouteParams = {};
+
+  const status = params.get('status');
+  if (status) {
+    result.status = status;
+  }
+
+  const tags = params.get('tags');
+  if (tags) {
+    result.tags = tags.split(',');
+  }
+
+  const sort = params.get('sort');
+  if (sort) {
+    result.sort = sort;
+  }
+
+  const order = params.get('order');
+  if (order === 'asc' || order === 'desc') {
+    result.order = order;
+  }
+
+  const page = params.get('page');
+  const parsedPage = page ? Number.parseInt(page, 10) : Number.NaN;
+  if (!Number.isNaN(parsedPage)) {
+    result.page = parsedPage;
+  }
+
+  const limit = params.get('limit');
+  const parsedLimit = limit ? Number.parseInt(limit, 10) : Number.NaN;
+  if (!Number.isNaN(parsedLimit)) {
+    result.limit = parsedLimit;
+  }
+
+  const searchParam = params.get('search');
+  if (searchParam) {
+    result.search = searchParam;
+  }
+
+  const location = params.get('location');
+  if (location) {
+    result.location = location;
+  }
+
+  return result;
+}
+
+/**
+ * Get breadcrumb segments from path
+ */
+export function getBreadcrumbs(path: string): Array<{ label: string; path: string }> {
+  const segments = path.split('/').filter(Boolean);
+  const breadcrumbs: Array<{ label: string; path: string }> = [
+    { label: 'Dashboard', path: '/' },
+  ];
+
+  let currentPath = '';
+  segments.forEach((segment) => {
+    currentPath += `/${segment}`;
+
+    // Skip UUID segments and action words
+    if (
+      segment.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i) ||
+      segment === 'new' ||
+      segment === 'edit'
+    ) {
+      return;
+    }
+
+    // Convert kebab-case to Title Case
+    const label = segment
+      .split('-')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+
+    breadcrumbs.push({ label, path: currentPath });
+  });
+
+  return breadcrumbs;
+}

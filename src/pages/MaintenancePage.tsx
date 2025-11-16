@@ -84,16 +84,16 @@ export function MaintenancePage() {
         <Tabs value={activeTab} onChange={(value) => setActiveTab(value ?? 'dashboard')} keepMounted={false}>
           <Tabs.List>
             <Tabs.Tab value="dashboard" leftSection={<IconGauge size={16} />}>
-              Übersicht
+              Overview
             </Tabs.Tab>
             <Tabs.Tab value="plans" leftSection={<IconClipboardList size={16} />}>
               Plans
             </Tabs.Tab>
             <Tabs.Tab value="schedules" leftSection={<IconCalendarCheck size={16} />}>
-              Wartungspläne
+              Schedules
             </Tabs.Tab>
             <Tabs.Tab value="records" leftSection={<IconClipboardList size={16} />}>
-              Wartungsprotokoll
+              Records
             </Tabs.Tab>
           </Tabs.List>
 
@@ -102,10 +102,10 @@ export function MaintenancePage() {
               <MaintenanceDashboard />
               <Group justify="flex-start" gap="sm" wrap="wrap">
                 <Button leftSection={<IconPlus size={16} />} onClick={openCreateSchedule}>
-                  Wartungsplan erstellen
+                  Create maintenance plan
                 </Button>
                 <Button variant="light" leftSection={<IconPlus size={16} />} onClick={() => openRecordModal()}>
-                  Wartung erfassen
+                  Log maintenance
                 </Button>
               </Group>
             </Stack>
@@ -152,7 +152,7 @@ export function MaintenancePage() {
         <Modal
           opened={scheduleModalOpen}
           onClose={closeScheduleModal}
-          title={editingSchedule ? 'Wartungsplan bearbeiten' : 'Neuen Wartungsplan erstellen'}
+          title={editingSchedule ? 'Edit maintenance plan' : 'Create maintenance plan'}
           size="lg"
         >
           <MaintenanceScheduleForm
@@ -166,22 +166,22 @@ export function MaintenancePage() {
         <Modal
           opened={recordModalOpen}
           onClose={closeRecordModal}
-          title="Wartung erfassen"
+          title="Log maintenance"
           size="lg"
         >
           <Stack gap="md">
             <Select
-              label="Asset auswählen"
-              placeholder="Asset auswählen"
+              label="Select asset"
+              placeholder="Select asset"
               data={assetOptions}
               value={selectedAssetId || null}
               onChange={(value) => setSelectedAssetId(value ?? '')}
               searchable
-              nothingFoundMessage={assetsLoading ? 'Lade Assets…' : 'Kein Asset gefunden'}
+              nothingFoundMessage={assetsLoading ? 'Loading assets…' : 'No assets found'}
             />
             {scheduleContext && selectedAsset && (
               <Text size="sm" c="dimmed">
-                Wartung gemäß Plan: {formatScheduleDescription(scheduleContext)}
+                Scheduled maintenance: {formatScheduleDescription(scheduleContext)}
               </Text>
             )}
             {selectedAsset ? (
@@ -193,7 +193,7 @@ export function MaintenancePage() {
                 onCancel={closeRecordModal}
               />
             ) : (
-              <Text c="dimmed">Bitte wählen Sie ein Asset aus, um eine Wartung zu erfassen.</Text>
+              <Text c="dimmed">Select an asset to log maintenance.</Text>
             )}
           </Stack>
         </Modal>

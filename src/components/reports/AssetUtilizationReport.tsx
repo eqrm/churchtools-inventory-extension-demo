@@ -67,8 +67,8 @@ function UtilizationFilters({
         </div>
 
         <Select
-          label="Asset-Typ"
-          placeholder="Alle Asset-Typen"
+          label="Asset type"
+          placeholder="All asset types"
           data={assetTypes}
           value={selectedAssetTypeId}
           onChange={setSelectedAssetTypeId}
@@ -77,8 +77,8 @@ function UtilizationFilters({
         />
 
         <Select
-          label="Standort"
-          placeholder="Alle Standorte"
+          label="Location"
+          placeholder="All locations"
           data={locations.map((loc) => ({ value: loc, label: loc }))}
           value={selectedLocation}
           onChange={setSelectedLocation}
@@ -105,7 +105,7 @@ function UtilizationTable({ data }: { data: AssetUtilizationData[] }) {
       columns={[
         {
           accessor: 'assetNumber',
-          title: 'Inventarnummer',
+          title: 'Asset number',
           width: 150,
         },
         {
@@ -115,35 +115,35 @@ function UtilizationTable({ data }: { data: AssetUtilizationData[] }) {
         },
         {
           accessor: 'assetTypeName',
-          title: 'Asset-Typ',
+          title: 'Asset type',
           width: 150,
         },
         {
           accessor: 'bookingCount',
-          title: 'Buchungen',
+          title: 'Bookings',
           width: 120,
           textAlign: 'right',
         },
         {
           accessor: 'totalDaysBooked',
-          title: 'Tage gebucht',
+          title: 'Days booked',
           width: 140,
           textAlign: 'right',
         },
         {
           accessor: 'utilizationPercentage',
-          title: 'Auslastung',
+          title: 'Utilization',
           width: 130,
           textAlign: 'right',
           render: (row) => `${row.utilizationPercentage}%`,
         },
         {
           accessor: 'lastBookedDate',
-          title: 'Letzte Buchung',
+          title: 'Last booking',
           width: 150,
           render: (row) =>
             row.lastBookedDate
-              ? new Date(row.lastBookedDate).toLocaleDateString('de-DE')
+              ? new Date(row.lastBookedDate).toLocaleDateString('en-US')
               : '-',
         },
       ]}
@@ -167,7 +167,7 @@ function GroupUtilizationTable({ data }: { data: AssetGroupUtilizationData[] }) 
       columns={[
         {
           accessor: 'groupNumber',
-          title: 'Gruppe',
+          title: 'Group',
           width: 150,
         },
         {
@@ -177,36 +177,36 @@ function GroupUtilizationTable({ data }: { data: AssetGroupUtilizationData[] }) 
         },
         {
           accessor: 'memberCount',
-          title: 'Mitglieder',
+          title: 'Members',
           width: 120,
           textAlign: 'right',
         },
         {
           accessor: 'bookingCount',
-          title: 'Buchungen',
+          title: 'Bookings',
           width: 120,
           textAlign: 'right',
         },
         {
           accessor: 'totalDaysBooked',
-          title: 'Gebuchte Tage',
+          title: 'Days booked',
           width: 140,
           textAlign: 'right',
         },
         {
           accessor: 'averageUtilization',
-          title: 'Ø Auslastung',
+          title: 'Avg. utilization',
           width: 140,
           textAlign: 'right',
           render: (row) => `${row.averageUtilization}%`,
         },
         {
           accessor: 'lastBookedDate',
-          title: 'Letzte Buchung',
+          title: 'Last booking',
           width: 150,
           render: (row) =>
             row.lastBookedDate
-              ? new Date(row.lastBookedDate).toLocaleDateString('de-DE')
+              ? new Date(row.lastBookedDate).toLocaleDateString('en-US')
               : '-',
         },
       ]}
@@ -240,9 +240,9 @@ export function AssetUtilizationReport() {
   } = useAssetGroups();
 
   if (assetsLoading || bookingsLoading || assetGroupsLoading) return <Loader />;
-  if (assetsError) return <Text c="red">Fehler beim Laden der Inventargegenstände</Text>;
-  if (bookingsError) return <Text c="red">Fehler beim Laden der Buchungen</Text>;
-  if (assetGroupsError) return <Text c="red">Fehler beim Laden der Asset-Gruppen</Text>;
+  if (assetsError) return <Text c="red">Failed to load assets</Text>;
+  if (bookingsError) return <Text c="red">Failed to load bookings</Text>;
+  if (assetGroupsError) return <Text c="red">Failed to load asset groups</Text>;
   if (!assets || !bookings) return null;
 
   // Filter assets
@@ -278,14 +278,14 @@ export function AssetUtilizationReport() {
   return (
     <Stack gap="md">
       <Group justify="space-between">
-        <Title order={2}>Inventar-Auslastung</Title>
+        <Title order={2}>Inventory utilization</Title>
         <Group gap="sm">
           <SegmentedControl
             value={viewMode}
             onChange={(value) => setViewMode(value as 'assets' | 'groups')}
             data={[
               { value: 'assets', label: 'Assets' },
-              { value: 'groups', label: 'Gruppen' },
+              { value: 'groups', label: 'Groups' },
             ]}
           />
           {viewMode === 'assets' && (
@@ -293,7 +293,7 @@ export function AssetUtilizationReport() {
               leftSection={<IconDownload size={16} />}
               onClick={() => exportUtilizationToCSV(utilizationData)}
             >
-              Exportieren
+              Export
             </Button>
           )}
         </Group>
@@ -316,7 +316,7 @@ export function AssetUtilizationReport() {
         <GroupUtilizationTable data={groupUtilizationData} />
       ) : (
         <Text size="sm" c="dimmed">
-          Keine Gruppen-Aktivität für den gewählten Zeitraum gefunden.
+          No group activity found for the selected timeframe.
         </Text>
       )}
     </Stack>

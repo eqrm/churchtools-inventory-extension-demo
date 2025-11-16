@@ -1,13 +1,16 @@
 /**
  * TanStack Query hooks for Equipment Kits
- * Provides data fetching and mutation hooks for kit CRUD operations
- * 
+ * Provides data fetching and mutation hooks backed by KitService + Zustand store
+ *
  * @module hooks/useKits
  */
 
+import { useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useStorageProvider } from './useStorageProvider';
-import type { KitCreate, KitUpdate } from '../types/entities';
+import type { Asset, KitCreate, KitUpdate } from '../types/entities';
+import { KitService } from '../services/KitService';
+import { useKitStore } from '../stores/kitStore';
 
 /**
  * Query key factory for kits
@@ -20,20 +23,45 @@ export const kitKeys = {
   detail: (id: string) => [...kitKeys.details(), id] as const,
   availability: (id: string, startDate: string, endDate: string) =>
     [...kitKeys.detail(id), 'availability', startDate, endDate] as const,
+  subAssets: (id: string) => [...kitKeys.detail(id), 'sub-assets'] as const,
 };
+
+function useKitServiceInternal(): KitService | null {
+  const storageProvider = useStorageProvider();
+  return useMemo(() => {
+    if (!storageProvider) {
+      return null;
+    }
+    return new KitService({ storageProvider });
+  }, [storageProvider]);
+}
+
+/**
+ * Helper hook to access KitService instance
+ */
+export function useKitServiceInstance(): KitService | null {
+  return useKitServiceInternal();
+}
 
 /**
  * Hook to fetch all kits
  * @returns Query result with array of kits
  */
 export function useKits() {
-  const storage = useStorageProvider();
+  const kitService = useKitServiceInternal();
+  const upsertKits = useKitStore((state) => state.upsertKits);
 
   return useQuery({
     queryKey: kitKeys.lists(),
-    queryFn: () => {
-      if (!storage) throw new Error('Storage provider not available');
-      return storage.getKits();
+    queryFn: async () => {
+      if (!kitService) {
+        throw new Error('Kit service unavailable');
+      }
+      return await kitService.getKits();
+    },
+    enabled: Boolean(kitService),
+    onSuccess: (kits) => {
+      upsertKits(kits);
     },
   });
 }
@@ -43,16 +71,25 @@ export function useKits() {
  * @param id - Kit ID
  * @returns Query result with kit or null
  */
-export function useKit(id: string) {
-  const storage = useStorageProvider();
+export function useKit(id: string | undefined) {
+  const kitService = useKitServiceInternal();
+  const cachedKit = useKitStore((state) => (id ? state.kitsById[id] : undefined));
+  const upsertKit = useKitStore((state) => state.upsertKit);
 
   return useQuery({
-    queryKey: kitKeys.detail(id),
-    queryFn: () => {
-      if (!storage) throw new Error('Storage provider not available');
-      return storage.getKit(id);
+    queryKey: kitKeys.detail(id ?? 'unknown'),
+    queryFn: async () => {
+      if (!kitService || !id) {
+        throw new Error('Kit service unavailable');
+      }
+      const kit = await kitService.getKit(id);
+      if (kit) {
+        upsertKit(kit);
+      }
+      return kit;
     },
-    enabled: Boolean(id),
+    enabled: Boolean(id && kitService),
+    initialData: cachedKit,
   });
 }
 
@@ -81,24 +118,49 @@ export function useKitAvailability(
 }
 
 /**
+ * Hook to fetch sub-assets for a kit
+ */
+export function useKitSubAssets(kitId: string | undefined) {
+  const kitService = useKitServiceInternal();
+  const cached = useKitStore((state) => (kitId ? state.subAssetsByKit[kitId] : undefined));
+  const setKitSubAssets = useKitStore((state) => state.setKitSubAssets);
+
+  return useQuery<Asset[]>({
+    queryKey: kitKeys.subAssets(kitId ?? 'unknown'),
+    queryFn: async () => {
+      if (!kitService || !kitId) {
+        throw new Error('Kit service unavailable');
+      }
+      const assets = await kitService.getKitSubAssets(kitId);
+      setKitSubAssets(kitId, assets);
+      return assets;
+    },
+    enabled: Boolean(kitId && kitService),
+    initialData: cached,
+  });
+}
+
+/**
  * Hook to create a new kit
  * Invalidates kit list cache on success
  * @returns Mutation object for creating kits
  */
 export function useCreateKit() {
-  const storage = useStorageProvider();
+  const kitService = useKitServiceInternal();
   const queryClient = useQueryClient();
+  const upsertKit = useKitStore((state) => state.upsertKit);
 
   return useMutation({
     mutationFn: (data: KitCreate) => {
-      if (!storage) throw new Error('Storage provider not available');
-      return storage.createKit(data);
+      if (!kitService) {
+        throw new Error('Kit service unavailable');
+      }
+      return kitService.createKit(data);
     },
     onSuccess: (newKit) => {
-      // Invalidate and refetch kit lists
-      queryClient.invalidateQueries({ queryKey: kitKeys.lists() });
-      // Set the new kit in cache
+      upsertKit(newKit);
       queryClient.setQueryData(kitKeys.detail(newKit.id), newKit);
+      void queryClient.invalidateQueries({ queryKey: kitKeys.lists() });
     },
   });
 }
@@ -109,19 +171,21 @@ export function useCreateKit() {
  * @returns Mutation object for updating kits
  */
 export function useUpdateKit() {
-  const storage = useStorageProvider();
+  const kitService = useKitServiceInternal();
   const queryClient = useQueryClient();
+  const upsertKit = useKitStore((state) => state.upsertKit);
 
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: KitUpdate }) => {
-      if (!storage) throw new Error('Storage provider not available');
-      return storage.updateKit(id, data);
+      if (!kitService) {
+        throw new Error('Kit service unavailable');
+      }
+      return kitService.updateKit(id, data);
     },
     onSuccess: (updatedKit) => {
-      // Update the kit in cache
+      upsertKit(updatedKit);
       queryClient.setQueryData(kitKeys.detail(updatedKit.id), updatedKit);
-      // Invalidate list to ensure consistency
-      queryClient.invalidateQueries({ queryKey: kitKeys.lists() });
+      void queryClient.invalidateQueries({ queryKey: kitKeys.lists() });
     },
   });
 }
@@ -132,19 +196,41 @@ export function useUpdateKit() {
  * @returns Mutation object for deleting kits
  */
 export function useDeleteKit() {
-  const storage = useStorageProvider();
+  const kitService = useKitServiceInternal();
   const queryClient = useQueryClient();
+  const removeKit = useKitStore((state) => state.removeKit);
 
   return useMutation({
     mutationFn: (id: string) => {
-      if (!storage) throw new Error('Storage provider not available');
-      return storage.deleteKit(id);
+      if (!kitService) {
+        throw new Error('Kit service unavailable');
+      }
+      return kitService.deleteKit(id);
     },
     onSuccess: (_, id) => {
-      // Remove from cache
+      removeKit(id);
       queryClient.removeQueries({ queryKey: kitKeys.detail(id) });
-      // Invalidate list
-      queryClient.invalidateQueries({ queryKey: kitKeys.lists() });
+      void queryClient.invalidateQueries({ queryKey: kitKeys.lists() });
+    },
+  });
+}
+
+export function useDisassembleKit() {
+  const kitService = useKitServiceInternal();
+  const queryClient = useQueryClient();
+  const upsertKit = useKitStore((state) => state.upsertKit);
+
+  return useMutation({
+    mutationFn: (id: string) => {
+      if (!kitService) {
+        throw new Error('Kit service unavailable');
+      }
+      return kitService.disassembleKit(id);
+    },
+    onSuccess: (kit) => {
+      upsertKit(kit);
+      queryClient.setQueryData(kitKeys.detail(kit.id), kit);
+      void queryClient.invalidateQueries({ queryKey: kitKeys.lists() });
     },
   });
 }

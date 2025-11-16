@@ -18,11 +18,6 @@ export function createStorageProvider(config: StorageProviderConfig): IStoragePr
             );
             return provider as unknown as IStorageProvider;
         }
-        
-        case 'offline': {
-            throw new Error('Offline provider not yet implemented - Phase 9');
-        }
-        
         case 'mock':
             throw new Error('Mock storage provider not yet implemented');
         

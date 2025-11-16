@@ -1049,45 +1049,45 @@ function updateConditionOperator(
 function operatorLabel(operator: string): string {
     switch (operator) {
         case 'contains':
-            return 'enthält';
+            return 'contains';
         case 'equals':
-            return 'gleich';
+            return 'equals';
         case 'startsWith':
-            return 'beginnt mit';
+            return 'starts with';
         case 'endsWith':
-            return 'endet mit';
+            return 'ends with';
         case 'notContains':
-            return 'enthält nicht';
+            return 'does not contain';
         case 'notEquals':
-            return 'ungleich';
+            return 'does not equal';
         case 'greaterThan':
-            return 'größer als';
+            return 'greater than';
         case 'greaterThanOrEqual':
-            return 'größer/gleich';
+            return 'greater than or equal';
         case 'lessThan':
-            return 'kleiner als';
+            return 'less than';
         case 'lessThanOrEqual':
-            return 'kleiner/gleich';
+            return 'less than or equal';
         case 'between':
-            return 'zwischen';
+            return 'between';
         case 'before':
-            return 'vor';
+            return 'before';
         case 'after':
-            return 'nach';
+            return 'after';
         case 'includesAny':
-            return 'enthält eines';
+            return 'includes any';
         case 'includesAll':
-            return 'enthält alle';
+            return 'includes all';
         case 'excludes':
-            return 'schließt aus';
+            return 'excludes';
         case 'isEmpty':
-            return 'ist leer';
+            return 'is empty';
         case 'isNotEmpty':
-            return 'ist nicht leer';
+            return 'is not empty';
         case 'is':
-            return 'ist';
+            return 'is';
         case 'isNot':
-            return 'ist nicht';
+            return 'is not';
         default:
             return operator;
     }

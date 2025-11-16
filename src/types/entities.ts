@@ -717,7 +717,17 @@ export interface FieldChange {
 
 export interface ChangeHistoryEntry {
   id: UUID
-  entityType: 'asset' | 'asset-group' | 'category' | 'booking' | 'kit' | 'maintenance' | 'stocktake' | 'asset-prefix' | 'damage-report'
+  entityType: 
+    | 'asset'
+    | 'asset-group'
+    | 'category'
+    | 'booking'
+    | 'kit'
+    | 'maintenance'
+    | 'stocktake'
+    | 'asset-prefix'
+    | 'damage-report'
+    | 'model'
   entityId: UUID
   entityName?: string
   action: ChangeAction
