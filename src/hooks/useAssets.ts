@@ -1,6 +1,8 @@
+import { useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useStorageProvider } from './useStorageProvider';
 import type { Asset, AssetCreate, AssetUpdate, AssetFilters } from '../types/entities';
+import { useKitAssets } from './useKitAssets';
 
 function normalizeAssetUpdate(update: AssetUpdate): Partial<Asset> {
   const {
@@ -57,13 +59,34 @@ export const assetKeys = {
   byNumber: (assetNumber: string) => [...assetKeys.all, 'byNumber', assetNumber] as const,
 };
 
+export function combineAssetsWithKitAssets(
+  baseAssets: Asset[] | undefined,
+  kitAssets: Asset[],
+): Asset[] | undefined {
+  if (!kitAssets.length) {
+    return baseAssets;
+  }
+
+  if (!baseAssets || baseAssets.length === 0) {
+    return [...kitAssets];
+  }
+
+  return [...baseAssets, ...kitAssets];
+}
+
 /**
  * Hook to fetch assets with optional filtering
  */
 export function useAssets(filters?: AssetFilters) {
   const provider = useStorageProvider();
+  const {
+    kitAssets,
+    isLoading: kitLoading,
+    isFetching: kitFetching,
+    error: kitError,
+  } = useKitAssets(filters, { force: true });
 
-  return useQuery({
+  const queryResult = useQuery({
     queryKey: assetKeys.list(filters),
     queryFn: async () => {
       if (!provider) throw new Error('Storage provider not initialized');
@@ -72,6 +95,18 @@ export function useAssets(filters?: AssetFilters) {
     enabled: !!provider,
     staleTime: 2 * 60 * 1000, // 2 minutes (assets change more frequently than categories)
   });
+
+  const combinedData = useMemo<Asset[] | undefined>(() => {
+    return combineAssetsWithKitAssets(queryResult.data, kitAssets);
+  }, [queryResult.data, kitAssets]);
+
+  return {
+    ...queryResult,
+    data: combinedData,
+    isLoading: queryResult.isLoading || kitLoading,
+    isFetching: queryResult.isFetching || kitFetching,
+    error: queryResult.error ?? kitError ?? undefined,
+  };
 }
 
 /**

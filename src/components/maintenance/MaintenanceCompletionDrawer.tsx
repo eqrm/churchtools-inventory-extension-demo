@@ -13,6 +13,7 @@ import {
 import { DateTimePicker } from '@mantine/dates';
 import { IconClockHour4, IconFileAlert } from '@tabler/icons-react';
 import type { MaintenancePlanAssetStatus } from '../../types/entities';
+import { useTranslation } from 'react-i18next';
 import type { MaintenancePlanAssetState } from '../../state/maintenance/planStore';
 
 type CompletionMode = 'complete' | 'skip' | 'pending';
@@ -57,6 +58,7 @@ function parseDate(value?: string) {
 }
 
 export function MaintenanceCompletionDrawer({ asset, opened, mode, onClose, onSubmit }: MaintenanceCompletionDrawerProps) {
+    const { t } = useTranslation('maintenance');
     const [status, setStatus] = useState<MaintenancePlanAssetStatus>('pending');
     const [notes, setNotes] = useState('');
     const [occurredAt, setOccurredAt] = useState<Date | null>(null);
@@ -73,13 +75,13 @@ export function MaintenanceCompletionDrawer({ asset, opened, mode, onClose, onSu
 
     const assetLabel = useMemo(() => {
         if (!asset) {
-            return 'Select an asset to log maintenance';
+            return t('completion.placeholders.selectAssetLabel');
         }
         return `${asset.assetNumber} · ${asset.assetName}`;
-    }, [asset]);
+    }, [asset, t]);
 
     return (
-        <Drawer opened={opened} onClose={onClose} position="right" size="md" title="Log maintenance outcome">
+        <Drawer opened={opened} onClose={onClose} position="right" size="md" title={t('completion.drawer.title')}>
             <form
                 onSubmit={(event) => {
                     event.preventDefault();
@@ -97,7 +99,7 @@ export function MaintenanceCompletionDrawer({ asset, opened, mode, onClose, onSu
             >
                 <Stack gap="lg">
                     <Stack gap={4}>
-                        <Text fw={600}>Asset</Text>
+                            <Text fw={600}>{t('completion.labels.asset')}</Text>
                         <Text size="sm" c="dimmed">
                             {assetLabel}
                         </Text>
@@ -111,16 +113,16 @@ export function MaintenanceCompletionDrawer({ asset, opened, mode, onClose, onSu
                     />
 
                     <DateTimePicker
-                        label="Occurred at"
+                        label={t('completion.labels.occurredAt')}
                         value={occurredAt}
                         onChange={setOccurredAt}
-                        placeholder="Select timestamp"
+                        placeholder={t('completion.placeholders.timestamp')}
                         leftSection={<IconClockHour4 size={16} />}
                     />
 
                     <Textarea
-                        label="Notes"
-                        placeholder="Add optional notes or follow-up actions"
+                        label={t('completion.labels.notes')}
+                        placeholder={t('completion.placeholders.notes')}
                         minRows={3}
                         value={notes}
                         onChange={(event) => setNotes(event.currentTarget.value)}
@@ -128,12 +130,12 @@ export function MaintenanceCompletionDrawer({ asset, opened, mode, onClose, onSu
 
                     <Stack gap={6}>
                         <FileInput
-                            label="Upload documentation"
-                            placeholder="Select files"
+                            label={t('completion.labels.upload')}
+                            placeholder={t('completion.placeholders.selectFiles')}
                             disabled
                             leftSection={<IconFileAlert size={16} />}
-                            rightSection={<Badge size="xs" variant="light" color="gray">Soon</Badge>}
-                            description="We’re working on secure maintenance file uploads. Until then, include relevant details in the notes field."
+                            rightSection={<Badge size="xs" variant="light" color="gray">{t('completion.labels.soon')}</Badge>}
+                            description={t('completion.placeholders.uploadDescription')}
                             value={null}
                         />
                         <Text size="xs" c="dimmed">
@@ -143,10 +145,10 @@ export function MaintenanceCompletionDrawer({ asset, opened, mode, onClose, onSu
 
                     <Group justify="flex-end">
                         <Button variant="subtle" onClick={onClose} type="button">
-                            Cancel
+                            {t('common:actions.cancel')}
                         </Button>
                         <Button type="submit" disabled={!asset}>
-                            Save outcome
+                            {t('completion.actions.saveOutcome')}
                         </Button>
                     </Group>
                 </Stack>

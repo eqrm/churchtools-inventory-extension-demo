@@ -43,13 +43,18 @@ export function useKitServiceInstance(): KitService | null {
   return useKitServiceInternal();
 }
 
+type UseKitsOptions = {
+  enabled?: boolean;
+};
+
 /**
  * Hook to fetch all kits
  * @returns Query result with array of kits
  */
-export function useKits() {
+export function useKits(options?: UseKitsOptions) {
   const kitService = useKitServiceInternal();
   const upsertKits = useKitStore((state) => state.upsertKits);
+  const enabled = options?.enabled ?? true;
 
   return useQuery({
     queryKey: kitKeys.lists(),
@@ -59,7 +64,7 @@ export function useKits() {
       }
       return await kitService.getKits();
     },
-    enabled: Boolean(kitService),
+    enabled: Boolean(kitService && enabled),
     onSuccess: (kits) => {
       upsertKits(kits);
     },

@@ -9,7 +9,7 @@ import type {
   ExternalWorkOrderState,
 } from '../types/maintenance';
 import type { IStorageProvider } from '../types/storage';
-import type { UUID, ISOTimestamp } from '../types/entities';
+import type { UUID, ISOTimestamp, ISODate } from '../types/entities';
 import type { UndoActionType } from '../types/undo';
 import { internalWorkOrderMachine } from './machines/InternalWorkOrderMachine';
 import { externalWorkOrderMachine } from './machines/ExternalWorkOrderMachine';
@@ -159,8 +159,28 @@ export class MaintenanceService {
   async createRule(
     data: Omit<MaintenanceRule, 'id' | 'createdAt' | 'updatedAt'>
   ): Promise<MaintenanceRule> {
+    // Get current user for createdBy field
+    const user = await this.storageProvider.getCurrentUser();
+    
+    // Calculate nextDueDate if not provided
+    let nextDueDate = data.nextDueDate;
+    if (!nextDueDate) {
+      const startDate = new Date(data.startDate);
+      if (data.intervalType === 'months') {
+        const dueDate = new Date(startDate);
+        dueDate.setMonth(dueDate.getMonth() + data.intervalValue);
+        nextDueDate = dueDate.toISOString().split('T')[0] as ISODate;
+      } else {
+        // For 'uses' type, nextDueDate is the same as startDate initially
+        nextDueDate = data.startDate;
+      }
+    }
+
     const rule: MaintenanceRule = {
       ...data,
+      nextDueDate,
+      createdBy: data.createdBy || user.id,
+      createdByName: data.createdByName || `${user.firstName} ${user.lastName}`,
       id: crypto.randomUUID(),
       createdAt: this.timestamp(),
       updatedAt: this.timestamp(),

@@ -11,6 +11,9 @@ import { IconTag, IconPlus } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import type { Tag } from '../../types/tag';
 import type { UUID } from '../../types/entities';
+import { useTags } from '../../hooks/useTags';
+import { useCurrentUser } from '../../hooks/useCurrentUser';
+import { notifications } from '@mantine/notifications';
 
 interface TagInputProps {
   /** All available tags */
@@ -44,21 +47,52 @@ export function TagInput({
   description,
   placeholder,
 }: TagInputProps) {
-  const { t } = useTranslation(['tags', 'common']);
+  const { t } = useTranslation('tags');
   const [searchValue, setSearchValue] = useState('');
+  const { createTag } = useTags();
+  const { data: currentUser } = useCurrentUser();
 
   // Convert tags to MultiSelect data format with color as part of the option
-  const tagOptions = tags.map((tag) => ({
+  const baseTagOptions = tags.map((tag) => ({
     value: tag.id,
     label: tag.name,
     color: tag.color,
   }));
 
+  // Add "Create new tag" option when search doesn't match any existing tag
+  const tagOptions = [...baseTagOptions];
+  const CREATE_PREFIX = '__create__:';
+  if (searchValue && !tags.some(tag => tag.name.toLowerCase() === searchValue.toLowerCase())) {
+    tagOptions.unshift({
+      value: `${CREATE_PREFIX}${searchValue}`,
+      label: `${t('createTag')} "${searchValue}"`,
+      color: '#868E96',
+    });
+  }
+
   // Get selected tags for badge display
   const selectedTags = tags.filter((tag) => selectedTagIds.includes(tag.id));
 
-  const handleChange = (values: string[]) => {
-    onChange(values);
+  const handleChange = async (values: string[]) => {
+    // Check if a "create" option was selected
+    const createValue = values.find(v => v.startsWith(CREATE_PREFIX));
+    if (createValue) {
+      const tagName = createValue.substring(CREATE_PREFIX.length);
+      try {
+        const color = '#868E96';
+        const createdBy = currentUser?.id ?? 'system';
+        const newTag = await createTag({ name: tagName, color, createdBy });
+        // Replace the create placeholder with the actual new tag ID
+        const updatedValues = values.filter(v => v !== createValue).concat(newTag.id);
+        onChange(updatedValues);
+        setSearchValue('');
+        notifications.show({ title: t('notifications.created'), message: tagName, color: 'green' });
+      } catch (err) {
+        notifications.show({ title: t('notifications.createError'), message: err instanceof Error ? err.message : String(err), color: 'red' });
+      }
+    } else {
+      onChange(values);
+    }
   };
 
   const handleRemoveTag = (tagId: UUID) => {
@@ -67,15 +101,15 @@ export function TagInput({
 
   // Helper to get tag color from options
   const getTagColor = (value: string) => {
-    return tagOptions.find((opt) => opt.value === value)?.color || 'gray';
+    return baseTagOptions.find((opt) => opt.value === value)?.color || '#868E96';
   };
 
   return (
     <Stack gap="xs">
       <MultiSelect
-        label={label || t('tags:selectTags')}
+        label={label || t('selectTags')}
         description={description}
-        placeholder={placeholder || t('tags:searchOrCreateTag')}
+        placeholder={placeholder || t('searchOrCreateTag')}
         data={tagOptions}
         value={selectedTagIds}
         onChange={handleChange}
@@ -87,13 +121,20 @@ export function TagInput({
         leftSection={isLoading ? <Loader size="xs" /> : <IconTag size={16} />}
         rightSection={isLoading ? <Loader size="xs" /> : undefined}
         maxDropdownHeight={300}
-        nothingFoundMessage={t('tags:noTagsFound')}
-        renderOption={({ option }) => (
-          <Group gap="xs">
-            <ColorSwatch color={getTagColor(option.value)} size={16} />
-            <Text size="sm">{option.label}</Text>
-          </Group>
-        )}
+        nothingFoundMessage={t('noTagsFound')}
+        renderOption={({ option }) => {
+          const isCreateOption = option.value.startsWith(CREATE_PREFIX);
+          return (
+            <Group gap="xs">
+              {isCreateOption ? (
+                <IconPlus size={16} />
+              ) : (
+                <ColorSwatch color={getTagColor(option.value)} size={16} />
+              )}
+              <Text size="sm">{option.label}</Text>
+            </Group>
+          );
+        }}
       />
 
       {/* Selected tags display */}
@@ -135,7 +176,7 @@ export function CompactTagInput({
   disabled = false,
   isLoading = false,
 }: CompactTagInputProps) {
-  const { t } = useTranslation(['tags']);
+  const { t } = useTranslation('tags');
 
   return (
     <TagInput
@@ -144,7 +185,7 @@ export function CompactTagInput({
       onChange={onChange}
       disabled={disabled}
       isLoading={isLoading}
-      placeholder={t('tags:addTags')}
+      placeholder={t('addTags')}
     />
   );
 }
@@ -158,7 +199,7 @@ interface CreateTagButtonProps {
 }
 
 export function CreateTagButton({ onClick, disabled = false }: CreateTagButtonProps) {
-  const { t } = useTranslation(['tags']);
+  const { t } = useTranslation('tags');
 
   return (
     <Badge
@@ -168,7 +209,7 @@ export function CreateTagButton({ onClick, disabled = false }: CreateTagButtonPr
       style={{ cursor: disabled ? 'not-allowed' : 'pointer' }}
       onClick={disabled ? undefined : onClick}
     >
-      {t('tags:createTag')}
+      {t('createTag')}
     </Badge>
   );
 }

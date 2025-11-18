@@ -10,6 +10,7 @@ import {
   Divider,
   Tooltip,
   Badge,
+  Switch,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { IconPlus, IconTrash, IconInfoCircle } from '@tabler/icons-react';
@@ -53,12 +54,14 @@ export function AssetTypeForm({ category, onSuccess, onCancel }: AssetTypeFormPr
     name: string;
     icon?: string;
     assetNameTemplate?: string;
+    defaultBookable: boolean;
     customFields: CustomFieldDefinition[];
   }>({
     initialValues: {
       name: category?.name ?? '',
       icon: category?.icon ?? '',
       assetNameTemplate: category?.assetNameTemplate ?? '%Manufacturer% %Model% %Asset Number%',
+      defaultBookable: category?.defaultBookable ?? true,
       customFields:
         category?.customFields ??
         [],
@@ -85,6 +88,7 @@ export function AssetTypeForm({ category, onSuccess, onCancel }: AssetTypeFormPr
         name: category.name,
         icon: category.icon ?? '',
         assetNameTemplate: category.assetNameTemplate ?? '%Manufacturer% %Model% %Asset Number%',
+        defaultBookable: category.defaultBookable ?? true,
         customFields: category.customFields,
       });
     }
@@ -98,6 +102,7 @@ export function AssetTypeForm({ category, onSuccess, onCancel }: AssetTypeFormPr
           name: values.name,
           icon: values.icon || undefined,
           assetNameTemplate: values.assetNameTemplate || undefined,
+          defaultBookable: values.defaultBookable,
           customFields: values.customFields,
         };
 
@@ -117,6 +122,7 @@ export function AssetTypeForm({ category, onSuccess, onCancel }: AssetTypeFormPr
           name: values.name,
           icon: values.icon || undefined,
           assetNameTemplate: values.assetNameTemplate || undefined,
+          defaultBookable: values.defaultBookable,
           customFields: values.customFields,
         };
 
@@ -277,6 +283,15 @@ export function AssetTypeForm({ category, onSuccess, onCancel }: AssetTypeFormPr
             </ActionIcon>
           </Tooltip>
         </Group>
+
+        <Divider label="Default settings" labelPosition="left" mt="xl" />
+
+        <Switch
+          label="Assets of this type are bookable by default"
+          description="New assets will have bookable enabled. Can be changed per asset."
+          {...form.getInputProps('defaultBookable', { type: 'checkbox' })}
+          disabled={isPending}
+        />
 
         <Divider label="Custom fields" labelPosition="left" mt="xl" />
 

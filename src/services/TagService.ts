@@ -2,6 +2,7 @@ import type { Tag } from '../types/tag';
 import type { UUID } from '../types/entities';
 import { recordUndoAction, registerUndoHandler } from './undo';
 import type { UndoAction } from '../types/undo';
+import { getChurchToolsStorageProvider } from './churchTools/storageProvider';
 
 export interface TagCreate {
   name: string;
@@ -16,9 +17,116 @@ export interface TagUpdate {
   description?: string;
 }
 
+const CATEGORY_NAME = '__Tags__';
+
 // Temporary in-memory storage until storage provider implements tag methods
 const tagsStore = new Map<UUID, Tag>();
 const entityTagsStore = new Map<string, Set<UUID>>(); // key: ${entityType}:${entityId}
+
+/**
+ * Load tags from ChurchTools storage
+ */
+async function loadTagsFromStorage(): Promise<void> {
+  if (tagsStore.size > 0) return; // Already loaded
+
+  try {
+    const provider = getChurchToolsStorageProvider();
+    const moduleId = provider.moduleId;
+    const apiClient = provider.apiClient;
+    
+    // Get or create tags category
+    const categories = await provider.getAllCategoriesIncludingHistory();
+    let category = categories.find((c) => c.name === CATEGORY_NAME);
+    
+    if (!category) {
+      const shorty = `tags_${Date.now().toString().slice(-4)}`;
+      const payload = {
+        customModuleId: Number(moduleId),
+        name: CATEGORY_NAME,
+        shorty,
+        description: 'Tags for assets, kits, and models',
+        data: null,
+      };
+      const created = await apiClient.createDataCategory(moduleId, payload);
+      category = provider.mapToAssetType(created);
+    }
+
+    // Load all tag records
+    const values = await apiClient.getDataValues(moduleId, category.id);
+    values.forEach((record) => {
+      const value = (record.value ?? record.data) as string | null;
+      if (!value) return;
+      
+      const parsed = JSON.parse(value) as Record<string, unknown>;
+      const tag: Tag = {
+        id: String(record.id),
+        name: String(parsed.name),
+        color: String(parsed.color),
+        description: typeof parsed.description === 'string' ? parsed.description : undefined,
+        createdBy: String(parsed.createdBy ?? 'system'),
+        createdByName: typeof parsed.createdByName === 'string' ? parsed.createdByName : undefined,
+        createdAt: String(parsed.createdAt ?? new Date().toISOString()),
+      };
+      tagsStore.set(tag.id, tag);
+    });
+
+    console.log(`Loaded ${tagsStore.size} tags from storage`);
+  } catch (error) {
+    console.error('Failed to load tags from storage:', error);
+  }
+}
+
+/**
+ * Save a tag to ChurchTools storage
+ */
+async function saveTagToStorage(tag: Omit<Tag, 'id'>): Promise<Tag> {
+  try {
+    const provider = getChurchToolsStorageProvider();
+    const moduleId = provider.moduleId;
+    const apiClient = provider.apiClient;
+    
+    const categories = await provider.getAllCategoriesIncludingHistory();
+    let category = categories.find((c) => c.name === CATEGORY_NAME);
+    
+    if (!category) {
+      const shorty = `tags_${Date.now().toString().slice(-4)}`;
+      const payload = {
+        customModuleId: Number(moduleId),
+        name: CATEGORY_NAME,
+        shorty,
+        description: 'Tags for assets, kits, and models',
+        data: null,
+      };
+      const created = await apiClient.createDataCategory(moduleId, payload);
+      category = provider.mapToAssetType(created);
+    }
+
+    const payload = {
+      name: tag.name,
+      color: tag.color,
+      description: tag.description,
+      createdBy: tag.createdBy,
+      createdByName: tag.createdByName,
+      createdAt: tag.createdAt,
+    };
+
+    const dataValue = {
+      dataCategoryId: Number(category.id),
+      value: JSON.stringify(payload),
+    };
+
+    const created = await apiClient.createDataValue(moduleId, category.id, dataValue);
+    
+    // Return the tag with the ID assigned by ChurchTools
+    return {
+      ...tag,
+      id: String(created.id),
+    };
+  } catch (error) {
+    console.error('Failed to save tag to storage:', error);
+    throw error;
+  }
+}
 
 /**
  * Tag Service
@@ -34,6 +142,8 @@ export class TagService {
    * Get all tags
    */
   async getTags(): Promise<Tag[]> {
+    // Load tags from storage if not already loaded
+    await loadTagsFromStorage();
     return Array.from(tagsStore.values());
   }
 
@@ -41,6 +151,7 @@ export class TagService {
    * Get a single tag by ID
    */
   async getTag(id: UUID): Promise<Tag | null> {
+    await loadTagsFromStorage();
     return tagsStore.get(id) ?? null;
   }
 
@@ -57,8 +168,7 @@ export class TagService {
       throw new Error('Tag color is required');
     }
 
-    const created: Tag = {
-      id: crypto.randomUUID(),
+    const tagData: Omit<Tag, 'id'> = {
       name: data.name,
       color: data.color,
       description: data.description,
@@ -66,6 +176,10 @@ export class TagService {
       createdAt: new Date().toISOString(),
     };
 
+    // Save to ChurchTools storage (this assigns the ID)
+    const created = await saveTagToStorage(tagData);
+
+    // Store in memory cache
     tagsStore.set(created.id, created);
 
     // Record undo action for tag creation
@@ -154,10 +268,18 @@ export class TagService {
       throw new Error(`Tag ${tagId} not found`);
     }
 
+    // Update in-memory cache
     const key = `${entityType}:${entityId}`;
     const entityTags = entityTagsStore.get(key) ?? new Set<UUID>();
     entityTags.add(tagId);
     entityTagsStore.set(key, entityTags);
+
+    // Persist to ChurchTools storage (only for assets currently)
+    if (entityType === 'asset') {
+      const provider = getChurchToolsStorageProvider();
+      const tagIds = Array.from(entityTags);
+      await provider.updateAsset(entityId, { tagIds });
+    }
 
     // Record undo action for tag application
     await recordUndoAction({
@@ -194,6 +316,13 @@ export class TagService {
 
     entityTags.delete(tagId);
     entityTagsStore.set(key, entityTags);
+
+    // Persist to ChurchTools storage (only for assets currently)
+    if (entityType === 'asset') {
+      const provider = getChurchToolsStorageProvider();
+      const tagIds = Array.from(entityTags);
+      await provider.updateAsset(entityId, { tagIds });
+    }
 
     // Record undo action
     await recordUndoAction({
@@ -253,6 +382,34 @@ export class TagService {
     entityType: 'asset' | 'kit' | 'model',
     entityId: UUID,
   ): Promise<Tag[]> {
+    // Load from ChurchTools storage (only for assets currently)
+    if (entityType === 'asset') {
+      const provider = getChurchToolsStorageProvider();
+      const entity = await provider.getAsset(entityId);
+      
+      if (!entity) {
+        return [];
+      }
+      
+      const tagIds = entity.tagIds ?? [];
+      
+      // Update in-memory cache
+      const key = `${entityType}:${entityId}`;
+      entityTagsStore.set(key, new Set(tagIds));
+      
+      // Fetch tag objects
+      const tags: Tag[] = [];
+      for (const tagId of tagIds) {
+        const tag = await this.getTag(tagId);
+        if (tag) {
+          tags.push(tag);
+        }
+      }
+      
+      return tags;
+    }
+    
+    // For kits/models, use in-memory cache for now
     const key = `${entityType}:${entityId}`;
     const entityTags = entityTagsStore.get(key) ?? new Set<UUID>();
     

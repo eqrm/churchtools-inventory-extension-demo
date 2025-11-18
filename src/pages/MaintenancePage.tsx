@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
+import { Outlet, useMatch } from 'react-router-dom';
 import { Container, Stack, Title, Text, Tabs, Button, Modal, Select, Group } from '@mantine/core';
-import { IconCalendarCheck, IconClipboardList, IconGauge, IconPlus, IconRefresh } from '@tabler/icons-react';
+import { IconCalendarCheck, IconClipboardList, IconGauge, IconPlus, IconRefresh, IconTool } from '@tabler/icons-react';
 import { MaintenanceDashboard } from '../components/maintenance/MaintenanceDashboard';
 import { MaintenanceScheduleList } from '../components/maintenance/MaintenanceScheduleList';
 import { MaintenanceRecordsSection } from '../components/maintenance/MaintenanceRecordsSection';
@@ -12,6 +13,9 @@ import { useAssets } from '../hooks/useAssets';
 import { formatScheduleDescription } from '../utils/maintenanceCalculations';
 import type { Asset, MaintenanceSchedule } from '../types/entities';
 import { useMaintenancePlanStore } from '../state/maintenance/planStore';
+import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
+import { routes } from '../router/routes';
 
 /**
  * Maintenance Page - Central hub for maintenance management
@@ -30,6 +34,9 @@ export function MaintenancePage() {
   const [selectedAssetId, setSelectedAssetId] = useState<string>('');
   const [scheduleContext, setScheduleContext] = useState<MaintenanceSchedule | null>(null);
   const resetPlan = useMaintenancePlanStore((store) => store.resetPlan);
+  const { t } = useTranslation('maintenance');
+  const matchRoot = useMatch({ path: routes.maintenance.root(), end: true });
+  const isRootRoute = Boolean(matchRoot);
 
   const assetOptions = useMemo(
     () => assets.map((asset) => ({ value: asset.id, label: `${asset.assetNumber} · ${asset.name}` })),
@@ -75,25 +82,44 @@ export function MaintenancePage() {
     <Container size="xl" py="xl">
       <Stack gap="lg">
         <div>
-          <Title order={1}>Maintenance</Title>
-          <Text size="lg" c="dimmed" mt="xs">
-            Track and manage asset maintenance schedules and compliance
-          </Text>
+          <Group justify="space-between" align="flex-start">
+            <Stack gap={4} flex={1}>
+              <Title order={1}>{t('page.title')}</Title>
+              <Text size="lg" c="dimmed">
+                {t('page.description')}
+              </Text>
+            </Stack>
+            <Group gap="xs" wrap="wrap">
+              <Button component={Link} to={routes.maintenance.dashboard()} variant="light" leftSection={<IconGauge size={16} />}>
+                {t('page.links.dashboard')}
+              </Button>
+              <Button component={Link} to={routes.maintenance.companies()} variant="light" leftSection={<IconTool size={16} />}>
+                {t('page.links.companies')}
+              </Button>
+              <Button component={Link} to={routes.maintenance.rules.list()} variant="light" leftSection={<IconClipboardList size={16} />}>
+                {t('page.links.rules')}
+              </Button>
+              <Button component={Link} to={routes.maintenance.workOrders.list()} variant="light" leftSection={<IconCalendarCheck size={16} />}>
+                {t('page.links.workOrders')}
+              </Button>
+            </Group>
+          </Group>
         </div>
 
-        <Tabs value={activeTab} onChange={(value) => setActiveTab(value ?? 'dashboard')} keepMounted={false}>
+        {isRootRoute ? (
+          <Tabs value={activeTab} onChange={(value) => setActiveTab(value ?? 'dashboard')} keepMounted={false}>
           <Tabs.List>
             <Tabs.Tab value="dashboard" leftSection={<IconGauge size={16} />}>
-              Overview
+              {t('page.tabs.dashboard')}
             </Tabs.Tab>
             <Tabs.Tab value="plans" leftSection={<IconClipboardList size={16} />}>
-              Plans
+              {t('page.tabs.plans')}
             </Tabs.Tab>
             <Tabs.Tab value="schedules" leftSection={<IconCalendarCheck size={16} />}>
-              Schedules
+              {t('page.tabs.schedules')}
             </Tabs.Tab>
             <Tabs.Tab value="records" leftSection={<IconClipboardList size={16} />}>
-              Records
+              {t('page.tabs.records')}
             </Tabs.Tab>
           </Tabs.List>
 
@@ -102,10 +128,10 @@ export function MaintenancePage() {
               <MaintenanceDashboard />
               <Group justify="flex-start" gap="sm" wrap="wrap">
                 <Button leftSection={<IconPlus size={16} />} onClick={openCreateSchedule}>
-                  Create maintenance plan
+                  {t('page.actions.createPlan')}
                 </Button>
                 <Button variant="light" leftSection={<IconPlus size={16} />} onClick={() => openRecordModal()}>
-                  Log maintenance
+                  {t('page.actions.logMaintenance')}
                 </Button>
               </Group>
             </Stack>
@@ -115,13 +141,13 @@ export function MaintenancePage() {
             <Stack gap="lg">
               <Group justify="space-between" align="flex-start">
                 <Stack gap={4}>
-                  <Title order={3}>Maintenance plans</Title>
+                  <Title order={3}>{t('page.plans.title')}</Title>
                   <Text size="sm" c="dimmed">
-                    Draft a plan, schedule maintenance windows, and track completion per asset.
+                    {t('page.plans.description')}
                   </Text>
                 </Stack>
                 <Button variant="light" leftSection={<IconRefresh size={16} />} onClick={resetPlan}>
-                  Reset draft
+                  {t('page.actions.resetDraft')}
                 </Button>
               </Group>
 
@@ -147,12 +173,15 @@ export function MaintenancePage() {
               onCreateRecord={(asset) => openRecordModal(asset)}
             />
           </Tabs.Panel>
-        </Tabs>
+          </Tabs>
+        ) : (
+          <Outlet />
+        )}
 
         <Modal
           opened={scheduleModalOpen}
           onClose={closeScheduleModal}
-          title={editingSchedule ? 'Edit maintenance plan' : 'Create maintenance plan'}
+          title={editingSchedule ? t('page.scheduleModal.editTitle') : t('page.scheduleModal.createTitle')}
           size="lg"
         >
           <MaintenanceScheduleForm
@@ -166,22 +195,24 @@ export function MaintenancePage() {
         <Modal
           opened={recordModalOpen}
           onClose={closeRecordModal}
-          title="Log maintenance"
+          title={t('page.records.modalTitle')}
           size="lg"
         >
           <Stack gap="md">
             <Select
-              label="Select asset"
-              placeholder="Select asset"
+              label={t('page.records.assetSelectLabel')}
+              placeholder={t('page.records.assetSelectPlaceholder')}
               data={assetOptions}
               value={selectedAssetId || null}
               onChange={(value) => setSelectedAssetId(value ?? '')}
               searchable
-              nothingFoundMessage={assetsLoading ? 'Loading assets…' : 'No assets found'}
+              nothingFoundMessage={assetsLoading ? t('page.records.loadingAssets') : t('page.records.nothingFound')}
             />
             {scheduleContext && selectedAsset && (
               <Text size="sm" c="dimmed">
-                Scheduled maintenance: {formatScheduleDescription(scheduleContext)}
+                {t('page.records.scheduledMaintenance', {
+                  description: formatScheduleDescription(scheduleContext),
+                })}
               </Text>
             )}
             {selectedAsset ? (
@@ -193,7 +224,7 @@ export function MaintenancePage() {
                 onCancel={closeRecordModal}
               />
             ) : (
-              <Text c="dimmed">Select an asset to log maintenance.</Text>
+              <Text c="dimmed">{t('page.records.selectAssetPrompt')}</Text>
             )}
           </Stack>
         </Modal>

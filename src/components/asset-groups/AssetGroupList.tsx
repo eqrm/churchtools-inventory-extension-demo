@@ -10,10 +10,13 @@ import {
   Text,
   TextInput,
   Title,
+  ActionIcon,
+  Menu,
 } from '@mantine/core';
-import { IconPlus, IconSearch, IconUsers } from '@tabler/icons-react';
+import { IconPlus, IconSearch, IconUsers, IconDots, IconTrash } from '@tabler/icons-react';
+import { notifications } from '@mantine/notifications';
 import type { AssetGroup, AssetGroupFilters } from '../../types/entities';
-import { useAssetGroups } from '../../hooks/useAssetGroups';
+import { useAssetGroups, useDeleteAssetGroup } from '../../hooks/useAssetGroups';
 import { useCategories } from '../../hooks/useCategories';
 import { AssetGroupBadge } from './AssetGroupBadge';
 import { EmptyState } from '../common/EmptyState';
@@ -35,6 +38,8 @@ export function AssetGroupList({ onSelectGroup, onCreateGroup, filters, hideHead
 
   const { data: groups = [], isLoading } = useAssetGroups(mergedFilters);
   const { data: assetTypes = [] } = useCategories();
+  const deleteAssetGroup = useDeleteAssetGroup();
+  const [processingGroupId, setProcessingGroupId] = useState<string | null>(null);
 
   const assetTypeLookup = useMemo(() => {
     return new Map(assetTypes.map((assetType) => [assetType.id, assetType.name]));
@@ -47,6 +52,31 @@ export function AssetGroupList({ onSelectGroup, onCreateGroup, filters, hideHead
   const handleSelect = (group: AssetGroup) => {
     if (onSelectGroup) {
       onSelectGroup(group);
+    }
+  };
+
+  const handleDeleteGroup = async (group: AssetGroup) => {
+    const confirmed = window.confirm(`Delete asset model "${group.name}"?`);
+    if (!confirmed) {
+      return;
+    }
+
+    setProcessingGroupId(group.id);
+    try {
+      await deleteAssetGroup.mutateAsync(group.id);
+      notifications.show({
+        title: 'Asset model removed',
+        message: `${group.name} was deleted`,
+        color: 'green',
+      });
+    } catch (error) {
+      notifications.show({
+        title: 'Unable to delete asset model',
+        message: error instanceof Error ? error.message : 'Unexpected error occurred.',
+        color: 'red',
+      });
+    } finally {
+      setProcessingGroupId(null);
     }
   };
 
@@ -122,9 +152,37 @@ export function AssetGroupList({ onSelectGroup, onCreateGroup, filters, hideHead
                 <Stack gap="sm">
                   <Group justify="space-between" align="flex-start">
                     <AssetGroupBadge group={group} withName data-testid={`asset-group-${group.id}`} />
-                    <Badge variant="light" color="gray" leftSection={<IconUsers size={14} />}>
-                      {group.memberCount} members
-                    </Badge>
+                      <Group gap="xs">
+                        <Badge variant="light" color="gray" leftSection={<IconUsers size={14} />}>
+                          {group.memberCount} members
+                        </Badge>
+                        <Menu withinPortal position="bottom-end">
+                          <Menu.Target>
+                            <ActionIcon
+                              variant="subtle"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                              }}
+                              aria-label="Asset model actions"
+                            >
+                              <IconDots size={16} />
+                            </ActionIcon>
+                          </Menu.Target>
+                          <Menu.Dropdown>
+                            <Menu.Item
+                              leftSection={<IconTrash size={14} />}
+                              color="red"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                void handleDeleteGroup(group);
+                              }}
+                              disabled={processingGroupId === group.id || deleteAssetGroup.isPending}
+                            >
+                              Delete
+                            </Menu.Item>
+                          </Menu.Dropdown>
+                        </Menu>
+                      </Group>
                   </Group>
 
                   <Stack gap={2}>

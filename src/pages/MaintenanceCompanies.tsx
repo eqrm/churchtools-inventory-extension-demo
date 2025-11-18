@@ -20,7 +20,12 @@ import {
 } from '@mantine/core';
 import { IconPlus, IconEdit, IconTrash } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import { useMaintenanceCompanies, useDeleteMaintenanceCompany } from '../hooks/useMaintenance';
+import {
+  useMaintenanceCompanies,
+  useDeleteMaintenanceCompany,
+  useCreateMaintenanceCompany,
+  useUpdateMaintenanceCompany,
+} from '../hooks/useMaintenance';
 import { MaintenanceCompanyForm } from '../components/maintenance/MaintenanceCompanyForm';
 import type { MaintenanceCompany } from '../types/maintenance';
 
@@ -28,6 +33,8 @@ export function MaintenanceCompanies() {
   const { t } = useTranslation(['maintenance', 'common']);
   const { data: companies = [], isLoading } = useMaintenanceCompanies();
   const deleteCompany = useDeleteMaintenanceCompany();
+  const createCompany = useCreateMaintenanceCompany();
+  const updateCompany = useUpdateMaintenanceCompany();
 
   const companyList = (companies as MaintenanceCompany[]) || [];
 
@@ -61,6 +68,18 @@ export function MaintenanceCompanies() {
   const handleFormClose = () => {
     setIsFormOpen(false);
     setSelectedCompany(null);
+  };
+
+  const handleFormSubmit = async (values: any) => {
+    try {
+      if (selectedCompany) {
+        await updateCompany.mutateAsync({ id: selectedCompany.id, data: values });
+      } else {
+        await createCompany.mutateAsync(values);
+      }
+    } finally {
+      handleFormClose();
+    }
   };
 
   const formatCurrency = (amount: number | undefined): string => {
@@ -157,8 +176,9 @@ export function MaintenanceCompanies() {
       >
         <MaintenanceCompanyForm
           company={selectedCompany || undefined}
-          onSubmit={handleFormClose}
+          onSubmit={handleFormSubmit}
           onCancel={handleFormClose}
+          isLoading={createCompany.isPending || updateCompany.isPending}
         />
       </Modal>
 

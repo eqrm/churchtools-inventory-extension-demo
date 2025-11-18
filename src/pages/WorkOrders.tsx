@@ -4,7 +4,7 @@
  * Multiple view modes (table/kanban/timeline) with filtering and CRUD operations.
  */
 
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Container,
   Title,
@@ -22,6 +22,7 @@ import {
 } from '@mantine/core';
 import { IconPlus, IconEdit, IconTable, IconColumns, IconTimeline } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
   useWorkOrders,
   useMaintenanceCompanies,
@@ -30,6 +31,7 @@ import {
 import { useAssets } from '../hooks/useAssets';
 import { WorkOrderForm } from '../components/maintenance/WorkOrderForm';
 import type { WorkOrder, WorkOrderState, WorkOrderType } from '../types/maintenance';
+import { routes } from '../router/routes';
 
 type ViewMode = 'table' | 'kanban' | 'timeline';
 
@@ -40,27 +42,48 @@ export function WorkOrders() {
   const { data: rules = [] } = useMaintenanceRules();
   const { data: assets = [] } = useAssets();
 
-  const workOrderList = (workOrders as WorkOrder[]) || [];
+  const workOrderList = useMemo(() => (workOrders as WorkOrder[]) || [], [workOrders]);
 
   const [viewMode, setViewMode] = useState<ViewMode>('table');
   const [filterState, setFilterState] = useState<WorkOrderState | 'all'>('all');
   const [filterType, setFilterType] = useState<WorkOrderType | 'all'>('all');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedWorkOrder, setSelectedWorkOrder] = useState<WorkOrder | null>(null);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { id: routeWorkOrderId } = useParams<{ id?: string }>();
+  const isEditRoute = location.pathname.endsWith('/edit');
+
+  useEffect(() => {
+    if (!routeWorkOrderId) {
+      return;
+    }
+    const workOrderFromRoute = workOrderList.find((wo) => wo.id === routeWorkOrderId);
+    if (!workOrderFromRoute) {
+      return;
+    }
+    setSelectedWorkOrder(workOrderFromRoute);
+    setIsFormOpen(true);
+  }, [routeWorkOrderId, workOrderList]);
 
   const handleCreate = () => {
     setSelectedWorkOrder(null);
     setIsFormOpen(true);
+    navigate(routes.maintenance.workOrders.list(), { replace: false });
   };
 
   const handleEdit = (workOrder: WorkOrder) => {
     setSelectedWorkOrder(workOrder);
     setIsFormOpen(true);
+    navigate(routes.maintenance.workOrders.edit(workOrder.id), { replace: false });
   };
 
   const handleFormClose = () => {
     setIsFormOpen(false);
     setSelectedWorkOrder(null);
+    if (routeWorkOrderId || isEditRoute) {
+      navigate(routes.maintenance.workOrders.list(), { replace: true });
+    }
   };
 
   const filteredWorkOrders = workOrderList.filter((wo) => {

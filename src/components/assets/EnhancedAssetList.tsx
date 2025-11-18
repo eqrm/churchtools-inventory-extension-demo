@@ -21,11 +21,15 @@ import {
   IconPlus,
   IconDeviceFloppy,
   IconBookmark,
+  IconPackage,
+  IconChevronDown,
 } from '@tabler/icons-react';
 import { notifications } from '@mantine/notifications';
+import { useTranslation } from 'react-i18next';
 import type { Asset, AssetFilters, SavedView } from '../../types/entities';
 import { useAssets } from '../../hooks/useAssets';
 import { useUIStore } from '../../stores/uiStore';
+import { useFeatureSettingsStore } from '../../stores';
 import { ViewSelector } from '../views/ViewSelector';
 import { FilterBuilder } from '../views/FilterBuilder';
 import { SavedViewForm } from '../reports/SavedViewForm';
@@ -43,12 +47,16 @@ interface EnhancedAssetListProps {
   onView?: (asset: Asset) => void;
   onEdit?: (asset: Asset) => void;
   onCreateNew?: () => void;
+  onCreateKit?: () => void;
 }
 
 /**
  * Enhanced AssetList with view modes, filters, and saved views
  */
-export function EnhancedAssetList({ onView, onEdit, onCreateNew }: EnhancedAssetListProps) {
+export function EnhancedAssetList({ onView, onEdit, onCreateNew, onCreateKit }: EnhancedAssetListProps) {
+  const { t: tAssets } = useTranslation('assets');
+  const { t: tViews } = useTranslation('views');
+  const kitsEnabled = useFeatureSettingsStore((state) => state.kitsEnabled);
   // T213: Use UI store for view preferences
   const {
     viewMode,
@@ -76,6 +84,7 @@ export function EnhancedAssetList({ onView, onEdit, onCreateNew }: EnhancedAsset
 
   // T211: Save view modal
   const [showSaveView, setShowSaveView] = useState(false);
+  const [editingViewId, setEditingViewId] = useState<string | null>(null);
 
   // T212: Saved views menu with localStorage persistence
   const [showSavedViews, setShowSavedViews] = useState(() => {
@@ -97,6 +106,10 @@ export function EnhancedAssetList({ onView, onEdit, onCreateNew }: EnhancedAsset
   }, [showSavedViews]);
 
   const { data: assets = [] } = useAssets();
+
+  const handleCreateKit = () => {
+    onCreateKit?.();
+  };
 
   // T200: Read filters from URL on mount
   useEffect(() => {
@@ -144,7 +157,13 @@ export function EnhancedAssetList({ onView, onEdit, onCreateNew }: EnhancedAsset
 
   // T211: Handle save current view
   const handleSaveCurrentView = () => {
+    setEditingViewId(null);
     setShowSaveView(true);
+  };
+
+  const closeSaveViewModal = () => {
+    setShowSaveView(false);
+    setEditingViewId(null);
   };
 
     // T212: Handle load saved view
@@ -156,8 +175,8 @@ export function EnhancedAssetList({ onView, onEdit, onCreateNew }: EnhancedAsset
     if (view.groupBy) setGroupBy(view.groupBy);
     setShowSavedViews(false);
     notifications.show({
-      title: 'View loaded',
-      message: `View "${view.name}" applied`,
+      title: tAssets('list.notifications.viewLoaded', { name: view.name }),
+      message: tAssets('list.notifications.viewLoaded', { name: view.name }),
       color: 'blue',
     });
   };
@@ -188,7 +207,6 @@ export function EnhancedAssetList({ onView, onEdit, onCreateNew }: EnhancedAsset
           <AssetTableView
             onView={onView}
             onEdit={onEdit}
-            onCreateNew={undefined}
             initialFilters={legacyFilters}
             hideFilterButton
             filtersOpen={filtersPanelOpen}
@@ -208,7 +226,6 @@ export function EnhancedAssetList({ onView, onEdit, onCreateNew }: EnhancedAsset
           <AssetTableView
             onView={onView}
             onEdit={onEdit}
-            onCreateNew={undefined}
             initialFilters={legacyFilters}
             hideFilterButton
             filtersOpen={filtersPanelOpen}
@@ -221,7 +238,6 @@ export function EnhancedAssetList({ onView, onEdit, onCreateNew }: EnhancedAsset
           <AssetTableView
             onView={onView}
             onEdit={onEdit}
-            onCreateNew={undefined}
             initialFilters={legacyFilters}
             hideFilterButton
             filtersOpen={filtersPanelOpen}
@@ -236,7 +252,7 @@ export function EnhancedAssetList({ onView, onEdit, onCreateNew }: EnhancedAsset
     <Stack gap="md">
       {/* Header with ViewModeSelector and actions */}
       <Group justify="space-between">
-        <Title order={2}>Inventory</Title>
+        <Title order={2}>{tAssets('list.title')}</Title>
 
         <Group>
           {/* T209: ViewSelector integration */}
@@ -246,13 +262,13 @@ export function EnhancedAssetList({ onView, onEdit, onCreateNew }: EnhancedAsset
           <Menu position="bottom-end" shadow="md">
             <Menu.Target>
               <Button variant="default" leftSection={<IconBookmark size={16} />}>
-                Views
+                {tAssets('list.actions.views')}
               </Button>
             </Menu.Target>
             <Menu.Dropdown>
-              <Menu.Label>Saved views</Menu.Label>
+              <Menu.Label>{tAssets('list.actions.menuLabel')}</Menu.Label>
               <Menu.Item onClick={() => setShowSavedViews(true)}>
-                Show all views...
+                {tAssets('list.actions.showAll')}
               </Menu.Item>
             </Menu.Dropdown>
           </Menu>
@@ -263,7 +279,9 @@ export function EnhancedAssetList({ onView, onEdit, onCreateNew }: EnhancedAsset
             leftSection={<IconFilter size={16} />}
             onClick={() => setFiltersPanelOpen((prev) => !prev)}
           >
-            Filters {viewFilters.length > 0 && `(${viewFilters.length})`}
+            {viewFilters.length > 0
+              ? tAssets('list.actions.filtersWithCount', { count: viewFilters.length })
+              : tAssets('list.actions.filters')}
           </Button>
 
           {/* T211: Save current view button */}
@@ -273,13 +291,27 @@ export function EnhancedAssetList({ onView, onEdit, onCreateNew }: EnhancedAsset
             onClick={handleSaveCurrentView}
             disabled={viewFilters.length === 0}
           >
-            Save view
+            {tAssets('list.actions.saveView')}
           </Button>
 
           {onCreateNew && (
-            <Button leftSection={<IconPlus size={16} />} onClick={onCreateNew}>
-              New
-            </Button>
+            <Menu position="bottom-end" shadow="md">
+              <Menu.Target>
+                <Button leftSection={<IconPlus size={16} />} rightSection={<IconChevronDown size={16} />}>
+                  {tAssets('list.actions.new')}
+                </Button>
+              </Menu.Target>
+              <Menu.Dropdown>
+                <Menu.Item leftSection={<IconPlus size={16} />} onClick={onCreateNew}>
+                  New Asset
+                </Menu.Item>
+                {kitsEnabled && onCreateKit && (
+                  <Menu.Item leftSection={<IconPackage size={16} />} onClick={handleCreateKit}>
+                    Create Kit
+                  </Menu.Item>
+                )}
+              </Menu.Dropdown>
+            </Menu>
           )}
         </Group>
       </Group>
@@ -297,8 +329,8 @@ export function EnhancedAssetList({ onView, onEdit, onCreateNew }: EnhancedAsset
       {/* T211: Save view modal */}
       <Modal
         opened={showSaveView}
-        onClose={() => setShowSaveView(false)}
-        title="Save view"
+        onClose={closeSaveViewModal}
+        title={tViews('form.title')}
         size="md"
       >
         <SavedViewForm
@@ -307,15 +339,16 @@ export function EnhancedAssetList({ onView, onEdit, onCreateNew }: EnhancedAsset
           sortBy={sortBy || undefined}
           sortDirection={sortDirection}
           groupBy={groupBy || undefined}
+          existingViewId={editingViewId ?? undefined}
           onSuccess={() => {
-            setShowSaveView(false);
+            closeSaveViewModal();
             notifications.show({
-              title: 'Success',
-              message: 'View saved',
+              title: tViews('notifications.createSuccessTitle'),
+              message: tViews('notifications.createSuccessMessage'),
               color: 'green',
             });
           }}
-          onCancel={() => setShowSaveView(false)}
+          onCancel={closeSaveViewModal}
         />
       </Modal>
 
@@ -323,7 +356,7 @@ export function EnhancedAssetList({ onView, onEdit, onCreateNew }: EnhancedAsset
       <Drawer
         opened={showSavedViews}
         onClose={() => setShowSavedViews(false)}
-        title="Saved views"
+        title={tViews('drawer.title')}
         position="right"
         size="md"
       >
@@ -332,6 +365,7 @@ export function EnhancedAssetList({ onView, onEdit, onCreateNew }: EnhancedAsset
           onEditView={(view) => {
             // Load view for editing
             handleLoadSavedView(view);
+            setEditingViewId(view.id);
             setShowSaveView(true);
           }}
         />

@@ -9,6 +9,7 @@ export const assetModelSchema = z
         manufacturer: z.string().optional(),
         modelNumber: z.string().optional(),
         defaultWarrantyMonths: z.number().int().min(0).max(120).optional(),
+        defaultBookable: z.boolean().optional(),
         defaultValues: z.record(z.string(), z.unknown()),
         tagIds: z.array(uuidSchema),
         createdBy: uuidSchema,

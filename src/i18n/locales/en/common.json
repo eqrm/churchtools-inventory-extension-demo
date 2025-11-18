@@ -7,12 +7,16 @@
   "actions": {
     "save": "Save",
     "cancel": "Cancel",
+    "delete": "Delete",
     "close": "Close",
     "retry": "Try again",
     "undo": "Undo",
     "redo": "Redo",
     "create": "Create"
   },
+  "loading": "Loading...",
+  "cancel": "Cancel",
+  "delete": "Delete",
   "columns": {
     "actions": "Actions"
   },

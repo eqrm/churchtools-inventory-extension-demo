@@ -6,7 +6,7 @@
 
 import { useState } from 'react';
 import { useForm } from '@mantine/form';
-import { TextInput, Textarea, NumberInput, Button, Stack, Group, Select } from '@mantine/core';
+import { TextInput, Textarea, NumberInput, Button, Stack, Group, Select, Switch } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { notifications } from '@mantine/notifications';
 import type { AssetModel } from '../../types/model';
@@ -47,6 +47,7 @@ export function AssetModelForm({
       assetTypeId: model?.assetTypeId || '',
       manufacturer: model?.manufacturer || '',
       modelNumber: model?.modelNumber || '',
+      defaultBookable: model?.defaultBookable ?? true,
       tagIds: model?.tagIds || [],
       defaultValues: {
         purchasePrice: (model?.defaultValues?.['purchasePrice'] as number) || undefined,
@@ -88,6 +89,7 @@ export function AssetModelForm({
       manufacturer: values.manufacturer || undefined,
       modelNumber: values.modelNumber || undefined,
       defaultWarrantyMonths: values.defaultValues.warrantyMonths,
+      defaultBookable: values.defaultBookable,
       tagIds: values.tagIds as UUID[],
       defaultValues: {
         purchasePrice: values.defaultValues.purchasePrice,
@@ -195,6 +197,12 @@ export function AssetModelForm({
           min={0}
           max={120}
           {...form.getInputProps('defaultValues.warrantyMonths')}
+        />
+
+        <Switch
+          label={t('models:form.defaultBookable')}
+          description={t('models:form.defaultBookableDescription')}
+          {...form.getInputProps('defaultBookable', { type: 'checkbox' })}
         />
 
         <TextInput

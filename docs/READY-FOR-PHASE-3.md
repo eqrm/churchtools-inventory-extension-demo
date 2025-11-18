@@ -95,7 +95,7 @@ Enable equipment managers to create, view, and track assets with unique identifi
 ### First Tasks to Start
 1. **T042**: Create TanStack Query hooks in `src/hooks/useCategories.ts`
 2. **T043**: Create AssetCategoryList component
-3. **T044**: Create AssetCategoryForm component
+3. **T044**: Create AssetTypeForm component
 4. **T045**: Create CustomFieldDefinitionInput component
 5. **T046**: Implement category CRUD in ChurchToolsStorageProvider
 

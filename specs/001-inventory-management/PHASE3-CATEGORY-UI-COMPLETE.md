@@ -34,8 +34,8 @@
 
 ---
 
-### T044: AssetCategoryForm Component ✅
-**File**: `src/components/categories/AssetCategoryForm.tsx` (185 lines)
+### T044: AssetTypeForm Component ✅
+**File**: `src/components/categories/AssetTypeForm.tsx` (185 lines)
 
 **Features Implemented**:
 - ✅ Create and edit modes (single component)
@@ -123,7 +123,7 @@ npm run lint
 
 ### Component Size
 - AssetCategoryList: 223 lines (UI-heavy, exempt from line limit)
-- AssetCategoryForm: 185 lines (Form logic, exempt from line limit)
+- AssetTypeForm: 185 lines (Form logic, exempt from line limit)
 - CustomFieldDefinitionInput: 244 lines (Complex UI, exempt from line limit)
 
 All components marked with `/* eslint-disable max-lines-per-function */` due to UI complexity.
@@ -160,7 +160,7 @@ All components marked with `/* eslint-disable max-lines-per-function */` due to 
 ### ✅ Complete
 1. T042 - Category TanStack Query hooks
 2. T043 - AssetCategoryList component
-3. T044 - AssetCategoryForm component
+3. T044 - AssetTypeForm component
 4. T045 - CustomFieldDefinitionInput component
 5. T046 - ChurchToolsProvider category CRUD
 6. T047 - Asset TanStack Query hooks
@@ -239,7 +239,7 @@ All components marked with `/* eslint-disable max-lines-per-function */` due to 
 ## Files Created (3)
 
 1. `src/components/categories/AssetCategoryList.tsx`
-2. `src/components/categories/AssetCategoryForm.tsx`
+2. `src/components/categories/AssetTypeForm.tsx`
 3. `src/components/categories/CustomFieldDefinitionInput.tsx`
 
 ## Files Modified (1)

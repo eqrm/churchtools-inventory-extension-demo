@@ -70,6 +70,7 @@ export const routes = {
     maintenance: {
         dashboard: () => '/maintenance/dashboard',
         root: () => '/maintenance',
+      companies: () => '/maintenance/companies',
         rules: {
             list: () => '/maintenance/rules',
             detail: (ruleId: IdLike) => `/maintenance/rules/${toId(ruleId)}`,

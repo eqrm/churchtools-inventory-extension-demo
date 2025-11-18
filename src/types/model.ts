@@ -7,6 +7,11 @@ export interface AssetModel {
   manufacturer?: string;
   modelNumber?: string;
   defaultWarrantyMonths?: number;
+  /**
+   * Default value for the bookable field when creating new assets from this model.
+   * If not specified, defaults to true.
+   */
+  defaultBookable?: boolean;
   defaultValues: Record<string, unknown>;
   tagIds: UUID[];
   createdBy: UUID;

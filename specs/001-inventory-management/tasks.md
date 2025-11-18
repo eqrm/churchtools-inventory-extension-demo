@@ -195,7 +195,7 @@ Repository root: `/workspaces/churchtools-inventory-extension/`
 
 - [x] T042 [P] [US1] Create TanStack Query hooks in src/hooks/useCategories.ts (useCategories, useCategory, useCreateCategory, useUpdateCategory, useDeleteCategory)
 - [x] T043 [P] [US1] Create AssetCategoryList component in src/components/categories/AssetCategoryList.tsx (display all categories with DataTable)
-- [x] T044 [P] [US1] Create AssetCategoryForm component in src/components/categories/AssetCategoryForm.tsx (Mantine form with validation)
+- [x] T044 [P] [US1] Create AssetTypeForm component in src/components/categories/AssetTypeForm.tsx (Mantine form with validation)
 - [x] T045 [P] [US1] Create CustomFieldDefinitionInput component in src/components/categories/CustomFieldDefinitionInput.tsx (add/edit custom fields)
 - [x] T046 [US1] Implement category CRUD methods in ChurchToolsStorageProvider (getCategories, createCategory, updateCategory, deleteCategory)
 
@@ -243,14 +243,14 @@ Repository root: `/workspaces/churchtools-inventory-extension/`
 - [x] T065 [P] [US2] Add person-reference field type support in CustomFieldInput (ChurchTools person picker)
 - [x] T066 [P] [US2] Add URL field type validation in CustomFieldInput (URL validation)
 - [x] T067 [P] [US2] Add multi-select field type support in CustomFieldInput (Mantine MultiSelect)
-- [x] T068 [P] [US2] Create custom field preview in AssetCategoryForm (show how fields will look)
+- [x] T068 [P] [US2] Create custom field preview in AssetTypeForm (show how fields will look)
 - [x] T069 [US2] Implement required field validation in AssetForm (prevent submission if required custom fields empty)
 - [x] T070 [US2] Add custom field filtering in AssetList (filter by custom field values)
 - [ ] T071 [US2] Add custom field sorting in AssetList (sort by custom field values)
 
 ### Category Management Enhancements for User Story 2
 
-- [x] T072 [P] [US2] Add category icon picker in AssetCategoryForm (Tabler icons via Mantine)
+- [x] T072 [P] [US2] Add category icon picker in AssetTypeForm (Tabler icons via Mantine)
 - [x] T073 [P] [US2] Create category templates feature in src/components/categories/CategoryTemplates.tsx (pre-defined category configurations)
 - [x] T074 [US2] Add category validation (prevent deletion if assets exist)
 - [x] T075 [US2] Add category duplication feature (copy category with all custom fields)

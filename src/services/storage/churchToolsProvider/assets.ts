@@ -96,18 +96,28 @@ export async function createAsset(
 
   const includeMainImage = Object.prototype.hasOwnProperty.call(data, 'mainImage');
 
-  const assetData = {
-    assetNumber,
-    name: data.name,
-    description: data.description,
-    manufacturer: data.manufacturer,
-    model: data.model,
-    status: data.status,
-    location: data.location,
-    inUseBy: data.inUseBy,
-    bookable: data.bookable ?? true,
-    barcode: assetNumber,
-    qrCode: assetNumber,
+    // If caller supplied a barcode, validate uniqueness and use it; otherwise default to assetNumber
+    let barcodeValue = assetNumber;
+    if (data.barcode) {
+      const allAssets = await getAssets(deps);
+      const duplicate = allAssets.find((existing) => existing.barcode === data.barcode);
+      if (duplicate) {
+        throw new Error(`Barcode "${data.barcode}" is already used by asset ${duplicate.assetNumber}`);
+      }
+      barcodeValue = data.barcode as string;
+    }
+
+    const assetData = {
+      assetNumber,
+      name: data.name,
+      description: data.description,
+      manufacturer: data.manufacturer,
+      model: data.model,
+      status: data.status,
+      location: data.location,
+      inUseBy: data.inUseBy,
+      barcode: barcodeValue,
+      qrCode: barcodeValue,
     customFieldValues: data.customFieldValues,
     parentAssetId: data.parentAssetId,
     isParent: data.isParent,
@@ -117,6 +127,20 @@ export async function createAsset(
     assetGroupNumber: data.assetGroup?.groupNumber,
     assetGroupName: data.assetGroup?.name,
     fieldSources: data.fieldSources ?? {},
+    kitId: data.kitId,
+    modelId: data.modelId,
+    tagIds: data.tagIds ?? [],
+    inheritedTagIds: data.inheritedTagIds ?? [],
+    inheritedTags: data.inheritedTags ?? [],
+    isKit: data.isKit,
+    kitType: data.kitType,
+    kitInheritedProperties: data.kitInheritedProperties,
+    kitCompletenessStatus: data.kitCompletenessStatus,
+    kitAssemblyDate: data.kitAssemblyDate,
+    kitDisassemblyDate: data.kitDisassemblyDate,
+    kitBoundAssets: data.kitBoundAssets,
+    kitPoolRequirements: data.kitPoolRequirements,
+    bookable: data.bookable,
   mainImage: includeMainImage ? data.mainImage ?? null : undefined,
     schemaVersion: data.schemaVersion ?? CURRENT_SCHEMA_VERSION,
     createdBy: user.id,
@@ -249,6 +273,25 @@ function mergeAssetData(
     ? (data.inUseBy ?? null)
     : previous.inUseBy ?? undefined;
 
+  const hasKitIdUpdate = Object.prototype.hasOwnProperty.call(data, 'kitId');
+  const updatedKitId = hasKitIdUpdate ? (data.kitId ?? null) : previous.kitId ?? undefined;
+
+  const hasModelIdUpdate = Object.prototype.hasOwnProperty.call(data, 'modelId');
+  const updatedModelId = hasModelIdUpdate ? (data.modelId ?? null) : previous.modelId ?? undefined;
+
+  const hasTagIdsUpdate = Object.prototype.hasOwnProperty.call(data, 'tagIds');
+  const updatedTagIds = hasTagIdsUpdate ? (data.tagIds ?? []) : previous.tagIds ?? [];
+
+  const hasInheritedTagIdsUpdate = Object.prototype.hasOwnProperty.call(data, 'inheritedTagIds');
+  const updatedInheritedTagIds = hasInheritedTagIdsUpdate
+    ? (data.inheritedTagIds ?? [])
+    : previous.inheritedTagIds ?? [];
+
+  const hasInheritedTagsUpdate = Object.prototype.hasOwnProperty.call(data, 'inheritedTags');
+  const updatedInheritedTags = hasInheritedTagsUpdate
+    ? (data.inheritedTags ?? [])
+    : previous.inheritedTags ?? [];
+
   return {
     assetNumber: previous.assetNumber,
     name: data.name ?? previous.name,
@@ -275,6 +318,22 @@ function mergeAssetData(
     assetGroupNumber: updatedAssetGroup?.groupNumber,
     assetGroupName: updatedAssetGroup?.name,
     fieldSources: updatedFieldSources,
+    kitId: updatedKitId,
+    modelId: updatedModelId,
+    tagIds: updatedTagIds,
+    inheritedTagIds: updatedInheritedTagIds,
+    inheritedTags: updatedInheritedTags,
+    // Kit integration fields
+    isKit: data.isKit ?? previous.isKit,
+    kitType: data.kitType ?? previous.kitType,
+    kitInheritedProperties: data.kitInheritedProperties ?? previous.kitInheritedProperties,
+    kitCompletenessStatus: data.kitCompletenessStatus ?? previous.kitCompletenessStatus,
+    kitAssemblyDate: data.kitAssemblyDate ?? previous.kitAssemblyDate,
+    kitDisassemblyDate: Object.prototype.hasOwnProperty.call(data, 'kitDisassemblyDate')
+      ? data.kitDisassemblyDate ?? null
+      : previous.kitDisassemblyDate ?? undefined,
+    kitBoundAssets: data.kitBoundAssets ?? previous.kitBoundAssets,
+    kitPoolRequirements: data.kitPoolRequirements ?? previous.kitPoolRequirements,
     schemaVersion: data.schemaVersion ?? previous.schemaVersion ?? CURRENT_SCHEMA_VERSION,
     createdBy: previous.createdBy,
     createdByName: previous.createdByName,
@@ -377,15 +436,38 @@ function applyAssetFilters(assets: Asset[], filters: AssetFilters): Asset[] {
   }
 
   if (filters.search) {
-    const query = filters.search.toLowerCase();
-    filtered = filtered.filter((asset) =>
-      asset.name.toLowerCase().includes(query) ||
-      asset.assetNumber.toLowerCase().includes(query) ||
-      asset.description?.toLowerCase().includes(query) ||
-      asset.barcode?.toLowerCase().includes(query) ||
-      asset.assetGroup?.groupNumber?.toLowerCase().includes(query) ||
-      asset.assetGroup?.name?.toLowerCase().includes(query),
-    );
+    const query = filters.search.trim().toLowerCase();
+    if (query.length > 0) {
+      filtered = filtered.filter((asset) => {
+        const searchableValues: Array<string | undefined> = [
+          asset.name,
+          asset.assetNumber,
+          asset.description ?? undefined,
+          asset.barcode ?? undefined,
+          asset.assetGroup?.groupNumber ?? undefined,
+          asset.assetGroup?.name ?? undefined,
+          asset.kitId,
+          asset.kitType,
+          asset.kitCompletenessStatus,
+          asset.location ?? undefined,
+        ];
+
+        if (asset.kitBoundAssets && asset.kitBoundAssets.length > 0) {
+          searchableValues.push(
+            asset.kitBoundAssets
+              .map((child) => `${child.assetNumber} ${child.name}`)
+              .join(' ')
+          );
+        }
+
+        return searchableValues.some((value) => {
+          if (!value) {
+            return false;
+          }
+          return value.toLowerCase().includes(query);
+        });
+      });
+    }
   }
 
   if (filters.customFields) {

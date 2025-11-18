@@ -14,11 +14,13 @@ function buildCategoryDataPayload(params: {
   customFields: CustomFieldDefinition[];
   assetNameTemplate?: string | null;
   mainImage?: string | null;
+  defaultBookable?: boolean;
 }): string | null {
   const payload: {
     customFields: CustomFieldDefinition[];
     assetNameTemplate?: string | null;
     mainImage?: string | null;
+    defaultBookable?: boolean;
   } = {
     customFields: params.customFields,
   };
@@ -30,11 +32,16 @@ function buildCategoryDataPayload(params: {
   if (params.mainImage !== undefined) {
     payload.mainImage = params.mainImage;
   }
+  
+  if (params.defaultBookable !== undefined) {
+    payload.defaultBookable = params.defaultBookable;
+  }
 
   if (
     payload.customFields.length === 0 &&
     !payload.assetNameTemplate &&
-    params.mainImage === undefined
+    params.mainImage === undefined &&
+    params.defaultBookable === undefined
   ) {
     return null;
   }
@@ -91,6 +98,7 @@ export async function createAssetType(
     customFields: data.customFields,
     assetNameTemplate: data.assetNameTemplate,
     mainImage: data.mainImage,
+    defaultBookable: data.defaultBookable,
   });
 
   const payload = {
@@ -132,11 +140,13 @@ export async function updateAssetType(
   const nextAssetNameTemplate =
     data.assetNameTemplate === undefined ? existing.assetNameTemplate : data.assetNameTemplate;
   const nextMainImage = data.mainImage === undefined ? existing.mainImage : data.mainImage;
+  const nextDefaultBookable = data.defaultBookable === undefined ? existing.defaultBookable : data.defaultBookable;
 
   const dataPayload = buildCategoryDataPayload({
     customFields: nextCustomFields,
     assetNameTemplate: nextAssetNameTemplate,
     mainImage: nextMainImage,
+    defaultBookable: nextDefaultBookable,
   });
 
   const payload: Record<string, unknown> = {

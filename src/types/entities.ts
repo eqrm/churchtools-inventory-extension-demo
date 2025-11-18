@@ -60,6 +60,11 @@ export interface AssetType {
   assetNameTemplate?: string
   /** Inline base64 image (data URL) used as the primary visual for this asset type */
   mainImage?: string
+  /**
+   * Default value for the bookable field when creating new assets of this type.
+   * If not specified, defaults to true.
+   */
+  defaultBookable?: boolean
   customFields: CustomFieldDefinition[]
   createdBy: string
   createdByName: string
@@ -155,6 +160,25 @@ export interface Asset {
   }
   // FR-017: Control booking eligibility
   bookable: boolean
+  // Kit integration: mark assets that are kits
+  isKit?: boolean
+  kitType?: KitType
+  kitInheritedProperties?: KitInheritanceProperty[]
+  kitCompletenessStatus?: KitCompletenessStatus
+  kitAssemblyDate?: ISOTimestamp
+  kitDisassemblyDate?: ISOTimestamp | null
+  kitBoundAssets?: {
+    assetId: UUID
+    assetNumber: string
+    name: string
+    inherits?: Partial<Record<KitInheritanceProperty, boolean>>
+  }[]
+  kitPoolRequirements?: {
+    assetTypeId: UUID
+    assetTypeName: string
+    quantity: number
+    filters?: Record<string, unknown>
+  }[]
   // FR-048-051: Asset images
   photos?: Array<{
     id: UUID
@@ -218,6 +242,8 @@ export type AssetCreate = Omit<
   assetNumber?: string  // Optional: will be generated if not provided
   prefix?: string       // Optional: prefix for asset number generation (legacy)
   prefixId?: string     // T272: ID of the AssetPrefix to use for numbering
+  /** Optional barcode to assign at creation. If provided, uniqueness will be validated by provider. */
+  barcode?: string
   fieldSources?: Record<string, AssetGroupFieldSource>
   childAssetIds?: UUID[]
   kitId?: UUID

@@ -16,6 +16,30 @@
     "savedViewsOpen": "Show all saved views",
     "nothingFound": "No results"
   },
+  "form": {
+    "title": "Save view",
+    "nameLabel": "View name",
+    "namePlaceholder": "e.g., Available audio gear",
+    "publicLabel": "Public view",
+    "publicDescription": "Other users can see and reuse this view",
+    "errorTitle": "Unable to load view",
+    "errorFallback": "An unexpected error occurred while loading the view.",
+    "cancel": "Cancel",
+    "save": "Save",
+    "update": "Update"
+  },
+  "drawer": {
+    "title": "Saved views",
+    "empty": "No saved views yet",
+    "loading": "Loading views…",
+    "error": "Failed to load views",
+    "deleteConfirm": "Delete view \"{{name}}\"?",
+    "publicLabel": "Public",
+    "privateLabel": "Private",
+    "filtersCount": "{{count}} filters",
+    "owner": "Created by {{name}}",
+    "viewMode": "{{mode}}"
+  },
   "filterPanel": {
     "title": "Filters",
     "badgeLabel": "{{count}}",
@@ -79,5 +103,19 @@
   },
   "table": {
     "summary": "Showing {{start}}-{{end}} of {{total}}"
+  },
+  "notifications": {
+    "createSuccessTitle": "View saved",
+    "createSuccessMessage": "The view was saved successfully",
+    "createErrorTitle": "Failed to save view",
+    "createErrorMessage": "{{message}}",
+    "updateSuccessTitle": "View updated",
+    "updateSuccessMessage": "The view was updated successfully",
+    "updateErrorTitle": "Failed to update view",
+    "updateErrorMessage": "{{message}}",
+    "deleteSuccessTitle": "View deleted",
+    "deleteSuccessMessage": "The view was deleted successfully",
+    "deleteErrorTitle": "Failed to delete view",
+    "deleteErrorMessage": "{{message}}"
   }
 }

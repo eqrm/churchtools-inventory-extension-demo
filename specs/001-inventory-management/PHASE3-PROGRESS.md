@@ -106,7 +106,7 @@ export async function generateAssetNumber(category: AssetCategory): Promise<stri
 
 Tasks:
 - T043: AssetCategoryList component
-- T044: AssetCategoryForm component
+- T044: AssetTypeForm component
 - T045: CustomFieldDefinitionInput component
 - T048: AssetList component
 - T049: AssetDetail component
@@ -174,7 +174,7 @@ name: cat['name'] as string,
 ### Step 3: Build UI Components (8-12 hours)
 
 1. Start with `AssetCategoryList` (simplest - just display)
-2. Build `AssetCategoryForm` (tests mutations)
+2. Build `AssetTypeForm` (tests mutations)
 3. Build `AssetList` (tests filtering)
 4. Build `AssetForm` (most complex - custom fields)
 5. Build remaining components

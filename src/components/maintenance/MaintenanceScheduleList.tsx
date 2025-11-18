@@ -5,6 +5,7 @@
 
 import { useMemo, useState } from 'react';
 import { ActionIcon, Badge, Button, Group, Modal, Select, Stack, Text, TextInput, Tooltip } from '@mantine/core';
+import { useTranslation } from 'react-i18next';
 import { IconCheck, IconEdit, IconPlus, IconTrash, IconTools, IconAlertCircle } from '@tabler/icons-react';
 import { DataTable, type DataTableColumn } from 'mantine-datatable';
 import { notifications } from '@mantine/notifications';
@@ -24,20 +25,20 @@ interface MaintenanceScheduleListProps {
   onLogMaintenance: (asset: Asset, schedule: MaintenanceSchedule) => void;
 }
 
-const scheduleTypeOptions = [
-  { value: 'all', label: 'All types' },
-  { value: 'time-based', label: 'Time-based' },
-  { value: 'usage-based', label: 'Usage-based' },
-  { value: 'event-based', label: 'Event-based' },
-  { value: 'fixed-date', label: 'Fixed date' },
+const scheduleTypeOptions = (t: (s: string, v?: unknown) => string) => [
+  { value: 'all', label: t('scheduleList.types.all') },
+  { value: 'time-based', label: t('scheduleList.types.timeBased') },
+  { value: 'usage-based', label: t('scheduleList.types.usageBased') },
+  { value: 'event-based', label: t('scheduleList.types.eventBased') },
+  { value: 'fixed-date', label: t('scheduleList.types.fixedDate') },
 ];
 
-const statusOptions = [
-  { value: 'all', label: 'All statuses' },
-  { value: 'overdue', label: 'Overdue' },
-  { value: 'due-soon', label: 'Due soon' },
-  { value: 'scheduled', label: 'Scheduled' },
-  { value: 'unscheduled', label: 'No due date' },
+const statusOptions = (t: (s: string, v?: unknown) => string) => [
+  { value: 'all', label: t('scheduleList.statuses.all') },
+  { value: 'overdue', label: t('scheduleList.statuses.overdue') },
+  { value: 'due-soon', label: t('scheduleList.statuses.dueSoon') },
+  { value: 'scheduled', label: t('scheduleList.statuses.scheduled') },
+  { value: 'unscheduled', label: t('scheduleList.statuses.unscheduled') },
 ];
 
 function determineStatus(schedule: MaintenanceSchedule): 'overdue' | 'due-soon' | 'scheduled' | 'unscheduled' {
@@ -63,50 +64,51 @@ function getColumns(
   onEdit: (schedule: MaintenanceSchedule) => void,
   onDelete: (schedule: MaintenanceSchedule) => void,
   onLogMaintenance: (asset: Asset, schedule: MaintenanceSchedule) => void,
+  t: (s: string, v?: unknown) => string,
 ): DataTableColumn<MaintenanceSchedule>[] {
   return [
     {
       accessor: 'assetId',
-      title: 'Asset',
+      title: t('scheduleList.columns.asset'),
       render: (schedule) => {
         const asset = assetMap.get(schedule.assetId);
         if (!asset) {
           return (
             <Stack gap={2}>
-              <Text fw={500}>Unknown asset</Text>
-              <Text size="xs" c="dimmed">ID: {schedule.assetId}</Text>
+              <Text fw={500}>{t('scheduleList.unknownAsset')}</Text>
+              <Text size="xs" c="dimmed">{t('scheduleList.unknownAssetId', { id: schedule.assetId })}</Text>
             </Stack>
           );
         }
         return (
           <Stack gap={2}>
             <Text fw={500}>{asset.assetNumber} · {asset.name}</Text>
-            <Text size="xs" c="dimmed">Category: {asset.assetType.name}</Text>
+            <Text size="xs" c="dimmed">{t('scheduleList.assetCategory', { category: asset.assetType.name })}</Text>
           </Stack>
         );
       },
     },
     {
       accessor: 'scheduleType',
-      title: 'Interval',
+      title: t('scheduleList.columns.interval'),
       render: (schedule) => (
         <Stack gap={2}>
           <Text size="sm">{formatScheduleDescription(schedule)}</Text>
           {schedule.lastPerformed && (
-            <Text size="xs" c="dimmed">Last performed: {new Date(schedule.lastPerformed).toLocaleDateString()}</Text>
+            <Text size="xs" c="dimmed">{t('scheduleList.lastPerformed', { date: new Date(schedule.lastPerformed).toLocaleDateString() })}</Text>
           )}
         </Stack>
       ),
     },
     {
       accessor: 'nextDue',
-      title: 'Next due',
+      title: t('scheduleList.columns.nextDue'),
       render: (schedule) => (
         <Group gap="sm">
           <MaintenanceReminderBadge schedule={schedule} />
           {schedule.reminderDaysBefore > 0 && (
             <Badge color="blue" variant="light" size="sm">
-              Reminder {schedule.reminderDaysBefore} days before
+              {t('scheduleList.reminderBefore', { count: schedule.reminderDaysBefore })}
             </Badge>
           )}
         </Group>
@@ -122,7 +124,7 @@ function getColumns(
         return (
           <Group gap="xs" justify="flex-end" wrap="nowrap">
             {asset && (
-              <Tooltip label="Log maintenance">
+              <Tooltip label={t('page.actions.logMaintenance')}>
                 <ActionIcon
                   variant="light"
                   color="green"
@@ -130,13 +132,13 @@ function getColumns(
                     event.stopPropagation();
                     onLogMaintenance(asset, schedule);
                   }}
-                  aria-label="Log maintenance"
+                  aria-label={t('page.actions.logMaintenance')}
                 >
                   <IconTools size={18} />
                 </ActionIcon>
               </Tooltip>
             )}
-            <Tooltip label="Edit">
+            <Tooltip label={t('scheduleList.actions.edit')}>
               <ActionIcon
                 variant="light"
                 color="blue"
@@ -144,12 +146,12 @@ function getColumns(
                   event.stopPropagation();
                   onEdit(schedule);
                 }}
-                aria-label="Edit maintenance plan"
+                aria-label={t('scheduleList.actions.edit')}
               >
                 <IconEdit size={18} />
               </ActionIcon>
             </Tooltip>
-            <Tooltip label="Delete">
+            <Tooltip label={t('scheduleList.actions.delete')}>
               <ActionIcon
                 variant="subtle"
                 color="red"
@@ -157,7 +159,7 @@ function getColumns(
                   event.stopPropagation();
                   onDelete(schedule);
                 }}
-                aria-label="Delete maintenance plan"
+                aria-label={t('scheduleList.actions.delete')}
               >
                 <IconTrash size={18} />
               </ActionIcon>
@@ -176,6 +178,7 @@ export function MaintenanceScheduleList({
   onEditSchedule,
   onLogMaintenance,
 }: MaintenanceScheduleListProps) {
+  const { t } = useTranslation('maintenance');
   const navigate = useNavigate();
   const { data: schedules, isLoading, error } = useMaintenanceSchedules();
   const deleteSchedule = useDeleteMaintenanceSchedule();
@@ -235,15 +238,15 @@ export function MaintenanceScheduleList({
     try {
       await deleteSchedule.mutateAsync(scheduleToDelete.id);
       notifications.show({
-        title: 'Maintenance plan deleted',
-        message: 'The maintenance plan was removed.',
+        title: t('messages.scheduleDeleted'),
+        message: t('messages.scheduleDeletedDescription'),
         color: 'green',
         icon: <IconCheck />,
       });
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to delete maintenance plan';
+      const message = err instanceof Error ? err.message : t('errors.scheduleDeleteFailed');
       notifications.show({
-        title: 'Error',
+        title: t('common:app.error'),
         message,
         color: 'red',
         icon: <IconAlertCircle />, // intentionally using alert icon
@@ -259,19 +262,19 @@ export function MaintenanceScheduleList({
       <Stack gap="md">
         <Group justify="space-between" align="flex-end" wrap="wrap">
           <TextInput
-            label="Search"
-            placeholder="Asset or interval"
+            label={t('scheduleList.search.label')}
+            placeholder={t('scheduleList.search.placeholder')}
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.currentTarget.value)}
             style={{ flex: 1, minWidth: 220 }}
             disabled
           />
           <Group gap="sm" wrap="wrap">
-            <Select label="Asset" placeholder="All" data={[]} disabled />
-            <Select label="Type" data={scheduleTypeOptions} value={typeFilter} disabled />
-            <Select label="Status" data={statusOptions} value={statusFilter} disabled />
+            <Select label={t('scheduleList.filters.asset')} placeholder={t('scheduleList.filters.assetAll')} data={[]} disabled />
+            <Select label={t('scheduleList.filters.type')} data={scheduleTypeOptions(t)} value={typeFilter} disabled />
+            <Select label={t('scheduleList.filters.status')} data={statusOptions(t)} value={statusFilter} disabled />
             <Button leftSection={<IconPlus size={16} />} disabled>
-              New plan
+              {t('page.actions.createPlan')}
             </Button>
           </Group>
         </Group>
@@ -283,30 +286,30 @@ export function MaintenanceScheduleList({
   if (error) {
     return (
       <AlertDisplay
-        title="Failed to load"
+        title={t('common:app.error')}
         message={(error as Error).message}
       />
     );
   }
 
-  const columns = getColumns(assetMap, onEditSchedule, handleDeleteClick, onLogMaintenance);
+  const columns = getColumns(assetMap, onEditSchedule, handleDeleteClick, onLogMaintenance, t);
 
   return (
     <Stack gap="md">
       <Group justify="space-between" align="flex-end" wrap="wrap">
         <TextInput
-          label="Search"
-          placeholder="Asset or interval"
+          label={t('scheduleList.search.label')}
+          placeholder={t('scheduleList.search.placeholder')}
           value={searchQuery}
           onChange={(event) => setSearchQuery(event.currentTarget.value)}
           style={{ flex: 1, minWidth: 220 }}
         />
         <Group gap="sm" wrap="wrap">
           <Select
-            label="Asset"
-            placeholder="All assets"
+            label={t('scheduleList.filters.asset')}
+            placeholder={t('scheduleList.filters.assetAll')}
             data={[
-              { value: 'all', label: 'All assets' },
+              { value: 'all', label: t('scheduleList.filters.assetAll') },
               ...(assets ?? []).map((asset) => ({
                 value: asset.id,
                 label: `${asset.assetNumber} · ${asset.name}`,
@@ -317,30 +320,30 @@ export function MaintenanceScheduleList({
             searchable
           />
           <Select
-            label="Type"
-            data={scheduleTypeOptions}
+            label={t('scheduleList.filters.type')}
+            data={scheduleTypeOptions(t)}
             value={typeFilter}
             onChange={(value) => setTypeFilter(value ?? 'all')}
           />
           <Select
-            label="Status"
-            data={statusOptions}
+            label={t('scheduleList.filters.status')}
+            data={statusOptions(t)}
             value={statusFilter}
             onChange={(value) => setStatusFilter(value ?? 'all')}
           />
           <Button leftSection={<IconPlus size={16} />} onClick={onCreateSchedule}>
-            New plan
+            {t('page.actions.createPlan')}
           </Button>
         </Group>
       </Group>
 
       {filteredSchedules.length === 0 ? (
         <EmptyState
-          title="No maintenance plans"
+          title={t('scheduleList.empty.title')}
           message={searchQuery || typeFilter !== 'all' || assetFilter !== 'all' || statusFilter !== 'all'
-            ? 'No maintenance plans match the current filters.'
-            : 'Create the first maintenance plan for your assets.'}
-          action={<Button leftSection={<IconPlus size={16} />} onClick={onCreateSchedule}>Create maintenance plan</Button>}
+            ? t('scheduleList.empty.filterMessage')
+            : t('scheduleList.empty.newMessage')}
+          action={<Button leftSection={<IconPlus size={16} />} onClick={onCreateSchedule}>{t('scheduleList.empty.action')}</Button>}
         />
       ) : (
         <DataTable
@@ -359,12 +362,12 @@ export function MaintenanceScheduleList({
           setDeleteModalOpened(false);
           setScheduleToDelete(null);
         }}
-        title="Delete maintenance plan"
+        title={t('scheduleList.delete.title')}
         centered
       >
         <Stack gap="md">
           <Text>
-            Are you sure you want to delete this maintenance plan?
+            {t('scheduleList.delete.confirm')}
             {scheduleToDelete && (
               <>
                 <br />
@@ -377,14 +380,14 @@ export function MaintenanceScheduleList({
               setDeleteModalOpened(false);
               setScheduleToDelete(null);
             }}>
-              Cancel
+              {t('common:actions.cancel')}
             </Button>
             <Button
               color="red"
               onClick={handleConfirmDelete}
               loading={deleteSchedule.isPending}
             >
-              Delete
+              {t('scheduleList.actions.delete')}
             </Button>
           </Group>
         </Stack>

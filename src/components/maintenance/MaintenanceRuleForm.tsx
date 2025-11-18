@@ -180,9 +180,20 @@ export function MaintenanceRuleForm({
           />
           <MultiSelect
             placeholder={t('maintenance:placeholders.selectTargets')}
-            data={targetOptions[targetType]}
+            data={targetOptions[targetType] || []}
             searchable
             required
+            clearable
+            nothingFoundMessage={
+              (targetOptions[targetType] || []).length === 0
+                ? `No ${targetType}s available. ${targetType === 'tag' ? 'Create tags from an asset detail page.' : `Please create ${targetType}s first.`}`
+                : 'No matches found'
+            }
+            description={
+              (targetOptions[targetType] || []).length === 0
+                ? `⚠️ No ${targetType}s found - you need to create some first`
+                : undefined
+            }
             {...form.getInputProps('targetIds')}
           />
         </Box>

@@ -20,10 +20,10 @@ import {
   IconDots,
   IconEdit,
   IconEye,
-  IconPlus,
   IconSearch,
   IconTrash,
   IconX,
+  IconPackage,
 } from '@tabler/icons-react';
 import { useAssets, useDeleteAsset, useCreateAsset } from '../../hooks/useAssets';
 import { useCategories } from '../../hooks/useCategories';
@@ -57,7 +57,6 @@ import { AssetCalendarView } from './AssetCalendarView';
 interface AssetListProps {
   onView?: (asset: Asset) => void;
   onEdit?: (asset: Asset) => void;
-  onCreateNew?: () => void;
   initialFilters?: AssetFilters;
   filtersOpen?: boolean;
   onToggleFilters?: () => void;
@@ -193,7 +192,6 @@ type AssetListSortStatus = DataTableSortStatus<AssetListRow> & DataTableSortStat
 export function AssetList({
   onView,
   onEdit,
-  onCreateNew,
   initialFilters,
   filtersOpen,
   onToggleFilters,
@@ -300,7 +298,11 @@ export function AssetList({
   const combinedFilterCount = activeFilterCount + advancedFilterCount;
   const combinedHasFilters = hasActiveFilters || hasAdvancedFilters;
 
-  const { data: assets = [], isLoading, error } = useAssets(assetFilters);
+  const {
+    data: assets = [],
+    isLoading,
+    error,
+  } = useAssets(assetFilters);
   const { data: maintenanceSchedules = [] } = useMaintenanceSchedules();
   const { data: assetGroups = [], isLoading: loadingAssetGroups } = useAssetGroups();
   const deleteAsset = useDeleteAsset();
@@ -1022,14 +1024,6 @@ export function AssetList({
     );
   }
 
-  const primaryAction = onCreateNew
-    ? {
-        label: 'New Asset',
-        icon: <IconPlus size={16} />,
-        onClick: onCreateNew,
-      }
-    : undefined;
-
   const tableViewContent = (
     <Card withBorder>
       <DataViewTable<AssetListRow>
@@ -1186,7 +1180,14 @@ export function AssetList({
 
                 return (
                   <Box style={{ marginLeft: `${row.__depth * 16}px` }}>
-                    <Text fw={500}>{row.name}</Text>
+                    <Group gap="xs">
+                      <Text fw={500}>{row.name}</Text>
+                      {row.isKit && (
+                        <Badge size="xs" variant="light" color="violet" leftSection={<IconPackage size={10} />}>
+                          Kit
+                        </Badge>
+                      )}
+                    </Group>
                     {row.description && (
                       <Text size="xs" c="dimmed" lineClamp={1}>
                         {row.description}
@@ -1416,7 +1417,6 @@ export function AssetList({
       onToggleFilters={toggleFilters}
       hasActiveFilters={combinedHasFilters}
       activeFilterCount={combinedFilterCount}
-      primaryAction={primaryAction}
       showFilterButton={hideFilterButton !== true}
       filterContent={filterContent}
       actions={headerActions}

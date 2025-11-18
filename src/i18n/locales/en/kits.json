@@ -100,6 +100,8 @@
       "descriptionPlaceholder": "Describe when or where this kit is used...",
       "locationLabel": "Default location",
       "locationPlaceholder": "e.g. Main campus warehouse",
+      "locationDescription": "Choose from saved locations or add a new one",
+      "locationEmpty": "No locations yet",
       "statusLabel": "Default status",
       "statusPlaceholder": "Select default status"
     },

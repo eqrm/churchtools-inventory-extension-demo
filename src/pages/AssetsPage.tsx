@@ -3,12 +3,14 @@ import { Container, Modal, Stack } from '@mantine/core';
 import { useNavigate } from 'react-router-dom';
 import { EnhancedAssetList } from '../components/assets/EnhancedAssetList';
 import { AssetForm } from '../components/assets/AssetForm';
+import { KitForm } from '../components/kits/KitForm';
 import type { Asset } from '../types/entities';
 
 export function AssetsPage() {
   const navigate = useNavigate();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingAsset, setEditingAsset] = useState<Asset | undefined>();
+  const [isKitModalOpen, setIsKitModalOpen] = useState(false);
 
   const handleView = (asset: Asset) => {
     navigate(`/assets/${asset.id}`);
@@ -22,6 +24,10 @@ export function AssetsPage() {
   const handleCreateNew = () => {
     setEditingAsset(undefined);
     setIsFormOpen(true);
+  };
+
+  const handleCreateKit = () => {
+    setIsKitModalOpen(true);
   };
 
   const handleSuccess = () => {
@@ -41,6 +47,7 @@ export function AssetsPage() {
           onView={handleView}
           onEdit={handleEdit}
           onCreateNew={handleCreateNew}
+          onCreateKit={handleCreateKit}
         />
 
         <Modal
@@ -53,6 +60,18 @@ export function AssetsPage() {
             asset={editingAsset}
             onSuccess={handleSuccess}
             onCancel={handleCancel}
+          />
+        </Modal>
+
+        <Modal
+          opened={isKitModalOpen}
+          onClose={() => setIsKitModalOpen(false)}
+          title="Create New Kit"
+          size="lg"
+        >
+          <KitForm
+            onSuccess={() => setIsKitModalOpen(false)}
+            onCancel={() => setIsKitModalOpen(false)}
           />
         </Modal>
       </Stack>

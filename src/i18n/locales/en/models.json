@@ -28,6 +28,8 @@
       "descriptionPlaceholder": "Describe this model",
       "defaultPurchasePrice": "Default Purchase Price",
       "defaultWarrantyMonths": "Default Warranty (months)",
+      "defaultBookable": "Assets are bookable by default",
+      "defaultBookableDescription": "New assets created from this model will have bookable enabled",
       "defaultLocation": "Default Location",
       "defaultNotes": "Default Notes",
       "tags": "Default Tags",

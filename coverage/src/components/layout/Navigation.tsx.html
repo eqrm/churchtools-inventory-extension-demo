@@ -25,7 +25,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/215</span>
+                <span class='fraction'>0/216</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/215</span>
+                <span class='fraction'>0/216</span>
             </div>
         
             
@@ -325,7 +325,8 @@
 <a name='L260'></a><a href='#L260'>260</a>
 <a name='L261'></a><a href='#L261'>261</a>
 <a name='L262'></a><a href='#L262'>262</a>
-<a name='L263'></a><a href='#L263'>263</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<a name='L263'></a><a href='#L263'>263</a>
+<a name='L264'></a><a href='#L264'>264</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -353,6 +354,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -616,7 +618,8 @@ interface NavigationProps {
 }
 &nbsp;
 <span class="cstat-no" title="statement not covered" >export function Navigation({ children, onScanClick }: NavigationProps) {</span>
-<span class="cstat-no" title="statement not covered" >  const { t } = useTranslation(['undo', 'common']);</span>
+<span class="cstat-no" title="statement not covered" >  const { t: tNav } = useTranslation('navigation');</span>
+<span class="cstat-no" title="statement not covered" >  const { t: tUndo } = useTranslation('undo');</span>
 <span class="cstat-no" title="statement not covered" >  const [opened, { toggle, close }] = useDisclosure();</span>
 <span class="cstat-no" title="statement not covered" >  const [undoHistoryOpened, { open: openUndoHistory, close: closeUndoHistory }] = useDisclosure(false);</span>
 <span class="cstat-no" title="statement not covered" >  const location = useLocation();</span>
@@ -687,14 +690,14 @@ interface NavigationProps {
 <span class="cstat-no" title="statement not covered" >              hiddenFrom="sm"</span>
 <span class="cstat-no" title="statement not covered" >              size="sm"</span>
 <span class="cstat-no" title="statement not covered" >            /&gt;</span>
-<span class="cstat-no" title="statement not covered" >            &lt;Title order={3}&gt;Inventory Manager&lt;/Title&gt;</span>
+<span class="cstat-no" title="statement not covered" >            &lt;Title order={3}&gt;{tNav('title')}&lt;/Title&gt;</span>
 <span class="cstat-no" title="statement not covered" >          &lt;/Group&gt;</span>
-<span class="cstat-no" title="statement not covered" >          &lt;Tooltip label={t('undo:openHistoryTooltip')}&gt;</span>
+<span class="cstat-no" title="statement not covered" >          &lt;Tooltip label={tUndo('openHistoryTooltip')}&gt;</span>
 <span class="cstat-no" title="statement not covered" >            &lt;ActionIcon</span>
 <span class="cstat-no" title="statement not covered" >              variant="subtle"</span>
 <span class="cstat-no" title="statement not covered" >              size="lg"</span>
 <span class="cstat-no" title="statement not covered" >              onClick={openUndoHistory}</span>
-<span class="cstat-no" title="statement not covered" >              aria-label={t('undo:openHistoryAria')}</span>
+<span class="cstat-no" title="statement not covered" >              aria-label={tUndo('openHistoryAria')}</span>
             &gt;
 <span class="cstat-no" title="statement not covered" >              &lt;IconHistory size={20} /&gt;</span>
 <span class="cstat-no" title="statement not covered" >            &lt;/ActionIcon&gt;</span>
@@ -704,40 +707,40 @@ interface NavigationProps {
 &nbsp;
 <span class="cstat-no" title="statement not covered" >      &lt;AppShell.Navbar p="md"&gt;</span>
 <span class="cstat-no" title="statement not covered" >        &lt;NavLink</span>
-<span class="cstat-no" title="statement not covered" >          data-nav-label="Dashboard"</span>
+<span class="cstat-no" title="statement not covered" >          data-nav-label={tNav('items.dashboard')}</span>
 <span class="cstat-no" title="statement not covered" >          component={Link}</span>
 <span class="cstat-no" title="statement not covered" >          to="/"</span>
-<span class="cstat-no" title="statement not covered" >          label="Dashboard"</span>
+<span class="cstat-no" title="statement not covered" >          label={tNav('items.dashboard')}</span>
 <span class="cstat-no" title="statement not covered" >          leftSection={&lt;IconHome size={20} /&gt;}</span>
 <span class="cstat-no" title="statement not covered" >          active={routeIsActive('/')}</span>
 <span class="cstat-no" title="statement not covered" >          onClick={(event) =&gt; handleNavClick(event, { label: 'Dashboard', route: '/' })}</span>
 <span class="cstat-no" title="statement not covered" >        /&gt;</span>
         
 <span class="cstat-no" title="statement not covered" >        &lt;NavLink</span>
-<span class="cstat-no" title="statement not covered" >          data-nav-label="Categories"</span>
+<span class="cstat-no" title="statement not covered" >          data-nav-label={tNav('items.categories')}</span>
 <span class="cstat-no" title="statement not covered" >          component={Link}</span>
 <span class="cstat-no" title="statement not covered" >          to="/categories"</span>
-<span class="cstat-no" title="statement not covered" >          label="Categories"</span>
+<span class="cstat-no" title="statement not covered" >          label={tNav('items.categories')}</span>
 <span class="cstat-no" title="statement not covered" >          leftSection={&lt;IconCategory size={20} /&gt;}</span>
 <span class="cstat-no" title="statement not covered" >          active={routeIsActive('/categories')}</span>
 <span class="cstat-no" title="statement not covered" >          onClick={(event) =&gt; handleNavClick(event, { label: 'Categories', route: '/categories' })}</span>
 <span class="cstat-no" title="statement not covered" >        /&gt;</span>
         
 <span class="cstat-no" title="statement not covered" >        &lt;NavLink</span>
-<span class="cstat-no" title="statement not covered" >          data-nav-label="Assets"</span>
+<span class="cstat-no" title="statement not covered" >          data-nav-label={tNav('items.assets')}</span>
 <span class="cstat-no" title="statement not covered" >          component={Link}</span>
 <span class="cstat-no" title="statement not covered" >          to="/assets"</span>
-<span class="cstat-no" title="statement not covered" >          label="Assets"</span>
+<span class="cstat-no" title="statement not covered" >          label={tNav('items.assets')}</span>
 <span class="cstat-no" title="statement not covered" >          leftSection={&lt;IconBox size={20} /&gt;}</span>
 <span class="cstat-no" title="statement not covered" >          active={routeIsActive('/assets')}</span>
 <span class="cstat-no" title="statement not covered" >          onClick={(event) =&gt; handleNavClick(event, { label: 'Assets', route: '/assets' })}</span>
 <span class="cstat-no" title="statement not covered" >        /&gt;</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >        &lt;NavLink</span>
-<span class="cstat-no" title="statement not covered" >          data-nav-label="Asset Models"</span>
+<span class="cstat-no" title="statement not covered" >          data-nav-label={tNav('items.assetModels')}</span>
 <span class="cstat-no" title="statement not covered" >          component={Link}</span>
 <span class="cstat-no" title="statement not covered" >          to="/asset-groups"</span>
-<span class="cstat-no" title="statement not covered" >          label="Asset Models"</span>
+<span class="cstat-no" title="statement not covered" >          label={tNav('items.assetModels')}</span>
 <span class="cstat-no" title="statement not covered" >          leftSection={&lt;IconUsersGroup size={20} /&gt;}</span>
 <span class="cstat-no" title="statement not covered" >          active={routeIsActive('/asset-groups')}</span>
 <span class="cstat-no" title="statement not covered" >          onClick={(event) =&gt; handleNavClick(event, { label: 'Asset Models', route: '/asset-groups' })}</span>
@@ -745,10 +748,10 @@ interface NavigationProps {
 &nbsp;
 <span class="cstat-no" title="statement not covered" >        {bookingsEnabled &amp;&amp; (</span>
 <span class="cstat-no" title="statement not covered" >          &lt;NavLink</span>
-<span class="cstat-no" title="statement not covered" >            data-nav-label="Bookings"</span>
+<span class="cstat-no" title="statement not covered" >            data-nav-label={tNav('items.bookings')}</span>
 <span class="cstat-no" title="statement not covered" >            component={Link}</span>
 <span class="cstat-no" title="statement not covered" >            to="/bookings"</span>
-<span class="cstat-no" title="statement not covered" >            label="Bookings"</span>
+<span class="cstat-no" title="statement not covered" >            label={tNav('items.bookings')}</span>
 <span class="cstat-no" title="statement not covered" >            leftSection={&lt;IconCalendarEvent size={20} /&gt;}</span>
 <span class="cstat-no" title="statement not covered" >            active={routeIsActive('/bookings')}</span>
 <span class="cstat-no" title="statement not covered" >            onClick={(event) =&gt; handleNavClick(event, { label: 'Bookings', route: '/bookings' })}</span>
@@ -757,10 +760,10 @@ interface NavigationProps {
 &nbsp;
 <span class="cstat-no" title="statement not covered" >        {kitsEnabled &amp;&amp; (</span>
 <span class="cstat-no" title="statement not covered" >          &lt;NavLink</span>
-<span class="cstat-no" title="statement not covered" >            data-nav-label="Kits"</span>
+<span class="cstat-no" title="statement not covered" >            data-nav-label={tNav('items.kits')}</span>
 <span class="cstat-no" title="statement not covered" >            component={Link}</span>
 <span class="cstat-no" title="statement not covered" >            to="/kits"</span>
-<span class="cstat-no" title="statement not covered" >            label="Kits"</span>
+<span class="cstat-no" title="statement not covered" >            label={tNav('items.kits')}</span>
 <span class="cstat-no" title="statement not covered" >            leftSection={&lt;IconPackage size={20} /&gt;}</span>
 <span class="cstat-no" title="statement not covered" >            active={routeIsActive('/kits')}</span>
 <span class="cstat-no" title="statement not covered" >            onClick={(event) =&gt; handleNavClick(event, { label: 'Kits', route: '/kits' })}</span>
@@ -768,20 +771,20 @@ interface NavigationProps {
         )}
 &nbsp;
 <span class="cstat-no" title="statement not covered" >        &lt;NavLink</span>
-<span class="cstat-no" title="statement not covered" >          data-nav-label="Stock Take"</span>
+<span class="cstat-no" title="statement not covered" >          data-nav-label={tNav('items.stockTake')}</span>
 <span class="cstat-no" title="statement not covered" >          component={Link}</span>
 <span class="cstat-no" title="statement not covered" >          to="/stock-take"</span>
-<span class="cstat-no" title="statement not covered" >          label="Stock Take"</span>
+<span class="cstat-no" title="statement not covered" >          label={tNav('items.stockTake')}</span>
 <span class="cstat-no" title="statement not covered" >          leftSection={&lt;IconClipboardList size={20} /&gt;}</span>
 <span class="cstat-no" title="statement not covered" >          active={routeIsActive('/stock-take')}</span>
 <span class="cstat-no" title="statement not covered" >          onClick={(event) =&gt; handleNavClick(event, { label: 'Stock Take', route: '/stock-take' })}</span>
 <span class="cstat-no" title="statement not covered" >        /&gt;</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >        &lt;NavLink</span>
-<span class="cstat-no" title="statement not covered" >          data-nav-label="Reports"</span>
+<span class="cstat-no" title="statement not covered" >          data-nav-label={tNav('items.reports')}</span>
 <span class="cstat-no" title="statement not covered" >          component={Link}</span>
 <span class="cstat-no" title="statement not covered" >          to="/reports"</span>
-<span class="cstat-no" title="statement not covered" >          label="Reports"</span>
+<span class="cstat-no" title="statement not covered" >          label={tNav('items.reports')}</span>
 <span class="cstat-no" title="statement not covered" >          leftSection={&lt;IconChartBar size={20} /&gt;}</span>
 <span class="cstat-no" title="statement not covered" >          active={routeIsActive('/reports')}</span>
 <span class="cstat-no" title="statement not covered" >          onClick={(event) =&gt; handleNavClick(event, { label: 'Reports', route: '/reports' })}</span>
@@ -789,10 +792,10 @@ interface NavigationProps {
 &nbsp;
 <span class="cstat-no" title="statement not covered" >        {maintenanceEnabled &amp;&amp; (</span>
 <span class="cstat-no" title="statement not covered" >          &lt;NavLink</span>
-<span class="cstat-no" title="statement not covered" >            data-nav-label="Maintenance"</span>
+<span class="cstat-no" title="statement not covered" >            data-nav-label={tNav('items.maintenance')}</span>
 <span class="cstat-no" title="statement not covered" >            component={Link}</span>
 <span class="cstat-no" title="statement not covered" >            to="/maintenance"</span>
-<span class="cstat-no" title="statement not covered" >            label="Maintenance"</span>
+<span class="cstat-no" title="statement not covered" >            label={tNav('items.maintenance')}</span>
 <span class="cstat-no" title="statement not covered" >            leftSection={&lt;IconTool size={20} /&gt;}</span>
 <span class="cstat-no" title="statement not covered" >            active={routeIsActive('/maintenance')}</span>
 <span class="cstat-no" title="statement not covered" >            onClick={(event) =&gt; handleNavClick(event, { label: 'Maintenance', route: '/maintenance' })}</span>
@@ -800,9 +803,9 @@ interface NavigationProps {
         )}
 &nbsp;
 <span class="cstat-no" title="statement not covered" >        &lt;NavLink</span>
-<span class="cstat-no" title="statement not covered" >          data-nav-label="Quick Scan"</span>
-<span class="cstat-no" title="statement not covered" >          label="Quick Scan"</span>
-<span class="cstat-no" title="statement not covered" >          description={scanShortcut}</span>
+<span class="cstat-no" title="statement not covered" >          data-nav-label={tNav('items.quickScan')}</span>
+<span class="cstat-no" title="statement not covered" >          label={tNav('items.quickScan')}</span>
+<span class="cstat-no" title="statement not covered" >          description={tNav('quickScanDescription', { shortcut: scanShortcut })}</span>
 <span class="cstat-no" title="statement not covered" >          leftSection={&lt;IconScan size={20} /&gt;}</span>
 <span class="cstat-no" title="statement not covered" >          onClick={(event) =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >            event.preventDefault();</span>
@@ -812,10 +815,10 @@ interface NavigationProps {
 <span class="cstat-no" title="statement not covered" >        /&gt;</span>
         
 <span class="cstat-no" title="statement not covered" >        &lt;NavLink</span>
-<span class="cstat-no" title="statement not covered" >          data-nav-label="Settings"</span>
+<span class="cstat-no" title="statement not covered" >          data-nav-label={tNav('items.settings')}</span>
 <span class="cstat-no" title="statement not covered" >          component={Link}</span>
 <span class="cstat-no" title="statement not covered" >          to="/settings"</span>
-<span class="cstat-no" title="statement not covered" >          label="Settings"</span>
+<span class="cstat-no" title="statement not covered" >          label={tNav('items.settings')}</span>
 <span class="cstat-no" title="statement not covered" >          leftSection={&lt;IconSettings size={20} /&gt;}</span>
 <span class="cstat-no" title="statement not covered" >          active={routeIsActive('/settings')}</span>
 <span class="cstat-no" title="statement not covered" >          onClick={(event) =&gt; handleNavClick(event, { label: 'Settings', route: '/settings' })}</span>
@@ -829,7 +832,7 @@ interface NavigationProps {
 <span class="cstat-no" title="statement not covered" >      &lt;Modal</span>
 <span class="cstat-no" title="statement not covered" >        opened={undoHistoryOpened}</span>
 <span class="cstat-no" title="statement not covered" >        onClose={closeUndoHistory}</span>
-<span class="cstat-no" title="statement not covered" >        title={t('undo:modalTitle')}</span>
+<span class="cstat-no" title="statement not covered" >        title={tUndo('modalTitle')}</span>
 <span class="cstat-no" title="statement not covered" >        size="lg"</span>
       &gt;
 <span class="cstat-no" title="statement not covered" >        {undoError &amp;&amp; (</span>
@@ -856,7 +859,7 @@ interface NavigationProps {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-11-16T21:19:09.110Z
+                at 2025-11-17T11:21:58.186Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

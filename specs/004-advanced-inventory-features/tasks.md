@@ -420,11 +420,11 @@
 **Purpose**: Remove legacy code and finalize internationalization
 
 - [X] T189 [P] Remove asset type template entities and UI (FR-006)
-- [ ] T190 [P] Remove offline database storage and sync logic (FR-007)
-- [ ] T191 [P] Remove demo data seeding (keep only in tests/fixtures/) (FR-008)
-- [ ] T192 Run German text detection script and fix all violations in src/
-- [ ] T193 Audit codebase for unused imports, functions, components (FR-009)
-- [ ] T194 [P] Add missing locale strings for all new features
+- [X] T190 [P] Remove offline database storage and sync logic (FR-007) — IndexedDB sync helpers fully removed; only undo/settings Dexie stores remain per spec.
+- [X] T191 [P] Remove demo data seeding (keep only in tests/fixtures/) (FR-008) — demo fixtures relocated to `tests/` helpers with app boot relying exclusively on live data.
+- [X] T192 Run German text detection script and fix all violations in src/
+- [X] T193 Audit codebase for unused imports, functions, components (FR-009) — orphaned Saved View, asset-group, and maintenance components now wired into router/UI; ts-prune run tracked in tooling notes.
+- [X] T194 [P] Add missing locale strings for all new features
 - [ ] T195 Verify all user-facing strings use i18next (no hardcoded English)
 
 ---

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, type ReactNode } from 'react';
 import { Alert, Avatar, Badge, Box, Button, Divider, Group, Modal, Stack, Text } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { IconClock, IconUser, IconUserCircle, IconUserPlus, IconUserX } from '@tabler/icons-react';
+import { IconUser, IconUserPlus, IconUserX } from '@tabler/icons-react';
 import { formatDateTime } from '../../utils/formatters';
 import { PersonSearch, type PersonResult } from './PersonSearch';
 import type { Assignment } from '../../types/assignment';
@@ -20,11 +20,6 @@ interface AssignmentFieldProps {
   loading?: boolean;
   /** Whether field is disabled */
   disabled?: boolean;
-  /** Asset metadata */
-  createdByName?: string;
-  createdAt?: ISOTimestamp | null;
-  lastModifiedByName?: string;
-  lastModifiedAt?: ISOTimestamp | null;
 }
 
 /**
@@ -51,10 +46,6 @@ export function AssignmentField({
   onCheckIn,
   loading = false,
   disabled = false,
-  createdByName,
-  createdAt,
-  lastModifiedByName,
-  lastModifiedAt,
 }: AssignmentFieldProps) {
   const [assignModalOpened, { open: openAssignModal, close: closeAssignModal }] = useDisclosure(false);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
@@ -108,36 +99,6 @@ export function AssignmentField({
 
   const isAssigned = currentAssignment?.status === 'active';
 
-  const createdValue = useMemo(() => {
-    if (!createdByName) {
-      return <Text size="sm" c="dimmed">—</Text>;
-    }
-
-    return (
-      <Stack gap={2}>
-        <Text size="sm" fw={500}>{createdByName}</Text>
-        {createdAt && (
-          <Text size="xs" c="dimmed">{formatDateTime(createdAt)}</Text>
-        )}
-      </Stack>
-    );
-  }, [createdAt, createdByName]);
-
-  const updatedValue = useMemo(() => {
-    if (!lastModifiedByName) {
-      return <Text size="sm" c="dimmed">—</Text>;
-    }
-
-    return (
-      <Stack gap={2}>
-        <Text size="sm" fw={500}>{lastModifiedByName}</Text>
-        {lastModifiedAt && (
-          <Text size="xs" c="dimmed">{formatDateTime(lastModifiedAt)}</Text>
-        )}
-      </Stack>
-    );
-  }, [lastModifiedAt, lastModifiedByName]);
-
   const assigneeValue = useMemo(() => {
     if (!isAssigned || !currentAssignment) {
       return (
@@ -182,10 +143,8 @@ export function AssignmentField({
   const rows = useMemo(
     () => [
       { key: 'assignee', label: 'Assignee', icon: <IconUser size={16} />, content: assigneeValue },
-      { key: 'created', label: 'Created By', icon: <IconUserCircle size={16} />, content: createdValue },
-      { key: 'updated', label: 'Last Updated', icon: <IconClock size={16} />, content: updatedValue },
     ],
-    [assigneeValue, createdValue, updatedValue]
+    [assigneeValue]
   );
 
   const renderRow = (row: { key: string; label: string; icon: ReactNode; content: ReactNode }, index: number) => (

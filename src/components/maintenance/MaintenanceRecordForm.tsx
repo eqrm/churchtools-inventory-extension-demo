@@ -4,6 +4,7 @@
  */
 
 import { Button, Group, NumberInput, Select, Stack, Textarea, TextInput } from '@mantine/core';
+import { useTranslation } from 'react-i18next';
 import { DateInput } from '@mantine/dates';
 import { useForm } from '@mantine/form';
 import { notifications } from '@mantine/notifications';
@@ -21,14 +22,14 @@ interface MaintenanceRecordFormProps {
   onCancel?: () => void;
 }
 
-const maintenanceTypes = [
-  { value: 'inspection', label: 'Inspection' },
-  { value: 'cleaning', label: 'Cleaning' },
-  { value: 'repair', label: 'Repair' },
-  { value: 'calibration', label: 'Calibration' },
-  { value: 'testing', label: 'Testing' },
-  { value: 'compliance', label: 'Compliance' },
-  { value: 'other', label: 'Other' },
+const maintenanceTypes = (t: (s: string, v?: unknown) => string) => [
+  { value: 'inspection', label: t('records.types.inspection') },
+  { value: 'cleaning', label: t('records.types.cleaning') },
+  { value: 'repair', label: t('records.types.repair') },
+  { value: 'calibration', label: t('records.types.calibration') },
+  { value: 'testing', label: t('records.types.testing') },
+  { value: 'compliance', label: t('records.types.compliance') },
+  { value: 'other', label: t('records.types.other') },
 ];
 
 /**
@@ -41,6 +42,7 @@ export function MaintenanceRecordForm({
   onSuccess,
   onCancel,
 }: MaintenanceRecordFormProps) {
+  const { t } = useTranslation('maintenance');
   const { data: currentUser } = useCurrentUser();
   const { data: schedule } = useMaintenanceSchedule(assetId);
   const createRecord = useCreateMaintenanceRecord();
@@ -68,8 +70,8 @@ export function MaintenanceRecordForm({
   const handleSubmit = form.onSubmit(async (values) => {
     if (!currentUser) {
       notifications.show({
-        title: 'Error',
-        message: 'User not found',
+        title: t('common:app.error'),
+        message: t('records.errors.userNotFound') ?? 'User not found',
         color: 'red',
         icon: <IconX />,
       });
@@ -104,26 +106,26 @@ export function MaintenanceRecordForm({
         }
       }
       
-      notifications.show({ title: 'Success', message: 'Maintenance recorded', color: 'green', icon: <IconCheck /> });
+      notifications.show({ title: t('messages.recordCreated'), message: t('messages.recordCreatedDescription'), color: 'green', icon: <IconCheck /> });
       form.reset();
       onSuccess?.();
     } catch (error) {
-      const msg = error instanceof Error ? error.message : 'Failed to save maintenance record';
-      notifications.show({ title: 'Error', message: msg, color: 'red', icon: <IconX /> });
+      const msg = error instanceof Error ? error.message : t('errors.recordSaveFailed');
+      notifications.show({ title: t('common:app.error'), message: msg, color: 'red', icon: <IconX /> });
     }
   });
 
   return (
     <form onSubmit={handleSubmit}>
       <Stack gap="md">
-        <Select label="Maintenance type" data={maintenanceTypes} required {...form.getInputProps('type')} />
-        <DateInput label="Date" required {...form.getInputProps('date')} />
-        <TextInput label="Description" placeholder="e.g., Annual safety inspection" required {...form.getInputProps('description')} />
-        <Textarea label="Notes" placeholder="Additional notes..." minRows={3} {...form.getInputProps('notes')} />
-        <NumberInput label="Cost (€)" placeholder="0.00" decimalScale={2} min={0} {...form.getInputProps('cost')} />
+        <Select label={t('records.columns.type')} data={maintenanceTypes(t)} required {...form.getInputProps('type')} />
+        <DateInput label={t('records.columns.date')} required {...form.getInputProps('date')} />
+        <TextInput label={t('records.columns.description')} placeholder={t('records.placeholders.descriptionExample')} required {...form.getInputProps('description')} />
+        <Textarea label={t('records.labels.notes') ?? 'Notes'} placeholder={t('records.placeholders.notes') ?? 'Additional notes...'} minRows={3} {...form.getInputProps('notes')} />
+        <NumberInput label={t('records.columns.cost') + ' (€)'} placeholder="0.00" decimalScale={2} min={0} {...form.getInputProps('cost')} />
         <Group justify="flex-end" mt="md">
-          {onCancel && <Button variant="subtle" onClick={onCancel}>Cancel</Button>}
-          <Button type="submit" loading={createRecord.isPending}>Log maintenance</Button>
+          {onCancel && <Button variant="subtle" onClick={onCancel}>{t('common:actions.cancel')}</Button>}
+          <Button type="submit" loading={createRecord.isPending}>{t('page.actions.logMaintenance')}</Button>
         </Group>
       </Stack>
     </form>

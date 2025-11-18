@@ -126,8 +126,7 @@ function SettingsTabs({ scannerModels, onAddModel, onEditModel, onDeleteModel }:
         </Tabs.Tab>
       </Tabs.List>
 
-      <Tabs.Panel value="prefixes" pt="md">
-        <PrefixSettingsPanel />
+      <Tabs.Panel value="prefixes" pt="md">\n        <PrefixSettingsPanel />
       </Tabs.Panel>
       <Tabs.Panel value="manufacturers" pt="md">
         <ManufacturerSettings />

@@ -8,6 +8,13 @@ import undo from './locales/en/undo.json';
 import views from './locales/en/views.json';
 import kits from './locales/en/kits.json';
 import settingsNamespace from './locales/en/settings.json';
+import assignment from './locales/en/assignment.json';
+import dashboard from './locales/en/dashboard.json';
+import maintenance from './locales/en/maintenance.json';
+import models from './locales/en/models.json';
+import tags from './locales/en/tags.json';
+import assets from './locales/en/assets.json';
+import navigation from './locales/en/navigation.json';
 
 const resources: Resource = {
   en: {
@@ -17,6 +24,13 @@ const resources: Resource = {
     views,
     kits,
     settings: settingsNamespace,
+    assignment,
+    dashboard,
+    maintenance,
+    models,
+    tags,
+    assets,
+    navigation,
   },
 };
 
@@ -32,7 +46,7 @@ export const initI18n = async (): Promise<void> => {
     fallbackLng: 'en',
     debug: import.meta.env.DEV,
     defaultNS: 'common',
-    ns: ['common', 'damage', 'undo', 'views', 'kits', 'settings'],
+    ns: ['common', 'damage', 'undo', 'views', 'kits', 'settings', 'assignment', 'dashboard', 'maintenance', 'models', 'tags', 'assets', 'navigation'],
     resources,
     interpolation: {
       escapeValue: false,

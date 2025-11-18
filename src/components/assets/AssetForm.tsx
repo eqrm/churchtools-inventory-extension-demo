@@ -49,8 +49,10 @@ import { CUSTOM_FIELD_SOURCE_PREFIX } from '../../services/asset-groups/constant
 
 interface AssetFormProps {
   asset?: Asset;
-  onSuccess?: (asset: Asset) => void;
+  onSuccess?: (created: Asset) => void;
   onCancel?: () => void;
+  initialData?: Partial<Asset>;
+  groupId?: string;
 }
 
 interface AssetFormValues {
@@ -61,6 +63,7 @@ interface AssetFormValues {
   mainImage: string | null;
   assetTypeId: string;
   prefixId?: string; // T272: Asset prefix selection
+  barcode?: string;
   status: AssetStatus;
   location?: string;
   parentAssetId?: string;
@@ -71,8 +74,9 @@ interface AssetFormValues {
 }
 
 
-export function AssetForm({ asset, onSuccess, onCancel }: AssetFormProps) {
+export function AssetForm({ asset, onSuccess, onCancel, initialData, groupId }: AssetFormProps) {
   const isEditing = Boolean(asset);
+  
   const { data: categories = [] } = useCategories();
   const { data: prefixes = [] } = useAssetPrefixes();
   const { models } = useAssetModels();
@@ -98,20 +102,21 @@ export function AssetForm({ asset, onSuccess, onCancel }: AssetFormProps) {
 
   const form = useForm<AssetFormValues>({
     initialValues: {
-      name: asset?.name || '',
-      manufacturer: asset?.manufacturer || '',
-      model: asset?.model || '',
-      description: asset?.description || '',
-      mainImage: asset?.mainImage ?? null,
-      assetTypeId: asset?.assetType.id || '',
-      prefixId: '', // Default to first prefix or empty
-      status: asset?.status || 'available',
-      location: asset?.location || '',
-      parentAssetId: asset?.parentAssetId || '',
-      isParent: asset?.isParent || false,
+      name: asset?.name || (initialData?.name ?? ''),
+      manufacturer: asset?.manufacturer || (initialData?.manufacturer ?? ''),
+      model: asset?.model || (initialData?.model ?? ''),
+      description: asset?.description || (initialData?.description ?? ''),
+      mainImage: asset?.mainImage ?? (initialData?.mainImage ?? null),
+      assetTypeId: asset?.assetType.id || (initialData?.assetType?.id ?? ''),
+      prefixId: initialData?.assetNumber ? '' : '', // Default remains empty; user can select
+      barcode: asset?.barcode || (initialData?.barcode ?? ''),
+      status: asset?.status || (initialData?.status ?? 'available'),
+      location: asset?.location || (initialData?.location ?? ''),
+      parentAssetId: asset?.parentAssetId || (initialData?.parentAssetId ?? ''),
+      isParent: asset?.isParent || (initialData?.isParent ?? false),
       quantity: 1,
-      bookable: asset?.bookable ?? true, // T070: Default to bookable
-      customFieldValues: asset?.customFieldValues || {},
+      bookable: asset?.bookable ?? (initialData?.bookable ?? true), // T070: Default to bookable
+      customFieldValues: asset?.customFieldValues || (initialData?.customFieldValues ?? {}),
     },
     validate: {
       name: (value) => {
@@ -169,6 +174,18 @@ export function AssetForm({ asset, onSuccess, onCancel }: AssetFormProps) {
     : 'Choose a prefix for this asset\'s numbering sequence';
 
   useEffect(() => {
+    // If initialData contains an assetNumber like "PREFIX-001", try to pre-select a matching prefix
+    if (!isEditing && initialData?.assetNumber && prefixes.length > 0) {
+      const matches = initialData.assetNumber.match(/^([A-Za-z0-9-_]+)-/);
+      if (matches) {
+        const prefixText = matches[1];
+        const found = prefixes.find((p) => p.prefix === prefixText);
+        if (found) {
+          form.setFieldValue('prefixId', found.id);
+        }
+      }
+    }
+
     if (isEditing) {
       return;
     }
@@ -268,6 +285,11 @@ export function AssetForm({ asset, onSuccess, onCancel }: AssetFormProps) {
         }
       });
       form.setFieldValue('customFieldValues', initialCustomFields);
+      
+      // Apply defaultBookable from asset type if no model is selected
+      if (!selectedModelId && selectedCategory.defaultBookable !== undefined) {
+        form.setFieldValue('bookable', selectedCategory.defaultBookable);
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCategory?.id, isEditing]);
@@ -406,6 +428,11 @@ export function AssetForm({ asset, onSuccess, onCancel }: AssetFormProps) {
     if (selectedModel.modelNumber) {
       form.setFieldValue('model', selectedModel.modelNumber);
     }
+    
+    // Apply defaultBookable from model
+    if (selectedModel.defaultBookable !== undefined) {
+      form.setFieldValue('bookable', selectedModel.defaultBookable);
+    }
 
     // Apply default values from model
     if (selectedModel.defaultValues) {
@@ -527,6 +554,7 @@ export function AssetForm({ asset, onSuccess, onCancel }: AssetFormProps) {
           bookable: values.bookable, // T070: Include bookable status
           customFieldValues: values.customFieldValues,
           prefixId: values.prefixId || undefined, // T272: Pass selected prefix
+          barcode: values.barcode || undefined,
           fieldSources: assetGroup ? fieldSources : undefined,
         };
 
@@ -695,6 +723,15 @@ export function AssetForm({ asset, onSuccess, onCancel }: AssetFormProps) {
                 value={form.values.status}
                 onChange={handleStatusChange}
                 error={form.errors['status']}
+              />
+            </Grid.Col>
+
+            <Grid.Col span={{ base: 12, md: 6 }}>
+              <TextInput
+                label="Barcode"
+                placeholder="Optional: set a barcode"
+                {...form.getInputProps('barcode')}
+                description="If provided, barcode uniqueness will be validated on save. Leave empty to auto-generate."
               />
             </Grid.Col>
 

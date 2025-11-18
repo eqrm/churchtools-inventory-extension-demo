@@ -33,19 +33,19 @@ export async function createAssetModel(
   const user = await deps.apiClient.getCurrentUser()
   const now = new Date().toISOString()
   const payload = buildAssetModelPayload({
-    id: undefined,
     name: data.name,
     assetTypeId: data.assetTypeId,
     manufacturer: data.manufacturer,
     modelNumber: data.modelNumber,
     defaultWarrantyMonths: data.defaultWarrantyMonths,
+    defaultBookable: data.defaultBookable,
     defaultValues: data.defaultValues,
     tagIds: data.tagIds,
-    createdBy: user.id,
-    createdByName: user.name,
+    createdBy: data.createdBy,
+    createdByName: data.createdByName,
     createdAt: now,
     updatedAt: now,
-  });
+  })
 
   const dataValue = {
     dataCategoryId: Number(category.id),
@@ -89,6 +89,7 @@ export async function updateAssetModel(
     modelNumber: data.modelNumber ?? existing.modelNumber,
     defaultWarrantyMonths:
       data.defaultWarrantyMonths ?? existing.defaultWarrantyMonths,
+    defaultBookable: data.defaultBookable ?? existing.defaultBookable,
     defaultValues: data.defaultValues ?? existing.defaultValues,
     tagIds: data.tagIds ?? existing.tagIds,
     createdBy: existing.createdBy,
@@ -146,6 +147,7 @@ function buildAssetModelPayload(entry: {
   manufacturer?: unknown
   modelNumber?: unknown
   defaultWarrantyMonths?: unknown
+  defaultBookable?: unknown
   defaultValues?: NormalizeableValue
   tagIds?: unknown
   createdBy: unknown
@@ -159,6 +161,7 @@ function buildAssetModelPayload(entry: {
     manufacturer: normalizeString(entry.manufacturer),
     modelNumber: normalizeString(entry.modelNumber),
     defaultWarrantyMonths: normalizeNumber(entry.defaultWarrantyMonths),
+    defaultBookable: typeof entry.defaultBookable === 'boolean' ? entry.defaultBookable : undefined,
     defaultValues: normalizeDefaultValues(entry.defaultValues),
     tagIds: normalizeTagIds(entry.tagIds),
     createdBy: String(entry.createdBy),
@@ -232,6 +235,7 @@ function mapToAssetModel(raw: unknown): AssetModel {
     manufacturer: typeof parsed['manufacturer'] === 'string' ? parsed['manufacturer'] : undefined,
     modelNumber: typeof parsed['modelNumber'] === 'string' ? parsed['modelNumber'] : undefined,
     defaultWarrantyMonths: typeof parsed['defaultWarrantyMonths'] === 'number' ? parsed['defaultWarrantyMonths'] : undefined,
+    defaultBookable: typeof parsed['defaultBookable'] === 'boolean' ? parsed['defaultBookable'] : undefined,
     defaultValues: normalizeDefaultValues(parsed['defaultValues'] as NormalizeableValue),
     tagIds: normalizeTagIds(parsed['tagIds']),
     createdBy: String(parsed['createdBy'] ?? parsed['createdById'] ?? 'system'),

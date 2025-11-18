@@ -397,7 +397,7 @@ Perform physical inventory counts to verify assets.
 2. Allow camera access
 3. Point camera at QR code/barcode
 4. Automatic detection and scanning
-5. Works offline for mobile stock takes
+5. Keep the device online so scans sync immediately
 
 **Manual Entry**:
 1. Type asset number in search field
@@ -412,15 +412,7 @@ If you scan an asset twice:
 - Count not incremented
 - Helps prevent counting errors
 
-### Offline Stock Take
-
-For remote locations without internet:
-
-1. Start session while online
-2. Disconnect from network
-3. Continue scanning (data saved locally)
-4. Reconnect to sync
-5. All scans upload automatically
+> **Note:** Offline scan queueing was removed in FR-007. If connectivity drops, pause scanning until you are back online so every scan is recorded.
 
 ### Completing a Session
 
@@ -636,17 +628,17 @@ Speed up your workflow with shortcuts.
 
 ---
 
-#### Offline sync not working
+#### Sync not updating
 
 **Causes**:
-- Browser storage disabled
-- Network connection lost
+- Device temporarily lost connection
+- Session tab left idle for too long
 
 **Solutions**:
-1. Check browser allows local storage
-2. Clear browser cache and reload
-3. Reconnect to network
-4. Data should sync automatically
+1. Ensure Wi-Fi/mobile data is connected and stable
+2. Refresh the page to rejoin the active session
+3. Re-scan any barcodes that failed while offline (the UI shows a warning)
+4. Export the session and contact support if records still differ
 
 ---
 

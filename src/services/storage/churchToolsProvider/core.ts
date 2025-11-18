@@ -12,6 +12,7 @@ interface AssetTypeStoragePayload {
   customFields: CustomFieldDefinition[]
   assetNameTemplate?: string
   mainImage?: string | null
+  defaultBookable?: boolean
 }
 
 function parseAssetTypeData(data: unknown): AssetTypeStoragePayload {
@@ -35,11 +36,13 @@ function parseAssetTypeData(data: unknown): AssetTypeStoragePayload {
         : []
       const assetNameTemplate = typeof payload.assetNameTemplate === 'string' ? payload.assetNameTemplate : undefined
       const mainImage = typeof payload.mainImage === 'string' ? payload.mainImage : undefined
+      const defaultBookable = typeof payload.defaultBookable === 'boolean' ? payload.defaultBookable : undefined
 
       return {
         customFields,
         assetNameTemplate,
         mainImage,
+        defaultBookable,
       }
     }
   } catch (error) {
@@ -85,6 +88,7 @@ export class ChurchToolsStorageProvider {
       customFields,
       assetNameTemplate,
       mainImage,
+      defaultBookable: parsedData.defaultBookable,
       createdBy: (raw['createdBy'] || 'system') as string,
       createdByName: (raw['createdByName'] || 'System') as string,
       createdAt: (raw['createdAt'] || new Date().toISOString()) as string,
@@ -126,6 +130,22 @@ export class ChurchToolsStorageProvider {
 
     const fieldSources = asset['fieldSources'] as Asset['fieldSources']
 
+    // Parse tag-related fields
+    const tagIds = Array.isArray(asset['tagIds'])
+      ? (asset['tagIds'] as unknown[]).map((id) => String(id))
+      : undefined
+
+    const inheritedTagIds = Array.isArray(asset['inheritedTagIds'])
+      ? (asset['inheritedTagIds'] as unknown[]).map((id) => String(id))
+      : undefined
+
+    const inheritedTags = Array.isArray(asset['inheritedTags'])
+      ? (asset['inheritedTags'] as Asset['inheritedTags'])
+      : undefined
+
+    const kitId = asset['kitId'] ? String(asset['kitId']) : undefined
+    const modelId = asset['modelId'] ? String(asset['modelId']) : undefined
+
     return {
       id: String(asset['id']),
       assetNumber: asset['assetNumber'] as string,
@@ -154,6 +174,11 @@ export class ChurchToolsStorageProvider {
       childAssetIds,
       assetGroup,
       fieldSources,
+      kitId,
+      modelId,
+      tagIds,
+      inheritedTagIds,
+      inheritedTags,
       isParent: ((asset['isParent'] as boolean | undefined) !== undefined ? (asset['isParent'] as boolean) : false),
       bookable: ((asset['bookable'] as boolean | undefined) !== undefined ? (asset['bookable'] as boolean) : true),
       createdBy: asset['createdBy'] as string,

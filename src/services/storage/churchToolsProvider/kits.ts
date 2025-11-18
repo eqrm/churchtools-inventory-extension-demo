@@ -289,7 +289,7 @@ export async function isKitAvailable(
 
 async function getKitsCategory(deps: KitDependencies): Promise<AssetType> {
   const categories = await deps.getAllCategoriesIncludingHistory();
-  let kitsCategory = categories.find((category) => category.name === '__Kits__');
+  let kitsCategory = categories.find((category) => category.name === '__kits__');
 
   if (!kitsCategory) {
     const user = await deps.apiClient.getCurrentUser();
@@ -297,7 +297,7 @@ async function getKitsCategory(deps: KitDependencies): Promise<AssetType> {
 
     const payload = {
       customModuleId: Number(deps.moduleId),
-      name: '__Kits__',
+      name: '__kits__',
       shorty,
       description: 'Internal category for equipment kits',
       data: null,

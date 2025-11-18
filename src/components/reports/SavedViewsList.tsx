@@ -7,8 +7,10 @@
 import { Stack, Card, Group, Text, Badge, ActionIcon, Menu, Loader } from '@mantine/core';
 import { IconDots, IconEdit, IconTrash, IconEye, IconWorld, IconLock } from '@tabler/icons-react';
 import { notifications } from '@mantine/notifications';
+import { useTranslation } from 'react-i18next';
 import type { SavedView } from '../../types/entities';
 import { useSavedViews, useDeleteSavedView } from '../../hooks/useSavedViews';
+import { ErrorState } from '../common/ErrorState';
 
 interface SavedViewsListProps {
   onSelectView: (view: SavedView) => void;
@@ -29,6 +31,8 @@ function ViewCard({
   onEdit?: () => void;
   onDelete: () => void;
 }) {
+  const { t } = useTranslation('views');
+  const modeLabel = t(`modes.${view.viewMode}`, view.viewMode);
   return (
     <Card key={view.id} padding="sm" withBorder>
       <Group justify="space-between">
@@ -37,19 +41,19 @@ function ViewCard({
             <Text fw={500}>{view.name}</Text>
             {view.isPublic ? (
               <Badge leftSection={<IconWorld size={12} />} variant="light" size="sm">
-                Public
+                {t('drawer.publicLabel')}
               </Badge>
             ) : (
               <Badge leftSection={<IconLock size={12} />} variant="light" size="sm" color="gray">
-                Private
+                {t('drawer.privateLabel')}
               </Badge>
             )}
             <Badge variant="light" size="sm" color="blue">
-              {view.viewMode}
+              {modeLabel}
             </Badge>
           </Group>
           <Text size="xs" c="dimmed">
-            {view.filters.length} filters • Created by {view.ownerName}
+            {t('drawer.filtersCount', { count: view.filters.length })} • {t('drawer.owner', { name: view.ownerName })}
           </Text>
         </Stack>
 
@@ -67,11 +71,11 @@ function ViewCard({
             <Menu.Dropdown>
               {onEdit && (
                 <Menu.Item leftSection={<IconEdit size={14} />} onClick={onEdit}>
-                  Edit
+                  {t('header.renameSavedView')}
                 </Menu.Item>
               )}
               <Menu.Item leftSection={<IconTrash size={14} />} color="red" onClick={onDelete}>
-                Delete
+                {t('header.deleteSavedView')}
               </Menu.Item>
             </Menu.Dropdown>
           </Menu>
@@ -85,23 +89,25 @@ function ViewCard({
  * Display list of user's saved views
  */
 export function SavedViewsList({ onSelectView, onEditView }: SavedViewsListProps) {
-  const { data: views, isLoading, error } = useSavedViews();
+  const { t } = useTranslation('views');
+  const { data: views, isLoading, error, refetch } = useSavedViews();
   const deleteMutation = useDeleteSavedView();
 
   const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`Delete view "${name}"?`)) return;
+    if (!confirm(t('drawer.deleteConfirm', { name }))) return;
 
     try {
       await deleteMutation.mutateAsync(id);
       notifications.show({
-        title: 'Success',
-        message: 'View deleted',
+        title: t('notifications.deleteSuccessTitle'),
+        message: t('notifications.deleteSuccessMessage'),
         color: 'green',
       });
-    } catch {
+    } catch (err) {
+      const message = err instanceof Error ? err.message : '';
       notifications.show({
-        title: 'Error',
-        message: 'Unable to delete view',
+        title: t('notifications.deleteErrorTitle'),
+        message: t('notifications.deleteErrorMessage', { message }),
         color: 'red',
       });
     }
@@ -111,23 +117,19 @@ export function SavedViewsList({ onSelectView, onEditView }: SavedViewsListProps
     return (
       <Group justify="center" p="md">
         <Loader size="sm" />
-        <Text c="dimmed" size="sm">Loading views…</Text>
+        <Text c="dimmed" size="sm">{t('drawer.loading')}</Text>
       </Group>
     );
   }
 
   if (error) {
-    return (
-      <Text c="red" size="sm" p="md">
-        Failed to load views
-      </Text>
-    );
+    return <ErrorState message={t('drawer.error')} onRetry={() => { void refetch(); }} />;
   }
 
   if (!views || views.length === 0) {
     return (
       <Text c="dimmed" size="sm" p="md" ta="center">
-        No saved views yet
+        {t('drawer.empty')}
       </Text>
     );
   }

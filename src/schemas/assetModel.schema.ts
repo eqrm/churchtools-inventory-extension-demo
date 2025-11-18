@@ -27,6 +27,7 @@ export const AssetModelSchemaV1_0 = z.object({
     })
     .optional(),
   customFieldValues: z.record(z.string(), z.unknown()).optional(),
+  defaultBookable: z.boolean().optional(),
   tagIds: z.array(z.string().uuid()).optional(),
   createdAt: z.string(), // ISOTimestamp
   updatedAt: z.string(), // ISOTimestamp

@@ -24,6 +24,13 @@ const MaintenancePage = lazy(() => import('../pages/MaintenancePage').then((modu
 const MaintenanceDashboardPage = lazy(() =>
     import('../pages/MaintenanceDashboard').then((module) => ({ default: module.MaintenanceDashboardPage })),
 );
+const MaintenanceCompaniesPage = lazy(() =>
+    import('../pages/MaintenanceCompanies').then((module) => ({ default: module.MaintenanceCompanies })),
+);
+const MaintenanceRulesPage = lazy(() =>
+    import('../pages/MaintenanceRules').then((module) => ({ default: module.MaintenanceRules })),
+);
+const WorkOrdersPage = lazy(() => import('../pages/WorkOrders').then((module) => ({ default: module.WorkOrders })));
 const SettingsPage = lazy(() => import('../pages/SettingsPage').then((module) => ({ default: module.SettingsPage })));
 
 function LoadingFallback() {
@@ -270,12 +277,18 @@ function buildRouter() {
                                 ),
                             },
                             {
+                                path: 'companies',
+                                element: (
+                                    <FeatureGate feature="maintenanceEnabled">
+                                        {withSuspense(<MaintenanceCompaniesPage />)}
+                                    </FeatureGate>
+                                ),
+                            },
+                            {
                                 path: 'rules',
                                 element: (
                                     <FeatureGate feature="maintenanceEnabled">
-                                        {withSuspense(
-                                            <PlaceholderPage title="Maintenance rules" description="Implementation pending." />,
-                                        )}
+                                        {withSuspense(<MaintenanceRulesPage />)}
                                     </FeatureGate>
                                 ),
                             },
@@ -283,9 +296,7 @@ function buildRouter() {
                                 path: 'rules/:id',
                                 element: (
                                     <FeatureGate feature="maintenanceEnabled">
-                                        {withSuspense(
-                                            <PlaceholderPage title="Rule detail" description="Implementation pending." />,
-                                        )}
+                                        {withSuspense(<MaintenanceRulesPage />)}
                                     </FeatureGate>
                                 ),
                             },
@@ -293,9 +304,23 @@ function buildRouter() {
                                 path: 'work-orders',
                                 element: (
                                     <FeatureGate feature="maintenanceEnabled">
-                                        {withSuspense(
-                                            <PlaceholderPage title="Work orders" description="Implementation pending." />,
-                                        )}
+                                        {withSuspense(<WorkOrdersPage />)}
+                                    </FeatureGate>
+                                ),
+                            },
+                            {
+                                path: 'work-orders/:id',
+                                element: (
+                                    <FeatureGate feature="maintenanceEnabled">
+                                        {withSuspense(<WorkOrdersPage />)}
+                                    </FeatureGate>
+                                ),
+                            },
+                            {
+                                path: 'work-orders/:id/edit',
+                                element: (
+                                    <FeatureGate feature="maintenanceEnabled">
+                                        {withSuspense(<WorkOrdersPage />)}
                                     </FeatureGate>
                                 ),
                             },

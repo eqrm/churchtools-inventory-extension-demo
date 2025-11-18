@@ -16,6 +16,7 @@ import {
 import { DateInput } from '@mantine/dates';
 import { IconAlertCircle, IconCircleCheck, IconPlayerPlay, IconRotateClockwise } from '@tabler/icons-react';
 import { notifications } from '@mantine/notifications';
+import { useTranslation } from 'react-i18next';
 import { useAssets } from '../../hooks/useAssets';
 import { useMaintenancePlanStore } from '../../state/maintenance/planStore';
 import { getMasterDataDefinition } from '../../utils/masterData';
@@ -37,11 +38,7 @@ function toIsoDate(value: Date | null): string | undefined {
     return value.toISOString().split('T')[0];
 }
 
-const stageLabels: Record<string, string> = {
-    draft: 'Draft',
-    planned: 'Planned',
-    completed: 'Completed',
-};
+    // Stage labels are localized at render time
 
 const stageColors: Record<string, string> = {
     draft: 'gray',
@@ -50,6 +47,7 @@ const stageColors: Record<string, string> = {
 };
 
 export function MaintenancePlanForm() {
+    const { t } = useTranslation('maintenance');
     const {
         state,
         setName,
@@ -81,7 +79,7 @@ export function MaintenancePlanForm() {
             setIsSyncingHolds(true);
             try {
                 const result = await syncPlanHolds();
-                if (
+                    if (
                     !options.suppressSuccess &&
                     options.successMessage &&
                     result &&
@@ -89,7 +87,7 @@ export function MaintenancePlanForm() {
                 ) {
                     notifications.show({
                         color: 'green',
-                        title: 'Maintenance holds updated',
+                        title: t('plan.messages.holdsUpdatedTitle'),
                         message: options.successMessage,
                     });
                 }
@@ -98,7 +96,7 @@ export function MaintenancePlanForm() {
                 const message = error instanceof Error ? error.message : 'Unknown error occurred.';
                 notifications.show({
                     color: 'red',
-                    title: 'Unable to update maintenance holds',
+                    title: t('plan.errors.holdsUpdateFailed'),
                     message,
                 });
                 return null;
@@ -106,7 +104,7 @@ export function MaintenancePlanForm() {
                 setIsSyncingHolds(false);
             }
         },
-        [syncPlanHolds],
+            [syncPlanHolds, t],
     );
 
     const notifyWarnings = useCallback((warnings: string[]) => {
@@ -265,22 +263,22 @@ export function MaintenancePlanForm() {
                 <Group justify="space-between" align="flex-start">
                     <Stack gap={4}>
                         <TextInput
-                            label="Plan name"
-                            placeholder="Enter maintenance plan name"
+                            label={t('plan.labels.name')}
+                            placeholder={t('plan.placeholders.name')}
                             value={state.name}
                             onChange={(event) => setName(event.currentTarget.value)}
                             required
                         />
                         <Textarea
-                            label="Description"
-                            placeholder="Describe the maintenance scope"
+                            label={t('plan.labels.description')}
+                            placeholder={t('plan.placeholders.description')}
                             minRows={2}
                             value={state.description}
                             onChange={(event) => setDescription(event.currentTarget.value)}
                         />
                     </Stack>
                     <Badge color={stageColors[state.stage]} variant="light" size="lg">
-                        {stageLabels[state.stage] ?? state.stage}
+                        {t(`plan.stages.${state.stage}`)}
                     </Badge>
                 </Group>
 
@@ -291,7 +289,7 @@ export function MaintenancePlanForm() {
                         disabled={!canMoveToPlanned || isSyncingHolds}
                         loading={isSyncingHolds}
                     >
-                        Move to planned
+                        {t('plan.actions.moveToPlanned')}
                     </Button>
                     <Button
                         variant="light"
@@ -300,7 +298,7 @@ export function MaintenancePlanForm() {
                         disabled={!canResetToDraft || isSyncingHolds}
                         loading={isSyncingHolds}
                     >
-                        Reset to draft
+                        {t('plan.actions.resetToDraft')}
                     </Button>
                     <Button
                         color="teal"
@@ -309,12 +307,12 @@ export function MaintenancePlanForm() {
                         disabled={!canComplete || isSyncingHolds}
                         loading={isSyncingHolds}
                     >
-                        Complete plan
+                        {t('plan.actions.complete')}
                     </Button>
                 </Group>
 
                 {state.stageWarnings.length > 0 && (
-                    <Alert icon={<IconAlertCircle />} color="red" title="Plan requirements">
+                    <Alert icon={<IconAlertCircle />} color="red" title={t('plan.requirements.title')}>
                         <Stack gap={4}>
                             {state.stageWarnings.map((warning) => (
                                 <Text key={warning} size="sm">
@@ -327,8 +325,8 @@ export function MaintenancePlanForm() {
 
                 <Stack gap="md">
                     <MultiSelect
-                        label="Assets"
-                        placeholder={assetsLoading ? 'Loading assets…' : 'Select one or more assets'}
+                        label={t('plan.labels.assets')}
+                        placeholder={assetsLoading ? t('plan.placeholders.loadingAssets') : t('plan.placeholders.selectAssets')}
                         data={assetOptions}
                         searchable
                         clearable
@@ -339,66 +337,66 @@ export function MaintenancePlanForm() {
 
                     <Text size="sm" c="dimmed">
                         {selectedAssetIds.length === 0
-                            ? 'Select at least one asset to prepare the plan.'
-                            : `${selectedAssetIds.length} asset${selectedAssetIds.length === 1 ? '' : 's'} included in this plan.`}
+                            ? t('plan.placeholders.selectAssetsPrompt')
+                            : t('plan.labels.selectedCount', { count: selectedAssetIds.length })}
                     </Text>
                 </Stack>
 
                 <Stack gap="md">
-                    <Text fw={600}>Maintenance company</Text>
+                    <Text fw={600}>{t('plan.labels.company')}</Text>
                     <MultiSelect
                         data={companyOptions}
                         value={state.maintenanceCompanyId ? [state.maintenanceCompanyId] : []}
                         onChange={(values) => handleCompanyChange(values[values.length - 1] ?? null)}
-                        label="Preferred company"
-                        placeholder="Select maintenance company"
+                        label={t('plan.labels.preferredCompany')}
+                        placeholder={t('plan.placeholders.selectCompany')}
                         searchable
                         clearable
                     />
                     {state.maintenanceCompanyName && (
                         <Text size="sm" c="dimmed">
-                            Selected company: {state.maintenanceCompanyName}
+                            {t('plan.labels.selectedCompany', { company: state.maintenanceCompanyName })}
                         </Text>
                     )}
                 </Stack>
 
-                <Divider label="Schedule window" labelPosition="center" />
+                <Divider label={t('plan.labels.scheduleWindow')} labelPosition="center" />
 
                 <Group grow>
                     <DateInput
-                        label="Start date"
+                        label={t('plan.labels.startDate')}
                         value={startDateValue}
                         onChange={(value) => handleScheduleUpdate({ startDate: toIsoDate(value) })}
-                        placeholder="Select start date"
+                        placeholder={t('plan.placeholders.startDate')}
                     />
                     <DateInput
-                        label="End date"
+                        label={t('plan.labels.endDate')}
                         value={endDateValue}
                         onChange={(value) => handleScheduleUpdate({ endDate: toIsoDate(value) })}
-                        placeholder="Select end date"
+                        placeholder={t('plan.placeholders.endDate')}
                         minDate={startDateValue ?? undefined}
                     />
                 </Group>
 
                 <Group gap="md" align="flex-end">
                     <ColorInput
-                        label="Hold color"
+                        label={t('plan.labels.holdColor')}
                         format="hex"
                         value={state.schedule.holdColor}
                         onChange={(value) => handleScheduleUpdate({ holdColor: value || undefined })}
-                        placeholder="#1c7ed6"
+                        placeholder={t('plan.placeholders.holdColor')}
                     />
                     <TextInput
-                        label="Interval rule"
-                        placeholder="e.g. Quarterly"
+                        label={t('plan.labels.intervalRule')}
+                        placeholder={t('plan.placeholders.intervalRuleExample')}
                         value={state.intervalRule ?? ''}
                         onChange={(event) => setIntervalRule(event.currentTarget.value || undefined)}
                     />
                 </Group>
 
                 <Textarea
-                    label="Internal notes"
-                    placeholder="Add optional notes for technicians"
+                    label={t('plan.labels.internalNotes')}
+                    placeholder={t('plan.placeholders.internalNotes')}
                     minRows={3}
                     value={state.notes}
                     onChange={(event) => setNotes(event.currentTarget.value)}

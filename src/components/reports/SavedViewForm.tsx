@@ -1,7 +1,9 @@
-import { TextInput, Switch, Stack, Button, Group } from '@mantine/core';
+import { useEffect } from 'react';
+import { TextInput, Switch, Stack, Button, Group, Alert } from '@mantine/core';
 import { useForm } from '@mantine/form';
+import { useTranslation } from 'react-i18next';
 import type { SavedViewCreate, ViewMode, ViewFilter } from '../../types/entities';
-import { useCreateSavedView, useUpdateSavedView } from '../../hooks/useSavedViews';
+import { useCreateSavedView, useUpdateSavedView, useSavedView } from '../../hooks/useSavedViews';
 import { useCurrentUser } from '../../hooks/useCurrentUser';
 
 interface SavedViewFormProps {
@@ -12,8 +14,6 @@ interface SavedViewFormProps {
   groupBy?: string;
   visibleColumns?: string[];
   existingViewId?: string;
-  existingViewName?: string;
-  existingIsPublic?: boolean;
   onSuccess?: () => void;
   onCancel?: () => void;
 }
@@ -29,27 +29,44 @@ export function SavedViewForm({
   groupBy,
   visibleColumns,
   existingViewId,
-  existingViewName,
-  existingIsPublic,
   onSuccess,
   onCancel,
 }: SavedViewFormProps) {
+  const { t } = useTranslation('views');
   const { data: currentUser } = useCurrentUser();
   const createMutation = useCreateSavedView();
   const updateMutation = useUpdateSavedView();
+  const {
+    data: existingView,
+    isLoading: isExistingViewLoading,
+    error: existingViewError,
+  } = useSavedView(existingViewId);
+  const isEditing = Boolean(existingViewId);
 
   const form = useForm({
     initialValues: {
-      name: existingViewName || '',
-      isPublic: existingIsPublic ?? false,
+      name: '',
+      isPublic: false,
     },
     validate: {
       name: (value) => (!value ? 'Name is required' : null),
     },
   });
 
+  useEffect(() => {
+    if (existingView) {
+      form.setValues({
+        name: existingView.name,
+        isPublic: existingView.isPublic ?? false,
+      });
+    } else if (!existingViewId) {
+      form.setValues({ name: '', isPublic: false });
+    }
+    // intentionally depend on existingViewId to reset form when switching between edit/create modes
+  }, [existingView, existingViewId, form]);
+
   const handleSubmit = async (values: { name: string; isPublic: boolean }) => {
-    if (!currentUser) return;
+    if (!currentUser || isExistingViewLoading) return;
 
     const viewData: SavedViewCreate = {
       name: values.name,
@@ -79,30 +96,45 @@ export function SavedViewForm({
   return (
     <form onSubmit={form.onSubmit(handleSubmit)}>
       <Stack gap="md">
+        {existingViewError && (
+          <Alert color="red" title={t('form.errorTitle')}>
+            {existingViewError instanceof Error
+              ? existingViewError.message
+              : t('form.errorFallback')}
+          </Alert>
+        )}
+
         <TextInput
-          label="View name"
-          placeholder="e.g., Available audio gear"
+          label={t('form.nameLabel')}
+          placeholder={t('form.namePlaceholder')}
           required
+          disabled={isExistingViewLoading}
           {...form.getInputProps('name')}
         />
 
         <Switch
-          label="Public view"
-          description="Other users can see and reuse this view"
+          label={t('form.publicLabel')}
+          description={t('form.publicDescription')}
+          disabled={isExistingViewLoading}
           {...form.getInputProps('isPublic', { type: 'checkbox' })}
         />
 
         <Group justify="flex-end" gap="sm">
           {onCancel && (
-            <Button variant="default" onClick={onCancel}>
-              Cancel
+            <Button variant="default" onClick={onCancel} disabled={isExistingViewLoading}>
+              {t('form.cancel')}
             </Button>
           )}
           <Button
             type="submit"
-            loading={createMutation.isPending || updateMutation.isPending}
+            loading={
+              createMutation.isPending ||
+              updateMutation.isPending ||
+              (isEditing && isExistingViewLoading)
+            }
+            disabled={isExistingViewLoading}
           >
-            {existingViewId ? 'Update' : 'Save'}
+            {existingViewId ? t('form.update') : t('form.save')}
           </Button>
         </Group>
       </Stack>

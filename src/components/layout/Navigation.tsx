@@ -2,13 +2,13 @@ import { AppShell, Burger, Group, NavLink, Title, ActionIcon, Tooltip, Modal, Te
 import { useDisclosure } from '@mantine/hooks';
 import {
   IconBox,
+  IconBoxMultiple,
   IconCategory,
   IconClipboardList,
   IconHome,
   IconScan,
   IconSettings,
   IconCalendarEvent,
-  IconPackage,
   IconChartBar,
   IconTool,
   IconUsersGroup,
@@ -27,14 +27,15 @@ interface NavigationProps {
 }
 
 export function Navigation({ children, onScanClick }: NavigationProps) {
-  const { t } = useTranslation(['undo', 'common']);
+  const { t: tNav } = useTranslation('navigation');
+  const { t: tUndo } = useTranslation('undo');
   const [opened, { toggle, close }] = useDisclosure();
   const [undoHistoryOpened, { open: openUndoHistory, close: closeUndoHistory }] = useDisclosure(false);
   const location = useLocation();
-  const { bookingsEnabled, kitsEnabled, maintenanceEnabled } = useFeatureSettingsStore((state) => ({
+  const { bookingsEnabled, maintenanceEnabled, kitsEnabled } = useFeatureSettingsStore((state) => ({
     bookingsEnabled: state.bookingsEnabled,
-    kitsEnabled: state.kitsEnabled,
     maintenanceEnabled: state.maintenanceEnabled,
+    kitsEnabled: state.kitsEnabled,
   }));
   const {
     history: undoHistory,
@@ -50,6 +51,13 @@ export function Navigation({ children, onScanClick }: NavigationProps) {
     if (!path) return false;
     if (path === '/') {
       return location.pathname === '/';
+    }
+    // Exact match for list pages (e.g., /assets, /kits, /bookings)
+    // These should only be active when on the exact path, not on detail pages
+    if (path === '/assets' || path === '/kits' || path === '/bookings' || 
+        path === '/categories' || path === '/asset-groups' || path === '/reports' || 
+        path === '/damage-reports') {
+      return location.pathname === path;
     }
     return location.pathname.startsWith(path);
   };
@@ -98,14 +106,14 @@ export function Navigation({ children, onScanClick }: NavigationProps) {
               hiddenFrom="sm"
               size="sm"
             />
-            <Title order={3}>Inventory Manager</Title>
+            <Title order={3}>{tNav('title')}</Title>
           </Group>
-          <Tooltip label={t('undo:openHistoryTooltip')}>
+          <Tooltip label={tUndo('openHistoryTooltip')}>
             <ActionIcon
               variant="subtle"
               size="lg"
               onClick={openUndoHistory}
-              aria-label={t('undo:openHistoryAria')}
+              aria-label={tUndo('openHistoryAria')}
             >
               <IconHistory size={20} />
             </ActionIcon>
@@ -115,84 +123,84 @@ export function Navigation({ children, onScanClick }: NavigationProps) {
 
       <AppShell.Navbar p="md">
         <NavLink
-          data-nav-label="Dashboard"
+          data-nav-label={tNav('items.dashboard')}
           component={Link}
           to="/"
-          label="Dashboard"
+          label={tNav('items.dashboard')}
           leftSection={<IconHome size={20} />}
           active={routeIsActive('/')}
           onClick={(event) => handleNavClick(event, { label: 'Dashboard', route: '/' })}
         />
         
         <NavLink
-          data-nav-label="Categories"
+          data-nav-label={tNav('items.categories')}
           component={Link}
           to="/categories"
-          label="Categories"
+          label={tNav('items.categories')}
           leftSection={<IconCategory size={20} />}
           active={routeIsActive('/categories')}
           onClick={(event) => handleNavClick(event, { label: 'Categories', route: '/categories' })}
         />
         
         <NavLink
-          data-nav-label="Assets"
+          data-nav-label={tNav('items.assets')}
           component={Link}
           to="/assets"
-          label="Assets"
+          label={tNav('items.assets')}
           leftSection={<IconBox size={20} />}
           active={routeIsActive('/assets')}
           onClick={(event) => handleNavClick(event, { label: 'Assets', route: '/assets' })}
         />
 
         <NavLink
-          data-nav-label="Asset Models"
+          data-nav-label={tNav('items.assetModels')}
           component={Link}
           to="/asset-groups"
-          label="Asset Models"
+          label={tNav('items.assetModels')}
           leftSection={<IconUsersGroup size={20} />}
           active={routeIsActive('/asset-groups')}
           onClick={(event) => handleNavClick(event, { label: 'Asset Models', route: '/asset-groups' })}
         />
 
+        {kitsEnabled && (
+          <NavLink
+            data-nav-label={tNav('items.kits')}
+            component={Link}
+            to="/kits"
+            label={tNav('items.kits')}
+            leftSection={<IconBoxMultiple size={20} />}
+            active={routeIsActive('/kits')}
+            onClick={(event) => handleNavClick(event, { label: 'Kits', route: '/kits' })}
+          />
+        )}
+
         {bookingsEnabled && (
           <NavLink
-            data-nav-label="Bookings"
+            data-nav-label={tNav('items.bookings')}
             component={Link}
             to="/bookings"
-            label="Bookings"
+            label={tNav('items.bookings')}
             leftSection={<IconCalendarEvent size={20} />}
             active={routeIsActive('/bookings')}
             onClick={(event) => handleNavClick(event, { label: 'Bookings', route: '/bookings' })}
           />
         )}
 
-        {kitsEnabled && (
-          <NavLink
-            data-nav-label="Kits"
-            component={Link}
-            to="/kits"
-            label="Kits"
-            leftSection={<IconPackage size={20} />}
-            active={routeIsActive('/kits')}
-            onClick={(event) => handleNavClick(event, { label: 'Kits', route: '/kits' })}
-          />
-        )}
-
         <NavLink
-          data-nav-label="Stock Take"
+          data-nav-label={tNav('items.stockTake')}
           component={Link}
           to="/stock-take"
-          label="Stock Take"
+          label={tNav('items.stockTake')}
           leftSection={<IconClipboardList size={20} />}
           active={routeIsActive('/stock-take')}
           onClick={(event) => handleNavClick(event, { label: 'Stock Take', route: '/stock-take' })}
         />
 
         <NavLink
-          data-nav-label="Reports"
+          data-nav-label={tNav('items.reports')}
           component={Link}
           to="/reports"
-          label="Reports"
+          label={tNav('items.reports')}
           leftSection={<IconChartBar size={20} />}
           active={routeIsActive('/reports')}
           onClick={(event) => handleNavClick(event, { label: 'Reports', route: '/reports' })}
@@ -200,10 +208,10 @@ export function Navigation({ children, onScanClick }: NavigationProps) {
 
         {maintenanceEnabled && (
           <NavLink
-            data-nav-label="Maintenance"
+            data-nav-label={tNav('items.maintenance')}
             component={Link}
             to="/maintenance"
-            label="Maintenance"
+            label={tNav('items.maintenance')}
             leftSection={<IconTool size={20} />}
             active={routeIsActive('/maintenance')}
             onClick={(event) => handleNavClick(event, { label: 'Maintenance', route: '/maintenance' })}
@@ -211,9 +219,9 @@ export function Navigation({ children, onScanClick }: NavigationProps) {
         )}
 
         <NavLink
-          data-nav-label="Quick Scan"
-          label="Quick Scan"
-          description={scanShortcut}
+          data-nav-label={tNav('items.quickScan')}
+          label={tNav('items.quickScan')}
+          description={tNav('quickScanDescription', { shortcut: scanShortcut })}
           leftSection={<IconScan size={20} />}
           onClick={(event) => {
             event.preventDefault();
@@ -223,10 +231,10 @@ export function Navigation({ children, onScanClick }: NavigationProps) {
         />
         
         <NavLink
-          data-nav-label="Settings"
+          data-nav-label={tNav('items.settings')}
           component={Link}
           to="/settings"
-          label="Settings"
+          label={tNav('items.settings')}
           leftSection={<IconSettings size={20} />}
           active={routeIsActive('/settings')}
           onClick={(event) => handleNavClick(event, { label: 'Settings', route: '/settings' })}
@@ -240,7 +248,7 @@ export function Navigation({ children, onScanClick }: NavigationProps) {
       <Modal
         opened={undoHistoryOpened}
         onClose={closeUndoHistory}
-        title={t('undo:modalTitle')}
+        title={tUndo('modalTitle')}
         size="lg"
       >
         {undoError && (

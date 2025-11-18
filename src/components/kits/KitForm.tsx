@@ -13,6 +13,9 @@ import type { Kit, KitCreate, KitInheritanceProperty } from '../../types/entitie
 import { ASSET_STATUS_OPTIONS } from '../../constants/assetStatuses';
 import { FixedKitBuilder } from './FixedKitBuilder';
 import { FlexibleKitBuilder } from './FlexibleKitBuilder';
+import { MasterDataSelectInput } from '../common/MasterDataSelectInput';
+import { useMasterData } from '../../hooks/useMasterDataNames';
+import { MASTER_DATA_DEFINITIONS, normalizeMasterDataName } from '../../utils/masterData';
 
 interface KitFormProps {
   kit?: Kit;
@@ -24,6 +27,7 @@ export function KitForm({ kit, onSuccess, onCancel }: KitFormProps) {
   const createKit = useCreateKit();
   const updateKit = useUpdateKit();
   const { t } = useTranslation('kits');
+  const { names: locationNames, addItem: addLocation } = useMasterData(MASTER_DATA_DEFINITIONS.locations);
 
   const typeOptions = useMemo(
     () => [
@@ -136,10 +140,18 @@ export function KitForm({ kit, onSuccess, onCancel }: KitFormProps) {
           {...form.getInputProps('description')}
         />
 
-        <TextInput
+        <MasterDataSelectInput
+          names={locationNames}
           label={t('form.fields.locationLabel')}
           placeholder={t('form.fields.locationPlaceholder')}
-          {...form.getInputProps('location')}
+          description={t('form.fields.locationDescription')}
+          value={form.values.location ?? ''}
+          onChange={(next) => form.setFieldValue('location', next)}
+          nothingFound={t('form.fields.locationEmpty')}
+          onCreateOption={(name) => {
+            const created = addLocation(name);
+            return created?.name ?? normalizeMasterDataName(name);
+          }}
         />
 
         <Select
