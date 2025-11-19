@@ -1,24 +1,30 @@
-import type { SettingsSnapshot, SettingsMasterDataItem } from '../../types/settings';
+import type { SettingsSnapshot, SettingsMasterDataItem, SettingsMasterDataSnapshot } from '../../types/settings';
 import { settingsSnapshotSchema } from '../../schemas/settings';
-import { MASTER_DATA_DEFINITIONS, persistMasterData, loadMasterData } from '../../utils/masterData';
+import { MASTER_DATA_DEFINITIONS, canonicalMasterDataName, normalizeMasterDataName } from '../../utils/masterData';
 import { loadScannerModels, saveScannerModels } from './scannerModels';
 import { useFeatureSettingsStore } from '../../stores/featureSettingsStore';
 import { getStoredModuleDefaultPrefixId, setStoredModuleDefaultPrefixId } from '../assets/autoNumbering';
+import { masterDataService } from '../MasterDataService';
+import { getChurchToolsStorageProvider } from '../churchTools/storageProvider';
 
 const ASSET_PREFIX_STORAGE_KEY = 'assetNumberPrefix';
 const DEFAULT_PREFIX = 'ASSET';
 const DEFAULT_FEATURE_TOGGLES = Object.freeze({
   bookingsEnabled: false,
-  kitsEnabled: false,
+  kitsEnabled: true,
   maintenanceEnabled: false,
 });
 
-const MASTER_DATA_SEQUENCE: Array<keyof SettingsSnapshot['masterData']> = [
-  'locations',
-  'manufacturers',
-  'models',
-  'maintenanceCompanies',
-];
+type MasterDataKey = keyof SettingsSnapshot['masterData'];
+
+const MASTER_DATA_CONFIG: Record<MasterDataKey, { allowDeletes: boolean }> = {
+  locations: { allowDeletes: true },
+  manufacturers: { allowDeletes: true },
+  models: { allowDeletes: true },
+  maintenanceCompanies: { allowDeletes: false },
+};
+
+const MASTER_DATA_SEQUENCE = Object.keys(MASTER_DATA_CONFIG) as MasterDataKey[];
 
 function getLocalStorage(): Storage | null {
   if (typeof window === 'undefined' || !window.localStorage) {
@@ -32,35 +38,120 @@ function getLocalStorage(): Storage | null {
   }
 }
 
-function toMasterDataItems(items: SettingsMasterDataItem[]): SettingsMasterDataItem[] {
-  return items.map((item) => ({ id: item.id, name: item.name.trim() }));
+function normalizeSnapshotNames(items: SettingsMasterDataItem[]): string[] {
+  const seen = new Set<string>();
+  const normalized: string[] = [];
+
+  items.forEach((item) => {
+    const name = normalizeMasterDataName(item.name ?? '');
+    if (!name) {
+      return;
+    }
+    const canonical = canonicalMasterDataName(name);
+    if (seen.has(canonical)) {
+      return;
+    }
+    seen.add(canonical);
+    normalized.push(name);
+  });
+
+  return normalized;
 }
 
-function persistMasterDataCollection(definitionKey: keyof typeof MASTER_DATA_DEFINITIONS, items: SettingsMasterDataItem[]): void {
-  const definition = MASTER_DATA_DEFINITIONS[definitionKey];
-  const normalized = toMasterDataItems(items).map((item) => ({ ...item, assetCount: 0 }));
-  persistMasterData(definition, normalized);
+async function collectMasterDataSnapshot(): Promise<SettingsMasterDataSnapshot> {
+  const base: SettingsMasterDataSnapshot = {
+    locations: [],
+    manufacturers: [],
+    models: [],
+    maintenanceCompanies: [],
+  };
+
+  const entries = await Promise.all(
+    MASTER_DATA_SEQUENCE.map(async (key) => {
+      const entity = MASTER_DATA_DEFINITIONS[key].entity;
+      const items = await masterDataService
+        .list(entity)
+        .catch((error) => {
+          console.warn(`Failed to collect master data for ${entity}`, error);
+          return [];
+        });
+      return [key, items.map((item) => ({ id: item.id, name: item.name }))] as const;
+    })
+  );
+
+  return entries.reduce((acc, [key, items]) => {
+    acc[key] = items;
+    return acc;
+  }, base);
+}
+
+async function syncMasterDataCollections(masterData: SettingsMasterDataSnapshot): Promise<void> {
+  for (const key of MASTER_DATA_SEQUENCE) {
+    await syncMasterDataEntity(key, masterData[key]);
+  }
+}
+
+async function syncMasterDataEntity(key: MasterDataKey, items: SettingsMasterDataItem[]): Promise<void> {
+  const definition = MASTER_DATA_DEFINITIONS[key];
+  const desiredNames = normalizeSnapshotNames(items);
+  const existing = await masterDataService.list(definition.entity);
+  const existingByCanonical = new Map(existing.map((item) => [canonicalMasterDataName(item.name), item]));
+  const desiredCanonical = new Set(desiredNames.map((name) => canonicalMasterDataName(name)));
+
+  for (const name of desiredNames) {
+    const canonical = canonicalMasterDataName(name);
+    const existingItem = existingByCanonical.get(canonical);
+    if (existingItem) {
+      if (existingItem.name !== name) {
+        await masterDataService.update(definition.entity, existingItem.id, name);
+      }
+    } else {
+      await masterDataService.create(definition.entity, name);
+    }
+  }
+
+  if (!MASTER_DATA_CONFIG[key].allowDeletes) {
+    return;
+  }
+
+  for (const item of existing) {
+    const canonical = canonicalMasterDataName(item.name);
+    if (!desiredCanonical.has(canonical)) {
+      await masterDataService.remove(definition.entity, item.id);
+    }
+  }
+}
+
+async function resolveModuleDefaultPrefixId(): Promise<string | null> {
+  try {
+    const provider = getChurchToolsStorageProvider();
+    return await provider.getModuleDefaultPrefixId();
+  } catch (error) {
+    console.warn('Falling back to cached module default prefix id', error);
+    return getStoredModuleDefaultPrefixId();
+  }
+}
+
+async function applyModuleDefaultPrefix(prefixId: string | null): Promise<void> {
+  try {
+    const provider = getChurchToolsStorageProvider();
+    await provider.setModuleDefaultPrefixId(prefixId);
+  } catch (error) {
+    console.warn('Failed to persist module default prefix to provider', error);
+  }
+
+  setStoredModuleDefaultPrefixId(prefixId);
 }
 
 export async function collectSettingsSnapshot(): Promise<SettingsSnapshot> {
   const storage = getLocalStorage();
   const featureState = useFeatureSettingsStore.getState();
-
-  const masterData = MASTER_DATA_SEQUENCE.reduce<SettingsSnapshot['masterData']>((acc, key) => {
-    const definition = MASTER_DATA_DEFINITIONS[key];
-    const items = loadMasterData(definition).map((item) => ({ id: item.id, name: item.name }));
-    return { ...acc, [key]: items };
-  }, {
-    locations: [],
-    manufacturers: [],
-    models: [],
-    maintenanceCompanies: [],
-  });
+  const masterData = await collectMasterDataSnapshot();
 
   const snapshot: SettingsSnapshot = {
     schemaVersion: '1.0',
     assetNumberPrefix: storage?.getItem(ASSET_PREFIX_STORAGE_KEY) ?? DEFAULT_PREFIX,
-    moduleDefaultPrefixId: getStoredModuleDefaultPrefixId(),
+    moduleDefaultPrefixId: await resolveModuleDefaultPrefixId(),
     featureToggles: {
       bookingsEnabled: featureState.bookingsEnabled,
       kitsEnabled: featureState.kitsEnabled,
@@ -81,11 +172,9 @@ export async function applySettingsSnapshot(snapshot: SettingsSnapshot): Promise
     storage.setItem(ASSET_PREFIX_STORAGE_KEY, normalized.assetNumberPrefix);
   }
 
-  setStoredModuleDefaultPrefixId(normalized.moduleDefaultPrefixId);
+  await applyModuleDefaultPrefix(normalized.moduleDefaultPrefixId);
 
-  MASTER_DATA_SEQUENCE.forEach((key) => {
-    persistMasterDataCollection(key, normalized.masterData[key]);
-  });
+  await syncMasterDataCollections(normalized.masterData);
 
   saveScannerModels(normalized.scannerModels);
 

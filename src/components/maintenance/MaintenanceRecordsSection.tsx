@@ -27,12 +27,10 @@ interface MaintenanceRecordsSectionProps {
 
 const maintenanceTypeOptions = (t: (s: string, v?: unknown) => string) => [
   { value: 'inspection', label: t('records.types.inspection') },
-  { value: 'cleaning', label: t('records.types.cleaning') },
-  { value: 'repair', label: t('records.types.repair') },
-  { value: 'calibration', label: t('records.types.calibration') },
-  { value: 'testing', label: t('records.types.testing') },
-  { value: 'compliance', label: t('records.types.compliance') },
-  { value: 'other', label: t('records.types.other') },
+  { value: 'maintenance', label: t('records.types.maintenance') },
+  { value: 'planned-repair', label: t('records.types.planned-repair') },
+  { value: 'unplanned-repair', label: t('records.types.unplanned-repair') },
+  { value: 'improvement', label: t('records.types.improvement') },
 ];
 
 interface MaintenanceViewFilters extends Record<string, unknown> {

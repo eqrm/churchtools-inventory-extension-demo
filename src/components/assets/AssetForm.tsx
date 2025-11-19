@@ -36,6 +36,7 @@ import {
 import { useMasterData } from '../../hooks/useMasterDataNames';
 import { generateAssetNameFromTemplate, DEFAULT_ASSET_NAME_TEMPLATE } from '../../utils/assetNameTemplate';
 import { MASTER_DATA_DEFINITIONS, normalizeMasterDataName } from '../../utils/masterData';
+import { bindSelectField } from '../../utils/selectControl';
 import { CustomFieldInput } from './CustomFieldInput';
 import { MasterDataSelectInput } from '../common/MasterDataSelectInput';
 import { MainImageUpload } from '../common/MainImageUpload';
@@ -52,7 +53,6 @@ interface AssetFormProps {
   onSuccess?: (created: Asset) => void;
   onCancel?: () => void;
   initialData?: Partial<Asset>;
-  groupId?: string;
 }
 
 interface AssetFormValues {
@@ -74,7 +74,7 @@ interface AssetFormValues {
 }
 
 
-export function AssetForm({ asset, onSuccess, onCancel, initialData, groupId }: AssetFormProps) {
+export function AssetForm({ asset, onSuccess, onCancel, initialData }: AssetFormProps) {
   const isEditing = Boolean(asset);
   
   const { data: categories = [] } = useCategories();
@@ -220,7 +220,7 @@ export function AssetForm({ asset, onSuccess, onCancel, initialData, groupId }: 
     return () => {
       cancelled = true;
     };
-  }, [isEditing, prefixes, selectedPrefixId, currentUserId, form]);
+  }, [isEditing, prefixes, selectedPrefixId, currentUserId, form, initialData?.assetNumber]);
 
   // Track whether the user has manually edited the name field. If not, we auto-fill
   // the name with a generated value based on other fields so the user sees a preview.
@@ -252,18 +252,6 @@ export function AssetForm({ asset, onSuccess, onCancel, initialData, groupId }: 
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [generatedName]);
-
-  // When editing an existing asset, ensure its manufacturer/model are present in
-  // the localStorage-backed lists so the CreatableSelect shows them consistently
-  useEffect(() => {
-    if (asset) {
-      if (asset.location) addLocation(asset.location);
-      if (asset.manufacturer) addManufacturer(asset.manufacturer);
-      if (asset.model) addModel(asset.model);
-    }
-    // only run when asset changes
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [asset?.id]);
 
   // Get selected category details
   const { data: selectedCategory } = useCategory(form.values.assetTypeId || '');
@@ -466,13 +454,13 @@ export function AssetForm({ asset, onSuccess, onCancel, initialData, groupId }: 
     try {
       // Ensure manufacturer/model values are persisted to localStorage-backed lists
       if (values.location) {
-        addLocation(values.location);
+        await addLocation(values.location);
       }
       if (values.manufacturer) {
-        addManufacturer(values.manufacturer);
+        await addManufacturer(values.manufacturer);
       }
       if (values.model) {
-        addModel(values.model);
+        await addModel(values.model);
       }
 
       // Validate custom fields
@@ -676,7 +664,7 @@ export function AssetForm({ asset, onSuccess, onCancel, initialData, groupId }: 
                   value: cat.id,
                   label: `${cat.icon || ''} ${cat.name}`.trim(),
                 }))}
-                {...form.getInputProps('assetTypeId')}
+                {...bindSelectField(form, 'assetTypeId', { emptyValue: '' })}
               />
             </Grid.Col>
 
@@ -755,8 +743,8 @@ export function AssetForm({ asset, onSuccess, onCancel, initialData, groupId }: 
                 onChange={(next) => form.setFieldValue('location', next)}
                 nothingFound="No locations"
                 error={form.errors['location']}
-                onCreateOption={(name) => {
-                  const created = addLocation(name);
+                onCreateOption={async (name) => {
+                  const created = await addLocation(name);
                   return created?.name ?? normalizeMasterDataName(name);
                 }}
               />
@@ -773,8 +761,8 @@ export function AssetForm({ asset, onSuccess, onCancel, initialData, groupId }: 
                 nothingFound="No manufacturers"
                 error={form.errors['manufacturer'] as string | undefined}
                 disabled={isEditing && assetGroup ? isFieldInherited('manufacturer') && !isFieldOverridden('manufacturer') : false}
-                onCreateOption={(name) => {
-                  const created = addManufacturer(name);
+                onCreateOption={async (name) => {
+                  const created = await addManufacturer(name);
                   return created?.name ?? normalizeMasterDataName(name);
                 }}
               />
@@ -796,8 +784,8 @@ export function AssetForm({ asset, onSuccess, onCancel, initialData, groupId }: 
                 nothingFound="No models"
                 error={form.errors['model'] as string | undefined}
                 disabled={isEditing && assetGroup ? isFieldInherited('model') && !isFieldOverridden('model') : false}
-                onCreateOption={(name) => {
-                  const created = addModel(name);
+                onCreateOption={async (name) => {
+                  const created = await addModel(name);
                   return created?.name ?? normalizeMasterDataName(name);
                 }}
               />

@@ -2,16 +2,19 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { ChurchToolsStorageProvider } from '../ChurchToolsProvider';
 import { createMockChurchToolsApi } from './mockChurchToolsApiClient';
 import type { SavedViewCreate } from '../../../types/entities';
+import { createFilterGroup } from '../../../utils/viewFilters';
+import { SAVED_VIEW_SCHEMA_VERSION } from '../../../constants/schemaVersions';
 
 const MODULE_ID = '42';
 
 const baseSavedView = (overrides: Partial<SavedViewCreate> = {}): SavedViewCreate => ({
+  schemaVersion: SAVED_VIEW_SCHEMA_VERSION,
   name: 'Default View',
   ownerId: 'user-1',
   ownerName: 'Test User',
   isPublic: false,
   viewMode: 'table',
-  filters: [],
+  filters: createFilterGroup('AND'),
   ...overrides,
 });
 

@@ -167,7 +167,7 @@
     },
     "unknownAsset": "Unknown asset",
     "unknownAssetId": "ID: {{id}}",
-    "assetCategory": "Category: {{category}}",
+    "assetCategory": "Asset type: {{category}}",
     "lastPerformed": "Last performed: {{date}}",
     "reminderBefore": "Reminder {{count}} days before",
     "search": {
@@ -210,12 +210,10 @@
     },
     "types": {
       "inspection": "Inspection",
-      "cleaning": "Cleaning",
-      "repair": "Repair",
-      "calibration": "Calibration",
-      "testing": "Testing",
-      "compliance": "Compliance",
-      "other": "Other"
+      "maintenance": "Maintenance",
+      "planned-repair": "Planned repair",
+      "unplanned-repair": "Unplanned repair",
+      "improvement": "Improvement"
     },
     "placeholders": {
       "descriptionExample": "e.g., Annual safety inspection",
@@ -449,11 +447,10 @@
   },
   "workTypes": {
     "inspection": "Inspection",
-    "repair": "Repair",
-    "replacement": "Replacement",
-    "calibration": "Calibration",
-    "cleaning": "Cleaning",
-    "upgrade": "Upgrade"
+    "maintenance": "Maintenance",
+    "planned-repair": "Planned repair",
+    "unplanned-repair": "Unplanned repair",
+    "improvement": "Improvement"
   },
   "intervalTypes": {
     "months": "Months",

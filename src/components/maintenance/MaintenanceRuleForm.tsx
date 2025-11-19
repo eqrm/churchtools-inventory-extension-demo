@@ -4,7 +4,7 @@
  * Form for creating and editing maintenance rules with target selector.
  */
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useForm } from '@mantine/form';
 import {
   TextInput,
@@ -21,8 +21,15 @@ import {
 } from '@mantine/core';
 import { DateInput } from '@mantine/dates';
 import { useTranslation } from 'react-i18next';
-import type { MaintenanceRule, MaintenanceTargetType, MaintenanceIntervalType } from '../../types/maintenance';
+import type {
+  MaintenanceRule,
+  MaintenanceTargetType,
+  MaintenanceIntervalType,
+  MaintenanceWorkType,
+} from '../../types/maintenance';
 import type { UUID } from '../../types/entities';
+import { MAINTENANCE_WORK_TYPES } from '../../constants/maintenanceWorkTypes';
+import { bindMultiSelectField, bindSelectField } from '../../utils/selectControl';
 
 interface MaintenanceRuleFormProps {
   rule?: MaintenanceRule;
@@ -53,10 +60,19 @@ export function MaintenanceRuleForm({
     rule?.targets?.[0]?.type || 'asset'
   );
 
+  const workTypeOptions = useMemo(
+    () =>
+      MAINTENANCE_WORK_TYPES.map((value) => ({
+        value,
+        label: t(`maintenance:workTypes.${value}`),
+      })),
+    [t],
+  );
+
   const form = useForm({
     initialValues: {
       name: rule?.name || '',
-      workType: rule?.workType || '',
+      workType: (rule?.workType ?? 'inspection') as MaintenanceWorkType,
       isInternal: rule?.isInternal ?? true,
       serviceProviderId: rule?.serviceProviderId || '',
       targetIds: rule?.targets?.[0]?.ids || [],
@@ -73,11 +89,9 @@ export function MaintenanceRuleForm({
             ? t('maintenance:validation.ruleNameMaxLength')
             : null,
       workType: (value) =>
-        !value
+        !value || !MAINTENANCE_WORK_TYPES.includes(value as MaintenanceWorkType)
           ? t('maintenance:validation.workTypeRequired')
-          : value.length > 200
-            ? t('maintenance:validation.workTypeMaxLength')
-            : null,
+          : null,
       serviceProviderId: (value, values) =>
         !values.isInternal && !value
           ? t('maintenance:validation.serviceProviderRequired')
@@ -135,12 +149,15 @@ export function MaintenanceRuleForm({
           {...form.getInputProps('name')}
         />
 
-        <TextInput
+        <Select
           label={t('maintenance:fields.workType')}
           placeholder={t('maintenance:placeholders.workType')}
           description={t('maintenance:descriptions.workType')}
           required
-          {...form.getInputProps('workType')}
+          data={workTypeOptions}
+          {...bindSelectField(form, 'workType', {
+            parse: (value) => value as MaintenanceWorkType,
+          })}
         />
 
         <Switch
@@ -155,7 +172,7 @@ export function MaintenanceRuleForm({
             placeholder={t('maintenance:placeholders.serviceProvider')}
             required
             data={companies.map((c) => ({ value: c.id, label: c.name }))}
-            {...form.getInputProps('serviceProviderId')}
+            {...bindSelectField(form, 'serviceProviderId', { emptyValue: '' })}
           />
         )}
 
@@ -194,7 +211,7 @@ export function MaintenanceRuleForm({
                 ? `⚠️ No ${targetType}s found - you need to create some first`
                 : undefined
             }
-            {...form.getInputProps('targetIds')}
+            {...bindMultiSelectField(form, 'targetIds')}
           />
         </Box>
 
@@ -213,7 +230,9 @@ export function MaintenanceRuleForm({
               { value: 'months', label: t('maintenance:intervalTypes.months') },
               { value: 'uses', label: t('maintenance:intervalTypes.uses') },
             ]}
-            {...form.getInputProps('intervalType')}
+            {...bindSelectField(form, 'intervalType', {
+              parse: (value) => value as MaintenanceIntervalType,
+            })}
           />
         </Group>
 

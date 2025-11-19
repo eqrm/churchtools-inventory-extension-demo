@@ -13,8 +13,8 @@ const CORE_FIELDS: Array<{
 }> = [
   {
     key: 'category',
-    label: 'Category',
-    description: 'All members remain in the same asset category.',
+    label: 'Asset Type',
+    description: 'All members remain in the same asset type.',
     allowOverride: false,
   },
   {

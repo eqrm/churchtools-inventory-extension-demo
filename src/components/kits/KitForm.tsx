@@ -85,6 +85,10 @@ export function KitForm({ kit, onSuccess, onCancel }: KitFormProps) {
 
   const handleSubmit = async (values: KitCreate) => {
     try {
+      if (values.location) {
+        await addLocation(values.location);
+      }
+
       if (kit) {
         await updateKit.mutateAsync({ id: kit.id, data: values });
         notifications.show({
@@ -148,8 +152,8 @@ export function KitForm({ kit, onSuccess, onCancel }: KitFormProps) {
           value={form.values.location ?? ''}
           onChange={(next) => form.setFieldValue('location', next)}
           nothingFound={t('form.fields.locationEmpty')}
-          onCreateOption={(name) => {
-            const created = addLocation(name);
+          onCreateOption={async (name) => {
+            const created = await addLocation(name);
             return created?.name ?? normalizeMasterDataName(name);
           }}
         />

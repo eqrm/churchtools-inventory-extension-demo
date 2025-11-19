@@ -15,5 +15,7 @@ import './people.provider'
 import './damage.provider'
 import './assignment.provider'
 import './models.provider'
+import './masterData.provider'
+import './prefixPreferences.provider'
 
 export { ChurchToolsStorageProvider }

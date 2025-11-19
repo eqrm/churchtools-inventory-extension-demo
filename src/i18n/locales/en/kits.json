@@ -49,6 +49,13 @@
       "inheritedBadge": "Inherited from kit"
     },
     "boundAssetsHeading": "Bound assets",
+    "boundAssets": {
+      "columns": {
+        "asset": "Asset",
+        "status": "Status"
+      },
+      "unknownStatus": "Status unknown"
+    },
     "subAssetsHeading": "Sub-assets",
     "poolRequirementsHeading": "Pool requirements",
     "poolRequirement": "{{quantity}} × {{name}}",
@@ -129,7 +136,13 @@
     "fixed": {
       "heading": "Bound assets",
       "selectPlaceholder": "Select asset",
-      "emptyState": "No assets added yet"
+      "emptyState": "No assets added yet",
+      "assetStatusTitle": "Asset status noted",
+      "assetStatusMessage": "{{assetNumber}} is currently {{status}}. The kit will show this state with a badge.",
+      "assetStatusInline": "Selected asset is {{status}}. It will appear in the kit with a status badge.",
+      "assetStatusUnknown": "unknown",
+      "assetStatusUnknownInline": "Status will be refreshed after saving.",
+      "removeAssetAria": "Remove {{name}} from kit"
     },
     "actions": {
       "addPool": "Add requirement",

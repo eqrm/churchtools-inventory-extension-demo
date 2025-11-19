@@ -1,7 +1,14 @@
 /**
  * Filter evaluation utilities for multi-condition filters
  */
-import type { ViewFilter, FilterOperator, Asset } from '../types/entities';
+import type {
+  Asset,
+  FilterOperator,
+  ViewFilter,
+  ViewFilterCondition,
+  ViewFilterGroup,
+} from '../types/entities';
+import { hasActiveFilters, isFilterGroup, normalizeFilterGroup } from './viewFilters';
 
 /**
  * Get nested field value from object using dot notation
@@ -93,44 +100,42 @@ export function evaluateCondition(
 }
 
 /**
- * Evaluate multi-condition filters with AND/OR logic
+ * Evaluate multi-condition filters with nested group logic
  */
-export function evaluateFilters(item: Asset, filters: ViewFilter[]): boolean {
-  if (filters.length === 0) return true;
-
-  let result = true;
-  let currentLogic: 'AND' | 'OR' = 'AND';
-
-  for (let i = 0; i < filters.length; i++) {
-    const filter = filters[i];
-    if (!filter) continue;
-    
-    const fieldValue = getFieldValue(item, filter.field);
-    const conditionResult = evaluateCondition(fieldValue, filter.operator, filter.value);
-
-    if (i === 0) {
-      result = conditionResult;
-    } else {
-      if (currentLogic === 'AND') {
-        result = result && conditionResult;
-      } else {
-        result = result || conditionResult;
-      }
-    }
-
-    // Update logic for next iteration
-    currentLogic = filter.logic || 'AND';
+export function evaluateFilters(item: Asset, group: ViewFilterGroup): boolean {
+  if (!group || group.children.length === 0) {
+    return true;
   }
 
-  return result;
+  return evaluateGroup(item, group);
+}
+
+function evaluateGroup(item: Asset, group: ViewFilterGroup): boolean {
+  if (group.children.length === 0) {
+    return true;
+  }
+
+  const evaluator = group.logic === 'OR' ? 'some' : 'every';
+  return group.children[evaluator]((node) => evaluateNode(item, node));
+}
+
+function evaluateNode(item: Asset, node: ViewFilter): boolean {
+  if (isFilterGroup(node)) {
+    return evaluateGroup(item, node);
+  }
+  return evaluateCondition(getFieldValue(item, node.field), node.operator, node.value);
 }
 
 /**
  * Apply filters to asset list
  */
-export function applyFilters(assets: Asset[], filters: ViewFilter[]): Asset[] {
-  if (filters.length === 0) return assets;
-  return assets.filter(asset => evaluateFilters(asset, filters));
+export function applyFilters(assets: Asset[], filters?: ViewFilterGroup): Asset[] {
+  if (!filters || !hasActiveFilters(filters)) {
+    return assets;
+  }
+
+  const normalized = normalizeFilterGroup(filters);
+  return assets.filter((asset) => evaluateFilters(asset, normalized));
 }
 
 /**

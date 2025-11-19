@@ -539,12 +539,10 @@ export interface MaintenanceRecord {
 
 export type MaintenanceType =
   | 'inspection'
-  | 'cleaning'
-  | 'repair'
-  | 'calibration'
-  | 'testing'
-  | 'compliance'
-  | 'other'
+  | 'maintenance'
+  | 'planned-repair'
+  | 'unplanned-repair'
+  | 'improvement'
 
 export type MaintenanceRecordCreate = Omit<
   MaintenanceRecord,
@@ -752,6 +750,7 @@ export interface ChangeHistoryEntry {
     | 'maintenance'
     | 'stocktake'
     | 'asset-prefix'
+    | 'master-data'
     | 'damage-report'
     | 'model'
   entityId: UUID
@@ -789,12 +788,13 @@ export type ChangeAction =
 
 export interface SavedView {
   id: UUID
+  schemaVersion: string
   name: string
   ownerId: string
   ownerName: string
   isPublic: boolean
   viewMode: ViewMode
-  filters: ViewFilter[]
+  filters: ViewFilterGroup
   sortBy?: string
   sortDirection?: 'asc' | 'desc'
   groupBy?: string
@@ -810,11 +810,30 @@ export type ViewMode =
   | 'kanban'
   | 'list'
 
-export interface ViewFilter {
+export type FilterLogic = 'AND' | 'OR'
+
+export interface ViewFilterCondition {
+  id: string
+  type?: 'condition'
   field: string
   operator: FilterOperator
   value: unknown
-  logic?: 'AND' | 'OR'
+}
+
+export interface ViewFilterGroup {
+  id: string
+  type: 'group'
+  logic: FilterLogic
+  children: ViewFilter[]
+}
+
+export type ViewFilter = ViewFilterCondition | ViewFilterGroup
+
+export interface LegacyViewFilter {
+  field: string
+  operator: FilterOperator
+  value: unknown
+  logic?: FilterLogic
 }
 
 export type FilterOperator =

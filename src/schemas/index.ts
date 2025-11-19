@@ -1,3 +1,5 @@
+import { getCurrentSavedViewSchemaVersion as getSavedViewSchemaVersion } from './savedView.schema';
+
 /**
  * Zod Schemas Export
  * 
@@ -67,12 +69,8 @@ export {
 // Saved View schemas
 export {
   SavedViewSchema,
-  SavedViewSchemaV1_0,
   SavedViewUpdateSchema,
   SavedViewCreateSchema,
-  FilterConditionSchema,
-  FilterOperatorSchema,
-  SortConfigSchema,
   SortDirectionSchema,
   migrateSavedView,
   getCurrentSavedViewSchemaVersion,
@@ -101,7 +99,7 @@ export function getAllSchemaVersions(): Record<string, string> {
     damageReport: '1.0',
     assignment: '1.0',
     assetModel: '1.0',
-    savedView: '1.0',
+    savedView: getSavedViewSchemaVersion(),
     undoHistoryEntry: '1.0',
   };
 }

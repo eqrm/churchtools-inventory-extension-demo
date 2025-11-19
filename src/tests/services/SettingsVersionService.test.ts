@@ -14,7 +14,7 @@ const DEFAULT_SNAPSHOT: SettingsSnapshot = {
   moduleDefaultPrefixId: null,
   featureToggles: {
     bookingsEnabled: false,
-    kitsEnabled: false,
+    kitsEnabled: true,
     maintenanceEnabled: false,
   },
   masterData: {

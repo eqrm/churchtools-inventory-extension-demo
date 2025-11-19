@@ -1,71 +1,89 @@
 {
-  "models": {
-    "title": "Asset Models",
-    "singular": "Asset Model",
-    "description": "Templates for creating assets with pre-filled defaults",
-    "createModel": "Create Model",
-    "editModel": "Edit Model",
-    "deleteModel": "Delete Model",
-    "selectModel": "Select Model Template",
-    "noModelSelected": "No template selected",
-    "useAsTemplate": "Use as Template",
-    "createFromModel": "Create from Template",
-    "modelDetails": "Model Details",
-    "defaultValues": "Default Values",
-    "assetsUsingModel": "Assets Using This Model",
-    "assetsCount": "{{count}} asset using this model",
-    "assetsCount_plural": "{{count}} assets using this model",
-    "form": {
-      "name": "Model Name",
-      "namePlaceholder": "e.g., Dell Latitude 5510",
-      "manufacturer": "Manufacturer",
-      "manufacturerPlaceholder": "e.g., Dell",
-      "modelNumber": "Model Number",
-      "modelNumberPlaceholder": "e.g., Latitude 5510",
-      "assetType": "Asset Type",
-      "assetTypePlaceholder": "Select asset type",
-      "description": "Description",
-      "descriptionPlaceholder": "Describe this model",
-      "defaultPurchasePrice": "Default Purchase Price",
-      "defaultWarrantyMonths": "Default Warranty (months)",
-      "defaultBookable": "Assets are bookable by default",
-      "defaultBookableDescription": "New assets created from this model will have bookable enabled",
-      "defaultLocation": "Default Location",
-      "defaultNotes": "Default Notes",
-      "tags": "Default Tags",
-      "customFields": "Custom Field Defaults"
-    },
-    "validation": {
-      "nameRequired": "Model name is required",
-      "assetTypeRequired": "Asset type is required",
-      "nameMaxLength": "Model name must be less than 100 characters"
-    },
-    "confirmDelete": {
-      "title": "Delete Model?",
-      "message": "Are you sure you want to delete this model? Existing assets will not be affected.",
-      "confirm": "Delete",
-      "cancel": "Cancel"
-    },
-    "tagPropagation": {
-      "title": "Update Asset Tags?",
-      "message": "Do you want to apply the updated tags to all {{count}} assets using this model?",
-      "applyToAll": "Apply to All Assets",
-      "skipUpdate": "Skip Update",
-      "updatingAssets": "Updating {{current}}/{{total}} assets..."
-    },
-    "notifications": {
-      "created": "Model created successfully",
-      "updated": "Model updated successfully",
-      "deleted": "Model deleted successfully",
-      "createError": "Failed to create model",
-      "updateError": "Failed to update model",
-      "deleteError": "Failed to delete model",
-      "tagsPropagated": "Tags applied to {{count}} assets"
-    },
-    "emptyState": {
-      "title": "No models yet",
-      "description": "Create model templates to quickly add assets with pre-filled defaults",
-      "action": "Create First Model"
-    }
+  "title": "Asset Models",
+  "singular": "Asset Model",
+  "description": "Templates for creating assets with pre-filled defaults",
+  "createModel": "Create Model",
+  "editModel": "Edit Model",
+  "deleteModel": "Delete Model",
+  "selectModel": "Select Model Template",
+  "noModelSelected": "No template selected",
+  "useAsTemplate": "Use as Template",
+  "createFromModel": "Create from Template",
+  "modelDetails": "Model Details",
+  "defaultValues": "Default Values",
+  "assetsUsingModel": "Assets Using This Model",
+  "assetsCount": "{{count}} asset using this model",
+  "assetsCount_plural": "{{count}} assets using this model",
+  "filters": {
+    "searchLabel": "Search",
+    "searchPlaceholder": "Search by model name or number",
+    "manufacturerLabel": "Manufacturer",
+    "manufacturerPlaceholder": "Filter by manufacturer",
+    "assetTypeLabel": "Asset Type",
+    "assetTypePlaceholder": "All asset types",
+    "noAssetTypes": "No asset types available",
+    "clear": "Clear filters"
+  },
+  "labels": {
+    "unknownAssetType": "Unknown asset type"
+  },
+  "card": {
+    "manufacturerFallback": "Manufacturer unknown",
+    "modelNumberLabel": "Model #: {{modelNumber}}"
+  },
+  "form": {
+    "name": "Model Name",
+    "namePlaceholder": "e.g., Dell Latitude 5510",
+    "manufacturer": "Manufacturer",
+    "manufacturerPlaceholder": "e.g., Dell",
+    "modelNumber": "Model Number",
+    "modelNumberPlaceholder": "e.g., Latitude 5510",
+    "assetType": "Asset Type",
+    "assetTypePlaceholder": "Select asset type",
+    "description": "Description",
+    "descriptionPlaceholder": "Describe this model",
+    "defaultPurchasePrice": "Default Purchase Price",
+    "defaultWarrantyMonths": "Default Warranty (months)",
+    "defaultBookable": "Assets are bookable by default",
+    "defaultBookableDescription": "New assets created from this model will have bookable enabled",
+    "defaultLocation": "Default Location",
+    "defaultNotes": "Default Notes",
+    "tags": "Default Tags",
+    "customFields": "Custom Field Defaults"
+  },
+  "validation": {
+    "nameRequired": "Model name is required",
+    "assetTypeRequired": "Asset type is required",
+    "nameMaxLength": "Model name must be less than 100 characters"
+  },
+  "confirmDelete": {
+    "title": "Delete Model?",
+    "message": "Are you sure you want to delete this model? Existing assets will not be affected.",
+    "confirm": "Delete",
+    "cancel": "Cancel"
+  },
+  "tagPropagation": {
+    "title": "Update Asset Tags?",
+    "message": "Do you want to apply the updated tags to all {{count}} assets using this model?",
+    "applyToAll": "Apply to All Assets",
+    "skipUpdate": "Skip Update",
+    "updatingAssets": "Updating {{current}}/{{total}} assets..."
+  },
+  "notifications": {
+    "created": "Model created successfully",
+    "updated": "Model updated successfully",
+    "deleted": "Model deleted successfully",
+    "createError": "Failed to create model",
+    "updateError": "Failed to update model",
+    "deleteError": "Failed to delete model",
+    "tagsPropagated": "Tags applied to {{count}} assets"
+  },
+  "emptyState": {
+    "title": "No models yet",
+    "description": "Create model templates to quickly add assets with pre-filled defaults",
+    "action": "Create First Model",
+    "filteredTitle": "No asset models match your filters",
+    "filteredDescription": "Try adjusting or clearing filters to see more results.",
+    "filteredAction": "Clear filters"
   }
 }

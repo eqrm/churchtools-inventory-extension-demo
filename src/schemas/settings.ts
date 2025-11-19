@@ -45,7 +45,7 @@ export const settingsSnapshotSchema = z.object({
     schemaVersion: z.literal('1.0').default('1.0'),
     assetNumberPrefix: z.string().min(1).max(20),
     moduleDefaultPrefixId: z.string().min(1).nullable().default(null),
-    featureToggles: featureToggleSchema.default({ bookingsEnabled: false, kitsEnabled: false, maintenanceEnabled: false }),
+    featureToggles: featureToggleSchema.default({ bookingsEnabled: false, kitsEnabled: true, maintenanceEnabled: false }),
     masterData: masterDataSchema.default({
         locations: [],
         manufacturers: [],

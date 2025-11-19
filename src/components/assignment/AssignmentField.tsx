@@ -5,7 +5,6 @@ import { IconUser, IconUserPlus, IconUserX } from '@tabler/icons-react';
 import { formatDateTime } from '../../utils/formatters';
 import { PersonSearch, type PersonResult } from './PersonSearch';
 import type { Assignment } from '../../types/assignment';
-import type { ISOTimestamp } from '../../types/entities';
 
 interface AssignmentFieldProps {
   /** Current assignment (if any) */

@@ -24,6 +24,7 @@ export interface UndoServiceOptions {
   idFactory?: () => string;
   now?: () => Date;
   retentionHours?: number;
+  maxActionsPerActor?: number;
 }
 
 export class UndoService {
@@ -58,6 +59,7 @@ export class UndoService {
     };
 
     await this.options.db.undoActions.put(undoAction);
+    await this.enforceActorHistoryLimit(actor.id);
 
     return actionId;
   }
@@ -107,12 +109,14 @@ export class UndoService {
   }
 
   async getUserUndoHistory(limit = 50): Promise<UndoAction[]> {
+    const maxActions = this.options.maxActionsPerActor ?? 20;
+    const effectiveLimit = Math.min(limit, maxActions);
     const actor = await this.options.getCurrentActor();
     const actions = await this.options.db.undoActions.where('actorId').equals(actor.id).toArray();
 
     actions.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
-    return actions.slice(0, limit);
+    return actions.slice(0, effectiveLimit);
   }
 
   async cleanupExpired(): Promise<number> {
@@ -160,5 +164,27 @@ export class UndoService {
     }
 
     return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  }
+
+  private async enforceActorHistoryLimit(actorId: string): Promise<void> {
+    const maxActions = this.options.maxActionsPerActor ?? 20;
+    if (maxActions <= 0) {
+      return;
+    }
+
+    const actions = await this.options.db.undoActions
+      .where('actorId')
+      .equals(actorId)
+      .sortBy('createdAt');
+
+    const excess = actions.length - maxActions;
+    if (excess <= 0) {
+      return;
+    }
+
+    const staleActionIds = actions.slice(0, excess).map((action) => action.actionId);
+    if (staleActionIds.length > 0) {
+      await this.options.db.undoActions.bulkDelete(staleActionIds);
+    }
   }
 }

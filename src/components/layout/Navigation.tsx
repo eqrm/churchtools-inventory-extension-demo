@@ -15,11 +15,12 @@ import {
   IconHistory,
 } from '@tabler/icons-react';
 import { Link, useLocation } from 'react-router-dom';
-import { useEffect, type ReactNode, type MouseEvent as ReactMouseEvent } from 'react';
+import { useCallback, useEffect, useMemo, type ReactNode, type MouseEvent as ReactMouseEvent } from 'react';
 import { useFeatureSettingsStore } from '../../stores';
 import { UndoHistory } from '../undo/UndoHistory';
 import { useUndoHistory } from '../../hooks/useUndo';
 import { useTranslation } from 'react-i18next';
+import { notifications } from '@mantine/notifications';
 
 interface NavigationProps {
   children: ReactNode;
@@ -32,6 +33,7 @@ export function Navigation({ children, onScanClick }: NavigationProps) {
   const [opened, { toggle, close }] = useDisclosure();
   const [undoHistoryOpened, { open: openUndoHistory, close: closeUndoHistory }] = useDisclosure(false);
   const location = useLocation();
+  const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad|iPod/.test(navigator.userAgent);
   const { bookingsEnabled, maintenanceEnabled, kitsEnabled } = useFeatureSettingsStore((state) => ({
     bookingsEnabled: state.bookingsEnabled,
     maintenanceEnabled: state.maintenanceEnabled,
@@ -40,9 +42,7 @@ export function Navigation({ children, onScanClick }: NavigationProps) {
   const {
     history: undoHistory,
     undoAction,
-    isLoading: isUndoHistoryLoading,
     isMutating: isUndoMutating,
-    undoingActionId,
     error: undoError,
     refetch: refetchUndoHistory,
   } = useUndoHistory();
@@ -76,16 +76,82 @@ export function Navigation({ children, onScanClick }: NavigationProps) {
 
     close();
   };
-
-  // Detect platform for correct keyboard shortcut display
-  const isMac = /Mac|iPhone|iPad|iPod/.test(navigator.userAgent);
   const scanShortcut = isMac ? '⌘S' : 'Alt+S';
+  const undoShortcut = isMac ? '⌘Z' : 'Ctrl+Z';
+
+  const latestUndoableAction = useMemo(() => {
+    const now = Date.now();
+    return undoHistory.find((action) => {
+      if (action.undoStatus === 'reverted') {
+        return false;
+      }
+      const expiresAt = new Date(action.expiresAt).getTime();
+      return expiresAt > now;
+    });
+  }, [undoHistory]);
+
+  const handleUndoShortcut = useCallback(async () => {
+    if (isUndoMutating) {
+      notifications.show({
+        color: 'blue',
+        message: tUndo('shortcuts.undoInFlight'),
+      });
+      return;
+    }
+
+    if (!latestUndoableAction) {
+      notifications.show({
+        color: 'yellow',
+        message: tUndo('shortcuts.undoUnavailable'),
+      });
+      return;
+    }
+
+    try {
+      await undoAction(latestUndoableAction.actionId);
+      notifications.show({
+        color: 'green',
+        message: tUndo('shortcuts.undoSuccess'),
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : tUndo('shortcuts.genericError');
+      notifications.show({
+        color: 'red',
+        message: tUndo('shortcuts.undoError', { message }),
+      });
+    }
+  }, [isUndoMutating, latestUndoableAction, tUndo, undoAction]);
 
   useEffect(() => {
     if (undoHistoryOpened) {
       void refetchUndoHistory();
     }
   }, [undoHistoryOpened, refetchUndoHistory]);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const modifierPressed = isMac ? event.metaKey : event.ctrlKey;
+      if (!modifierPressed || event.key.toLowerCase() !== 'z' || event.shiftKey) {
+        return;
+      }
+
+      const target = event.target as HTMLElement | null;
+      if (target) {
+        const tagName = target.tagName;
+        if (target.isContentEditable || tagName === 'INPUT' || tagName === 'TEXTAREA' || tagName === 'SELECT') {
+          return;
+        }
+      }
+
+      event.preventDefault();
+      void handleUndoShortcut();
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [handleUndoShortcut, isMac]);
 
   return (
     <AppShell
@@ -108,7 +174,7 @@ export function Navigation({ children, onScanClick }: NavigationProps) {
             />
             <Title order={3}>{tNav('title')}</Title>
           </Group>
-          <Tooltip label={tUndo('openHistoryTooltip')}>
+          <Tooltip label={tUndo('openHistoryTooltip', { shortcut: undoShortcut })}>
             <ActionIcon
               variant="subtle"
               size="lg"
@@ -139,7 +205,7 @@ export function Navigation({ children, onScanClick }: NavigationProps) {
           label={tNav('items.categories')}
           leftSection={<IconCategory size={20} />}
           active={routeIsActive('/categories')}
-          onClick={(event) => handleNavClick(event, { label: 'Categories', route: '/categories' })}
+          onClick={(event) => handleNavClick(event, { label: 'Asset Types', route: '/categories' })}
         />
         
         <NavLink
@@ -256,14 +322,10 @@ export function Navigation({ children, onScanClick }: NavigationProps) {
             {undoError}
           </Text>
         )}
-        <UndoHistory
-          actions={undoHistory}
-          onUndo={async (actionId: string) => {
-            await undoAction(actionId);
-          }}
-          loading={isUndoHistoryLoading || isUndoMutating}
-          undoingActionId={undoingActionId}
-        />
+        <Text size="sm" c="dimmed" mb="sm">
+          {tUndo('shortcuts.hint', { shortcut: undoShortcut })}
+        </Text>
+        <UndoHistory actions={undoHistory} shortcutHint={undoShortcut} />
       </Modal>
     </AppShell>
   );

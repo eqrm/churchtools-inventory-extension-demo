@@ -5,6 +5,7 @@ import type { CompoundActionInput, UndoableActionInput } from '../services/UndoS
 import { getUndoService } from '../services/undo';
 import { useUndoStore } from '../stores/undoStore';
 import { useCurrentUser } from './useCurrentUser';
+import { MAX_UNDO_HISTORY } from '../constants/undo';
 
 const undoQueryKeys = {
   all: ['undo'] as const,
@@ -23,7 +24,8 @@ interface UseUndoResult {
   refetch: () => Promise<UndoAction[]>;
 }
 
-export function useUndo(limit = 50): UseUndoResult {
+export function useUndo(limit = MAX_UNDO_HISTORY): UseUndoResult {
+  const effectiveLimit = Math.min(limit, MAX_UNDO_HISTORY);
   const undoService = useMemo(() => getUndoService(), []);
   const queryClient = useQueryClient();
   const { data: currentUser } = useCurrentUser();
@@ -48,9 +50,9 @@ export function useUndo(limit = 50): UseUndoResult {
   }, [userId, clearActions, setError]);
 
   const historyQuery = useQuery<UndoAction[], Error>({
-    queryKey: undoQueryKeys.history(userId, limit),
+    queryKey: undoQueryKeys.history(userId, effectiveLimit),
     queryFn: async (): Promise<UndoAction[]> => {
-      return await undoService.getUserUndoHistory(limit);
+      return await undoService.getUserUndoHistory(effectiveLimit);
     },
     enabled: Boolean(userId),
     staleTime: 60 * 1000,
@@ -84,7 +86,7 @@ export function useUndo(limit = 50): UseUndoResult {
     onSuccess: (_result, actionId) => {
       markReverted(actionId);
       if (userId) {
-        void queryClient.invalidateQueries({ queryKey: undoQueryKeys.history(userId, limit) });
+        void queryClient.invalidateQueries({ queryKey: undoQueryKeys.history(userId, effectiveLimit) });
       }
       setError(undefined);
     },
@@ -101,7 +103,7 @@ export function useUndo(limit = 50): UseUndoResult {
     mutationFn: async (action) => await undoService.recordAction(action),
     onSuccess: async () => {
       if (userId) {
-        await queryClient.invalidateQueries({ queryKey: undoQueryKeys.history(userId, limit) });
+        await queryClient.invalidateQueries({ queryKey: undoQueryKeys.history(userId, effectiveLimit) });
       }
       setError(undefined);
     },
@@ -115,7 +117,7 @@ export function useUndo(limit = 50): UseUndoResult {
     mutationFn: async (action) => await undoService.recordCompoundAction(action),
     onSuccess: async () => {
       if (userId) {
-        await queryClient.invalidateQueries({ queryKey: undoQueryKeys.history(userId, limit) });
+        await queryClient.invalidateQueries({ queryKey: undoQueryKeys.history(userId, effectiveLimit) });
       }
       setError(undefined);
     },

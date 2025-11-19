@@ -19,29 +19,25 @@ export interface MaintenanceRecordListProps {
  * Badge for maintenance type
  */
 export function MaintenanceTypeBadge({ type }: { type: MaintenanceRecord['type'] }) {
-  const colors = {
+  const colors: Record<MaintenanceRecord['type'], string> = {
     inspection: 'blue',
-    cleaning: 'cyan',
-    repair: 'orange',
-    calibration: 'purple',
-    testing: 'green',
-    compliance: 'red',
-    other: 'gray',
+    maintenance: 'teal',
+    'planned-repair': 'orange',
+    'unplanned-repair': 'red',
+    improvement: 'grape',
   };
 
-  const labels = {
+  const labels: Record<MaintenanceRecord['type'], string> = {
     inspection: 'Inspection',
-    cleaning: 'Cleaning',
-    repair: 'Repair',
-    calibration: 'Calibration',
-    testing: 'Testing',
-    compliance: 'Compliance',
-    other: 'Other',
+    maintenance: 'Maintenance',
+    'planned-repair': 'Planned repair',
+    'unplanned-repair': 'Unplanned repair',
+    improvement: 'Improvement',
   };
 
   return (
-    <Badge color={colors[type]} size="sm">
-      {labels[type]}
+    <Badge color={colors[type] ?? 'gray'} size="sm">
+      {labels[type] ?? type}
     </Badge>
   );
 }

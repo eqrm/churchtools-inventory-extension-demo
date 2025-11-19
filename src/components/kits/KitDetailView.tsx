@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Badge, Button, Card, Divider, Group, Skeleton, Stack, Table, Text, Title } from '@mantine/core';
 import { IconCalendar } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
@@ -57,6 +57,13 @@ export function KitDetailView({ kit, onEdit, onOpenBooking, onDisassemble, disas
   const { t: tTags } = useTranslation('tags');
   const isFixed = kit.type === 'fixed';
   const { data: subAssets = [], isLoading: subAssetsLoading } = useKitSubAssets(isFixed ? kit.id : undefined);
+  const subAssetLookup = useMemo(() => {
+    const map = new Map<string, (typeof subAssets)[number]>();
+    for (const asset of subAssets) {
+      map.set(asset.id, asset);
+    }
+    return map;
+  }, [subAssets]);
   const inheritance = kit.inheritedProperties ?? [];
   const completeness = kit.completenessStatus ?? 'complete';
 
@@ -354,22 +361,38 @@ export function KitDetailView({ kit, onEdit, onOpenBooking, onDisassemble, disas
             <Table striped highlightOnHover withColumnBorders>
               <Table.Thead>
                 <Table.Tr>
-                  <Table.Th>{t('detail.subAssets.columns.asset')}</Table.Th>
+                  <Table.Th>{t('detail.boundAssets.columns.asset')}</Table.Th>
+                  <Table.Th>{t('detail.boundAssets.columns.status')}</Table.Th>
                 </Table.Tr>
               </Table.Thead>
               <Table.Tbody>
-                {kit.boundAssets.map((bound) => (
-                  <Table.Tr key={bound.assetId}>
-                    <Table.Td>
-                      <Group gap="xs">
-                        <Text fw={500}>{bound.name}</Text>
-                        <Text size="xs" c="dimmed">
-                          {bound.assetNumber}
-                        </Text>
-                      </Group>
-                    </Table.Td>
-                  </Table.Tr>
-                ))}
+                {kit.boundAssets.map((bound) => {
+                  const assetMeta = subAssetLookup.get(bound.assetId);
+                  const status = assetMeta?.status;
+                  return (
+                    <Table.Tr key={bound.assetId}>
+                      <Table.Td>
+                        <Group gap="xs">
+                          <Text fw={500}>{bound.name}</Text>
+                          <Text size="xs" c="dimmed">
+                            {bound.assetNumber}
+                          </Text>
+                        </Group>
+                      </Table.Td>
+                      <Table.Td>
+                        {status ? (
+                          <Badge color={ASSET_STATUS_KANBAN_COLORS[status] ?? 'gray'} variant="light">
+                            {ASSET_STATUS_LABELS[status] ?? status}
+                          </Badge>
+                        ) : (
+                          <Text size="xs" c="dimmed">
+                            {t('detail.boundAssets.unknownStatus')}
+                          </Text>
+                        )}
+                      </Table.Td>
+                    </Table.Tr>
+                  );
+                })}
               </Table.Tbody>
             </Table>
           </Stack>

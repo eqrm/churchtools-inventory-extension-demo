@@ -5,11 +5,13 @@
 
 import { useMemo, useState } from 'react';
 import type { SelectItem, SelectProps } from '@mantine/core';
-import { Stack, Text, Button, Group, Select, ActionIcon, Paper } from '@mantine/core';
+import { Stack, Text, Button, Group, Select, ActionIcon, Paper, Badge } from '@mantine/core';
+import { notifications } from '@mantine/notifications';
 import { IconPlus, IconTrash } from '@tabler/icons-react';
 import { useAssets } from '../../hooks/useAssets';
 import { useTranslation } from 'react-i18next';
-import type { Asset } from '../../types/entities';
+import { matchesBoundAssetSearch } from '../../utils/matchesBoundAssetSearch';
+import { ASSET_STATUS_KANBAN_COLORS, ASSET_STATUS_LABELS } from '../../constants/assetStatuses';
 
 interface BoundAsset {
   assetId: string;
@@ -29,42 +31,54 @@ export interface AssetSelectOption extends SelectItem {
   assetLocation: string;
 }
 
-export function matchesBoundAssetSearch(value: unknown, option?: AssetSelectOption | null) {
-  if (!option) {
-    return true;
-  }
-
-  const query = String(value ?? '').trim().toLowerCase();
-  if (query.length === 0) {
-    return true;
-  }
-
-  const haystack = [
-    option.assetNumber,
-    option.assetName,
-    option.assetDescription,
-    option.assetLocation,
-  ];
-
-  return haystack.some((field) => (field ?? '').toLowerCase().includes(query));
-}
-
 export function FixedKitBuilder({ value, onChange }: FixedKitBuilderProps) {
-  const { data: assets } = useAssets({ status: 'available' });
+  const { data: assets } = useAssets();
   const [selectedAssetId, setSelectedAssetId] = useState<string>('');
   const { t } = useTranslation('kits');
+  const selectableAssets = useMemo(() => {
+    if (!Array.isArray(assets)) {
+      return [];
+    }
+    return assets.filter((asset) => asset.status !== 'deleted');
+  }, [assets]);
+
+  const assetLookup = useMemo(() => {
+    const lookup = new Map<string, (typeof selectableAssets)[number]>();
+    for (const asset of selectableAssets) {
+      lookup.set(asset.id, asset);
+    }
+    return lookup;
+  }, [selectableAssets]);
+
   const assetOptions = useMemo<AssetSelectOption[]>(() => {
     // Keep a definitive array reference so Mantine sees iterable `data`
-    const sourceAssets = Array.isArray(assets) ? assets : [];
-    return sourceAssets.map((asset) => ({
-      value: asset.id,
-      label: `${asset.assetNumber} - ${asset.name}`,
+    return selectableAssets.map((asset) => {
+      const statusSuffix = asset.status && asset.status !== 'available' ? ` (${asset.status})` : '';
+      return {
+        value: asset.id,
+        label: `${asset.assetNumber} - ${asset.name}${statusSuffix}`,
       assetNumber: asset.assetNumber,
       assetName: asset.name,
       assetDescription: asset.description ?? '',
       assetLocation: asset.location ?? '',
-    }));
-  }, [assets]);
+      } satisfies AssetSelectOption;
+    });
+  }, [selectableAssets]);
+
+  const selectedAsset = useMemo(() => {
+    return selectableAssets.find((asset) => asset.id === selectedAssetId);
+  }, [selectableAssets, selectedAssetId]);
+
+  const notifyAssetStatus = (assetNumber: string, status?: string) => {
+    notifications.show({
+      color: 'orange',
+      title: t('form.fixed.assetStatusTitle'),
+      message: t('form.fixed.assetStatusMessage', {
+        assetNumber,
+        status: status ?? t('form.fixed.assetStatusUnknown'),
+      }),
+    });
+  };
 
   const assetSelectFilter = useMemo<NonNullable<SelectProps['filter']>>(
     () => ({ options, search, limit }) => {
@@ -104,22 +118,23 @@ export function FixedKitBuilder({ value, onChange }: FixedKitBuilderProps) {
   );
 
   const handleAddAsset = () => {
-    if (!selectedAssetId) return;
-    
-    const asset = assets?.find(a => a.id === selectedAssetId);
-    if (!asset) return;
+    if (!selectedAsset) return;
+
+    if (selectedAsset.status !== 'available') {
+      notifyAssetStatus(selectedAsset.assetNumber, selectedAsset.status);
+    }
 
     // Check if already added
-    if (value.some(ba => ba.assetId === asset.id)) {
+    if (value.some((ba) => ba.assetId === selectedAsset.id)) {
       return;
     }
 
     onChange([
       ...value,
       {
-        assetId: asset.id,
-        assetNumber: asset.assetNumber,
-        name: asset.name,
+        assetId: selectedAsset.id,
+        assetNumber: selectedAsset.assetNumber,
+        name: selectedAsset.name,
       },
     ]);
     setSelectedAssetId('');
@@ -135,22 +150,43 @@ export function FixedKitBuilder({ value, onChange }: FixedKitBuilderProps) {
       
       {value.length > 0 && (
         <Stack gap="xs">
-          {value.map((asset) => (
-            <Paper key={asset.assetId} p="xs" withBorder>
-              <Group justify="space-between">
-                <Text size="sm">
-                  {asset.assetNumber} - {asset.name}
-                </Text>
-                <ActionIcon
-                  color="red"
-                  variant="subtle"
-                  onClick={() => handleRemoveAsset(asset.assetId)}
-                >
-                  <IconTrash size={16} />
-                </ActionIcon>
-              </Group>
-            </Paper>
-          ))}
+          {value.map((asset) => {
+            const assetMeta = assetLookup.get(asset.assetId);
+            const status = assetMeta?.status;
+            return (
+              <Paper key={asset.assetId} p="xs" withBorder>
+                <Group justify="space-between" align="flex-start">
+                  <Stack gap={4}>
+                    <Text size="sm" fw={500}>
+                      {asset.assetNumber} - {asset.name}
+                    </Text>
+                    {status && (
+                      <Badge
+                        size="xs"
+                        color={ASSET_STATUS_KANBAN_COLORS[status] ?? 'gray'}
+                        variant="light"
+                      >
+                        {ASSET_STATUS_LABELS[status] ?? status}
+                      </Badge>
+                    )}
+                    {!status && (
+                      <Text size="xs" c="dimmed">
+                        {t('form.fixed.assetStatusUnknownInline')}
+                      </Text>
+                    )}
+                  </Stack>
+                  <ActionIcon
+                    color="red"
+                    variant="subtle"
+                    onClick={() => handleRemoveAsset(asset.assetId)}
+                    aria-label={t('form.fixed.removeAssetAria', { name: asset.name })}
+                  >
+                    <IconTrash size={16} />
+                  </ActionIcon>
+                </Group>
+              </Paper>
+            );
+          })}
         </Stack>
       )}
 
@@ -172,6 +208,14 @@ export function FixedKitBuilder({ value, onChange }: FixedKitBuilderProps) {
           {t('form.actions.addAsset')}
         </Button>
       </Group>
+
+      {selectedAsset && selectedAsset.status !== 'available' ? (
+        <Text size="xs" c="orange.6">
+          {t('form.fixed.assetStatusInline', {
+            status: selectedAsset.status ?? t('form.fixed.assetStatusUnknown'),
+          })}
+        </Text>
+      ) : null}
 
       {value.length === 0 && (
         <Text size="sm" c="dimmed">

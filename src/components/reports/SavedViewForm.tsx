@@ -2,13 +2,14 @@ import { useEffect } from 'react';
 import { TextInput, Switch, Stack, Button, Group, Alert } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useTranslation } from 'react-i18next';
-import type { SavedViewCreate, ViewMode, ViewFilter } from '../../types/entities';
+import type { SavedViewCreate, ViewMode, ViewFilterGroup } from '../../types/entities';
 import { useCreateSavedView, useUpdateSavedView, useSavedView } from '../../hooks/useSavedViews';
 import { useCurrentUser } from '../../hooks/useCurrentUser';
+import { SAVED_VIEW_SCHEMA_VERSION } from '../../constants/schemaVersions';
 
 interface SavedViewFormProps {
   viewMode: ViewMode;
-  filters: ViewFilter[];
+  filters: ViewFilterGroup;
   sortBy?: string;
   sortDirection?: 'asc' | 'desc';
   groupBy?: string;
@@ -67,8 +68,10 @@ export function SavedViewForm({
 
   const handleSubmit = async (values: { name: string; isPublic: boolean }) => {
     if (!currentUser || isExistingViewLoading) return;
+    const schemaVersion = existingView?.schemaVersion ?? SAVED_VIEW_SCHEMA_VERSION;
 
     const viewData: SavedViewCreate = {
+      schemaVersion,
       name: values.name,
       ownerId: currentUser.id,
       ownerName: currentUser.name,

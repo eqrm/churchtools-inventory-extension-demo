@@ -70,7 +70,6 @@ async function loadTagsFromStorage(): Promise<void> {
       tagsStore.set(tag.id, tag);
     });
 
-    console.log(`Loaded ${tagsStore.size} tags from storage`);
   } catch (error) {
     console.error('Failed to load tags from storage:', error);
   }

@@ -136,7 +136,7 @@ export function StockTakeSummaryReport() {
           },
           {
             accessor: 'categoryName',
-            title: 'Category',
+            title: 'Asset Type',
             width: 150,
           },
           {

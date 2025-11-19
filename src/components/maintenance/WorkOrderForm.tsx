@@ -20,6 +20,7 @@ import { useTranslation } from 'react-i18next';
 import { AssetScheduleTable } from './AssetScheduleTable';
 import type { WorkOrder, WorkOrderLineItem, WorkOrderType } from '../../types/maintenance';
 import type { UUID } from '../../types/entities';
+import { bindSelectField } from '../../utils/selectControl';
 
 interface WorkOrderFormProps {
   workOrder?: WorkOrder;
@@ -126,7 +127,7 @@ export function WorkOrderForm({
             description={t('maintenance:descriptions.maintenanceRule')}
             data={rules.map((r) => ({ value: r.id, label: r.name }))}
             clearable
-            {...form.getInputProps('ruleId')}
+            {...bindSelectField(form, 'ruleId', { emptyValue: '' })}
           />
         )}
 
@@ -136,7 +137,7 @@ export function WorkOrderForm({
             placeholder={t('maintenance:placeholders.serviceProvider')}
             required
             data={companies.map((c) => ({ value: c.id, label: c.name }))}
-            {...form.getInputProps('companyId')}
+            {...bindSelectField(form, 'companyId', { emptyValue: '' })}
           />
         )}
 

@@ -50,6 +50,7 @@ import { ViewSelector } from '../views/ViewSelector';
 import { FilterBuilder } from '../views/FilterBuilder';
 import { useUIStore } from '../../stores/uiStore';
 import { applyFilters } from '../../utils/filterEvaluation';
+import { countFilterConditions, createFilterGroup } from '../../utils/viewFilters';
 import { AssetGalleryView } from './AssetGalleryView';
 import { AssetKanbanView } from './AssetKanbanView';
 import { AssetCalendarView } from './AssetCalendarView';
@@ -293,7 +294,7 @@ export function AssetList({
     return next;
   }, [filters]);
 
-  const advancedFilterCount = viewFilters.length;
+  const advancedFilterCount = countFilterConditions(viewFilters);
   const hasAdvancedFilters = advancedFilterCount > 0;
   const combinedFilterCount = activeFilterCount + advancedFilterCount;
   const combinedHasFilters = hasActiveFilters || hasAdvancedFilters;
@@ -419,11 +420,11 @@ export function AssetList({
   }, [assets, filters.assetType, filters.prefixId, filters.hasAssetGroup, filters.assetGroupId, prefixes]);
 
   const viewFilteredAssets = useMemo(() => {
-    if (!viewFilters.length) {
+    if (!hasAdvancedFilters) {
       return filteredAssets;
     }
     return applyFilters(filteredAssets, viewFilters);
-  }, [filteredAssets, viewFilters]);
+  }, [filteredAssets, hasAdvancedFilters, viewFilters]);
 
   // Sort assets (memoized to avoid re-sorting on every render) - T217
   const sortedAssets = useMemo(() => {
@@ -758,7 +759,7 @@ export function AssetList({
   const clearFilters = () => {
     resetFilters();
     if (hasAdvancedFilters) {
-      setViewFilters([]);
+      setViewFilters(createFilterGroup('AND'));
     }
   };
 
@@ -967,13 +968,13 @@ export function AssetList({
                 size="xs"
                 color="gray"
                 leftSection={<IconX size={14} />}
-                onClick={() => setViewFilters([])}
+                onClick={() => setViewFilters(createFilterGroup('AND'))}
               >
                 Clear advanced filters
               </Button>
             )}
           </Group>
-          <FilterBuilder filters={viewFilters} onChange={setViewFilters} />
+          <FilterBuilder value={viewFilters} onChange={setViewFilters} />
         </Stack>
       )}
     </Stack>

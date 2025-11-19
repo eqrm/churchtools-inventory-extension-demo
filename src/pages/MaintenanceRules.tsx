@@ -210,7 +210,7 @@ export function MaintenanceRules() {
                   <Table.Th>{t('maintenance:fields.isInternal')}</Table.Th>
                   <Table.Th>{t('maintenance:fields.targets')}</Table.Th>
                   <Table.Th>{t('maintenance:fields.intervalType')}</Table.Th>
-                  <Table.Th>{t('common:actions')}</Table.Th>
+                  <Table.Th>{t('common:columns.actions')}</Table.Th>
                 </Table.Tr>
               </Table.Thead>
               <Table.Tbody>

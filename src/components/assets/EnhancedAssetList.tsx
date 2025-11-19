@@ -39,6 +39,7 @@ import { AssetKanbanView } from './AssetKanbanView';
 import { AssetCalendarView } from './AssetCalendarView';
 import { applyFilters, sortAssets } from '../../utils/filterEvaluation';
 import { readFiltersFromUrl, updateUrlWithFilters } from '../../utils/urlFilters';
+import { countFilterConditions, flattenFilterConditions, hasActiveFilters } from '../../utils/viewFilters';
 
 // Import the original AssetList as AssetTableView
 import { AssetList as AssetTableView } from './AssetList';
@@ -106,6 +107,7 @@ export function EnhancedAssetList({ onView, onEdit, onCreateNew, onCreateKit }: 
   }, [showSavedViews]);
 
   const { data: assets = [] } = useAssets();
+  const activeFilterCount = useMemo(() => countFilterConditions(viewFilters), [viewFilters]);
 
   const handleCreateKit = () => {
     onCreateKit?.();
@@ -114,7 +116,7 @@ export function EnhancedAssetList({ onView, onEdit, onCreateNew, onCreateKit }: 
   // T200: Read filters from URL on mount
   useEffect(() => {
     const urlState = readFiltersFromUrl();
-    if (urlState.filters.length > 0) {
+    if (urlState.filters) {
       setViewFilters(urlState.filters);
     }
     if (urlState.viewMode) {
@@ -145,7 +147,9 @@ export function EnhancedAssetList({ onView, onEdit, onCreateNew, onCreateKit }: 
 
   // T197: Apply advanced filters
   const filteredAssets = useMemo(() => {
-    if (viewFilters.length === 0) return assets;
+    if (!hasActiveFilters(viewFilters)) {
+      return assets;
+    }
     return applyFilters(assets, viewFilters);
   }, [assets, viewFilters]);
 
@@ -184,7 +188,8 @@ export function EnhancedAssetList({ onView, onEdit, onCreateNew, onCreateKit }: 
   // Convert ViewFilters to AssetFilters for table view compatibility
   const legacyFilters: AssetFilters = useMemo(() => {
     const filters: AssetFilters = {};
-    for (const filter of viewFilters) {
+    const conditions = flattenFilterConditions(viewFilters);
+    for (const filter of conditions) {
       if (filter.field === 'category.name' && filter.operator === 'equals') {
         // Note: This is a simplified conversion - full implementation would need category ID lookup
         filters.assetTypeId = String(filter.value);
@@ -279,8 +284,8 @@ export function EnhancedAssetList({ onView, onEdit, onCreateNew, onCreateKit }: 
             leftSection={<IconFilter size={16} />}
             onClick={() => setFiltersPanelOpen((prev) => !prev)}
           >
-            {viewFilters.length > 0
-              ? tAssets('list.actions.filtersWithCount', { count: viewFilters.length })
+            {activeFilterCount > 0
+              ? tAssets('list.actions.filtersWithCount', { count: activeFilterCount })
               : tAssets('list.actions.filters')}
           </Button>
 
@@ -289,7 +294,7 @@ export function EnhancedAssetList({ onView, onEdit, onCreateNew, onCreateKit }: 
             variant="default"
             leftSection={<IconDeviceFloppy size={16} />}
             onClick={handleSaveCurrentView}
-            disabled={viewFilters.length === 0}
+            disabled={activeFilterCount === 0}
           >
             {tAssets('list.actions.saveView')}
           </Button>
@@ -319,7 +324,7 @@ export function EnhancedAssetList({ onView, onEdit, onCreateNew, onCreateKit }: 
       {/* T210: Filter builder panel with smooth collapse animation */}
       <Collapse in={filtersPanelOpen}>
         <Card withBorder>
-          <FilterBuilder filters={viewFilters} onChange={setViewFilters} />
+          <FilterBuilder value={viewFilters} onChange={setViewFilters} />
         </Card>
       </Collapse>
 

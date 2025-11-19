@@ -2,7 +2,7 @@
   "title": "Inventory Manager",
   "items": {
     "dashboard": "Dashboard",
-    "categories": "Categories",
+    "categories": "Asset Types",
     "assets": "Assets",
     "assetModels": "Asset Models",
     "bookings": "Bookings",

@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { UndoAction } from '../types/undo';
+import { MAX_UNDO_HISTORY } from '../constants/undo';
 
 interface UndoStoreState {
   actions: UndoAction[];
@@ -27,7 +28,7 @@ export const useUndoStore = create<UndoStoreState>((set) => ({
   error: undefined,
 
   setActions: (actions) => {
-    set({ actions: [...actions].sort(sortByCreatedAtDesc).slice(0, 50) });
+    set({ actions: [...actions].sort(sortByCreatedAtDesc).slice(0, MAX_UNDO_HISTORY) });
   },
 
   upsertAction: (action) => {
@@ -44,7 +45,7 @@ export const useUndoStore = create<UndoStoreState>((set) => ({
       next.sort(sortByCreatedAtDesc);
 
       return {
-        actions: next.slice(0, 50),
+        actions: next.slice(0, MAX_UNDO_HISTORY),
       };
     });
   },

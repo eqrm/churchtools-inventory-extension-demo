@@ -162,19 +162,10 @@ export class MaintenanceService {
     // Get current user for createdBy field
     const user = await this.storageProvider.getCurrentUser();
     
-    // Calculate nextDueDate if not provided
-    let nextDueDate = data.nextDueDate;
-    if (!nextDueDate) {
-      const startDate = new Date(data.startDate);
-      if (data.intervalType === 'months') {
-        const dueDate = new Date(startDate);
-        dueDate.setMonth(dueDate.getMonth() + data.intervalValue);
-        nextDueDate = dueDate.toISOString().split('T')[0] as ISODate;
-      } else {
-        // For 'uses' type, nextDueDate is the same as startDate initially
-        nextDueDate = data.startDate;
-      }
-    }
+    const startDate = new Date(data.startDate);
+    const anchor = Number.isNaN(startDate.getTime()) ? this.now() : startDate;
+    const computedNextDue = this.calculateNextDueDate(data.intervalType, data.intervalValue, anchor);
+    const nextDueDate = data.nextDueDate ?? computedNextDue ?? data.startDate;
 
     const rule: MaintenanceRule = {
       ...data,
@@ -403,9 +394,15 @@ export class MaintenanceService {
     const machine =
       existing.type === 'internal' ? internalWorkOrderMachine : externalWorkOrderMachine;
 
+    const persistedSnapshot = machine.resolveState({
+      value: existing.state,
+      context: { workOrder: existing },
+    });
+
     // Create actor with current work order state
     const actor = createActor(machine, {
       input: { workOrder: existing },
+      snapshot: persistedSnapshot,
     });
 
     actor.start();
@@ -422,12 +419,14 @@ export class MaintenanceService {
     }
 
     // Build updated work order from snapshot
-    const newState = snapshot.value as InternalWorkOrderState | ExternalWorkOrderState;
     const updatedContext = snapshot.context.workOrder;
+    const resultingState =
+      (updatedContext.state as InternalWorkOrderState | ExternalWorkOrderState | undefined) ??
+      (snapshot.value as InternalWorkOrderState | ExternalWorkOrderState);
 
     const historyEntry: WorkOrderHistoryEntry = {
       id: crypto.randomUUID(),
-      state: newState,
+      state: resultingState,
       changedAt: this.timestamp(),
       changedBy,
       changedByName,
@@ -436,12 +435,16 @@ export class MaintenanceService {
     const updated: WorkOrder = {
       ...existing,
       ...updatedContext,
-      state: newState,
+      state: resultingState,
       history: [...existing.history, historyEntry],
       updatedAt: this.timestamp(),
     };
 
     const saved = await this.storageProvider.updateWorkOrder(id, updated);
+
+    if (resultingState === 'completed' && updated.ruleId && updated.actualEnd) {
+      await this.updateRuleScheduleFromCompletion(updated.ruleId, updated.actualEnd);
+    }
 
     await recordUndoAction({
       entityType: 'workOrder',
@@ -618,46 +621,77 @@ export class MaintenanceService {
     rule: MaintenanceRule,
     today: Date
   ): Promise<boolean> {
-    const startDate = new Date(rule.startDate);
-    
-    // Don't create if start date is in the future
-    if (startDate > today) {
+    const dueIso = rule.nextDueDate ?? rule.startDate;
+    if (!dueIso) {
       return false;
     }
 
-    // Get all work orders for this rule
+    const dueDate = new Date(dueIso);
+    if (Number.isNaN(dueDate.getTime())) {
+      return false;
+    }
+
     const allWorkOrders = await this.getWorkOrders();
-    const ruleWorkOrders = allWorkOrders
-      .filter((wo) => wo.ruleId === rule.id)
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    const ruleWorkOrders = allWorkOrders.filter((wo) => wo.ruleId === rule.id);
 
-    // If no work orders exist, create one if we're past the start date
-    if (ruleWorkOrders.length === 0) {
-      return true;
-    }
-
-    const lastWorkOrder = ruleWorkOrders[0];
-    if (!lastWorkOrder) {
-      return true;
-    }
-    
-    const lastCreated = new Date(lastWorkOrder.createdAt);
-
-    // Calculate next due date based on interval type
-    if (rule.intervalType === 'months') {
-      const nextDueDate = new Date(lastCreated);
-      nextDueDate.setMonth(nextDueDate.getMonth() + rule.intervalValue);
-      
-      // Subtract lead time days
-      const scheduledDate = new Date(nextDueDate);
-      scheduledDate.setDate(scheduledDate.getDate() - rule.leadTimeDays);
-
-      return today >= scheduledDate;
-    } else {
-      // For 'uses' interval type, we would need usage tracking
-      // For now, skip auto-generation for usage-based rules
+    const hasOpenOrder = ruleWorkOrders.some(
+      (workOrder) => !['done', 'aborted', 'obsolete'].includes(workOrder.state),
+    );
+    if (hasOpenOrder) {
       return false;
     }
+
+    const scheduledDate = new Date(dueDate);
+    scheduledDate.setDate(scheduledDate.getDate() - rule.leadTimeDays);
+
+    return today >= scheduledDate;
+  }
+
+  private calculateNextDueDate(
+    intervalType: MaintenanceRule['intervalType'],
+    intervalValue: number,
+    anchor: Date,
+  ): ISODate | null {
+    if (intervalType !== 'months') {
+      return null;
+    }
+
+    const dueDate = new Date(anchor);
+    if (Number.isNaN(dueDate.getTime())) {
+      return null;
+    }
+
+    dueDate.setMonth(dueDate.getMonth() + intervalValue);
+    if (Number.isNaN(dueDate.getTime())) {
+      return null;
+    }
+
+    return dueDate.toISOString().split('T')[0] as ISODate;
+  }
+
+  private async updateRuleScheduleFromCompletion(ruleId: UUID, completionIso: string): Promise<void> {
+    const rule = await this.storageProvider.getMaintenanceRule(ruleId);
+    if (!rule) {
+      return;
+    }
+
+    const completionDate = new Date(completionIso);
+    if (Number.isNaN(completionDate.getTime())) {
+      return;
+    }
+
+    const nextDueDate = this.calculateNextDueDate(rule.intervalType, rule.intervalValue, completionDate);
+    if (!nextDueDate || nextDueDate === rule.nextDueDate) {
+      return;
+    }
+
+    const updatedRule: MaintenanceRule = {
+      ...rule,
+      nextDueDate,
+      updatedAt: this.timestamp(),
+    };
+
+    await this.storageProvider.updateMaintenanceRule(ruleId, updatedRule);
   }
 
   // ========================================

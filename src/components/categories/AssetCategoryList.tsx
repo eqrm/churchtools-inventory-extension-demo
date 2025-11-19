@@ -272,13 +272,13 @@ export function AssetTypeList({ onEdit, headerActions }: AssetTypeListProps) {
       await deleteAssetType.mutateAsync(category.id);
       notifications.show({
         title: 'Success',
-        message: `Category "${category.name}" has been deleted`,
+        message: `Asset type "${category.name}" has been deleted`,
         color: 'green',
       });
     } catch (err) {
       notifications.show({
         title: 'Error',
-        message: err instanceof Error ? err.message : 'Failed to delete category',
+        message: err instanceof Error ? err.message : 'Failed to delete asset type',
         color: 'red',
       });
     }
@@ -295,13 +295,13 @@ export function AssetTypeList({ onEdit, headerActions }: AssetTypeListProps) {
 
       notifications.show({
         title: 'Success',
-        message: `Category "${duplicated.name}" has been created`,
+        message: `Asset type "${duplicated.name}" has been created`,
         color: 'green',
       });
     } catch (err) {
       notifications.show({
         title: 'Error',
-        message: err instanceof Error ? err.message : 'Failed to duplicate category',
+        message: err instanceof Error ? err.message : 'Failed to duplicate asset type',
         color: 'red',
       });
     }
@@ -324,7 +324,7 @@ export function AssetTypeList({ onEdit, headerActions }: AssetTypeListProps) {
       <Group align="flex-end" justify="space-between" wrap="wrap">
         <TextInput
           label="Search"
-          placeholder="Search categories"
+          placeholder="Search asset types"
           leftSection={<IconSearch size={16} />}
           value={filters.search ?? ''}
           onChange={(event) => {
@@ -351,14 +351,14 @@ export function AssetTypeList({ onEdit, headerActions }: AssetTypeListProps) {
   if (error) {
     return (
       <Card withBorder>
-        <Text c="red">Error loading categories: {error.message}</Text>
+        <Text c="red">Error loading asset types: {error.message}</Text>
       </Card>
     );
   }
 
   return (
     <DataViewLayout
-      title="Asset Categories"
+      title="Asset Types"
       mode={viewMode}
       availableModes={['table']}
       onModeChange={setViewMode}
@@ -390,10 +390,10 @@ export function AssetTypeList({ onEdit, headerActions }: AssetTypeListProps) {
           onSortStatusChange={setSortStatus}
           fetching={isLoading}
           paginationText={({ from, to, totalRecords: total }) =>
-            `Showing ${from} to ${to} of ${total} categories`
+            `Showing ${from} to ${to} of ${total} asset types`
           }
           noRecordsText={
-            hasActiveFilters ? 'No categories match your filters' : 'No categories found'
+            hasActiveFilters ? 'No asset types match your filters' : 'No asset types found'
           }
         />
       </Card>

@@ -12,6 +12,7 @@ import { IconCheck, IconX } from '@tabler/icons-react';
 import { useCreateMaintenanceSchedule, useUpdateMaintenanceSchedule } from '../../hooks/useMaintenance';
 import { useAssets } from '../../hooks/useAssets';
 import type { MaintenanceSchedule, MaintenanceScheduleCreate, ScheduleType } from '../../types/entities';
+import { bindSelectField } from '../../utils/selectControl';
 
 interface MaintenanceScheduleFormProps {
   assetId?: string;
@@ -127,10 +128,17 @@ export function MaintenanceScheduleForm({ assetId, schedule, onSuccess, onCancel
             nothingFoundMessage={assetsLoading ? t('scheduleForm.placeholders.loadingAssets') : t('scheduleForm.placeholders.noAssets')}
             disabled={assetsLoading}
             required
-            {...form.getInputProps('selectedAssetId')}
+            {...bindSelectField(form, 'selectedAssetId', { emptyValue: '' })}
           />
         )}
-        <Select label={t('scheduleForm.labels.type')} data={scheduleTypes(t)} required {...form.getInputProps('scheduleType')} />
+        <Select
+          label={t('scheduleForm.labels.type')}
+          data={scheduleTypes(t)}
+          required
+          {...bindSelectField(form, 'scheduleType', {
+            parse: (value) => value as ScheduleType,
+          })}
+        />
         
         {scheduleType === 'time-based' && (
           <>

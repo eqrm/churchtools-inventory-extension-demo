@@ -21,7 +21,7 @@ interface MasterDataSelectInputProps
   onChange: (value: string) => void;
   nothingFound?: string;
     onBlur?: () => void;
-    onCreateOption: (name: string) => string;
+    onCreateOption: (name: string) => string | Promise<string>;
 }
 
 export function MasterDataSelectInput({
@@ -41,6 +41,7 @@ export function MasterDataSelectInput({
     onCreateOption,
 }: MasterDataSelectInputProps) {
   const [searchValue, setSearchValue] = useState<string>('');
+  const [isCreating, setIsCreating] = useState(false);
 
   useEffect(() => {
     setSearchValue('');
@@ -60,6 +61,12 @@ export function MasterDataSelectInput({
 
   const options = useMemo(() => {
     const items = names.map((name) => ({ value: name, label: name }));
+    if (value) {
+      const canonicalValue = canonicalMasterDataName(value);
+      if (!canonicalNames.includes(canonicalValue)) {
+        items.push({ value, label: value });
+      }
+    }
     if (shouldShowCreate && normalizedSearch) {
       items.unshift({
         value: `${CREATE_PREFIX}${normalizedSearch}`,
@@ -67,7 +74,7 @@ export function MasterDataSelectInput({
       });
     }
     return items;
-  }, [names, normalizedSearch, shouldShowCreate]);
+  }, [names, value, canonicalNames, normalizedSearch, shouldShowCreate]);
 
   const handleChange = (selected: string | null) => {
     if (!selected) {
@@ -77,9 +84,20 @@ export function MasterDataSelectInput({
 
     if (selected.startsWith(CREATE_PREFIX)) {
       const raw = selected.slice(CREATE_PREFIX.length);
-      const finalName = onCreateOption(raw);
-      onChange(finalName);
-      setSearchValue('');
+      const run = async () => {
+        setIsCreating(true);
+        try {
+          const finalName = await Promise.resolve(onCreateOption(raw));
+          onChange(finalName);
+        } catch (error) {
+          console.error('Failed to create master data entry', error);
+        } finally {
+          setSearchValue('');
+          setIsCreating(false);
+        }
+      };
+
+      void run();
       return;
     }
 
@@ -105,7 +123,7 @@ export function MasterDataSelectInput({
       nothingFoundMessage={nothingFound ?? 'No options'}
       searchValue={searchValue}
       onSearchChange={setSearchValue}
-      disabled={disabled}
+      disabled={disabled || isCreating}
       comboboxProps={{ withinPortal: false }}
       onBlur={onBlur}
     />

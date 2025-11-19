@@ -53,6 +53,7 @@ import type {
   DamageRepairInput,
   DamageReportRecord,
 } from './damage'
+import type { MasterDataEntity, MasterDataItem } from './masterData'
 
 export interface GroupBookingCreate {
   groupId: UUID
@@ -265,6 +266,42 @@ export interface IStorageProvider {
     assetId: string,
     fieldKey: string
   ): Promise<{ value: unknown; source: 'group' | 'local' | 'override' }>
+
+  // ============================================================================
+  // Master Data
+  // ============================================================================
+
+  /**
+   * Retrieve master data items for a given entity (locations, manufacturers, models, maintenance companies)
+   */
+  getMasterDataItems(entity: MasterDataEntity): Promise<MasterDataItem[]>
+
+  /**
+   * Create a new master data entry with the provided name
+   */
+  createMasterDataItem(entity: MasterDataEntity, name: string): Promise<MasterDataItem>
+
+  /**
+   * Update the name of a master data item
+   */
+  updateMasterDataItem(entity: MasterDataEntity, id: string, name: string): Promise<MasterDataItem>
+
+  /**
+   * Delete a master data entry
+   */
+  deleteMasterDataItem(entity: MasterDataEntity, id: string): Promise<void>
+
+  /**
+   * Manage module-level default prefix preference
+   */
+  setModuleDefaultPrefixId(prefixId: string | null): Promise<void>
+  getModuleDefaultPrefixId(): Promise<string | null>
+
+  /**
+   * Manage personal default prefix preference for a given ChurchTools person
+   */
+  getPersonDefaultPrefixId(personId: string): Promise<string | null>
+  setPersonDefaultPrefixId(personId: string, prefixId: string | null): Promise<void>
 
   // ============================================================================
   // Bookings

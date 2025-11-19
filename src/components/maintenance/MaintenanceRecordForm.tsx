@@ -12,6 +12,7 @@ import { IconCheck, IconX } from '@tabler/icons-react';
 import { useCreateMaintenanceRecord, useMaintenanceSchedule, useUpdateMaintenanceSchedule } from '../../hooks/useMaintenance';
 import { useCurrentUser } from '../../hooks/useCurrentUser';
 import { calculateNextDue } from '../../utils/maintenanceCalculations';
+import { bindSelectField } from '../../utils/selectControl';
 import type { MaintenanceRecordCreate, MaintenanceType } from '../../types/entities';
 
 interface MaintenanceRecordFormProps {
@@ -24,12 +25,10 @@ interface MaintenanceRecordFormProps {
 
 const maintenanceTypes = (t: (s: string, v?: unknown) => string) => [
   { value: 'inspection', label: t('records.types.inspection') },
-  { value: 'cleaning', label: t('records.types.cleaning') },
-  { value: 'repair', label: t('records.types.repair') },
-  { value: 'calibration', label: t('records.types.calibration') },
-  { value: 'testing', label: t('records.types.testing') },
-  { value: 'compliance', label: t('records.types.compliance') },
-  { value: 'other', label: t('records.types.other') },
+  { value: 'maintenance', label: t('records.types.maintenance') },
+  { value: 'planned-repair', label: t('records.types.planned-repair') },
+  { value: 'unplanned-repair', label: t('records.types.unplanned-repair') },
+  { value: 'improvement', label: t('records.types.improvement') },
 ];
 
 /**
@@ -118,7 +117,14 @@ export function MaintenanceRecordForm({
   return (
     <form onSubmit={handleSubmit}>
       <Stack gap="md">
-        <Select label={t('records.columns.type')} data={maintenanceTypes(t)} required {...form.getInputProps('type')} />
+        <Select
+          label={t('records.columns.type')}
+          data={maintenanceTypes(t)}
+          required
+          {...bindSelectField(form, 'type', {
+            parse: (value) => value as MaintenanceType,
+          })}
+        />
         <DateInput label={t('records.columns.date')} required {...form.getInputProps('date')} />
         <TextInput label={t('records.columns.description')} placeholder={t('records.placeholders.descriptionExample')} required {...form.getInputProps('description')} />
         <Textarea label={t('records.labels.notes') ?? 'Notes'} placeholder={t('records.placeholders.notes') ?? 'Additional notes...'} minRows={3} {...form.getInputProps('notes')} />

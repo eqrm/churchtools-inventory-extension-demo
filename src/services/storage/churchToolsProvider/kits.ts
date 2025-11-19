@@ -116,8 +116,8 @@ export async function createKit(deps: KitDependencies, data: KitCreate): Promise
       if (!asset) {
         throw new Error(`Asset ${boundAsset.assetNumber} not found`);
       }
-      if (asset.status !== 'available') {
-        throw new Error(`Asset ${boundAsset.assetNumber} is not available (status: ${asset.status})`);
+      if (asset.status === 'deleted') {
+        throw new Error(`Asset ${boundAsset.assetNumber} has been deleted and cannot be added to a kit`);
       }
     }
   }
@@ -182,6 +182,9 @@ export async function updateKit(deps: KitDependencies, id: string, data: KitUpda
       const asset = await deps.getAsset(boundAsset.assetId);
       if (!asset) {
         throw new Error(`Asset ${boundAsset.assetNumber} not found`);
+      }
+      if (asset.status === 'deleted') {
+        throw new Error(`Asset ${boundAsset.assetNumber} has been deleted and cannot be added to a kit`);
       }
     }
   }

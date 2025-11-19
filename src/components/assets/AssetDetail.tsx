@@ -15,9 +15,7 @@ import {
   Textarea,
   Title,
   Tooltip,
-  AspectRatio,
   Image,
-  Avatar,
   ActionIcon,
   Collapse,
   useMantineTheme,
@@ -30,7 +28,6 @@ import {
   IconChevronUp,
   IconDownload,
   IconEdit,
-  IconHash,
   IconHistory,
   IconInfoCircle,
   IconLocation,
@@ -53,7 +50,6 @@ import { useTranslation } from 'react-i18next';
 import { notifications } from '@mantine/notifications';
 import { useAsset, useAssets, useRegenerateBarcode } from '../../hooks/useAssets';
 import { useChangeHistory } from '../../hooks/useChangeHistory';
-import { useMaintenanceRecords, useMaintenanceSchedule } from '../../hooks/useMaintenance';
 import { useCategories } from '../../hooks/useCategories';
 import { useAssignments } from '../../hooks/useAssignments';
 import { AssetStatusMenu } from './AssetStatusMenu';
@@ -66,12 +62,8 @@ import { ParentAssetLink } from './ParentAssetLink';
 import { ChildAssetsList } from './ChildAssetsList';
 import { ParentSummaryStatistics } from './ParentSummaryStatistics';
 import { AssetMaintenanceHistory } from './AssetMaintenanceHistory';
-import { MaintenanceRecordList } from '../maintenance/MaintenanceRecordList';
-import { MaintenanceReminderBadge } from '../maintenance/MaintenanceReminderBadge';
-import { formatScheduleDescription } from '../../utils/maintenanceCalculations';
 import type { Asset, AssetGroupFieldSource, AssetStatus } from '../../types/entities';
 import type { Tag, InheritedTag } from '../../types/tag';
-import { AssetGroupBadge } from '../asset-groups/AssetGroupBadge';
 import { AssetGroupDetail } from '../asset-groups/AssetGroupDetail';
 import { ConvertAssetToGroupModal } from '../asset-groups/ConvertAssetToGroupModal';
 import { JoinAssetGroupModal } from '../asset-groups/JoinAssetGroupModal';
@@ -81,7 +73,6 @@ import { RepairHistoryTab } from '../damage/RepairHistoryTab';
 import { DamageReportForm, type DamageReportFormData } from '../damage/DamageReportForm';
 import { useDamageReports } from '../../hooks/useDamageReports';
 import { AssignmentField } from '../assignment/AssignmentField';
-import { AssetAssignmentList } from './AssetAssignmentList';
 import type { PersonResult } from '../assignment/PersonSearch';
 import type { AssignmentTarget } from '../../types/assignment';
 import { useUpdateAsset } from '../../hooks/useAssets';
@@ -104,8 +95,6 @@ export function AssetDetail({ assetId, onEdit, onClose, onDuplicate }: AssetDeta
   const { data: history = [] } = useChangeHistory(assetId, 10);
   const { data: allAssets = [] } = useAssets();
   const { data: categories = [] } = useCategories();
-  const { data: maintenanceRecords = [] } = useMaintenanceRecords(assetId);
-  const { data: maintenanceSchedule } = useMaintenanceSchedule(assetId);
   const [barcodeHistoryExpanded, setBarcodeHistoryExpanded] = useState(() => {
     const saved = localStorage.getItem(`churchtools-inventory-barcode-history-expanded-${assetId}`);
     return saved ? JSON.parse(saved) : false;
@@ -139,7 +128,6 @@ export function AssetDetail({ assetId, onEdit, onClose, onDuplicate }: AssetDeta
     isRemoving,
   } = useEntityTags('asset', assetId);
   const { t: tTags } = useTranslation('tags');
-  const { t: tAssets } = useTranslation('assets');
 
   const directTags = entityTags ?? [];
   const inheritedTagEntries = (asset?.inheritedTags ?? [])
@@ -295,51 +283,6 @@ export function AssetDetail({ assetId, onEdit, onClose, onDuplicate }: AssetDeta
       minute: '2-digit',
     });
   };
-
-  const InfoRow = ({ 
-    icon, 
-    label, 
-    value, 
-    fieldKey,
-    kitInheritanceProperty 
-  }: { 
-    icon: React.ReactNode; 
-    label: string; 
-    value: React.ReactNode; 
-    fieldKey?: string;
-    kitInheritanceProperty?: 'location' | 'status' | 'tags';
-  }) => (
-    <Group gap="xs" wrap="nowrap">
-      <Box c="dimmed" style={{ display: 'flex', alignItems: 'center' }}>
-        {icon}
-      </Box>
-      <Box style={{ flex: 1 }}>
-        <Group gap={4} align="center">
-          <Text size="xs" c="dimmed" tt="uppercase" fw={700}>
-            {label}
-          </Text>
-          {fieldKey ? renderFieldSourceIndicator(fieldKey) : null}
-          {kitInheritanceProperty && asset.kitId ? (
-            <PropertyInheritanceIndicator 
-              assetId={asset.id} 
-              property={kitInheritanceProperty} 
-            />
-          ) : null}
-        </Group>
-        <Box>
-          {value ? (
-            typeof value === 'string' ? (
-              <Text size="sm">{value}</Text>
-            ) : (
-              value
-            )
-          ) : (
-            <Text size="sm" c="dimmed">—</Text>
-          )}
-        </Box>
-      </Box>
-    </Group>
-  );
 
   return (
     <>
@@ -804,7 +747,7 @@ export function AssetDetail({ assetId, onEdit, onClose, onDuplicate }: AssetDeta
 
             {/* Sidebar - Compact */}
             <Grid.Col span={{ base: 12, lg: 4 }}>
-              <AssetDetailSidebar asset={asset} allAssets={allAssets} formatDate={formatDate} InfoRow={InfoRow} />
+              <AssetDetailSidebar asset={asset} allAssets={allAssets} formatDate={formatDate} />
             </Grid.Col>
           </Grid>
         </Tabs.Panel>
@@ -920,12 +863,10 @@ function AssetDetailSidebar({
   asset,
   allAssets,
   formatDate,
-  InfoRow,
 }: {
   asset: Asset;
   allAssets: Asset[];
   formatDate: (date: string) => string;
-  InfoRow: ({ icon, label, value, fieldKey }: { icon: React.ReactNode; label: string; value: React.ReactNode; fieldKey?: string }) => JSX.Element;
 }) {
   // T284, T285 - E2: Barcode regeneration modal state
   const [regenerateModalOpen, setRegenerateModalOpen] = useState(false);
@@ -1288,84 +1229,5 @@ function FieldSourceIndicator({
     <Tooltip label={tooltip} withArrow>
       <IconTags size={14} style={{ color }} aria-hidden="true" />
     </Tooltip>
-  );
-}
-
-// Custom Field Display Component (handles person-reference fields)
-function CustomFieldDisplay({
-  icon,
-  label,
-  value,
-  fieldType,
-  fieldSource,
-  groupName,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: unknown;
-  fieldType?: string;
-  fieldSource?: AssetGroupFieldSource;
-  groupName?: string;
-}) {
-  const [personData, setPersonData] = useState<PersonSearchResult | null>(null);
-  const [loadingPerson, setLoadingPerson] = useState(false);
-
-  // Fetch person data if this is a person-reference field
-  useEffect(() => {
-    if (fieldType === 'person-reference' && value && typeof value === 'string') {
-      setLoadingPerson(true);
-      personSearchService
-        .getPersonById(value)
-        .then(person => setPersonData(person))
-        .catch(err => console.error('Failed to load person data:', err))
-        .finally(() => setLoadingPerson(false));
-    }
-  }, [fieldType, value]);
-
-  const renderValue = () => {
-    // Handle person-reference fields
-    if (fieldType === 'person-reference') {
-      if (loadingPerson) {
-        return <Text size="sm">Loading...</Text>;
-      }
-      if (personData) {
-        return (
-          <Group gap="xs">
-            <Avatar src={personData.avatarUrl} size="sm" radius="xl" />
-            <Text size="sm">{personData.displayName}</Text>
-          </Group>
-        );
-      }
-      return <Text size="sm" c="dimmed">—</Text>;
-    }
-
-    // Handle other field types
-    if (!value) {
-      return <Text size="sm" c="dimmed">—</Text>;
-    }
-    if (Array.isArray(value)) {
-      return <Text size="sm">{value.join(', ')}</Text>;
-    }
-    if (typeof value === 'boolean') {
-      return <Text size="sm">{value ? 'Yes' : 'No'}</Text>;
-    }
-    return <Text size="sm">{String(value)}</Text>;
-  };
-
-  return (
-    <Group gap="xs" wrap="nowrap">
-      <Box c="dimmed" style={{ display: 'flex', alignItems: 'center' }}>
-        {icon}
-      </Box>
-      <Box style={{ flex: 1 }}>
-        <Group gap={4} align="center">
-          <Text size="xs" c="dimmed" tt="uppercase" fw={700}>
-            {label}
-          </Text>
-          <FieldSourceIndicator source={fieldSource} groupName={groupName} />
-        </Group>
-        <Box>{renderValue()}</Box>
-      </Box>
-    </Group>
   );
 }

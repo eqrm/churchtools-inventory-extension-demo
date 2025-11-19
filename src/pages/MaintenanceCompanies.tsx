@@ -29,6 +29,11 @@ import {
 import { MaintenanceCompanyForm } from '../components/maintenance/MaintenanceCompanyForm';
 import type { MaintenanceCompany } from '../types/maintenance';
 
+type MaintenanceCompanyFormValues = Omit<
+  MaintenanceCompany,
+  'id' | 'createdAt' | 'updatedAt' | 'createdBy' | 'createdByName'
+>;
+
 export function MaintenanceCompanies() {
   const { t } = useTranslation(['maintenance', 'common']);
   const { data: companies = [], isLoading } = useMaintenanceCompanies();
@@ -70,7 +75,7 @@ export function MaintenanceCompanies() {
     setSelectedCompany(null);
   };
 
-  const handleFormSubmit = async (values: any) => {
+  const handleFormSubmit = async (values: MaintenanceCompanyFormValues) => {
     try {
       if (selectedCompany) {
         await updateCompany.mutateAsync({ id: selectedCompany.id, data: values });
@@ -117,7 +122,7 @@ export function MaintenanceCompanies() {
                   <Table.Th>{t('maintenance:fields.contactPerson')}</Table.Th>
                   <Table.Th>{t('maintenance:fields.address')}</Table.Th>
                   <Table.Th>{t('maintenance:fields.hourlyRate')}</Table.Th>
-                  <Table.Th>{t('common:actions')}</Table.Th>
+                  <Table.Th>{t('common:columns.actions')}</Table.Th>
                 </Table.Tr>
               </Table.Thead>
               <Table.Tbody>

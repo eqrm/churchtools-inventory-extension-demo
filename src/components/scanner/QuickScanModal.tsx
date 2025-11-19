@@ -1,13 +1,16 @@
-import { useEffect, useState } from 'react';
-import { Modal, Stack, Text, Select } from '@mantine/core';
+import { Suspense, lazy, useEffect, useState } from 'react';
+import { Loader, Modal, Stack, Text, Select } from '@mantine/core';
 import { useNavigate } from 'react-router-dom';
-import { BarcodeScanner } from './BarcodeScanner';
 import { ScannerInput } from './ScannerInput';
 import { provideScanSuccessFeedback, provideScanErrorFeedback } from '../../services/scanner/ScanFeedback';
 import { useStorageProvider } from '../../hooks/useStorageProvider';
 import { useScannerStore } from '../../stores/scannerStore';
 import { useScannerPreference } from '../../hooks/useScannerPreference';
 import type { ScannerModel } from '../../types/entities';
+
+const BarcodeScanner = lazy(() =>
+  import('./BarcodeScanner').then((module) => ({ default: module.BarcodeScanner })),
+);
 
 interface QuickScanModalProps {
   opened: boolean;
@@ -181,14 +184,16 @@ export function QuickScanModal({ opened, onClose }: QuickScanModalProps) {
         )}
 
         {/* Barcode Scanner */}
-        <BarcodeScanner
-          onScan={handleScan}
-          onError={handleError}
-          enableCamera={true}
-          enableKeyboard={true}
-          scannerModels={scannerModels}
-          selectedScannerId={preferredScannerId}
-        />
+        <Suspense fallback={<ScannerFallback />}>
+          <BarcodeScanner
+            onScan={handleScan}
+            onError={handleError}
+            enableCamera={true}
+            enableKeyboard={true}
+            scannerModels={scannerModels}
+            selectedScannerId={preferredScannerId}
+          />
+        </Suspense>
 
         {/* Manual Entry Fallback */}
         <ScannerInput
@@ -204,5 +209,16 @@ export function QuickScanModal({ opened, onClose }: QuickScanModalProps) {
         </Text>
       </Stack>
     </Modal>
+  );
+}
+
+function ScannerFallback() {
+  return (
+    <Stack gap="xs" align="center" style={{ padding: 'var(--mantine-spacing-lg)' }}>
+      <Loader size="sm" />
+      <Text size="sm" c="dimmed">
+        Loading scanner tools...
+      </Text>
+    </Stack>
   );
 }

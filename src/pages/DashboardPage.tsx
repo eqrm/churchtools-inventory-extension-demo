@@ -57,7 +57,7 @@ export function DashboardPage() {
           <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
             <StatCard
               icon={<IconCategory size={28} />}
-              label="Categories"
+              label="Asset Types"
               value={categories.length}
               color="var(--mantine-color-violet-6)"
             />
@@ -86,7 +86,7 @@ export function DashboardPage() {
           <Stack gap="md">
             <Title order={3}>Quick Start</Title>
             <Text size="sm">
-              Get started by creating asset categories and adding your equipment to the inventory system.
+              Get started by creating asset types and adding your equipment to the inventory system.
             </Text>
             <Grid>
               <Grid.Col span={{ base: 12, md: 6 }}>
@@ -94,11 +94,11 @@ export function DashboardPage() {
                   <Stack gap="xs">
                     <Group>
                       <IconCategory size={20} />
-                      <Text fw={600}>1. Create Categories</Text>
+                      <Text fw={600}>1. Create Asset Types</Text>
                     </Group>
-                    <Text size="sm" c="dimmed">
-                      Define asset categories with custom fields for your equipment types.
-                    </Text>
+                      <Text size="sm" c="dimmed">
+                        Define asset types with custom fields for your equipment templates.
+                      </Text>
                   </Stack>
                 </Card>
               </Grid.Col>

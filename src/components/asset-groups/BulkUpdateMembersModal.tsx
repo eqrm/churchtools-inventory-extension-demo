@@ -136,8 +136,8 @@ export function BulkUpdateMembersModal({ group, opened, onClose, onCompleted }: 
               onChange={(value) => form.setFieldValue('location', value)}
               label="Location"
               nothingFound="No locations"
-              onCreateOption={(name) => {
-                const created = addLocation(name);
+              onCreateOption={async (name) => {
+                const created = await addLocation(name);
                 return created?.name ?? normalizeMasterDataName(name);
               }}
             />

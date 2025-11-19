@@ -3,6 +3,7 @@ import { getUndoDatabase } from '../db/UndoDatabase';
 import type { UndoActionType } from '../../types/undo';
 import { backgroundJobService } from '../BackgroundJobService';
 import { churchToolsAPIClient } from '../api/ChurchToolsAPIClient';
+import { MAX_UNDO_HISTORY } from '../../constants/undo';
 
 type HandlerBucket = Partial<Record<UndoActionType, UndoHandler[]>>;
 
@@ -41,6 +42,7 @@ const serviceOptions: UndoServiceOptions = {
   db: getUndoDatabase(),
   handlers: aggregatedHandlers,
   retentionHours: 24,
+  maxActionsPerActor: MAX_UNDO_HISTORY,
   getCurrentActor: async () => {
     const actor = await churchToolsAPIClient.getCurrentUser();
     return { id: actor.id, name: actor.name };

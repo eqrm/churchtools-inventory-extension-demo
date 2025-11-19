@@ -11,6 +11,7 @@ import { useTranslation } from 'react-i18next';
 import type { SavedView } from '../../types/entities';
 import { useSavedViews, useDeleteSavedView } from '../../hooks/useSavedViews';
 import { ErrorState } from '../common/ErrorState';
+import { countFilterConditions } from '../../utils/viewFilters';
 
 interface SavedViewsListProps {
   onSelectView: (view: SavedView) => void;
@@ -53,7 +54,7 @@ function ViewCard({
             </Badge>
           </Group>
           <Text size="xs" c="dimmed">
-            {t('drawer.filtersCount', { count: view.filters.length })} • {t('drawer.owner', { name: view.ownerName })}
+            {t('drawer.filtersCount', { count: countFilterConditions(view.filters) })} • {t('drawer.owner', { name: view.ownerName })}
           </Text>
         </Stack>
 

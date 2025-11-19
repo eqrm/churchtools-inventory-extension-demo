@@ -138,7 +138,7 @@ export function WorkOrders() {
             <Table.Th>{t('maintenance:fields.state')}</Table.Th>
             <Table.Th>{t('maintenance:fields.scheduledStart')}</Table.Th>
             <Table.Th>{t('maintenance:fields.assignedTo')}</Table.Th>
-            <Table.Th>{t('common:actions')}</Table.Th>
+            <Table.Th>{t('common:columns.actions')}</Table.Th>
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>

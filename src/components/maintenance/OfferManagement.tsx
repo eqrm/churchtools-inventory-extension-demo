@@ -81,7 +81,7 @@ export function OfferManagement({
               <Table.Th>{t('maintenance:offers.columns.receivedAt')}</Table.Th>
               <Table.Th>{t('maintenance:offers.columns.notes')}</Table.Th>
               <Table.Th>{t('maintenance:offers.columns.status')}</Table.Th>
-              <Table.Th>{t('common:actions')}</Table.Th>
+              <Table.Th>{t('common:columns.actions')}</Table.Th>
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>

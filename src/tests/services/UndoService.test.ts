@@ -166,8 +166,8 @@ describe('UndoService (T021-T036)', () => {
     await expect(service.undoAction(actionId)).rejects.toThrow('Undo action already applied');
   });
 
-  it('returns the current user history limited to 50 most recent actions (T026)', async () => {
-    const { service, options, advanceTime } = createTestContext();
+  it('limits the current user history to the configured maximum (T026)', async () => {
+    const { service, options, advanceTime } = createTestContext({ maxActionsPerActor: 20 });
 
     // Insert actions for another user that should be ignored
     const otherAction: UndoAction = {
@@ -186,8 +186,8 @@ describe('UndoService (T021-T036)', () => {
     };
     await options.db.undoActions.add(otherAction);
 
-    // Create 55 actions for the current user (should be truncated to 50)
-    for (let i = 0; i < 55; i += 1) {
+    // Create 40 actions for the current user (should be truncated to 20)
+    for (let i = 0; i < 40; i += 1) {
       advanceTime(1);
       await service.recordAction({
         entityType: 'asset',
@@ -198,12 +198,38 @@ describe('UndoService (T021-T036)', () => {
       });
     }
 
-    const history = await service.getUserUndoHistory(50);
+    const history = await service.getUserUndoHistory(40);
 
-    expect(history).toHaveLength(50);
-  expect(history.every((action: UndoAction) => action.actorId === 'user-123')).toBe(true);
-  const timestamps = history.map((action: UndoAction) => new Date(action.createdAt).getTime());
+    expect(history).toHaveLength(20);
+    expect(history.every((action: UndoAction) => action.actorId === 'user-123')).toBe(true);
+    expect(history[0]?.actionId).toBe('undo-40');
+    expect(history.at(-1)?.actionId).toBe('undo-21');
+    const timestamps = history.map((action: UndoAction) => new Date(action.createdAt).getTime());
     expect([...timestamps].sort((a, b) => b - a)).toEqual(timestamps); // ensure descending order
+  });
+
+  it('prunes the oldest actions once the actor history exceeds the limit (T026-PRUNE)', async () => {
+    const { service, options, advanceTime } = createTestContext({ maxActionsPerActor: 5 });
+
+    for (let i = 0; i < 12; i += 1) {
+      advanceTime(1);
+      await service.recordAction({
+        entityType: 'asset',
+        entityId: `asset-${i}`,
+        actionType: 'update',
+        beforeState: { version: i },
+        afterState: { version: i + 1 },
+      });
+    }
+
+    const stored = await options.db.undoActions
+      .where('actorId')
+      .equals('user-123')
+      .sortBy('createdAt');
+
+    expect(stored).toHaveLength(5);
+    expect(stored[0]?.actionId).toBe('undo-8');
+    expect(stored.at(-1)?.actionId).toBe('undo-12');
   });
 
   it('removes only expired actions during cleanup (T027)', async () => {

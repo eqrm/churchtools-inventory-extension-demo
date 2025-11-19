@@ -7,124 +7,137 @@
 
 import { z } from 'zod';
 
-/**
- * Filter Operator enum
- */
-export const FilterOperatorSchema = z.enum([
+import type { LegacyViewFilter, ViewFilter, ViewFilterGroup } from '../types/entities';
+import { LEGACY_SAVED_VIEW_SCHEMA_VERSION, SAVED_VIEW_SCHEMA_VERSION } from '../constants/schemaVersions';
+import { convertLegacyFiltersToGroup, normalizeFilterGroup } from '../utils/viewFilters';
+
+const FALLBACK_TIMESTAMP = '1970-01-01T00:00:00.000Z';
+
+const FilterOperatorSchema = z.enum([
   'equals',
-  'notEquals',
+  'not-equals',
   'contains',
-  'notContains',
-  'greaterThan',
-  'lessThan',
-  'greaterThanOrEqual',
-  'lessThanOrEqual',
+  'not-contains',
+  'starts-with',
+  'ends-with',
+  'greater-than',
+  'less-than',
   'in',
-  'notIn',
-  'isEmpty',
-  'isNotEmpty',
+  'not-in',
+  'is-empty',
+  'is-not-empty',
 ]);
 
-/**
- * Filter Condition Schema
- */
-export const FilterConditionSchema = z.object({
+const ViewModeSchema = z.enum(['table', 'gallery', 'calendar', 'kanban', 'list']);
+const FilterLogicSchema = z.enum(['AND', 'OR']);
+export const SortDirectionSchema = z.enum(['asc', 'desc']);
+
+const FilterConditionSchema = z.object({
+  id: z.string(),
+  type: z.literal('condition').optional(),
   field: z.string(),
   operator: FilterOperatorSchema,
   value: z.unknown().optional(),
 });
 
-/**
- * Sort Direction enum
- */
-export const SortDirectionSchema = z.enum(['asc', 'desc']);
+const FilterGroupSchema: z.ZodType<ViewFilterGroup> = z.lazy(() =>
+  z.object({
+    id: z.string(),
+    type: z.literal('group').optional(),
+    logic: FilterLogicSchema,
+    children: z.array(z.union([FilterConditionSchema, FilterGroupSchema])),
+  }),
+);
 
-/**
- * Sort Configuration Schema
- */
-export const SortConfigSchema = z.object({
-  field: z.string(),
-  direction: SortDirectionSchema,
-});
+const FilterNodeSchema: z.ZodType<ViewFilter> = z.union([FilterConditionSchema, FilterGroupSchema]);
 
-/**
- * Saved View Schema Version 1.0 (Initial)
- */
-export const SavedViewSchemaV1_0 = z.object({
-  schemaVersion: z.literal('1.0'),
-  id: z.string().uuid(),
+export const SavedViewSchema = z.object({
+  schemaVersion: z.literal(SAVED_VIEW_SCHEMA_VERSION),
+  id: z.string(),
   name: z.string().min(1).max(100),
-  description: z.string().optional(),
-  entityType: z.enum(['asset', 'kit', 'damageReport', 'assignment', 'workOrder']),
-  filters: z.array(FilterConditionSchema),
-  sort: z.array(SortConfigSchema).optional(),
+  ownerId: z.string(),
+  ownerName: z.string(),
+  isPublic: z.boolean(),
+  viewMode: ViewModeSchema,
+  filters: FilterGroupSchema,
+  sortBy: z.string().optional(),
+  sortDirection: SortDirectionSchema.optional(),
+  groupBy: z.string().optional(),
   visibleColumns: z.array(z.string()).optional(),
-  isDefault: z.boolean().default(false),
-  createdAt: z.string(), // ISOTimestamp
-  updatedAt: z.string(), // ISOTimestamp
-  createdBy: z.string().uuid(),
-  createdByName: z.string(),
-  updatedBy: z.string().uuid().optional(),
-  updatedByName: z.string().optional(),
-  deletedAt: z.string().optional().nullable(),
-  deletedBy: z.string().uuid().optional().nullable(),
-  deletedByName: z.string().optional().nullable(),
+  createdAt: z.string(),
+  lastModifiedAt: z.string(),
 });
 
-/**
- * Current Saved View Schema (latest version)
- */
-export const SavedViewSchema = SavedViewSchemaV1_0;
-
-/**
- * Type inference from current schema
- */
 export type SavedViewSchemaType = z.infer<typeof SavedViewSchema>;
 
-/**
- * Partial Saved View Schema for updates
- */
 export const SavedViewUpdateSchema = SavedViewSchema.partial().required({
   id: true,
-  updatedAt: true,
+  lastModifiedAt: true,
 });
 
-/**
- * Saved View Create Schema
- */
 export const SavedViewCreateSchema = SavedViewSchema.omit({
   id: true,
-  schemaVersion: true,
   createdAt: true,
-  updatedAt: true,
-  deletedAt: true,
-  deletedBy: true,
-  deletedByName: true,
+  lastModifiedAt: true,
 });
 
-/**
- * Validate and migrate saved view from any version to current
- */
+const LegacyFilterSchema = z.object({
+  field: z.string(),
+  operator: z.string(),
+  value: z.unknown().optional(),
+  logic: FilterLogicSchema.optional(),
+});
+
+const LegacySavedViewSchema = z.object({
+  schemaVersion: z.string().optional(),
+  id: z.string(),
+  name: z.string(),
+  ownerId: z.string(),
+  ownerName: z.string(),
+  isPublic: z.boolean().default(false),
+  viewMode: ViewModeSchema,
+  filters: z.array(LegacyFilterSchema).default([]),
+  sortBy: z.string().optional().nullable(),
+  sortDirection: SortDirectionSchema.optional().nullable(),
+  groupBy: z.string().optional().nullable(),
+  visibleColumns: z.array(z.string()).optional(),
+  createdAt: z.string().optional(),
+  lastModifiedAt: z.string().optional(),
+});
+
 export function migrateSavedView(data: unknown): SavedViewSchemaType {
-  const result = SavedViewSchema.safeParse(data);
-  
-  if (result.success) {
-    return result.data;
+  const current = SavedViewSchema.safeParse(data);
+  if (current.success) {
+    return current.data;
   }
-  
-  const versionCheck = z.object({ schemaVersion: z.string().optional() }).safeParse(data);
-  
-  if (!versionCheck.success || !versionCheck.data.schemaVersion) {
+
+  const legacy = LegacySavedViewSchema.safeParse(data);
+  if (legacy.success) {
+    const { schemaVersion, filters, sortDirection, ...rest } = legacy.data;
+    const normalizedFilters = convertLegacyFiltersToGroup(filters as LegacyViewFilter[]);
+    return {
+      ...rest,
+      schemaVersion: SAVED_VIEW_SCHEMA_VERSION,
+      filters: normalizeFilterGroup(normalizedFilters),
+      sortDirection: sortDirection ?? undefined,
+      createdAt: rest.createdAt ?? FALLBACK_TIMESTAMP,
+      lastModifiedAt: rest.lastModifiedAt ?? FALLBACK_TIMESTAMP,
+    } satisfies SavedViewSchemaType;
+  }
+
+  const versionLookup = z.object({ schemaVersion: z.string().optional() }).safeParse(data);
+  const version = versionLookup.success ? versionLookup.data.schemaVersion : undefined;
+  if (!version) {
     throw new Error('SavedView data missing schemaVersion field');
   }
-  
-  const version = versionCheck.data.schemaVersion;
+
+  if (version === LEGACY_SAVED_VIEW_SCHEMA_VERSION) {
+    throw new Error('Legacy saved view payload did not match expected shape');
+  }
+
   throw new Error(`Unsupported saved view schema version: ${version}`);
 }
 
-/**
- * Get current schema version
- */
 export function getCurrentSavedViewSchemaVersion(): string {
-  return '1.0';
+  return SAVED_VIEW_SCHEMA_VERSION;
 }

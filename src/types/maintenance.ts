@@ -23,10 +23,17 @@ export interface MaintenanceRuleTarget {
 
 export type MaintenanceIntervalType = 'months' | 'uses';
 
+export type MaintenanceWorkType =
+  | 'inspection'
+  | 'maintenance'
+  | 'planned-repair'
+  | 'unplanned-repair'
+  | 'improvement';
+
 export interface MaintenanceRule {
   id: UUID;
   name: string;
-  workType: string;
+  workType: MaintenanceWorkType;
   isInternal: boolean;
   serviceProviderId?: UUID;
   targets: MaintenanceRuleTarget[];

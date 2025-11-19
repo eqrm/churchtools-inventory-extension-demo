@@ -6,7 +6,7 @@
 
 import { useState } from 'react';
 import { Button, Group, Stack, Text, Alert, TextInput } from '@mantine/core';
-import { DateInput } from '@mantine/dates';
+import { DateInput, DateTimePicker } from '@mantine/dates';
 import { IconAlertCircle, IconCheck } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import type {
@@ -309,13 +309,21 @@ export function WorkOrderStateTransition({
                     style={{ flex: 1 }}
                   />
                 )}
-                {(option.requiresInput === 'scheduledStart' ||
-                  option.requiresInput === 'actualEnd') && (
+                {option.requiresInput === 'scheduledStart' && (
                   <DateInput
-                    placeholder={t(`maintenance:placeholders.${option.requiresInput}`)}
+                    placeholder={t('maintenance:placeholders.scheduledStart')}
                     value={dateValue}
                     onChange={setDateValue}
                     style={{ flex: 1 }}
+                  />
+                )}
+                {option.requiresInput === 'actualEnd' && (
+                  <DateTimePicker
+                    placeholder={t('maintenance:placeholders.actualEnd')}
+                    value={dateValue}
+                    onChange={setDateValue}
+                    style={{ flex: 1 }}
+                    withSeconds={false}
                   />
                 )}
                 <Button

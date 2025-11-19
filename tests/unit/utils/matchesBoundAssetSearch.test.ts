@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { AssetSelectOption, matchesBoundAssetSearch } from '../../../src/components/kits/FixedKitBuilder';
+import type { AssetSelectOption } from '../../../src/components/kits/FixedKitBuilder';
+import { matchesBoundAssetSearch } from '../../../src/utils/matchesBoundAssetSearch';
 
 const baseOption: AssetSelectOption = {
   value: 'asset-1',
