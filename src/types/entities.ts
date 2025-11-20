@@ -635,10 +635,13 @@ export type MaintenancePlanUpdate = Partial<Omit<MaintenancePlan, 'id' | 'create
 export interface MaintenanceCompany {
   id: UUID
   name: string
-  contactName?: string
-  email?: string
-  phone?: string
-  notes?: string
+  contactPerson?: string
+  contactEmail?: string
+  contactPhone?: string
+  address?: string
+  serviceLevelAgreement?: string
+  hourlyRate?: number
+  contractNotes?: string
   createdAt: ISOTimestamp
   createdBy: string
   createdByName: string
@@ -795,6 +798,7 @@ export interface SavedView {
   isPublic: boolean
   viewMode: ViewMode
   filters: ViewFilterGroup
+  quickFilters?: ViewFilterGroup
   sortBy?: string
   sortDirection?: 'asc' | 'desc'
   groupBy?: string
@@ -836,6 +840,12 @@ export interface LegacyViewFilter {
   logic?: FilterLogic
 }
 
+export interface RelativeDateFilterValue {
+  direction: 'last' | 'next'
+  unit: 'days' | 'weeks' | 'months'
+  amount: number
+}
+
 export type FilterOperator =
   | 'equals'
   | 'not-equals'
@@ -849,6 +859,8 @@ export type FilterOperator =
   | 'is-not-empty'
   | 'in'
   | 'not-in'
+  | 'relative-last'
+  | 'relative-next'
 
 export type SavedViewCreate = Omit<
   SavedView,

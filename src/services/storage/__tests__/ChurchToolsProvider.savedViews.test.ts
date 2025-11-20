@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { ChurchToolsStorageProvider } from '../ChurchToolsProvider';
 import { createMockChurchToolsApi } from './mockChurchToolsApiClient';
 import type { SavedViewCreate } from '../../../types/entities';
-import { createFilterGroup } from '../../../utils/viewFilters';
+import { createFilterCondition, createFilterGroup } from '../../../utils/viewFilters';
 import { SAVED_VIEW_SCHEMA_VERSION } from '../../../constants/schemaVersions';
 
 const MODULE_ID = '42';
@@ -55,5 +55,23 @@ describe('ChurchToolsStorageProvider - Saved Views', () => {
     );
 
     await expect(provider.deleteSavedView(created.id)).rejects.toThrow('Only the view owner can delete this view');
+  });
+
+  it('persists quick filters and clears them when removed', async () => {
+    const quickFilters = createFilterGroup('AND', [
+      createFilterCondition({ field: 'name', operator: 'contains', value: 'Camera' }),
+    ]);
+
+    const created = await provider.createSavedView(
+      baseSavedView({ name: 'Quick Filtered', quickFilters }),
+    );
+
+    const [loaded] = await provider.getSavedViews('user-1');
+    expect(loaded.quickFilters).toBeDefined();
+    expect(loaded.quickFilters?.children).toHaveLength(1);
+
+    await provider.updateSavedView(created.id, { quickFilters: undefined });
+    const [updated] = await provider.getSavedViews('user-1');
+    expect(updated.quickFilters).toBeUndefined();
   });
 });

@@ -3,6 +3,12 @@
   "page": {
     "title": "Maintenance workspace",
     "description": "Track and manage asset maintenance schedules and compliance.",
+    "sections": {
+      "dashboard": "Review compliance, overdue work, and upcoming assignments.",
+      "companies": "Manage service providers, contracts, and contacts.",
+      "rules": "Define recurring maintenance rules and ownership.",
+      "workOrders": "Track execution progress across internal and external work orders."
+    },
     "tabs": {
       "dashboard": "Overview",
       "plans": "Plans",
@@ -23,6 +29,15 @@
       "companies": "Companies",
       "rules": "Rules",
       "workOrders": "Work orders"
+    },
+    "overviewCard": {
+      "title": "Maintenance snapshot",
+      "description": "Monitor overdue work, asset readiness, and upcoming maintenance windows."
+    },
+    "quickLinks": {
+      "title": "Jump to a workspace",
+      "description": "Open the focused maintenance views for companies, rules, and work orders.",
+      "openLabel": "Open {{label}}"
     },
     "scheduleModal": {
       "createTitle": "Create maintenance plan",
@@ -115,7 +130,11 @@
     "editCompany": "Edit Company",
     "deleteCompany": "Delete Company",
     "noCompanies": "No maintenance companies yet",
-    "deleteConfirm": "Are you sure you want to delete this company? This cannot be undone."
+    "deleteConfirm": "Are you sure you want to delete this company? This cannot be undone.",
+    "actionsColumn": "Actions",
+    "unknownContact": "No contact assigned",
+    "noEmail": "No email provided",
+    "noPhone": "No phone provided"
   },
   "rules": {
     "title": "Maintenance Rules",
@@ -273,13 +292,17 @@
   },
   "fields": {
     "name": "Name",
+    "companyName": "Company Name",
     "contactPerson": "Contact Person",
+    "contactEmail": "Contact Email",
+    "contactPhone": "Contact Phone",
     "address": "Address",
     "serviceLevelAgreement": "Service Level Agreement",
     "hourlyRate": "Hourly Rate",
     "contractNotes": "Contract Notes",
     "ruleName": "Rule Name",
     "workType": "Work Type",
+    "customWorkType": "Custom work type",
     "isInternal": "Internal Work",
     "serviceProvider": "Service Provider",
     "appliesTo": "Applies To",
@@ -289,6 +312,8 @@
     "intervalValue": "Interval Value",
     "startDate": "Start Date",
     "leadTimeDays": "Lead Time (Days)",
+    "rescheduleMode": "Reschedule mode",
+    "orderType": "Order type",
     "type": "Type",
     "state": "State",
     "currentState": "Current State",
@@ -311,6 +336,8 @@
   "labels": {
     "name": "Company Name",
     "contactPerson": "Contact Person",
+    "contactEmail": "Contact Email",
+    "contactPhone": "Contact Phone",
     "address": "Address",
     "serviceLevelAgreement": "Service Level Agreement (SLA)",
     "hourlyRate": "Hourly Rate (€)",
@@ -330,13 +357,18 @@
   },
   "placeholders": {
     "name": "Enter company name",
+    "companyName": "Enter company name",
     "contactPerson": "Enter contact person name",
+    "contactPersonOptional": "Enter contact person name (optional)",
+    "contactEmail": "Enter contact email",
+    "contactPhone": "Enter contact phone number",
     "address": "Enter company address",
     "serviceLevelAgreement": "Describe service level agreement details",
     "hourlyRate": "Enter hourly rate",
     "contractNotes": "Additional contract notes (optional)",
     "ruleName": "Enter rule name (e.g., Quarterly inspection)",
     "workType": "Select work type",
+    "customWorkType": "Describe the work type",
     "serviceProvider": "Select service provider",
     "targets": "Select assets, kits, models, or tags",
     "selectTargets": "Select one or more targets",
@@ -436,6 +468,8 @@
     "intervalValue": "How often maintenance should occur",
     "startDate": "When this maintenance rule becomes active",
     "leadTimeDays": "How many days in advance to create work orders",
+    "rescheduleMode": "Choose how the next recurrence should be calculated after completion",
+    "orderType": "Flag how this work order entered the system",
     "lineItems": "Select which assets are included in this work order",
     "maintenanceRule": "Optional: Link this work order to a maintenance rule"
   },
@@ -450,7 +484,17 @@
     "maintenance": "Maintenance",
     "planned-repair": "Planned repair",
     "unplanned-repair": "Unplanned repair",
-    "improvement": "Improvement"
+    "improvement": "Improvement",
+    "custom": "Custom"
+  },
+  "rescheduleModes": {
+    "actualCompletion": "Anchor to completion",
+    "replanOnce": "Replan once"
+  },
+  "orderTypes": {
+    "planned": "Planned",
+    "unplanned": "Unplanned",
+    "follow-up": "Follow-up"
   },
   "intervalTypes": {
     "months": "Months",
@@ -533,25 +577,41 @@
   "validation": {
     "nameRequired": "Company name is required",
     "nameTooLong": "Name must be 200 characters or less",
+    "companyNameRequired": "Company name is required",
+    "companyNameMaxLength": "Company name must be 200 characters or less",
     "contactPersonRequired": "Contact person is required",
     "contactPersonTooLong": "Contact person must be 200 characters or less",
+    "contactPersonMaxLength": "Contact person must be 200 characters or less",
+    "contactEmailInvalid": "Provide a valid contact email",
+    "contactPhoneInvalid": "Provide a valid phone number (4-20 digits)",
     "addressRequired": "Address is required",
     "addressTooLong": "Address must be 500 characters or less",
+    "slaRequired": "Service level agreement is required",
     "slaTooLong": "SLA must be 1000 characters or less",
+    "slaMaxLength": "Service level agreement must be 1000 characters or less",
     "hourlyRateNegative": "Hourly rate must be 0 or greater",
+    "hourlyRatePositive": "Hourly rate must be 0 or greater",
     "ruleNameRequired": "Rule name is required",
     "ruleNameMaxLength": "Rule name must be 200 characters or less",
     "workTypeRequired": "Work type is required",
     "workTypeMaxLength": "Work type must be 200 characters or less",
+    "customWorkTypeRequired": "Enter a custom work type name",
     "serviceProviderRequired": "Service provider is required for external work",
     "targetsRequired": "At least one target must be selected",
     "intervalValueRequired": "Interval value is required",
     "intervalValuePositive": "Interval value must be greater than 0",
     "startDateRequired": "Start date is required",
     "leadTimeDaysNonNegative": "Lead time must be 0 or greater",
+    "rescheduleModeRequired": "Choose how to reschedule after completion",
+    "orderTypeRequired": "Select an order type",
     "leadTimeDaysNegative": "Lead time must be 0 or greater",
     "lineItemsRequired": "At least one asset must be selected",
     "companyIdRequired": "Company is required for external work orders"
+  },
+  "targetPicker": {
+    "noneAvailable": "No {{label}} available yet",
+    "noMatches": "No matches found",
+    "help": "Create {{label}} first to target them."
   },
   "actions": {
     "save": "Save",

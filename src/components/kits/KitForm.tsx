@@ -197,6 +197,7 @@ export function KitForm({ kit, onSuccess, onCancel }: KitFormProps) {
           <FixedKitBuilder
             value={form.values.boundAssets || []}
             onChange={(value) => form.setFieldValue('boundAssets', value)}
+            kitId={kit?.id}
           />
         ) : (
           <FlexibleKitBuilder

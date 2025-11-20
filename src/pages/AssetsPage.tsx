@@ -5,6 +5,7 @@ import { EnhancedAssetList } from '../components/assets/EnhancedAssetList';
 import { AssetForm } from '../components/assets/AssetForm';
 import { KitForm } from '../components/kits/KitForm';
 import type { Asset } from '../types/entities';
+import { getAssetDetailPath } from '../utils/assetNavigation';
 
 export function AssetsPage() {
   const navigate = useNavigate();
@@ -13,7 +14,7 @@ export function AssetsPage() {
   const [isKitModalOpen, setIsKitModalOpen] = useState(false);
 
   const handleView = (asset: Asset) => {
-    navigate(`/assets/${asset.id}`);
+    navigate(getAssetDetailPath(asset));
   };
 
   const handleEdit = (asset: Asset) => {

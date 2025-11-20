@@ -3,6 +3,9 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useStorageProvider } from './useStorageProvider';
 import type { Asset, AssetCreate, AssetUpdate, AssetFilters } from '../types/entities';
 import { useKitAssets } from './useKitAssets';
+import { useKitServiceInstance } from './useKits';
+import { resolveAssetById } from '../utils/assetResolution';
+import { isKitAssetId } from '../utils/kitAssets';
 
 function normalizeAssetUpdate(update: AssetUpdate): Partial<Asset> {
   const {
@@ -114,15 +117,19 @@ export function useAssets(filters?: AssetFilters) {
  */
 export function useAsset(id: string | undefined) {
   const provider = useStorageProvider();
+  const kitService = useKitServiceInstance();
+  const isKitId = id ? isKitAssetId(id) : false;
 
   return useQuery({
     queryKey: assetKeys.detail(id ?? ''),
     queryFn: async () => {
-      if (!provider) throw new Error('Storage provider not initialized');
       if (!id) throw new Error('Asset ID is required');
-      return await provider.getAsset(id);
+      return await resolveAssetById(id, {
+        storageProvider: provider,
+        kitService,
+      });
     },
-    enabled: !!provider && !!id,
+    enabled: Boolean(id && (isKitId ? kitService : provider)),
     staleTime: 2 * 60 * 1000,
   });
 }

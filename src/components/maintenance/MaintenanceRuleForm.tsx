@@ -13,7 +13,6 @@ import {
   Stack,
   Group,
   Select,
-  Switch,
   MultiSelect,
   SegmentedControl,
   Box,
@@ -26,6 +25,7 @@ import type {
   MaintenanceTargetType,
   MaintenanceIntervalType,
   MaintenanceWorkType,
+  MaintenanceRescheduleMode,
 } from '../../types/maintenance';
 import type { UUID } from '../../types/entities';
 import { MAINTENANCE_WORK_TYPES } from '../../constants/maintenanceWorkTypes';
@@ -73,6 +73,7 @@ export function MaintenanceRuleForm({
     initialValues: {
       name: rule?.name || '',
       workType: (rule?.workType ?? 'inspection') as MaintenanceWorkType,
+      workTypeCustomLabel: rule?.workTypeCustomLabel || '',
       isInternal: rule?.isInternal ?? true,
       serviceProviderId: rule?.serviceProviderId || '',
       targetIds: rule?.targets?.[0]?.ids || [],
@@ -80,6 +81,7 @@ export function MaintenanceRuleForm({
       intervalValue: rule?.intervalValue || 6,
       startDate: rule?.startDate ? new Date(rule.startDate) : new Date(),
       leadTimeDays: rule?.leadTimeDays || 14,
+      rescheduleMode: (rule?.rescheduleMode ?? 'actual-completion') as MaintenanceRescheduleMode,
     },
     validate: {
       name: (value) =>
@@ -96,6 +98,12 @@ export function MaintenanceRuleForm({
         !values.isInternal && !value
           ? t('maintenance:validation.serviceProviderRequired')
           : null,
+      workTypeCustomLabel: (value, values) =>
+        values.workType === 'custom' && (!value || !value.trim())
+          ? t('maintenance:validation.customWorkTypeRequired')
+          : value && value.length > 200
+            ? t('maintenance:validation.workTypeMaxLength')
+            : null,
       targetIds: (value) =>
         !value || value.length === 0
           ? t('maintenance:validation.targetsRequired')
@@ -108,6 +116,10 @@ export function MaintenanceRuleForm({
         value < 0
           ? t('maintenance:validation.leadTimeDaysNonNegative')
           : null,
+      rescheduleMode: (value) =>
+        !value || !['actual-completion', 'replan-once'].includes(value)
+          ? t('maintenance:validation.rescheduleModeRequired')
+          : null,
     },
   });
 
@@ -115,6 +127,10 @@ export function MaintenanceRuleForm({
     const data = {
       name: values.name,
       workType: values.workType,
+      workTypeCustomLabel:
+        values.workType === 'custom'
+          ? values.workTypeCustomLabel?.trim() || undefined
+          : undefined,
       isInternal: values.isInternal,
       serviceProviderId: values.isInternal ? undefined : values.serviceProviderId,
       targets: [
@@ -127,17 +143,26 @@ export function MaintenanceRuleForm({
       intervalValue: values.intervalValue,
       startDate: values.startDate.toISOString().split('T')[0] || '',
       leadTimeDays: values.leadTimeDays,
+      rescheduleMode: values.rescheduleMode,
     };
 
     onSubmit(data);
   };
 
-  const targetOptions = {
-    asset: assets.map((a) => ({ value: a.id, label: a.name })),
-    kit: kits.map((k) => ({ value: k.id, label: k.name })),
-    model: models.map((m) => ({ value: m.id, label: m.name })),
-    tag: tags.map((tag) => ({ value: tag.id, label: tag.name })),
-  };
+  const targetOptions = useMemo(() => {
+    const sortByLabel = <T extends { label: string }>(list: T[]) =>
+      [...list].sort((a, b) => a.label.localeCompare(b.label));
+
+    return {
+      asset: sortByLabel(assets.map((a) => ({ value: a.id, label: a.name }))),
+      kit: sortByLabel(kits.map((k) => ({ value: k.id, label: k.name }))),
+      model: sortByLabel(models.map((m) => ({ value: m.id, label: m.name }))),
+      tag: sortByLabel(tags.map((tag) => ({ value: tag.id, label: tag.name }))),
+    } as Record<MaintenanceTargetType, Array<{ value: string; label: string }>>;
+  }, [assets, kits, models, tags]);
+
+  const currentTargetOptions = targetOptions[targetType] ?? [];
+  const noTargetsAvailable = currentTargetOptions.length === 0;
 
   return (
     <form onSubmit={form.onSubmit(handleSubmit)}>
@@ -160,11 +185,32 @@ export function MaintenanceRuleForm({
           })}
         />
 
-        <Switch
-          label={t('maintenance:fields.isInternal')}
-          description={t('maintenance:descriptions.isInternal')}
-          {...form.getInputProps('isInternal', { type: 'checkbox' })}
-        />
+        {form.values.workType === 'custom' && (
+          <TextInput
+            label={t('maintenance:fields.customWorkType')}
+            placeholder={t('maintenance:placeholders.customWorkType')}
+            required
+            {...form.getInputProps('workTypeCustomLabel')}
+          />
+        )}
+
+        <Box>
+          <Text size="sm" fw={500} mb={4}>
+            {t('maintenance:fields.isInternal')}
+          </Text>
+          <SegmentedControl
+            value={form.values.isInternal ? 'internal' : 'external'}
+            onChange={(value) => form.setFieldValue('isInternal', value === 'internal')}
+            data={[
+              { label: t('maintenance:types.internal'), value: 'internal' },
+              { label: t('maintenance:types.external'), value: 'external' },
+            ]}
+            fullWidth
+          />
+          <Text size="xs" c="dimmed" mt={4}>
+            {t('maintenance:descriptions.isInternal')}
+          </Text>
+        </Box>
 
         {!form.values.isInternal && (
           <Select
@@ -197,18 +243,22 @@ export function MaintenanceRuleForm({
           />
           <MultiSelect
             placeholder={t('maintenance:placeholders.selectTargets')}
-            data={targetOptions[targetType] || []}
+            data={currentTargetOptions}
             searchable
             required
             clearable
             nothingFoundMessage={
-              (targetOptions[targetType] || []).length === 0
-                ? `No ${targetType}s available. ${targetType === 'tag' ? 'Create tags from an asset detail page.' : `Please create ${targetType}s first.`}`
-                : 'No matches found'
+              noTargetsAvailable
+                ? t('maintenance:targetPicker.noneAvailable', {
+                    label: t(`maintenance:targetTypes.${targetType}`),
+                  })
+                : t('maintenance:targetPicker.noMatches')
             }
             description={
-              (targetOptions[targetType] || []).length === 0
-                ? `⚠️ No ${targetType}s found - you need to create some first`
+              noTargetsAvailable
+                ? t('maintenance:targetPicker.help', {
+                    label: t(`maintenance:targetTypes.${targetType}`),
+                  })
                 : undefined
             }
             {...bindMultiSelectField(form, 'targetIds')}
@@ -251,6 +301,32 @@ export function MaintenanceRuleForm({
           min={0}
           {...form.getInputProps('leadTimeDays')}
         />
+
+        <Box>
+          <Text size="sm" fw={500} mb="xs">
+            {t('maintenance:fields.rescheduleMode')}
+          </Text>
+          <SegmentedControl
+            value={form.values.rescheduleMode}
+            onChange={(value) =>
+              form.setFieldValue('rescheduleMode', value as MaintenanceRescheduleMode)
+            }
+            data={[
+              {
+                label: t('maintenance:rescheduleModes.actualCompletion'),
+                value: 'actual-completion',
+              },
+              {
+                label: t('maintenance:rescheduleModes.replanOnce'),
+                value: 'replan-once',
+              },
+            ]}
+            fullWidth
+          />
+          <Text size="xs" c="dimmed" mt="xs">
+            {t('maintenance:descriptions.rescheduleMode')}
+          </Text>
+        </Box>
 
         <Group justify="flex-end" mt="md">
           <Button variant="subtle" onClick={onCancel} disabled={isLoading}>

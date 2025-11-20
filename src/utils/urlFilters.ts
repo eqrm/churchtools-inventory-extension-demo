@@ -58,7 +58,8 @@ export function updateUrlWithFilters(
   viewMode?: ViewMode,
   sortBy?: string,
   sortDirection?: 'asc' | 'desc',
-  groupBy?: string
+  groupBy?: string,
+  quickFilters?: ViewFilterGroup,
 ): void {
   const params = new URLSearchParams(window.location.search);
   
@@ -88,6 +89,12 @@ export function updateUrlWithFilters(
   } else {
     params.delete('groupBy');
   }
+
+  if (quickFilters && hasActiveFilters(quickFilters)) {
+    params.set('quickFilters', serializeFiltersToUrl(quickFilters));
+  } else {
+    params.delete('quickFilters');
+  }
   
   // Update URL without reload
   const nextSearch = params.toString();
@@ -110,6 +117,7 @@ export function readFiltersFromUrl(): {
   sortBy?: string;
   sortDirection?: 'asc' | 'desc';
   groupBy?: string;
+  quickFilters?: ViewFilterGroup;
 } {
   const params = new URLSearchParams(window.location.search);
   
@@ -119,6 +127,7 @@ export function readFiltersFromUrl(): {
     sortBy: params.get('sortBy') || undefined,
     sortDirection: (params.get('sortDir') as 'asc' | 'desc') || undefined,
     groupBy: params.get('groupBy') || undefined,
+    quickFilters: deserializeFiltersFromUrl(params.get('quickFilters') || ''),
   };
 }
 
@@ -130,7 +139,8 @@ export function generateShareableLink(
   viewMode?: ViewMode,
   sortBy?: string,
   sortDirection?: 'asc' | 'desc',
-  groupBy?: string
+  groupBy?: string,
+  quickFilters?: ViewFilterGroup,
 ): string {
   const params = new URLSearchParams();
   
@@ -151,6 +161,10 @@ export function generateShareableLink(
   
   if (groupBy) {
     params.set('groupBy', groupBy);
+  }
+
+  if (quickFilters && hasActiveFilters(quickFilters)) {
+    params.set('quickFilters', serializeFiltersToUrl(quickFilters));
   }
   
   const baseUrl = `${window.location.origin}${window.location.pathname}`;

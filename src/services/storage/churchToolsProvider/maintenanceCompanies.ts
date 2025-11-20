@@ -58,7 +58,9 @@ function mapToCompany(raw: unknown): MaintenanceCompany {
   return {
     id: String(rv['id'] ?? parsed['id']),
     name: String(parsed['name'] ?? ''),
-    contactPerson: String(parsed['contactPerson'] ?? ''),
+    contactPerson: parsed['contactPerson'] ? String(parsed['contactPerson']) : undefined,
+    contactEmail: parsed['contactEmail'] ? String(parsed['contactEmail']) : undefined,
+    contactPhone: parsed['contactPhone'] ? String(parsed['contactPhone']) : undefined,
     address: String(parsed['address'] ?? ''),
     serviceLevelAgreement: String(parsed['serviceLevelAgreement'] ?? ''),
     hourlyRate: typeof parsed['hourlyRate'] === 'number' ? parsed['hourlyRate'] : parsed['hourlyRate'] ? Number(parsed['hourlyRate']) : undefined,

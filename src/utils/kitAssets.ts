@@ -2,6 +2,15 @@ import type { Asset, AssetFilters, AssetStatus, Kit } from '../types/entities'
 
 const DEFAULT_KIT_STATUS: AssetStatus = 'available'
 export const KIT_ASSET_TYPE_ID = '__kits__'
+export const KIT_ID_PREFIX = 'kit-'
+
+export function isKitAssetId(id: string): boolean {
+  return id.startsWith(KIT_ID_PREFIX)
+}
+
+export function stripKitIdPrefix(id: string): string {
+  return isKitAssetId(id) ? id.slice(KIT_ID_PREFIX.length) : id
+}
 
 function buildKitAssetNumber(kit: Kit): string {
   if (kit.boundAssets && kit.boundAssets.length > 0) {
@@ -25,7 +34,7 @@ export function mapKitToAsset(kit: Kit): Asset {
   const poolRequirements = kit.poolRequirements ?? []
 
   return {
-    id: `kit-${kit.id}`,
+    id: `${KIT_ID_PREFIX}${kit.id}`,
     assetNumber,
     name: kit.name,
     manufacturer: undefined,

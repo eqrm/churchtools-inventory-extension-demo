@@ -52,9 +52,10 @@ export const routes = {
         },
     },
     assetGroups: {
-        list: () => '/asset-groups',
-        detail: (groupId: IdLike) => `/asset-groups/${toId(groupId)}`,
+      list: () => '/asset-groups',
+      detail: (groupId: IdLike) => `/asset-groups/${toId(groupId)}`,
     },
+    assetModels: () => '/models',
     bookings: {
         list: () => '/bookings',
         detail: (bookingId: IdLike) => `/bookings/${toId(bookingId)}`,

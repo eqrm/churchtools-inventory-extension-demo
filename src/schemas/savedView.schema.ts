@@ -26,6 +26,8 @@ const FilterOperatorSchema = z.enum([
   'not-in',
   'is-empty',
   'is-not-empty',
+  'relative-last',
+  'relative-next',
 ]);
 
 const ViewModeSchema = z.enum(['table', 'gallery', 'calendar', 'kanban', 'list']);
@@ -51,6 +53,8 @@ const FilterGroupSchema: z.ZodType<ViewFilterGroup> = z.lazy(() =>
 
 const FilterNodeSchema: z.ZodType<ViewFilter> = z.union([FilterConditionSchema, FilterGroupSchema]);
 
+const QuickFiltersSchema = FilterGroupSchema.optional();
+
 export const SavedViewSchema = z.object({
   schemaVersion: z.literal(SAVED_VIEW_SCHEMA_VERSION),
   id: z.string(),
@@ -60,6 +64,7 @@ export const SavedViewSchema = z.object({
   isPublic: z.boolean(),
   viewMode: ViewModeSchema,
   filters: FilterGroupSchema,
+  quickFilters: QuickFiltersSchema,
   sortBy: z.string().optional(),
   sortDirection: SortDirectionSchema.optional(),
   groupBy: z.string().optional(),
@@ -97,6 +102,7 @@ const LegacySavedViewSchema = z.object({
   isPublic: z.boolean().default(false),
   viewMode: ViewModeSchema,
   filters: z.array(LegacyFilterSchema).default([]),
+  quickFilters: QuickFiltersSchema,
   sortBy: z.string().optional().nullable(),
   sortDirection: SortDirectionSchema.optional().nullable(),
   groupBy: z.string().optional().nullable(),
@@ -113,12 +119,13 @@ export function migrateSavedView(data: unknown): SavedViewSchemaType {
 
   const legacy = LegacySavedViewSchema.safeParse(data);
   if (legacy.success) {
-    const { schemaVersion, filters, sortDirection, ...rest } = legacy.data;
+    const { schemaVersion, filters, sortDirection, quickFilters, ...rest } = legacy.data;
     const normalizedFilters = convertLegacyFiltersToGroup(filters as LegacyViewFilter[]);
     return {
       ...rest,
       schemaVersion: SAVED_VIEW_SCHEMA_VERSION,
       filters: normalizeFilterGroup(normalizedFilters),
+      quickFilters: quickFilters ? normalizeFilterGroup(quickFilters) : undefined,
       sortDirection: sortDirection ?? undefined,
       createdAt: rest.createdAt ?? FALLBACK_TIMESTAMP,
       lastModifiedAt: rest.lastModifiedAt ?? FALLBACK_TIMESTAMP,

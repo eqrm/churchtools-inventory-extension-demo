@@ -21,6 +21,7 @@ import {
   Text,
   TextInput,
   Title,
+  Tooltip,
 } from '@mantine/core';
 import { IconEdit, IconPlus, IconTemplate, IconTrash, IconX } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
@@ -28,9 +29,10 @@ import { notifications } from '@mantine/notifications';
 import { useAssetModels } from '../hooks/useAssetModels';
 import { useCategories } from '../hooks/useCategories';
 import { useAssets } from '../hooks/useAssets';
-import type { Asset, AssetType } from '../types/entities';
+import type { Asset, AssetType, CustomFieldValue } from '../types/entities';
 import type { AssetModel } from '../types/model';
 import { AssetModelForm } from '../components/models/AssetModelForm';
+import { AssetForm } from '../components/assets/AssetForm';
 
 export function AssetModelList() {
   const { t } = useTranslation(['models', 'common']);
@@ -54,6 +56,7 @@ export function AssetModelList() {
   const [searchQuery, setSearchQuery] = useState('');
   const [manufacturerFilter, setManufacturerFilter] = useState('');
   const [assetTypeFilter, setAssetTypeFilter] = useState<string | null>(null);
+  const [modelForAssetCreate, setModelForAssetCreate] = useState<AssetModel | null>(null);
 
   const assetTypes: AssetType[] = useMemo(
     () => rawAssetTypes.filter((type) => !type.name.toLowerCase().includes('kit')),
@@ -61,12 +64,21 @@ export function AssetModelList() {
   );
 
   const assetTypeMap = useMemo(() => {
-    const map = new Map<string, string>();
+    const map = new Map<string, AssetType>();
     assetTypes.forEach((type) => {
-      map.set(type.id, type.name);
+      map.set(type.id, type);
     });
     return map;
   }, [assetTypes]);
+
+  const assetFormInitialData = useMemo(() => {
+    if (!modelForAssetCreate) {
+      return null;
+    }
+
+    const assetType = assetTypeMap.get(modelForAssetCreate.assetTypeId);
+    return buildInitialAssetDataFromModel(modelForAssetCreate, assetType);
+  }, [assetTypeMap, modelForAssetCreate]);
 
   const assetCountByModel = useMemo(() => {
     const counts = new Map<string, number>();
@@ -175,6 +187,15 @@ export function AssetModelList() {
     setAssetTypeFilter(null);
   };
 
+  const handleQuickCreateSuccess = (created: Asset) => {
+    setModelForAssetCreate(null);
+    notifications.show({
+      title: t('models:notifications.assetCreatedTitle'),
+      message: t('models:notifications.assetCreatedMessage', { name: created.name }),
+      color: 'green',
+    });
+  };
+
   if (error) {
     return (
       <Container>
@@ -270,15 +291,16 @@ export function AssetModelList() {
             </Stack>
           </Card>
         ) : (
-          <SimpleGrid cols={{ base: 1, md: 2, lg: 3 }} spacing="lg">
+          <SimpleGrid cols={{ base: 1, sm: 2, md: 2, lg: 3, xl: 4 }} spacing="lg">
             {filteredModels.map((model) => (
               <AssetModelCard
                 key={model.id}
                 model={model}
-                assetTypeName={assetTypeMap.get(model.assetTypeId) ?? t('models:labels.unknownAssetType')}
+                assetType={assetTypeMap.get(model.assetTypeId)}
                 assetCount={assetCountByModel.get(model.id) ?? 0}
                 onEdit={() => setEditingModel(model)}
                 onDelete={() => setDeletingModel(model)}
+                onQuickCreate={() => setModelForAssetCreate(model)}
               />
             ))}
           </SimpleGrid>
@@ -319,6 +341,26 @@ export function AssetModelList() {
         )}
       </Modal>
 
+      {/* Quick Create Asset Modal */}
+      <Modal
+        opened={!!modelForAssetCreate}
+        onClose={() => setModelForAssetCreate(null)}
+        title={
+          modelForAssetCreate
+            ? t('models:modals.createAssetFromModel', { modelName: modelForAssetCreate.name })
+            : undefined
+        }
+        size="xl"
+      >
+        {modelForAssetCreate && (
+          <AssetForm
+            initialData={assetFormInitialData ?? undefined}
+            onCancel={() => setModelForAssetCreate(null)}
+            onSuccess={handleQuickCreateSuccess}
+          />
+        )}
+      </Modal>
+
       {/* Delete Confirmation Modal */}
       <Modal
         opened={!!deletingModel}
@@ -343,16 +385,18 @@ export function AssetModelList() {
 
 interface AssetModelCardProps {
   model: AssetModel;
-  assetTypeName: string;
+  assetType?: AssetType;
   assetCount: number;
   onEdit: () => void;
   onDelete: () => void;
+  onQuickCreate: () => void;
 }
 
-function AssetModelCard({ model, assetTypeName, assetCount, onEdit, onDelete }: AssetModelCardProps) {
+function AssetModelCard({ model, assetType, assetCount, onEdit, onDelete, onQuickCreate }: AssetModelCardProps) {
   const { t } = useTranslation('models');
   const manufacturerLabel = model.manufacturer?.trim() || t('models:card.manufacturerFallback');
   const modelNumber = model.modelNumber?.trim();
+  const assetTypeName = assetType?.name ?? t('models:labels.unknownAssetType');
 
   return (
     <Card withBorder radius="md" padding="lg">
@@ -364,9 +408,14 @@ function AssetModelCard({ model, assetTypeName, assetCount, onEdit, onDelete }: 
               {manufacturerLabel}
             </Text>
           </Stack>
-          <Badge variant="light" size="sm">
-            {assetTypeName}
-          </Badge>
+          <Stack gap={2} align="flex-end">
+            <Badge variant="light" size="sm">
+              {assetTypeName}
+            </Badge>
+            <Text size="xs" c="dimmed">
+              {t('models:card.assetTypeLabel', { assetType: assetTypeName })}
+            </Text>
+          </Stack>
         </Group>
 
         {modelNumber && (
@@ -381,15 +430,73 @@ function AssetModelCard({ model, assetTypeName, assetCount, onEdit, onDelete }: 
           })}
         </Badge>
 
-        <Group justify="flex-end" gap="xs">
-          <ActionIcon variant="subtle" color="blue" onClick={onEdit} aria-label={t('common:edit')}>
-            <IconEdit size={16} />
-          </ActionIcon>
-          <ActionIcon variant="subtle" color="red" onClick={onDelete} aria-label={t('common:delete')}>
-            <IconTrash size={16} />
-          </ActionIcon>
+        <Group justify="space-between" gap="xs" align="center">
+          <Tooltip label={t('models:card.quickCreateTooltip')}>
+            <Button
+              variant="light"
+              size="xs"
+              leftSection={<IconPlus size={14} />}
+              onClick={onQuickCreate}
+              aria-label={t('models:card.quickCreate')}
+              disabled={!assetType}
+            >
+              {t('models:card.quickCreate')}
+            </Button>
+          </Tooltip>
+          <Group gap="xs">
+            <ActionIcon variant="subtle" color="blue" onClick={onEdit} aria-label={t('common:edit')}>
+              <IconEdit size={16} />
+            </ActionIcon>
+            <ActionIcon variant="subtle" color="red" onClick={onDelete} aria-label={t('common:delete')}>
+              <IconTrash size={16} />
+            </ActionIcon>
+          </Group>
         </Group>
       </Stack>
     </Card>
   );
+}
+
+function buildInitialAssetDataFromModel(model: AssetModel, assetType?: AssetType): Partial<Asset> {
+  return {
+    name: model.name,
+    manufacturer: model.manufacturer,
+    model: model.modelNumber,
+    assetType: assetType
+      ? {
+          id: assetType.id,
+          name: assetType.name,
+          icon: assetType.icon,
+        }
+      : undefined,
+    status: 'available',
+    bookable: model.defaultBookable ?? assetType?.defaultBookable ?? true,
+    customFieldValues: normalizeDefaultValues(model.defaultValues),
+    tagIds: model.tagIds,
+    modelId: model.id,
+  };
+}
+
+function normalizeDefaultValues(values: Record<string, unknown>): Record<string, CustomFieldValue> {
+  const normalized: Record<string, CustomFieldValue> = {};
+
+  Object.entries(values ?? {}).forEach(([key, value]) => {
+    if (value === undefined || value === null) {
+      return;
+    }
+
+    if (Array.isArray(value)) {
+      const filtered = value.filter((entry): entry is string => typeof entry === 'string');
+      if (filtered.length > 0) {
+        normalized[key] = filtered;
+      }
+      return;
+    }
+
+    if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+      normalized[key] = value;
+    }
+  });
+
+  return normalized;
 }

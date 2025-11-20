@@ -3,7 +3,9 @@ import type { ISODate, ISOTimestamp, UUID } from './entities';
 export interface MaintenanceCompany {
   id: UUID;
   name: string;
-  contactPerson: string;
+  contactPerson?: string;
+  contactEmail?: string;
+  contactPhone?: string;
   address: string;
   serviceLevelAgreement: string;
   hourlyRate?: number;
@@ -28,12 +30,16 @@ export type MaintenanceWorkType =
   | 'maintenance'
   | 'planned-repair'
   | 'unplanned-repair'
-  | 'improvement';
+  | 'improvement'
+  | 'custom';
+
+export type MaintenanceRescheduleMode = 'actual-completion' | 'replan-once';
 
 export interface MaintenanceRule {
   id: UUID;
   name: string;
   workType: MaintenanceWorkType;
+  workTypeCustomLabel?: string;
   isInternal: boolean;
   serviceProviderId?: UUID;
   targets: MaintenanceRuleTarget[];
@@ -42,6 +48,7 @@ export interface MaintenanceRule {
   startDate: ISODate;
   nextDueDate: ISODate;
   leadTimeDays: number;
+  rescheduleMode?: MaintenanceRescheduleMode;
   createdBy: UUID;
   createdByName?: string;
   createdAt: ISOTimestamp;
@@ -70,6 +77,7 @@ export type ExternalWorkOrderState =
   | 'done';
 
 export type WorkOrderType = 'internal' | 'external';
+export type WorkOrderOrderType = 'planned' | 'unplanned' | 'follow-up';
 
 export type WorkOrderState = InternalWorkOrderState | ExternalWorkOrderState;
 
@@ -101,6 +109,7 @@ export interface WorkOrder {
   id: UUID;
   workOrderNumber: string;
   type: WorkOrderType;
+  orderType: WorkOrderOrderType;
   state: WorkOrderState;
   ruleId?: UUID;
   companyId?: UUID;

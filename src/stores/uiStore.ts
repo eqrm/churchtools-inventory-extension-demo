@@ -60,6 +60,10 @@ interface UIState {
     viewFilters: ViewFilterGroup;
     setViewFilters: (filters: ViewFilterGroup) => void;
     clearViewFilters: () => void;
+
+    quickFilters: ViewFilterGroup;
+    setQuickFilters: (filters: ViewFilterGroup) => void;
+    clearQuickFilters: () => void;
     
     sortBy: string | null;
     setSortBy: (field: string | null) => void;
@@ -139,6 +143,14 @@ export const useUIStore = create<UIState>()(
             clearViewFilters: () => {
                 set({ viewFilters: createFilterGroup('AND') });
             },
+
+            quickFilters: createFilterGroup('AND'),
+            setQuickFilters: (filters) => {
+                set({ quickFilters: normalizeFilterGroup(filters) });
+            },
+            clearQuickFilters: () => {
+                set({ quickFilters: createFilterGroup('AND') });
+            },
             
             sortBy: null,
             setSortBy: (field) => {
@@ -181,6 +193,11 @@ export const useUIStore = create<UIState>()(
                 if (nextState.viewFilters) {
                     nextState.viewFilters = normalizeFilterGroup(nextState.viewFilters);
                 }
+                if (nextState.quickFilters) {
+                    nextState.quickFilters = normalizeFilterGroup(nextState.quickFilters);
+                } else {
+                    nextState.quickFilters = createFilterGroup('AND');
+                }
                 return nextState;
             },
             partialize: (state) => ({
@@ -191,6 +208,7 @@ export const useUIStore = create<UIState>()(
                 // T213: Persist view preferences
                 viewMode: state.viewMode,
                 viewFilters: state.viewFilters,
+                quickFilters: state.quickFilters,
                 sortBy: state.sortBy,
                 sortDirection: state.sortDirection,
                 groupBy: state.groupBy,

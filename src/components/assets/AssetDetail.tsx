@@ -82,6 +82,7 @@ import { TagListWithInheritance } from '../tags/InheritedTagBadge';
 import { useTags, useEntityTags } from '../../hooks/useTags';
 import { AssetLabelPrint } from './AssetLabelPrint';
 import { KitInformationSection } from './KitInformationSection';
+import { KitSummaryPanel } from './KitSummaryPanel';
 
 interface AssetDetailProps {
   assetId: string;
@@ -452,6 +453,14 @@ export function AssetDetail({ assetId, onEdit, onClose, onDuplicate }: AssetDeta
             {/* Main Content - 2/3 width */}
             <Grid.Col span={{ base: 12, lg: 8 }}>
               <Stack gap="md">
+                {asset.isKit && (
+                  <KitSummaryPanel
+                    asset={asset}
+                    directTags={directTags}
+                    inheritedTags={inheritedTagEntries}
+                  />
+                )}
+
                 {/* Parent/Child Relationships */}
                 {asset.parentAssetId && <ParentAssetLink parentAssetId={asset.parentAssetId} />}
                 {asset.isParent && (

@@ -29,7 +29,10 @@
   },
   "card": {
     "manufacturerFallback": "Manufacturer unknown",
-    "modelNumberLabel": "Model #: {{modelNumber}}"
+    "modelNumberLabel": "Model #: {{modelNumber}}",
+    "assetTypeLabel": "Type: {{assetType}}",
+    "quickCreate": "Create asset",
+    "quickCreateTooltip": "Create a new asset with this model"
   },
   "form": {
     "name": "Model Name",
@@ -76,7 +79,12 @@
     "createError": "Failed to create model",
     "updateError": "Failed to update model",
     "deleteError": "Failed to delete model",
-    "tagsPropagated": "Tags applied to {{count}} assets"
+    "tagsPropagated": "Tags applied to {{count}} assets",
+    "assetCreatedTitle": "Asset draft ready",
+    "assetCreatedMessage": "{{name}} now uses this model"
+  },
+  "modals": {
+    "createAssetFromModel": "Create asset from {{modelName}}"
   },
   "emptyState": {
     "title": "No models yet",

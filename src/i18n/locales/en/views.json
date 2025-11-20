@@ -20,6 +20,8 @@
     "title": "Save view",
     "nameLabel": "View name",
     "namePlaceholder": "e.g., Available audio gear",
+    "nameRequired": "Name is required",
+    "nameTooLong": "Name must be 100 characters or fewer",
     "publicLabel": "Public view",
     "publicDescription": "Other users can see and reuse this view",
     "errorTitle": "Unable to load view",

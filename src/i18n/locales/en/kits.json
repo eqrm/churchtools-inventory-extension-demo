@@ -138,11 +138,17 @@
       "selectPlaceholder": "Select asset",
       "emptyState": "No assets added yet",
       "assetStatusTitle": "Asset status noted",
-      "assetStatusMessage": "{{assetNumber}} is currently {{status}}. The kit will show this state with a badge.",
-      "assetStatusInline": "Selected asset is {{status}}. It will appear in the kit with a status badge.",
+      "assetStatusMessage": "{{assetNumber}} is currently {{status}}. Saving the kit may overwrite this value with the kit defaults.",
+      "assetStatusInline": "Selected asset is {{status}}. Saving the kit will refresh it to the kit's status/location.",
       "assetStatusUnknown": "unknown",
       "assetStatusUnknownInline": "Status will be refreshed after saving.",
-      "removeAssetAria": "Remove {{name}} from kit"
+      "removeAssetAria": "Remove {{name}} from kit",
+      "nonAvailableWarningTitle": "{{count}} selected asset is not available",
+      "nonAvailableWarningTitle_plural": "{{count}} selected assets are not available",
+      "nonAvailableWarningItem": "{{assetNumber}} is {{status}}. The kit defaults will reapply when you save.",
+      "nonAvailableWarningFootnote": "Only continue if you intend to sync the kit's status/location back to these assets.",
+      "kitAssignmentHint": "{{count}} asset is hidden because it belongs to another kit. Remove it there first to reuse.",
+      "kitAssignmentHint_plural": "{{count}} assets are hidden because they belong to other kits. Remove them first to reuse."
     },
     "actions": {
       "addPool": "Add requirement",

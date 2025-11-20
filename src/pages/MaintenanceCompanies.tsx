@@ -17,6 +17,7 @@ import {
   Stack,
   Paper,
   Badge,
+  Anchor,
 } from '@mantine/core';
 import { IconPlus, IconEdit, IconTrash } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
@@ -121,8 +122,10 @@ export function MaintenanceCompanies() {
                   <Table.Th>{t('maintenance:fields.name')}</Table.Th>
                   <Table.Th>{t('maintenance:fields.contactPerson')}</Table.Th>
                   <Table.Th>{t('maintenance:fields.address')}</Table.Th>
+                  <Table.Th>{t('maintenance:fields.contactEmail')}</Table.Th>
+                  <Table.Th>{t('maintenance:fields.contactPhone')}</Table.Th>
                   <Table.Th>{t('maintenance:fields.hourlyRate')}</Table.Th>
-                  <Table.Th>{t('common:columns.actions')}</Table.Th>
+                  <Table.Th>{t('maintenance:companies.actionsColumn')}</Table.Th>
                 </Table.Tr>
               </Table.Thead>
               <Table.Tbody>
@@ -132,12 +135,36 @@ export function MaintenanceCompanies() {
                       <Text fw={500}>{company.name}</Text>
                     </Table.Td>
                     <Table.Td>
-                      <Text size="sm">{company.contactPerson}</Text>
+                      <Text size="sm">
+                        {company.contactPerson || t('maintenance:companies.unknownContact')}
+                      </Text>
                     </Table.Td>
                     <Table.Td>
                       <Text size="sm" lineClamp={1} maw={300}>
                         {company.address}
                       </Text>
+                    </Table.Td>
+                    <Table.Td>
+                      {company.contactEmail ? (
+                        <Anchor size="sm" href={`mailto:${company.contactEmail}`}>
+                          {company.contactEmail}
+                        </Anchor>
+                      ) : (
+                        <Text size="sm" c="dimmed">
+                          {t('maintenance:companies.noEmail')}
+                        </Text>
+                      )}
+                    </Table.Td>
+                    <Table.Td>
+                      {company.contactPhone ? (
+                        <Anchor size="sm" href={`tel:${company.contactPhone.replace(/\s+/g, '')}`}>
+                          {company.contactPhone}
+                        </Anchor>
+                      ) : (
+                        <Text size="sm" c="dimmed">
+                          {t('maintenance:companies.noPhone')}
+                        </Text>
+                      )}
                     </Table.Td>
                     <Table.Td>
                       <Text size="sm">{formatCurrency(company.hourlyRate)}</Text>

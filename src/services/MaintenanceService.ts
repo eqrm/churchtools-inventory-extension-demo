@@ -2,6 +2,8 @@ import { createActor } from 'xstate';
 import type {
   MaintenanceCompany,
   MaintenanceRule,
+  MaintenanceRescheduleMode,
+  MaintenanceWorkType,
   WorkOrder,
   WorkOrderLineItem,
   WorkOrderHistoryEntry,
@@ -43,6 +45,8 @@ type WorkOrderUndoState = { workOrder: WorkOrder };
  * - Integration with undo service
  */
 export class MaintenanceService {
+  private static readonly DAY_IN_MS = 24 * 60 * 60 * 1000;
+
   private readonly storageProvider: IStorageProvider;
   private readonly now: () => Date;
 
@@ -166,10 +170,16 @@ export class MaintenanceService {
     const anchor = Number.isNaN(startDate.getTime()) ? this.now() : startDate;
     const computedNextDue = this.calculateNextDueDate(data.intervalType, data.intervalValue, anchor);
     const nextDueDate = data.nextDueDate ?? computedNextDue ?? data.startDate;
+    const normalizedWorkType = (data.workType ?? 'inspection') as MaintenanceWorkType;
+    const normalizedCustomLabel =
+      normalizedWorkType === 'custom' ? data.workTypeCustomLabel?.trim() : undefined;
 
     const rule: MaintenanceRule = {
       ...data,
+      workType: normalizedWorkType,
+      workTypeCustomLabel: normalizedCustomLabel,
       nextDueDate,
+      rescheduleMode: (data.rescheduleMode ?? 'actual-completion') as MaintenanceRescheduleMode,
       createdBy: data.createdBy || user.id,
       createdByName: data.createdByName || `${user.firstName} ${user.lastName}`,
       id: crypto.randomUUID(),
@@ -196,13 +206,23 @@ export class MaintenanceService {
     data: Partial<Omit<MaintenanceRule, 'id' | 'createdAt' | 'createdBy'>>
   ): Promise<MaintenanceRule> {
     const existing = await this.requireRule(id);
+    const mergedWorkType = (data.workType ?? existing.workType) as MaintenanceWorkType;
+    const customLabelSource =
+      data.workTypeCustomLabel !== undefined
+        ? data.workTypeCustomLabel
+        : existing.workTypeCustomLabel;
+    const mergedCustomLabel =
+      mergedWorkType === 'custom' ? customLabelSource?.trim() : undefined;
 
     const updated: MaintenanceRule = {
       ...existing,
       ...data,
+      workType: mergedWorkType,
+      workTypeCustomLabel: mergedCustomLabel,
       id: existing.id,
       createdAt: existing.createdAt,
       createdBy: existing.createdBy,
+      rescheduleMode: (data.rescheduleMode ?? existing.rescheduleMode ?? 'actual-completion') as MaintenanceRescheduleMode,
       updatedAt: this.timestamp(),
     };
 
@@ -322,6 +342,7 @@ export class MaintenanceService {
     const workOrder: Omit<WorkOrder, 'id' | 'createdAt' | 'updatedAt'> = {
       workOrderNumber: await this.generateWorkOrderNumber(),
       type: rule.isInternal ? 'internal' : 'external',
+      orderType: 'planned',
       state: 'backlog',
       ruleId: rule.id,
       companyId: rule.serviceProviderId,
@@ -344,6 +365,7 @@ export class MaintenanceService {
   ): Promise<WorkOrder> {
     const workOrder: WorkOrder = {
       ...data,
+      orderType: data.orderType ?? 'planned',
       id: crypto.randomUUID(),
       createdAt: this.timestamp(),
       updatedAt: this.timestamp(),
@@ -669,6 +691,28 @@ export class MaintenanceService {
     return dueDate.toISOString().split('T')[0] as ISODate;
   }
 
+  private addDays(date: Date, days: number): Date {
+    const result = new Date(date);
+    result.setDate(result.getDate() + days);
+    return result;
+  }
+
+  private toISODate(date: Date): ISODate {
+    return date.toISOString().split('T')[0] as ISODate;
+  }
+
+  private parseIsoDate(value?: string): Date | null {
+    if (!value) {
+      return null;
+    }
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+
+  private getRescheduleMode(rule: MaintenanceRule): MaintenanceRescheduleMode {
+    return (rule.rescheduleMode ?? 'actual-completion') as MaintenanceRescheduleMode;
+  }
+
   private async updateRuleScheduleFromCompletion(ruleId: UUID, completionIso: string): Promise<void> {
     const rule = await this.storageProvider.getMaintenanceRule(ruleId);
     if (!rule) {
@@ -680,13 +724,42 @@ export class MaintenanceService {
       return;
     }
 
-    const nextDueDate = this.calculateNextDueDate(rule.intervalType, rule.intervalValue, completionDate);
-    if (!nextDueDate || nextDueDate === rule.nextDueDate) {
+    const baseNextDue = this.calculateNextDueDate(
+      rule.intervalType,
+      rule.intervalValue,
+      completionDate,
+    );
+    if (!baseNextDue) {
+      return;
+    }
+
+    const rescheduleMode = this.getRescheduleMode(rule);
+    let nextDueDate = baseNextDue;
+    const ruleUpdates: Partial<MaintenanceRule> = {};
+
+    if (rescheduleMode === 'replan-once') {
+      const scheduledDue = this.parseIsoDate(rule.nextDueDate) ?? this.parseIsoDate(rule.startDate);
+      const startDate = this.parseIsoDate(rule.startDate);
+      if (scheduledDue && startDate) {
+        const deltaDays = Math.round(
+          (completionDate.getTime() - scheduledDue.getTime()) / MaintenanceService.DAY_IN_MS,
+        );
+        if (deltaDays !== 0) {
+          const shiftedNext = this.addDays(new Date(baseNextDue), deltaDays);
+          nextDueDate = this.toISODate(shiftedNext);
+          ruleUpdates.startDate = this.toISODate(this.addDays(startDate, deltaDays));
+        }
+      }
+      ruleUpdates.rescheduleMode = 'actual-completion';
+    }
+
+    if (nextDueDate === rule.nextDueDate && !ruleUpdates.startDate && !ruleUpdates.rescheduleMode) {
       return;
     }
 
     const updatedRule: MaintenanceRule = {
       ...rule,
+      ...ruleUpdates,
       nextDueDate,
       updatedAt: this.timestamp(),
     };

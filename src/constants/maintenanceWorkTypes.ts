@@ -6,4 +6,5 @@ export const MAINTENANCE_WORK_TYPES: readonly MaintenanceWorkType[] = [
   'planned-repair',
   'unplanned-repair',
   'improvement',
+  'custom',
 ] as const;

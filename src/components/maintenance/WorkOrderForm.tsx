@@ -4,6 +4,7 @@
  * Form for creating work orders (from rule or manually) with line items.
  */
 
+import { useMemo } from 'react';
 import { useForm } from '@mantine/form';
 import {
   Button,
@@ -14,11 +15,18 @@ import {
   NumberInput,
   Box,
   Tabs,
+  MultiSelect,
+  SegmentedControl,
 } from '@mantine/core';
 import { DateInput } from '@mantine/dates';
 import { useTranslation } from 'react-i18next';
 import { AssetScheduleTable } from './AssetScheduleTable';
-import type { WorkOrder, WorkOrderLineItem, WorkOrderType } from '../../types/maintenance';
+import type {
+  WorkOrder,
+  WorkOrderLineItem,
+  WorkOrderOrderType,
+  WorkOrderType,
+} from '../../types/maintenance';
 import type { UUID } from '../../types/entities';
 import { bindSelectField } from '../../utils/selectControl';
 
@@ -46,11 +54,20 @@ export function WorkOrderForm({
   isLoading = false,
 }: WorkOrderFormProps) {
   const { t } = useTranslation(['maintenance', 'common']);
+  const assetOptions = useMemo(
+    () =>
+      assets.map((asset) => ({
+        value: asset.id,
+        label: asset.name ? `${asset.name} (${asset.assetNumber})` : asset.assetNumber,
+      })),
+    [assets],
+  );
 
   const form = useForm({
     initialValues: {
       type: workOrder?.type || type,
       state: workOrder?.state || 'backlog',
+      orderType: (workOrder?.orderType ?? 'planned') as WorkOrderOrderType,
       ruleId: workOrder?.ruleId || '',
       companyId: workOrder?.companyId || '',
       assignedTo: workOrder?.assignedTo || '',
@@ -65,6 +82,10 @@ export function WorkOrderForm({
       companyId: (value, values) =>
         values.type === 'external' && !value
           ? t('maintenance:validation.companyRequired')
+          : null,
+      orderType: (value) =>
+        !value || !['planned', 'unplanned', 'follow-up'].includes(value)
+          ? t('maintenance:validation.orderTypeRequired')
           : null,
       lineItems: (value) =>
         !value || value.length === 0
@@ -81,6 +102,7 @@ export function WorkOrderForm({
     const data = {
       type: values.type,
       state: values.state as WorkOrder['state'],
+      orderType: values.orderType as WorkOrderOrderType,
       ruleId: values.ruleId || undefined,
       companyId: values.companyId || undefined,
       assignedTo: values.assignedTo || undefined,
@@ -115,7 +137,21 @@ export function WorkOrderForm({
     form.setFieldValue('lineItems', updatedItems);
   };
 
-  const selectedAssetIds = new Set(form.values.lineItems.map((item) => item.assetId));
+  const handleLineItemSelectionChange = (ids: string[]) => {
+    const preservedItems = new Map(form.values.lineItems.map((item) => [item.assetId, item]));
+    const nextItems = ids.map((id) => {
+      const existing = preservedItems.get(id as UUID);
+      return (
+        existing ?? {
+          assetId: id as UUID,
+          completionStatus: 'pending' as const,
+        }
+      );
+    });
+    form.setFieldValue('lineItems', nextItems);
+  };
+
+  const selectedAssetIds = form.values.lineItems.map((item) => item.assetId);
 
   return (
     <form onSubmit={form.onSubmit(handleSubmit)}>
@@ -130,6 +166,27 @@ export function WorkOrderForm({
             {...bindSelectField(form, 'ruleId', { emptyValue: '' })}
           />
         )}
+
+        <Box>
+          <Text size="sm" fw={500} mb="xs">
+            {t('maintenance:fields.orderType')}
+          </Text>
+          <SegmentedControl
+            value={form.values.orderType}
+            onChange={(value) =>
+              form.setFieldValue('orderType', value as WorkOrderOrderType)
+            }
+            data={[
+              { label: t('maintenance:orderTypes.planned'), value: 'planned' },
+              { label: t('maintenance:orderTypes.unplanned'), value: 'unplanned' },
+              { label: t('maintenance:orderTypes.follow-up'), value: 'follow-up' },
+            ]}
+            fullWidth
+          />
+          <Text size="xs" c="dimmed" mt="xs">
+            {t('maintenance:descriptions.orderType')}
+          </Text>
+        </Box>
 
         {type === 'external' && (
           <Select
@@ -164,11 +221,29 @@ export function WorkOrderForm({
           {...form.getInputProps('leadTimeDays')}
         />
 
+        <MultiSelect
+          label={t('maintenance:labels.selectAssets')}
+          placeholder={t('maintenance:placeholders.targets')}
+          data={assetOptions}
+          searchable
+          clearable
+          value={selectedAssetIds}
+          onChange={handleLineItemSelectionChange}
+          nothingFoundMessage={
+            assetOptions.length === 0
+              ? t('maintenance:targetPicker.noneAvailable', {
+                  label: t('maintenance:targetTypes.asset'),
+                })
+              : t('maintenance:targetPicker.noMatches')
+          }
+          description={t('maintenance:descriptions.lineItems')}
+        />
+
         <Box>
           <Tabs defaultValue="schedule">
             <Tabs.List>
               <Tabs.Tab value="schedule">
-                {t('maintenance:tabs.schedule')} ({selectedAssetIds.size} {t('maintenance:selected')})
+                {t('maintenance:tabs.schedule')} ({selectedAssetIds.length} {t('maintenance:selected')})
               </Tabs.Tab>
             </Tabs.List>
 

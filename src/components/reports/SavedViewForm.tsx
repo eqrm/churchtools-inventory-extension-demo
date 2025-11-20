@@ -1,15 +1,16 @@
-import { useEffect } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { TextInput, Switch, Stack, Button, Group, Alert } from '@mantine/core';
-import { useForm } from '@mantine/form';
 import { useTranslation } from 'react-i18next';
 import type { SavedViewCreate, ViewMode, ViewFilterGroup } from '../../types/entities';
 import { useCreateSavedView, useUpdateSavedView, useSavedView } from '../../hooks/useSavedViews';
 import { useCurrentUser } from '../../hooks/useCurrentUser';
 import { SAVED_VIEW_SCHEMA_VERSION } from '../../constants/schemaVersions';
+import { hasActiveFilters } from '../../utils/viewFilters';
 
 interface SavedViewFormProps {
   viewMode: ViewMode;
   filters: ViewFilterGroup;
+  quickFilters?: ViewFilterGroup;
   sortBy?: string;
   sortDirection?: 'asc' | 'desc';
   groupBy?: string;
@@ -25,6 +26,7 @@ interface SavedViewFormProps {
 export function SavedViewForm({
   viewMode,
   filters,
+  quickFilters,
   sortBy,
   sortDirection,
   groupBy,
@@ -43,41 +45,64 @@ export function SavedViewForm({
     error: existingViewError,
   } = useSavedView(existingViewId);
   const isEditing = Boolean(existingViewId);
-
-  const form = useForm({
-    initialValues: {
-      name: '',
-      isPublic: false,
-    },
-    validate: {
-      name: (value) => (!value ? 'Name is required' : null),
-    },
-  });
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [name, setName] = useState('');
+  const [nameError, setNameError] = useState<string | null>(null);
+  const [isPublic, setIsPublic] = useState(false);
 
   useEffect(() => {
     if (existingView) {
-      form.setValues({
-        name: existingView.name,
-        isPublic: existingView.isPublic ?? false,
-      });
+      setName(existingView.name);
+      setIsPublic(existingView.isPublic ?? false);
+      setNameError(null);
     } else if (!existingViewId) {
-      form.setValues({ name: '', isPublic: false });
+      setName('');
+      setIsPublic(false);
+      setNameError(null);
     }
+    setSubmitError(null);
     // intentionally depend on existingViewId to reset form when switching between edit/create modes
-  }, [existingView, existingViewId, form]);
+  }, [existingView, existingViewId]);
 
-  const handleSubmit = async (values: { name: string; isPublic: boolean }) => {
+  const validateName = useCallback(() => {
+    const trimmed = name.trim();
+    if (!trimmed) {
+      setNameError(t('form.nameRequired', 'Name is required'));
+      return null;
+    }
+    if (trimmed.length > 100) {
+      setNameError(t('form.nameTooLong', 'Name must be 100 characters or fewer'));
+      return null;
+    }
+    setNameError(null);
+    return trimmed;
+  }, [name, t]);
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     if (!currentUser || isExistingViewLoading) return;
+
+    const trimmedName = validateName();
+    if (!trimmedName) {
+      return;
+    }
+
+    setSubmitError(null);
+
     const schemaVersion = existingView?.schemaVersion ?? SAVED_VIEW_SCHEMA_VERSION;
+    const normalizedQuickFilters = quickFilters && hasActiveFilters(quickFilters)
+      ? quickFilters
+      : undefined;
 
     const viewData: SavedViewCreate = {
       schemaVersion,
-      name: values.name,
+      name: trimmedName,
       ownerId: currentUser.id,
       ownerName: currentUser.name,
-      isPublic: values.isPublic,
+      isPublic,
       viewMode,
       filters,
+      quickFilters: normalizedQuickFilters,
       sortBy,
       sortDirection,
       groupBy,
@@ -89,15 +114,23 @@ export function SavedViewForm({
         await updateMutation.mutateAsync({ id: existingViewId, updates: viewData });
       } else {
         await createMutation.mutateAsync(viewData);
+        setName('');
+        setIsPublic(false);
       }
       onSuccess?.();
     } catch (error) {
-      console.error('Failed to save view:', error);
+      const message = error instanceof Error ? error.message : t('form.errorFallback');
+      setSubmitError(message);
     }
   };
 
+  const isSubmitting =
+    createMutation.isPending ||
+    updateMutation.isPending ||
+    (isEditing && isExistingViewLoading);
+
   return (
-    <form onSubmit={form.onSubmit(handleSubmit)}>
+    <form onSubmit={handleSubmit} noValidate>
       <Stack gap="md">
         {existingViewError && (
           <Alert color="red" title={t('form.errorTitle')}>
@@ -107,19 +140,34 @@ export function SavedViewForm({
           </Alert>
         )}
 
+        {submitError && (
+          <Alert color="red" title={t('form.errorTitle')}>
+            {submitError}
+          </Alert>
+        )}
+
         <TextInput
           label={t('form.nameLabel')}
           placeholder={t('form.namePlaceholder')}
           required
           disabled={isExistingViewLoading}
-          {...form.getInputProps('name')}
+          value={name}
+          onChange={(event) => {
+            setName(event.currentTarget.value);
+            if (nameError) {
+              setNameError(null);
+            }
+          }}
+          onBlur={validateName}
+          error={nameError}
         />
 
         <Switch
           label={t('form.publicLabel')}
           description={t('form.publicDescription')}
           disabled={isExistingViewLoading}
-          {...form.getInputProps('isPublic', { type: 'checkbox' })}
+          checked={isPublic}
+          onChange={(event) => setIsPublic(event.currentTarget.checked)}
         />
 
         <Group justify="flex-end" gap="sm">
@@ -130,12 +178,8 @@ export function SavedViewForm({
           )}
           <Button
             type="submit"
-            loading={
-              createMutation.isPending ||
-              updateMutation.isPending ||
-              (isEditing && isExistingViewLoading)
-            }
-            disabled={isExistingViewLoading}
+            loading={isSubmitting}
+            disabled={isExistingViewLoading || !currentUser}
           >
             {existingViewId ? t('form.update') : t('form.save')}
           </Button>

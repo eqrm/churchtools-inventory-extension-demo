@@ -8,25 +8,27 @@ import { useState, useMemo, useEffect } from 'react';
 import {
   Button,
   Card,
+  Collapse,
+  Drawer,
   Group,
   Menu,
   Modal,
   Stack,
+  Text,
   Title,
-  Drawer,
-  Collapse,
 } from '@mantine/core';
 import {
-  IconFilter,
-  IconPlus,
-  IconDeviceFloppy,
   IconBookmark,
-  IconPackage,
   IconChevronDown,
+  IconDeviceFloppy,
+  IconFilter,
+  IconPackage,
+  IconPlus,
+  IconX,
 } from '@tabler/icons-react';
 import { notifications } from '@mantine/notifications';
 import { useTranslation } from 'react-i18next';
-import type { Asset, AssetFilters, SavedView } from '../../types/entities';
+import type { Asset, AssetFilters, SavedView, ViewFilterGroup } from '../../types/entities';
 import { useAssets } from '../../hooks/useAssets';
 import { useUIStore } from '../../stores/uiStore';
 import { useFeatureSettingsStore } from '../../stores';
@@ -39,7 +41,7 @@ import { AssetKanbanView } from './AssetKanbanView';
 import { AssetCalendarView } from './AssetCalendarView';
 import { applyFilters, sortAssets } from '../../utils/filterEvaluation';
 import { readFiltersFromUrl, updateUrlWithFilters } from '../../utils/urlFilters';
-import { countFilterConditions, flattenFilterConditions, hasActiveFilters } from '../../utils/viewFilters';
+import { countFilterConditions, createFilterGroup, flattenFilterConditions, hasActiveFilters } from '../../utils/viewFilters';
 
 // Import the original AssetList as AssetTableView
 import { AssetList as AssetTableView } from './AssetList';
@@ -62,8 +64,12 @@ export function EnhancedAssetList({ onView, onEdit, onCreateNew, onCreateKit }: 
   const {
     viewMode,
     setViewMode,
+    quickFilters,
+    setQuickFilters,
+    clearQuickFilters,
     viewFilters,
     setViewFilters,
+    clearViewFilters,
     sortBy,
     setSortBy,
     sortDirection,
@@ -107,7 +113,33 @@ export function EnhancedAssetList({ onView, onEdit, onCreateNew, onCreateKit }: 
   }, [showSavedViews]);
 
   const { data: assets = [] } = useAssets();
-  const activeFilterCount = useMemo(() => countFilterConditions(viewFilters), [viewFilters]);
+  const quickFilterCount = useMemo(() => countFilterConditions(quickFilters), [quickFilters]);
+  const advancedFilterCount = useMemo(() => countFilterConditions(viewFilters), [viewFilters]);
+  const activeFilterCount = quickFilterCount + advancedFilterCount;
+  const hasQuickFilterConditions = quickFilterCount > 0;
+  const hasAdvancedFilterConditions = advancedFilterCount > 0;
+
+  const filtersToApply = useMemo(() => {
+    const activeGroups: ViewFilterGroup[] = [];
+    if (hasActiveFilters(quickFilters)) {
+      activeGroups.push(quickFilters);
+    }
+    if (hasActiveFilters(viewFilters)) {
+      activeGroups.push(viewFilters);
+    }
+
+    if (activeGroups.length === 0) {
+      return createFilterGroup('AND');
+    }
+
+    if (activeGroups.length === 1) {
+      return activeGroups[0];
+    }
+
+    return createFilterGroup('AND', activeGroups);
+  }, [quickFilters, viewFilters]);
+
+  const shouldApplyFilters = hasActiveFilters(filtersToApply);
 
   const handleCreateKit = () => {
     onCreateKit?.();
@@ -118,6 +150,9 @@ export function EnhancedAssetList({ onView, onEdit, onCreateNew, onCreateKit }: 
     const urlState = readFiltersFromUrl();
     if (urlState.filters) {
       setViewFilters(urlState.filters);
+    }
+    if (urlState.quickFilters) {
+      setQuickFilters(urlState.quickFilters);
     }
     if (urlState.viewMode) {
       setViewMode(urlState.viewMode);
@@ -141,17 +176,18 @@ export function EnhancedAssetList({ onView, onEdit, onCreateNew, onCreateKit }: 
       viewMode,
       sortBy || undefined,
       sortDirection,
-      groupBy || undefined
+      groupBy || undefined,
+      quickFilters,
     );
-  }, [viewFilters, viewMode, sortBy, sortDirection, groupBy]);
+  }, [viewFilters, viewMode, sortBy, sortDirection, groupBy, quickFilters]);
 
   // T197: Apply advanced filters
   const filteredAssets = useMemo(() => {
-    if (!hasActiveFilters(viewFilters)) {
+    if (!shouldApplyFilters) {
       return assets;
     }
-    return applyFilters(assets, viewFilters);
-  }, [assets, viewFilters]);
+    return applyFilters(assets, filtersToApply);
+  }, [assets, filtersToApply, shouldApplyFilters]);
 
   // T201: Apply sorting
   const sortedAssets = useMemo(() => {
@@ -174,6 +210,11 @@ export function EnhancedAssetList({ onView, onEdit, onCreateNew, onCreateKit }: 
   const handleLoadSavedView = (view: SavedView) => {
     setViewMode(view.viewMode);
     setViewFilters(view.filters);
+    if (view.quickFilters) {
+      setQuickFilters(view.quickFilters);
+    } else {
+      clearQuickFilters();
+    }
     if (view.sortBy) setSortBy(view.sortBy);
     if (view.sortDirection) setSortDirection(view.sortDirection);
     if (view.groupBy) setGroupBy(view.groupBy);
@@ -188,7 +229,7 @@ export function EnhancedAssetList({ onView, onEdit, onCreateNew, onCreateKit }: 
   // Convert ViewFilters to AssetFilters for table view compatibility
   const legacyFilters: AssetFilters = useMemo(() => {
     const filters: AssetFilters = {};
-    const conditions = flattenFilterConditions(viewFilters);
+    const conditions = flattenFilterConditions(filtersToApply);
     for (const filter of conditions) {
       if (filter.field === 'category.name' && filter.operator === 'equals') {
         // Note: This is a simplified conversion - full implementation would need category ID lookup
@@ -202,7 +243,7 @@ export function EnhancedAssetList({ onView, onEdit, onCreateNew, onCreateKit }: 
       }
     }
     return filters;
-  }, [viewFilters]);
+  }, [filtersToApply]);
 
   // Render view based on current mode
   const renderView = () => {
@@ -323,9 +364,51 @@ export function EnhancedAssetList({ onView, onEdit, onCreateNew, onCreateKit }: 
 
       {/* T210: Filter builder panel with smooth collapse animation */}
       <Collapse in={filtersPanelOpen}>
-        <Card withBorder>
-          <FilterBuilder value={viewFilters} onChange={setViewFilters} />
-        </Card>
+        <Stack gap="md">
+          <Card withBorder>
+            <Stack gap="sm">
+              <Group justify="space-between" align="center">
+                <Text size="sm" fw={600}>
+                  Quick filters
+                </Text>
+                {hasQuickFilterConditions && (
+                  <Button
+                    variant="subtle"
+                    size="xs"
+                    color="gray"
+                    leftSection={<IconX size={14} />}
+                    onClick={clearQuickFilters}
+                  >
+                    Clear quick filters
+                  </Button>
+                )}
+              </Group>
+              <FilterBuilder mode="quick" value={quickFilters} onChange={setQuickFilters} />
+            </Stack>
+          </Card>
+
+          <Card withBorder>
+            <Stack gap="sm">
+              <Group justify="space-between" align="center">
+                <Text size="sm" fw={600}>
+                  Advanced filters
+                </Text>
+                {hasAdvancedFilterConditions && (
+                  <Button
+                    variant="subtle"
+                    size="xs"
+                    color="gray"
+                    leftSection={<IconX size={14} />}
+                    onClick={clearViewFilters}
+                  >
+                    Clear advanced filters
+                  </Button>
+                )}
+              </Group>
+              <FilterBuilder mode="advanced" value={viewFilters} onChange={setViewFilters} />
+            </Stack>
+          </Card>
+        </Stack>
       </Collapse>
 
       {/* Render current view mode */}
@@ -341,6 +424,7 @@ export function EnhancedAssetList({ onView, onEdit, onCreateNew, onCreateKit }: 
         <SavedViewForm
           viewMode={viewMode}
           filters={viewFilters}
+          quickFilters={hasQuickFilterConditions ? quickFilters : undefined}
           sortBy={sortBy || undefined}
           sortDirection={sortDirection}
           groupBy={groupBy || undefined}

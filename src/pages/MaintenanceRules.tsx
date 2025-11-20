@@ -53,21 +53,25 @@ export function MaintenanceRules() {
   const { tags = [] } = useTags();
 
   // Map assets to the format expected by the form
-  const assetsForForm = useMemo(() => 
-    (assets as Array<{ id: string; name: string; assetNumber?: string }>).map(a => ({ 
-      id: a.id, 
-      name: a.name || a.assetNumber || a.id 
-    })),
-    [assets]
+  const assetsForForm = useMemo(
+    () =>
+      (assets as Array<{ id: string; name?: string; assetNumber?: string; status?: string }>)
+        .filter((asset) => asset.status !== 'deleted')
+        .map((a) => ({
+          id: a.id,
+          name: a?.name || a?.assetNumber || a.id,
+        })),
+    [assets],
   );
 
   // Map models to the format expected by the form  
-  const modelsForForm = useMemo(() =>
-    (models as Array<{ id: string; name: string }>).map(m => ({
-      id: m.id,
-      name: m.name
-    })),
-    [models]
+  const modelsForForm = useMemo(
+    () =>
+      (models as Array<{ id: string; name: string; manufacturer?: string }>).map((m) => ({
+        id: m.id,
+        name: m.manufacturer ? `${m.name} (${m.manufacturer})` : m.name,
+      })),
+    [models],
   );
 
   // Map tags to the format expected by the form

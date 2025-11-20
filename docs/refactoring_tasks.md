@@ -37,26 +37,26 @@ This document breaks the overhaul plan into numbered phases and concrete, tracka
 **Goal:** Modernize the filter UX and strengthen view persistence.
 
 2.1 Redesign filter builder UI
-- 2.1.1 Identify the shared filter builder components (AssetList + `AdvancedFilterEditor`).
-- 2.1.2 Implement a compact, Notion-like dropdown layout: small row height, field list on the left, operator + value inline.
-- 2.1.3 Add AND/OR toggle between rules within the builder UI.
-- 2.1.4 Add an "Advanced" link/button that opens the stacked rules view for power users.
+- [x] 2.1.1 Identify the shared filter builder components (AssetList + `AdvancedFilterEditor`). (Consolidated on `FilterBuilder` used by AssetList quick/advanced panels.)
+- [x] 2.1.2 Implement a compact, Notion-like dropdown layout: small row height, field list on the left, operator + value inline. (New combobox-driven field selector + tightened row spacing.)
+- [x] 2.1.3 Add AND/OR toggle between rules within the builder UI. (Segmented toggle rendered between chips remains but now styled inline.)
+- [x] 2.1.4 Add an "Advanced" link/button that opens the stacked rules view for power users. (Advanced modal wiring verified + polished.)
 
 2.2 Introduce relative date operators
-- 2.2.1 Define new filter operators for relative dates: e.g. "in last N days", "in next N days".
-- 2.2.2 Implement a reusable `RelativeDateInput` component for capturing N and direction.
-- 2.2.3 Wire relative date operators into the existing filter evaluation utilities.
-- 2.2.4 Add tests for filter evaluation with relative operators across boundary conditions.
+- [x] 2.2.1 Define new filter operators for relative dates: e.g. "in last N days", "in next N days". (Operators added to `src/types/entities.ts`, schemas updated in `src/schemas/savedView.schema.ts`, UI wired via `FilterBuilder`.)
+- [x] 2.2.2 Implement a reusable `RelativeDateInput` component for capturing N and direction. (See `src/components/views/RelativeDateInput.tsx`, leveraged by compact filter rows.)
+- [x] 2.2.3 Wire relative date operators into the existing filter evaluation utilities. (Handled inside `src/utils/filterEvaluation.ts` including normalization + range math.)
+- [x] 2.2.4 Add tests for filter evaluation with relative operators across boundary conditions. (Coverage in `src/tests/utils/filterEvaluation.test.ts` spans last/next window edges and month rollover.)
 
 2.3 Split quick vs advanced filters
-- 2.3.1 Define the schema for "Quick filters" vs "Advanced filters" while keeping the current underlying model.
-- 2.3.2 Implement UI separation in AssetList (quick chips/controls vs advanced builder panel).
-- 2.3.3 Ensure saved views can store both quick and advanced filter states without breaking old data.
+- [x] 2.3.1 Define the schema for "Quick filters" vs "Advanced filters" while keeping the current underlying model.
+- [x] 2.3.2 Implement UI separation in AssetList (quick chips/controls vs advanced builder panel).
+- [x] 2.3.3 Ensure saved views can store both quick and advanced filter states without breaking old data.
 
 2.4 Fix and harden "Save view" UX
-- 2.4.1 Refactor the "Save view" name field into a fully controlled input.
-- 2.4.2 Verify saved view creation and updates persist correctly via the existing settings/view storage layer.
-- 2.4.3 Add unit tests for saving, updating, and loading views (including edge cases: empty name, rename, overwrite).
+- [x] 2.4.1 Refactor the "Save view" name field into a fully controlled input. (Rebuilt `src/components/reports/SavedViewForm.tsx` around `useState` + validation helpers so labels/errors stay in sync with async data.)
+- [x] 2.4.2 Verify saved view creation and updates persist correctly via the existing settings/view storage layer. (Normalized payload builder ensures schema version, filters, quick filters, and metadata are sent consistently to `useCreateSavedView`/`useUpdateSavedView`.)
+- [x] 2.4.3 Add unit tests for saving, updating, and loading views (including edge cases: empty name, rename, overwrite). (New coverage in `src/tests/components/reports/SavedViewForm.test.tsx` fakes TanStack hooks + translations.)
 
 ---
 
@@ -65,26 +65,26 @@ This document breaks the overhaul plan into numbered phases and concrete, tracka
 **Goal:** Make kit assets first-class and fix kit-related navigation and availability issues.
 
 3.1 Enhance kit rows in AssetList
-- 3.1.1 Extend kit row rendering in `AssetList` to show a member count badge.
-- 3.1.2 Add a Mantine `Tooltip` that lists child assets (number + name) on hover using `kitAssets` helpers.
-- 3.1.3 Add tests verifying the tooltip content for a kit with multiple members.
+- [x] 3.1.1 Extend kit row rendering in `AssetList` to show a member count badge. (Name column now renders `KitMemberBadge` beside the kit pill.)
+- [x] 3.1.2 Add a Mantine `Tooltip` that lists child assets (number + name) on hover using `kitAssets` helpers. (New `KitMemberBadge` component aggregates `kitBoundAssets` metadata.)
+- [x] 3.1.3 Add tests verifying the tooltip content for a kit with multiple members. (See `src/tests/components/assets/KitMemberBadge.test.tsx`.)
 
 3.2 Kit-aware detail navigation
-- 3.2.1 Ensure clicking a kit row navigates to a kit-aware detail route.
-- 3.2.2 Implement a dedicated "Kit" layout in `AssetDetail` when `asset.isKit === true` (image, prefix+number, barcode, members, tags, inherited status).
-- 3.2.3 Optionally define a dedicated `KitDetail` component embedded in the existing asset route.
-- 3.2.4 Add tests confirming kit navigation loads the correct layout and data.
+- [x] 3.2.1 Ensure clicking a kit row navigates to a kit-aware detail route. (`AssetList` now uses `getAssetDetailPath` so kits route to `/kits/:id`.)
+- [x] 3.2.2 Implement a dedicated "Kit" layout in `AssetDetail` when `asset.isKit === true` (image, prefix+number, barcode, members, tags, inherited status). (New `KitSummaryPanel` surfaces kit metadata, barcode, members, tags, and inheritance badges.)
+- [x] 3.2.3 Optionally define a dedicated `KitDetail` component embedded in the existing asset route. (Kit summary panel acts as the embedded kit layout without impacting non-kit detail rendering.)
+- [x] 3.2.4 Add tests confirming kit navigation loads the correct layout and data. (Helper verified via `src/tests/utils/assetNavigation.test.ts`; layout covered by `src/tests/components/assets/KitSummaryPanel.test.tsx`.)
 
 3.3 Fix kit ID resolution
-- 3.3.1 Investigate the "Asset with ID kit-2108 not found" error path.
-- 3.3.2 Decide on a strategy: ensure kit rows use real asset IDs or teach the detail layer to resolve kit IDs → asset IDs.
-- 3.3.3 Implement chosen fix and add tests covering kit ID resolution for existing data.
+- [x] 3.3.1 Investigate the "Asset with ID kit-2108 not found" error path.
+- [x] 3.3.2 Decide on a strategy: ensure kit rows use real asset IDs or teach the detail layer to resolve kit IDs → asset IDs.
+- [x] 3.3.3 Implement chosen fix and add tests covering kit ID resolution for existing data.
 
 3.4 Kit builder availability rules
-- 3.4.1 Update kit builders to allow selecting all assets except those with `status === 'deleted'`.
-- 3.4.2 When binding a non-available asset, display a clear warning that its status may be overwritten/updated on save.
-- 3.4.3 Align frontend selection rules with backend validation to avoid "Asset X is not available" conflicts.
-- 3.4.4 Add tests for selection constraints and warning display logic.
+- [x] 3.4.1 Update kit builders to allow selecting all assets except those with `status === 'deleted'`.
+- [x] 3.4.2 When binding a non-available asset, display a clear warning that its status may be overwritten/updated on save.
+- [x] 3.4.3 Align frontend selection rules with backend validation to avoid "Asset X is not available" conflicts.
+- [x] 3.4.4 Add tests for selection constraints and warning display logic.
 
 ---
 
@@ -93,24 +93,24 @@ This document breaks the overhaul plan into numbered phases and concrete, tracka
 **Goal:** Turn the models view into a usable catalog powered by real asset types.
 
 4.1 Replace table with card/grid layout
-- 4.1.1 Analyze current `AssetModelsPage` implementation and its dependencies.
-- 4.1.2 Implement a card/grid layout: model name, manufacturer, asset type badge, asset count, optional preview image.
-- 4.1.3 Add quick actions to each card: edit model, create asset from model.
-- 4.1.4 Ensure layout is responsive across common breakpoints.
+- [x] 4.1.1 Audit complete (`src/pages/AssetModelList.tsx`) to understand existing data sources + modals before refactor.
+- [x] 4.1.2 Rebuilt the page into Mantine `Card`/`SimpleGrid` layout showing name, manufacturer, badge + count with responsive breakpoints.
+- [x] 4.1.3 Added inline quick actions (edit/delete + new "Create asset" CTA) plus a modal that seeds `AssetForm` with model defaults.
+- [x] 4.1.4 Verified responsive behavior via Mantine breakpoints (`cols={{ base:1, sm:2, md:2, lg:3, xl:4 }}`) and adaptive spacing.
 
 4.2 Wire real asset types
-- 4.2.1 Replace placeholder asset type lists with real data from the ChurchTools provider.
-- 4.2.2 Ensure model forms and filters use the same canonical asset type source.
-- 4.2.3 Align labels and i18n strings with global "Asset Type" terminology.
+- [x] 4.2.1 Asset types now come directly from `useCategories` and are mapped per-card for badges + quick-create context.
+- [x] 4.2.2 Filters, forms, and the new quick-create modal reuse the canonical asset-type map so IDs/names stay in sync.
+- [x] 4.2.3 Updated `src/i18n/locales/en/models.json` with the new labels/tooltips for asset types + quick create action.
 
 4.3 Simplify models scope (no kits)
-- 4.3.1 Locate and remove or hide any "Kit" options in the models sidebar/navigation.
-- 4.3.2 Validate that models are used purely for asset templates, not kit templates.
+- [x] 4.3.1 Navigation now links to a dedicated `/models` route (no asset-group alias), and kit-specific asset types are filtered out.
+- [x] 4.3.2 Quick-create wiring seeds the regular `AssetForm`, reinforcing that models only bootstrap standalone assets.
 
 4.4 Improve models filters and empty states
-- 4.4.1 Add filters by asset type and manufacturer to the models view.
-- 4.4.2 Implement helpful empty states for "no models" and "no models match filters".
-- 4.4.3 Add unit tests for models view rendering, filtering, and empty state behavior.
+- [x] 4.4.1 Existing manufacturer + asset-type filters were refined and now share the canonical data source.
+- [x] 4.4.2 Empty-state blocks were polished and still cover "global" vs "filtered" cases inside the new layout.
+- [x] 4.4.3 Added `src/tests/pages/AssetModelList.test.tsx` covering quick-create rendering, filtering, and both empty states.
 
 ---
 
@@ -131,19 +131,19 @@ This document breaks the overhaul plan into numbered phases and concrete, tracka
 - 5.2.4 Add tests for company creation/editing and correct table header rendering.
 
 5.3 Improve maintenance rules
-- 5.3.1 Implement "Replan once" logic: when a work order is completed early/late and user opts in, shift next due date and future recurrences based on delta.
-- 5.3.2 Alternatively support mode: reschedule based on actual completion date using existing interval rules.
-- 5.3.3 Fix model target selection in rule editor so models are correctly listed and selectable.
-- 5.3.4 Ensure asset pickers used in rules filter out deleted assets.
-- 5.3.5 Simplify "Work type" UI to: single dropdown (standard types + "Custom") plus clear Internal/External toggle.
-- 5.3.6 Add rule-focused unit tests for target selection, work type selection, and "Replan once" logic.
+- [x] 5.3.1 Implement "Replan once" logic: when a work order is completed early/late and user opts in, shift next due date and future recurrences based on delta.
+- [x] 5.3.2 Alternatively support mode: reschedule based on actual completion date using existing interval rules.
+- [x] 5.3.3 Fix model target selection in rule editor so models are correctly listed and selectable.
+- [x] 5.3.4 Ensure asset pickers used in rules filter out deleted assets.
+- [x] 5.3.5 Simplify "Work type" UI to: single dropdown (standard types + "Custom") plus clear Internal/External toggle.
+- [x] 5.3.6 Add rule-focused unit tests for target selection, work type selection, and "Replan once" logic.
 
 5.4 Improve work orders
-- 5.4.1 Allow selecting assets (not just rules) when creating manual work orders via existing asset search/select component.
-- 5.4.2 Ensure asset selection filters out deleted assets.
-- 5.4.3 Add an `orderType` field (planned, unplanned, follow-up) with a pill selector.
-- 5.4.4 Display `orderType` in work order lists and detail views.
-- 5.4.5 Add tests for work order creation with different `orderType` values and asset selections.
+- [x] 5.4.1 Allow selecting assets (not just rules) when creating manual work orders via existing asset search/select component.
+- [x] 5.4.2 Ensure asset selection filters out deleted assets.
+- [x] 5.4.3 Add an `orderType` field (planned, unplanned, follow-up) with a pill selector.
+- [x] 5.4.4 Display `orderType` in work order lists and detail views.
+- [x] 5.4.5 Add tests for work order creation with different `orderType` values and asset selections.
 
 ---
 

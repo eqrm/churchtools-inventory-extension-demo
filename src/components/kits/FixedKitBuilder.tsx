@@ -5,13 +5,14 @@
 
 import { useMemo, useState } from 'react';
 import type { SelectItem, SelectProps } from '@mantine/core';
-import { Stack, Text, Button, Group, Select, ActionIcon, Paper, Badge } from '@mantine/core';
+import { Stack, Text, Button, Group, Select, ActionIcon, Paper, Badge, Alert } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { IconPlus, IconTrash } from '@tabler/icons-react';
 import { useAssets } from '../../hooks/useAssets';
 import { useTranslation } from 'react-i18next';
 import { matchesBoundAssetSearch } from '../../utils/matchesBoundAssetSearch';
 import { ASSET_STATUS_KANBAN_COLORS, ASSET_STATUS_LABELS } from '../../constants/assetStatuses';
+import type { Asset } from '../../types/entities';
 
 interface BoundAsset {
   assetId: string;
@@ -22,6 +23,7 @@ interface BoundAsset {
 interface FixedKitBuilderProps {
   value: BoundAsset[];
   onChange: (value: BoundAsset[]) => void;
+  kitId?: string;
 }
 
 export interface AssetSelectOption extends SelectItem {
@@ -31,16 +33,41 @@ export interface AssetSelectOption extends SelectItem {
   assetLocation: string;
 }
 
-export function FixedKitBuilder({ value, onChange }: FixedKitBuilderProps) {
+export function buildSelectableKitAssets(assets: Asset[] | undefined, kitId?: string): Asset[] {
+  if (!Array.isArray(assets)) {
+    return [];
+  }
+
+  return assets.filter((asset) => {
+    if (asset.status === 'deleted') {
+      return false;
+    }
+    if (asset.isKit) {
+      return false;
+    }
+    if (asset.kitId && asset.kitId !== kitId) {
+      return false;
+    }
+    return true;
+  });
+}
+
+export function FixedKitBuilder({ value, onChange, kitId }: FixedKitBuilderProps) {
   const { data: assets } = useAssets();
   const [selectedAssetId, setSelectedAssetId] = useState<string>('');
   const { t } = useTranslation('kits');
-  const selectableAssets = useMemo(() => {
+  const selectableAssets = useMemo(() => buildSelectableKitAssets(assets, kitId), [assets, kitId]);
+  const blockedAssetCount = useMemo(() => {
     if (!Array.isArray(assets)) {
-      return [];
+      return 0;
     }
-    return assets.filter((asset) => asset.status !== 'deleted');
-  }, [assets]);
+    return assets.filter((asset) => {
+      if (asset.status === 'deleted' || asset.isKit) {
+        return false;
+      }
+      return Boolean(asset.kitId && asset.kitId !== kitId);
+    }).length;
+  }, [assets, kitId]);
 
   const assetLookup = useMemo(() => {
     const lookup = new Map<string, (typeof selectableAssets)[number]>();
@@ -64,6 +91,23 @@ export function FixedKitBuilder({ value, onChange }: FixedKitBuilderProps) {
       } satisfies AssetSelectOption;
     });
   }, [selectableAssets]);
+
+  const nonAvailableBindings = useMemo(() => {
+    return value
+      .map((bound) => {
+        const asset = assetLookup.get(bound.assetId);
+        const status = asset?.status;
+        if (!status || status === 'available') {
+          return null;
+        }
+        return {
+          assetId: bound.assetId,
+          assetNumber: bound.assetNumber,
+          status,
+        };
+      })
+      .filter((entry): entry is { assetId: string; assetNumber: string; status: Asset['status'] } => entry !== null);
+  }, [assetLookup, value]);
 
   const selectedAsset = useMemo(() => {
     return selectableAssets.find((asset) => asset.id === selectedAssetId);
@@ -190,6 +234,28 @@ export function FixedKitBuilder({ value, onChange }: FixedKitBuilderProps) {
         </Stack>
       )}
 
+      {nonAvailableBindings.length > 0 && (
+        <Alert
+          color="orange"
+          title={t('form.fixed.nonAvailableWarningTitle', { count: nonAvailableBindings.length })}
+          data-testid="kit-bound-status-warning"
+        >
+          <Stack gap={2}>
+            {nonAvailableBindings.map((entry) => (
+              <Text key={entry.assetId} size="sm">
+                {t('form.fixed.nonAvailableWarningItem', {
+                  assetNumber: entry.assetNumber,
+                  status: entry.status ?? t('form.fixed.assetStatusUnknown'),
+                })}
+              </Text>
+            ))}
+            <Text size="xs" c="dimmed">
+              {t('form.fixed.nonAvailableWarningFootnote')}
+            </Text>
+          </Stack>
+        </Alert>
+      )}
+
       <Group>
         <Select
           placeholder={t('form.fixed.selectPlaceholder')}
@@ -208,6 +274,12 @@ export function FixedKitBuilder({ value, onChange }: FixedKitBuilderProps) {
           {t('form.actions.addAsset')}
         </Button>
       </Group>
+
+      {blockedAssetCount > 0 && (
+        <Text size="xs" c="dimmed" data-testid="kit-blocked-assets-hint">
+          {t('form.fixed.kitAssignmentHint', { count: blockedAssetCount })}
+        </Text>
+      )}
 
       {selectedAsset && selectedAsset.status !== 'available' ? (
         <Text size="xs" c="orange.6">

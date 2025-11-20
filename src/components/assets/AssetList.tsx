@@ -54,6 +54,8 @@ import { countFilterConditions, createFilterGroup } from '../../utils/viewFilter
 import { AssetGalleryView } from './AssetGalleryView';
 import { AssetKanbanView } from './AssetKanbanView';
 import { AssetCalendarView } from './AssetCalendarView';
+import { KitMemberBadge } from './KitMemberBadge';
+import { getAssetDetailPath } from '../../utils/assetNavigation';
 
 interface AssetListProps {
   onView?: (asset: Asset) => void;
@@ -378,12 +380,14 @@ export function AssetList({
     }
 
     const asset = record;
+    const detailPath = getAssetDetailPath(asset);
 
     if (onView) {
       onView(asset);
-    } else {
-      navigate(`/assets/${asset.id}`);
+      return;
     }
+
+    navigate(detailPath);
   };
 
   // Filter assets by type (parent/child/standalone) - T099
@@ -1179,14 +1183,23 @@ export function AssetList({
                   );
                 }
 
+                const kitMembers = row.kitBoundAssets ?? [];
                 return (
                   <Box style={{ marginLeft: `${row.__depth * 16}px` }}>
-                    <Group gap="xs">
+                    <Group gap="xs" wrap="wrap">
                       <Text fw={500}>{row.name}</Text>
                       {row.isKit && (
-                        <Badge size="xs" variant="light" color="violet" leftSection={<IconPackage size={10} />}>
-                          Kit
-                        </Badge>
+                        <Group gap={4} wrap="nowrap">
+                          <Badge
+                            size="xs"
+                            variant="light"
+                            color="violet"
+                            leftSection={<IconPackage size={10} />}
+                          >
+                            Kit
+                          </Badge>
+                          <KitMemberBadge members={kitMembers} />
+                        </Group>
                       )}
                     </Group>
                     {row.description && (

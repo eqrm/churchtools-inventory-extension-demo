@@ -13,6 +13,7 @@ const AssetsPage = lazy(() => import('../pages/AssetsPage').then((module) => ({ 
 const AssetDetailPage = lazy(() => import('../pages/AssetDetailPage').then((module) => ({ default: module.AssetDetailPage })));
 const AssetGroupsPage = lazy(() => import('../pages/AssetGroupsPage').then((module) => ({ default: module.AssetGroupsPage })));
 const AssetGroupDetailPage = lazy(() => import('../pages/AssetGroupDetailPage').then((module) => ({ default: module.AssetGroupDetailPage })));
+const AssetModelsPage = lazy(() => import('../pages/AssetModelList').then((module) => ({ default: module.AssetModelList })));
 const BookingsPage = lazy(() => import('../pages/BookingsPage').then((module) => ({ default: module.BookingsPage })));
 const BookingDetailPage = lazy(() => import('../pages/BookingDetailPage').then((module) => ({ default: module.BookingDetailPage })));
 const BookingCalendarPage = lazy(() => import('../pages/BookingCalendarPage').then((module) => ({ default: module.BookingCalendarPage })));
@@ -182,6 +183,10 @@ function buildRouter() {
                             { index: true, element: withSuspense(<AssetGroupsPage />) },
                             { path: ':id', element: withSuspense(<AssetGroupDetailPage />) },
                         ],
+                    },
+                    {
+                        path: 'models',
+                        element: withSuspense(<AssetModelsPage />),
                     },
                     {
                         path: 'bookings',

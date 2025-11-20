@@ -45,6 +45,7 @@ function createRule(overrides: Partial<MaintenanceRule> = {}): MaintenanceRule {
     startDate: '2025-01-01',
     nextDueDate: '2025-02-01',
     leadTimeDays: 10,
+    rescheduleMode: 'actual-completion',
     createdBy: 'user-1' as UUID,
     createdByName: 'User One',
     createdAt: '2024-12-01T00:00:00Z',
@@ -58,6 +59,7 @@ function createWorkOrder(overrides: Partial<WorkOrder> = {}): WorkOrder {
     id: 'wo-1' as UUID,
     workOrderNumber: 'WO-20250101-0001',
     type: 'internal',
+    orderType: 'planned',
     state: 'in-progress',
     ruleId: 'rule-1' as UUID,
     companyId: undefined,
@@ -130,5 +132,31 @@ describe('MaintenanceService scheduling', () => {
     );
 
     expect(blocked).toBe(false);
+  });
+
+  it('applies replan-once shifts and resets reschedule mode', async () => {
+    const rule = createRule({
+      nextDueDate: '2025-02-01',
+      startDate: '2025-01-01',
+      rescheduleMode: 'replan-once',
+    });
+
+    (storageProvider.getMaintenanceRule as unknown as Mock).mockResolvedValue(rule);
+    (storageProvider.updateMaintenanceRule as unknown as Mock).mockImplementation(
+      async (_id: string, data: MaintenanceRule) => data,
+    );
+
+    await (
+      service as unknown as {
+        updateRuleScheduleFromCompletion: (id: UUID, completionIso: string) => Promise<void>;
+      }
+    ).updateRuleScheduleFromCompletion(rule.id, '2025-02-05T00:00:00Z');
+
+    expect(storageProvider.updateMaintenanceRule).toHaveBeenCalled();
+    const updatedRule = (storageProvider.updateMaintenanceRule as unknown as Mock).mock
+      .calls[0][1] as MaintenanceRule;
+    expect(updatedRule.nextDueDate).toBe('2025-03-09');
+    expect(updatedRule.startDate).toBe('2025-01-05');
+    expect(updatedRule.rescheduleMode).toBe('actual-completion');
   });
 });

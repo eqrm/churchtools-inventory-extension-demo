@@ -9,12 +9,25 @@ import { TextInput, Textarea, NumberInput, Button, Stack, Group } from '@mantine
 import { useTranslation } from 'react-i18next';
 import type { MaintenanceCompany } from '../../types/maintenance';
 
+interface MaintenanceCompanyFormValues {
+  name: string;
+  contactPerson?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  address: string;
+  serviceLevelAgreement: string;
+  hourlyRate?: number;
+  contractNotes?: string;
+}
+
 interface MaintenanceCompanyFormProps {
   company?: MaintenanceCompany;
   onSubmit: (data: Omit<MaintenanceCompany, 'id' | 'createdAt' | 'updatedAt' | 'createdBy' | 'createdByName'>) => void;
   onCancel: () => void;
   isLoading?: boolean;
 }
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function MaintenanceCompanyForm({
   company,
@@ -24,10 +37,12 @@ export function MaintenanceCompanyForm({
 }: MaintenanceCompanyFormProps) {
   const { t } = useTranslation(['maintenance', 'common']);
 
-  const form = useForm({
+  const form = useForm<MaintenanceCompanyFormValues>({
     initialValues: {
       name: company?.name || '',
       contactPerson: company?.contactPerson || '',
+      contactEmail: company?.contactEmail || '',
+      contactPhone: company?.contactPhone || '',
       address: company?.address || '',
       serviceLevelAgreement: company?.serviceLevelAgreement || '',
       hourlyRate: company?.hourlyRate,
@@ -41,11 +56,19 @@ export function MaintenanceCompanyForm({
             ? t('maintenance:validation.companyNameMaxLength')
             : null,
       contactPerson: (value) =>
-        !value
-          ? t('maintenance:validation.contactPersonRequired')
-          : value.length > 200
-            ? t('maintenance:validation.contactPersonMaxLength')
-            : null,
+        value && value.length > 200 ? t('maintenance:validation.contactPersonMaxLength') : null,
+      contactEmail: (value) =>
+        value && !EMAIL_REGEX.test(value.trim())
+          ? t('maintenance:validation.contactEmailInvalid')
+          : null,
+      contactPhone: (value) => {
+        if (!value) return null;
+        const normalized = value.replace(/[^0-9]/g, '');
+        if (normalized.length < 4 || normalized.length > 20) {
+          return t('maintenance:validation.contactPhoneInvalid');
+        }
+        return null;
+      },
       address: (value) =>
         !value
           ? t('maintenance:validation.addressRequired')
@@ -65,8 +88,24 @@ export function MaintenanceCompanyForm({
     },
   });
 
-  const handleSubmit = (values: typeof form.values) => {
-    onSubmit(values);
+  const normalizeOptional = (value?: string | null) => {
+    const trimmed = value?.trim();
+    return trimmed ? trimmed : undefined;
+  };
+
+  const handleSubmit = (values: MaintenanceCompanyFormValues) => {
+    const payload: MaintenanceCompanyFormValues = {
+      ...values,
+      name: values.name.trim(),
+      address: values.address.trim(),
+      serviceLevelAgreement: values.serviceLevelAgreement.trim(),
+      contactPerson: normalizeOptional(values.contactPerson),
+      contactEmail: normalizeOptional(values.contactEmail),
+      contactPhone: normalizeOptional(values.contactPhone),
+      contractNotes: normalizeOptional(values.contractNotes),
+    };
+
+    onSubmit(payload);
   };
 
   return (
@@ -81,9 +120,20 @@ export function MaintenanceCompanyForm({
 
         <TextInput
           label={t('maintenance:fields.contactPerson')}
-          placeholder={t('maintenance:placeholders.contactPerson')}
-          required
+          placeholder={t('maintenance:placeholders.contactPersonOptional')}
           {...form.getInputProps('contactPerson')}
+        />
+
+        <TextInput
+          label={t('maintenance:fields.contactEmail')}
+          placeholder={t('maintenance:placeholders.contactEmail')}
+          {...form.getInputProps('contactEmail')}
+        />
+
+        <TextInput
+          label={t('maintenance:fields.contactPhone')}
+          placeholder={t('maintenance:placeholders.contactPhone')}
+          {...form.getInputProps('contactPhone')}
         />
 
         <Textarea

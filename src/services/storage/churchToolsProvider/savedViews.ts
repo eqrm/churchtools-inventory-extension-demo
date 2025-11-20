@@ -37,11 +37,13 @@ export async function createSavedView(
 
   const now = new Date().toISOString();
   const normalizedFilters = normalizeFiltersInput(data.filters);
+  const normalizedQuickFilters = normalizeOptionalFiltersInput(data.quickFilters);
   const payload: SavedView = {
     id: '',
     ...data,
     schemaVersion: data.schemaVersion ?? SAVED_VIEW_SCHEMA_VERSION,
     filters: normalizedFilters,
+    quickFilters: normalizedQuickFilters,
     createdAt: now,
     lastModifiedAt: now,
   };
@@ -83,12 +85,18 @@ export async function updateSavedView(
       ? normalizeFiltersInput(updates.filters)
       : current.filters;
 
+  const nextQuickFilters =
+    'quickFilters' in updates
+      ? normalizeOptionalFiltersInput(updates.quickFilters)
+      : current.quickFilters;
+
   const updated: SavedView = {
     ...current,
     ...updates,
     id,
     schemaVersion: updates.schemaVersion ?? current.schemaVersion ?? SAVED_VIEW_SCHEMA_VERSION,
     filters: nextFilters,
+    quickFilters: nextQuickFilters,
     lastModifiedAt: new Date().toISOString(),
   };
 
@@ -161,6 +169,7 @@ function mapToSavedView(value: unknown): SavedView {
     ...parsed,
     schemaVersion: parsed.schemaVersion ?? LEGACY_SAVED_VIEW_SCHEMA_VERSION,
     filters: normalizeFiltersInput(parsed.filters as ViewFilterGroup | LegacyViewFilter[] | undefined),
+    quickFilters: normalizeOptionalFiltersInput(parsed.quickFilters as ViewFilterGroup | LegacyViewFilter[] | undefined),
     id: record.id,
   };
 }
@@ -183,4 +192,17 @@ function normalizeFiltersInput(filters: ViewFilterGroup | LegacyViewFilter[] | u
     return convertLegacyFiltersToGroup(filters);
   }
   return normalizeFilterGroup(filters);
+}
+
+function normalizeOptionalFiltersInput(
+  filters: ViewFilterGroup | LegacyViewFilter[] | undefined,
+): ViewFilterGroup | undefined {
+  if (!filters) {
+    return undefined;
+  }
+  if (Array.isArray(filters)) {
+    return convertLegacyFiltersToGroup(filters);
+  }
+  const normalized = normalizeFilterGroup(filters);
+  return normalized.children.length > 0 ? normalized : undefined;
 }

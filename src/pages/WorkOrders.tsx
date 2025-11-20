@@ -30,7 +30,12 @@ import {
 } from '../hooks/useMaintenance';
 import { useAssets } from '../hooks/useAssets';
 import { WorkOrderForm } from '../components/maintenance/WorkOrderForm';
-import type { WorkOrder, WorkOrderState, WorkOrderType } from '../types/maintenance';
+import type {
+  WorkOrder,
+  WorkOrderOrderType,
+  WorkOrderState,
+  WorkOrderType,
+} from '../types/maintenance';
 import { routes } from '../router/routes';
 
 type ViewMode = 'table' | 'kanban' | 'timeline';
@@ -43,6 +48,17 @@ export function WorkOrders() {
   const { data: assets = [] } = useAssets();
 
   const workOrderList = useMemo(() => (workOrders as WorkOrder[]) || [], [workOrders]);
+  const assetsForForm = useMemo(
+    () =>
+      (assets as Array<{ id: string; assetNumber: string; name?: string; status?: string }>)
+        .filter((asset) => asset.status !== 'deleted')
+        .map((asset) => ({
+          id: asset.id,
+          assetNumber: asset.assetNumber,
+          name: asset.name || asset.assetNumber,
+        })),
+    [assets],
+  );
 
   const [viewMode, setViewMode] = useState<ViewMode>('table');
   const [filterState, setFilterState] = useState<WorkOrderState | 'all'>('all');
@@ -119,6 +135,19 @@ export function WorkOrders() {
     }
   };
 
+  const getOrderTypeColor = (orderType: WorkOrderOrderType): string => {
+    switch (orderType) {
+      case 'planned':
+        return 'blue';
+      case 'unplanned':
+        return 'red';
+      case 'follow-up':
+        return 'grape';
+      default:
+        return 'gray';
+    }
+  };
+
   const formatDate = (dateString?: string): string => {
     if (!dateString) return '-';
     return new Date(dateString).toLocaleDateString('de-DE', {
@@ -135,6 +164,7 @@ export function WorkOrders() {
           <Table.Tr>
             <Table.Th>{t('maintenance:fields.workOrderNumber')}</Table.Th>
             <Table.Th>{t('maintenance:fields.type')}</Table.Th>
+                <Table.Th>{t('maintenance:fields.orderType')}</Table.Th>
             <Table.Th>{t('maintenance:fields.state')}</Table.Th>
             <Table.Th>{t('maintenance:fields.scheduledStart')}</Table.Th>
             <Table.Th>{t('maintenance:fields.assignedTo')}</Table.Th>
@@ -152,6 +182,14 @@ export function WorkOrders() {
               <Table.Td>
                 <Badge color={workOrder.type === 'internal' ? 'blue' : 'orange'} variant="light">
                   {t(`maintenance:types.${workOrder.type}`)}
+                </Badge>
+              </Table.Td>
+              <Table.Td>
+                <Badge
+                  color={getOrderTypeColor((workOrder.orderType ?? 'planned') as WorkOrderOrderType)}
+                  variant="outline"
+                >
+                  {t(`maintenance:orderTypes.${workOrder.orderType ?? 'planned'}`)}
                 </Badge>
               </Table.Td>
               <Table.Td>
@@ -302,7 +340,7 @@ export function WorkOrders() {
           workOrder={selectedWorkOrder || undefined}
           type={selectedWorkOrder?.type || 'internal'}
           companies={(companies as Array<{ id: string; name: string }>) || []}
-          assets={(assets as Array<{ id: string; assetNumber: string; name: string }>) || []}
+          assets={assetsForForm as Array<{ id: string; assetNumber: string; name: string }>}
           rules={(rules as Array<{ id: string; name: string }>) || []}
           onSubmit={handleFormClose}
           onCancel={handleFormClose}

@@ -55,7 +55,7 @@ export function Navigation({ children, onScanClick }: NavigationProps) {
     // Exact match for list pages (e.g., /assets, /kits, /bookings)
     // These should only be active when on the exact path, not on detail pages
     if (path === '/assets' || path === '/kits' || path === '/bookings' || 
-        path === '/categories' || path === '/asset-groups' || path === '/reports' || 
+        path === '/categories' || path === '/asset-groups' || path === '/models' || path === '/reports' || 
         path === '/damage-reports') {
       return location.pathname === path;
     }
@@ -221,11 +221,11 @@ export function Navigation({ children, onScanClick }: NavigationProps) {
         <NavLink
           data-nav-label={tNav('items.assetModels')}
           component={Link}
-          to="/asset-groups"
+          to="/models"
           label={tNav('items.assetModels')}
           leftSection={<IconUsersGroup size={20} />}
-          active={routeIsActive('/asset-groups')}
-          onClick={(event) => handleNavClick(event, { label: 'Asset Models', route: '/asset-groups' })}
+          active={routeIsActive('/models')}
+          onClick={(event) => handleNavClick(event, { label: 'Asset Models', route: '/models' })}
         />
 
         {kitsEnabled && (
