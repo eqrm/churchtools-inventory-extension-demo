@@ -329,6 +329,19 @@ function buildRouter() {
                                     </FeatureGate>
                                 ),
                             },
+                            // Redirects for deprecated routes
+                            {
+                                path: 'plans',
+                                element: <Navigate to={routes.maintenance.rules.list()} replace />,
+                            },
+                            {
+                                path: 'schedules',
+                                element: <Navigate to={routes.maintenance.dashboard()} replace />,
+                            },
+                            {
+                                path: 'records',
+                                element: <Navigate to={routes.maintenance.workOrders.list()} replace />,
+                            },
                         ],
                     },
                     { path: 'settings', element: withSuspense(<SettingsPage />) },

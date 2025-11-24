@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { render, screen } from '../../tests/utils/custom-render';
+import { render, screen, fireEvent, waitFor } from '../../tests/utils/custom-render';
 import { MaintenanceCompanies } from '../MaintenanceCompanies';
 import type { MaintenanceCompany } from '../../types/maintenance';
 
@@ -7,14 +7,18 @@ const mockCompany: MaintenanceCompany = {
   id: 'company-1',
   name: 'Audio Pros',
   contactPerson: 'Jane Doe',
+  contactEmail: 'jane@audiopros.com',
+  contactPhone: '123-456-7890',
   address: '123 Service Way',
   serviceLevelAgreement: 'Standard',
   hourlyRate: 120,
   contractNotes: 'Handles emergency callouts',
   createdAt: '2024-01-01T00:00:00.000Z',
-  updatedAt: '2024-01-02T00:00:00.000Z',
   createdBy: 'user-1',
   createdByName: 'User One',
+  lastModifiedAt: '2024-01-02T00:00:00.000Z',
+  lastModifiedBy: 'user-1',
+  lastModifiedByName: 'User One',
 };
 
 vi.mock('react-i18next', () => ({
@@ -30,9 +34,10 @@ vi.mock('react-i18next', () => ({
         'maintenance:fields.name': 'Name',
         'maintenance:fields.contactPerson': 'Contact',
         'maintenance:fields.address': 'Address',
+        'maintenance:fields.contactEmail': 'Email',
+        'maintenance:fields.contactPhone': 'Phone',
         'maintenance:fields.hourlyRate': 'Hourly rate',
-        'maintenance:fields.appliesTo': 'Applies to',
-        'common:columns.actions': 'Actions Column',
+        'maintenance:companies.actionsColumn': 'Actions',
         'common:loading': 'Loading',
         'common:cancel': 'Cancel',
         'common:delete': 'Delete',
@@ -56,11 +61,24 @@ vi.mock('../../components/maintenance/MaintenanceCompanyForm', () => ({
 }));
 
 describe('MaintenanceCompanies page', () => {
-  it('shows the translated actions column header', () => {
+  it('renders the company list with correct headers', () => {
     render(<MaintenanceCompanies />);
 
-    expect(
-      screen.getByRole('columnheader', { name: 'Actions Column' })
-    ).toBeInTheDocument();
+    expect(screen.getByText('Maintenance Companies')).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Actions' })).toBeInTheDocument();
+    expect(screen.getByText('Audio Pros')).toBeInTheDocument();
+    expect(screen.getByText('Jane Doe')).toBeInTheDocument();
+    expect(screen.getByText('jane@audiopros.com')).toBeInTheDocument();
+  });
+
+  it('opens the create modal when Add Company is clicked', async () => {
+    render(<MaintenanceCompanies />);
+    
+    const addButton = screen.getByRole('button', { name: 'Add Company' });
+    fireEvent.click(addButton);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('maintenance-company-form')).toBeInTheDocument();
+    });
   });
 });

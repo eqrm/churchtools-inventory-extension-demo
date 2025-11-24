@@ -11,8 +11,43 @@ vi.mock('react-i18next', () => ({
     t: (key: string) => key,
   }),
 }));
+vi.mock('@mantine/notifications');
 
 describe('WorkOrderForm', () => {
+  it('adds asset via scanner', async () => {
+    const handleSubmit = vi.fn();
+    const user = userEvent.setup();
+
+    render(
+      <MantineProvider>
+        <WorkOrderForm
+          type="internal"
+          assets={[
+            { id: 'asset-1' as UUID, name: 'Boom Lift', assetNumber: 'AS-100', barcode: '123456' },
+            { id: 'asset-2' as UUID, name: 'Stage Deck', assetNumber: 'AS-200' },
+          ]}
+          companies={[]}
+          rules={[]}
+          onSubmit={handleSubmit}
+          onCancel={vi.fn()}
+        />
+      </MantineProvider>,
+    );
+
+    const scanInput = screen.getByPlaceholderText('maintenance:placeholders.scanBarcode');
+    await user.type(scanInput, '123456{Enter}');
+
+    await user.click(screen.getByRole('button', { name: 'common:actions.create' }));
+
+    expect(handleSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        lineItems: [
+          expect.objectContaining({ assetId: 'asset-1', completionStatus: 'pending' }),
+        ],
+      }),
+    );
+  });
+
   it('submits selected assets and order type', async () => {
     const handleSubmit = vi.fn();
     const user = userEvent.setup();

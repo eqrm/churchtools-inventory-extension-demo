@@ -18,6 +18,11 @@ import { externalWorkOrderMachine } from './machines/ExternalWorkOrderMachine';
 import type { InternalWorkOrderEvent } from './machines/InternalWorkOrderMachine';
 import type { ExternalWorkOrderEvent } from './machines/ExternalWorkOrderMachine';
 import { recordUndoAction, registerUndoHandler } from './undo';
+import {
+  calculateNextDueDate,
+  computeScheduleAfterCompletion,
+  shouldCreateWorkOrder,
+} from './maintenanceScheduler';
 
 export interface MaintenanceServiceOptions {
   storageProvider: IStorageProvider;
@@ -45,8 +50,6 @@ type WorkOrderUndoState = { workOrder: WorkOrder };
  * - Integration with undo service
  */
 export class MaintenanceService {
-  private static readonly DAY_IN_MS = 24 * 60 * 60 * 1000;
-
   private readonly storageProvider: IStorageProvider;
   private readonly now: () => Date;
 
@@ -168,7 +171,7 @@ export class MaintenanceService {
     
     const startDate = new Date(data.startDate);
     const anchor = Number.isNaN(startDate.getTime()) ? this.now() : startDate;
-    const computedNextDue = this.calculateNextDueDate(data.intervalType, data.intervalValue, anchor);
+    const computedNextDue = calculateNextDueDate(data.intervalType, data.intervalValue, anchor);
     const nextDueDate = data.nextDueDate ?? computedNextDue ?? data.startDate;
     const normalizedWorkType = (data.workType ?? 'inspection') as MaintenanceWorkType;
     const normalizedCustomLabel =
@@ -522,6 +525,21 @@ export class MaintenanceService {
     return saved;
   }
 
+  async deleteWorkOrder(id: UUID): Promise<void> {
+    const existing = await this.requireWorkOrder(id);
+
+    await this.storageProvider.deleteWorkOrder(id);
+
+    await recordUndoAction({
+      entityType: 'workOrder',
+      entityId: id,
+      actionType: 'delete',
+      beforeState: { workOrder: existing } satisfies WorkOrderUndoState,
+      afterState: null,
+      metadata: { workOrderNumber: existing.workOrderNumber },
+    });
+  }
+
   private async requireWorkOrder(id: UUID): Promise<WorkOrder> {
     const workOrder = await this.getWorkOrder(id);
     if (!workOrder) {
@@ -617,100 +635,20 @@ export class MaintenanceService {
    * This should be run daily (e.g., at 00:05) as a background job.
    */
   public async autoGenerateWorkOrders(): Promise<void> {
-    const rules = await this.getRules();
+    const [rules, workOrders] = await Promise.all([this.getRules(), this.getWorkOrders()]);
     const today = new Date();
 
     for (const rule of rules) {
-      // Check if work order should be created for this rule
-      const shouldCreate = await this.shouldCreateWorkOrderForRule(rule, today);
-      
+      const shouldCreate = shouldCreateWorkOrder(rule, workOrders, today);
+
       if (shouldCreate) {
         try {
           await this.createWorkOrderFromRule(rule.id);
         } catch (error) {
           console.error(`Failed to auto-generate work order for rule ${rule.id}:`, error);
-          // Continue with other rules even if one fails
         }
       }
     }
-  }
-
-  /**
-   * Determine if a work order should be created for a rule today.
-   * Checks the rule's interval and last work order creation date.
-   */
-  private async shouldCreateWorkOrderForRule(
-    rule: MaintenanceRule,
-    today: Date
-  ): Promise<boolean> {
-    const dueIso = rule.nextDueDate ?? rule.startDate;
-    if (!dueIso) {
-      return false;
-    }
-
-    const dueDate = new Date(dueIso);
-    if (Number.isNaN(dueDate.getTime())) {
-      return false;
-    }
-
-    const allWorkOrders = await this.getWorkOrders();
-    const ruleWorkOrders = allWorkOrders.filter((wo) => wo.ruleId === rule.id);
-
-    const hasOpenOrder = ruleWorkOrders.some(
-      (workOrder) => !['done', 'aborted', 'obsolete'].includes(workOrder.state),
-    );
-    if (hasOpenOrder) {
-      return false;
-    }
-
-    const scheduledDate = new Date(dueDate);
-    scheduledDate.setDate(scheduledDate.getDate() - rule.leadTimeDays);
-
-    return today >= scheduledDate;
-  }
-
-  private calculateNextDueDate(
-    intervalType: MaintenanceRule['intervalType'],
-    intervalValue: number,
-    anchor: Date,
-  ): ISODate | null {
-    if (intervalType !== 'months') {
-      return null;
-    }
-
-    const dueDate = new Date(anchor);
-    if (Number.isNaN(dueDate.getTime())) {
-      return null;
-    }
-
-    dueDate.setMonth(dueDate.getMonth() + intervalValue);
-    if (Number.isNaN(dueDate.getTime())) {
-      return null;
-    }
-
-    return dueDate.toISOString().split('T')[0] as ISODate;
-  }
-
-  private addDays(date: Date, days: number): Date {
-    const result = new Date(date);
-    result.setDate(result.getDate() + days);
-    return result;
-  }
-
-  private toISODate(date: Date): ISODate {
-    return date.toISOString().split('T')[0] as ISODate;
-  }
-
-  private parseIsoDate(value?: string): Date | null {
-    if (!value) {
-      return null;
-    }
-    const parsed = new Date(value);
-    return Number.isNaN(parsed.getTime()) ? null : parsed;
-  }
-
-  private getRescheduleMode(rule: MaintenanceRule): MaintenanceRescheduleMode {
-    return (rule.rescheduleMode ?? 'actual-completion') as MaintenanceRescheduleMode;
   }
 
   private async updateRuleScheduleFromCompletion(ruleId: UUID, completionIso: string): Promise<void> {
@@ -718,49 +656,16 @@ export class MaintenanceService {
     if (!rule) {
       return;
     }
-
-    const completionDate = new Date(completionIso);
-    if (Number.isNaN(completionDate.getTime())) {
-      return;
-    }
-
-    const baseNextDue = this.calculateNextDueDate(
-      rule.intervalType,
-      rule.intervalValue,
-      completionDate,
-    );
-    if (!baseNextDue) {
-      return;
-    }
-
-    const rescheduleMode = this.getRescheduleMode(rule);
-    let nextDueDate = baseNextDue;
-    const ruleUpdates: Partial<MaintenanceRule> = {};
-
-    if (rescheduleMode === 'replan-once') {
-      const scheduledDue = this.parseIsoDate(rule.nextDueDate) ?? this.parseIsoDate(rule.startDate);
-      const startDate = this.parseIsoDate(rule.startDate);
-      if (scheduledDue && startDate) {
-        const deltaDays = Math.round(
-          (completionDate.getTime() - scheduledDue.getTime()) / MaintenanceService.DAY_IN_MS,
-        );
-        if (deltaDays !== 0) {
-          const shiftedNext = this.addDays(new Date(baseNextDue), deltaDays);
-          nextDueDate = this.toISODate(shiftedNext);
-          ruleUpdates.startDate = this.toISODate(this.addDays(startDate, deltaDays));
-        }
-      }
-      ruleUpdates.rescheduleMode = 'actual-completion';
-    }
-
-    if (nextDueDate === rule.nextDueDate && !ruleUpdates.startDate && !ruleUpdates.rescheduleMode) {
+    const scheduleUpdate = computeScheduleAfterCompletion(rule, completionIso);
+    if (!scheduleUpdate) {
       return;
     }
 
     const updatedRule: MaintenanceRule = {
       ...rule,
-      ...ruleUpdates,
-      nextDueDate,
+      nextDueDate: scheduleUpdate.nextDueDate,
+      startDate: scheduleUpdate.updatedStartDate ?? rule.startDate,
+      rescheduleMode: scheduleUpdate.nextRescheduleMode ?? rule.rescheduleMode,
       updatedAt: this.timestamp(),
     };
 

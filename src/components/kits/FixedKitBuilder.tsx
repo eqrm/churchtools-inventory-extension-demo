@@ -5,14 +5,15 @@
 
 import { useMemo, useState } from 'react';
 import type { SelectItem, SelectProps } from '@mantine/core';
-import { Stack, Text, Button, Group, Select, ActionIcon, Paper, Badge, Alert } from '@mantine/core';
+import { Stack, Text, Button, Group, Select, ActionIcon, Paper, Badge, Alert, TextInput } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { IconPlus, IconTrash } from '@tabler/icons-react';
+import { IconPlus, IconTrash, IconScan } from '@tabler/icons-react';
 import { useAssets } from '../../hooks/useAssets';
 import { useTranslation } from 'react-i18next';
 import { matchesBoundAssetSearch } from '../../utils/matchesBoundAssetSearch';
 import { ASSET_STATUS_KANBAN_COLORS, ASSET_STATUS_LABELS } from '../../constants/assetStatuses';
 import type { Asset } from '../../types/entities';
+import { findAssetByScanValue } from '../../utils/scanUtils';
 
 interface BoundAsset {
   assetId: string;
@@ -55,6 +56,7 @@ export function buildSelectableKitAssets(assets: Asset[] | undefined, kitId?: st
 export function FixedKitBuilder({ value, onChange, kitId }: FixedKitBuilderProps) {
   const { data: assets } = useAssets();
   const [selectedAssetId, setSelectedAssetId] = useState<string>('');
+  const [scanValue, setScanValue] = useState('');
   const { t } = useTranslation('kits');
   const selectableAssets = useMemo(() => buildSelectableKitAssets(assets, kitId), [assets, kitId]);
   const blockedAssetCount = useMemo(() => {
@@ -84,10 +86,10 @@ export function FixedKitBuilder({ value, onChange, kitId }: FixedKitBuilderProps
       return {
         value: asset.id,
         label: `${asset.assetNumber} - ${asset.name}${statusSuffix}`,
-      assetNumber: asset.assetNumber,
-      assetName: asset.name,
-      assetDescription: asset.description ?? '',
-      assetLocation: asset.location ?? '',
+        assetNumber: asset.assetNumber,
+        assetName: asset.name,
+        assetDescription: asset.description ?? '',
+        assetLocation: asset.location ?? '',
       } satisfies AssetSelectOption;
     });
   }, [selectableAssets]);
@@ -122,6 +124,66 @@ export function FixedKitBuilder({ value, onChange, kitId }: FixedKitBuilderProps
         status: status ?? t('form.fixed.assetStatusUnknown'),
       }),
     });
+  };
+
+  const handleScan = () => {
+    if (!scanValue.trim()) return;
+    
+    // Use all assets for lookup, but check selectability later
+    const found = findAssetByScanValue(assets || [], scanValue);
+    
+    if (found) {
+      // Check if selectable (not deleted, not kit, not in another kit)
+      const isSelectable = selectableAssets.some(a => a.id === found.id);
+      
+      if (!isSelectable) {
+        // Provide specific feedback why it's not selectable
+        if (found.status === 'deleted') {
+          notifications.show({ color: 'red', message: 'Asset is deleted.' });
+        } else if (found.isKit) {
+          notifications.show({ color: 'red', message: 'Cannot add a kit to a kit.' });
+        } else if (found.kitId && found.kitId !== kitId) {
+          notifications.show({ color: 'red', message: 'Asset belongs to another kit.' });
+        }
+        setScanValue('');
+        return;
+      }
+
+      // Check if already added
+      if (value.some((ba) => ba.assetId === found.id)) {
+        notifications.show({
+          color: 'yellow',
+          message: t('form.fixed.scanAlreadyAdded', { name: found.name }),
+        });
+        setScanValue('');
+        return;
+      }
+
+      // Check status
+      if (found.status !== 'available') {
+         notifyAssetStatus(found.assetNumber, found.status);
+      }
+
+      // Add directly
+      onChange([
+        ...value,
+        {
+          assetId: found.id,
+          assetNumber: found.assetNumber,
+          name: found.name,
+        },
+      ]);
+      notifications.show({
+        color: 'green',
+        message: t('form.fixed.scanSuccess', { name: found.name }),
+      });
+      setScanValue('');
+    } else {
+      notifications.show({
+        color: 'red',
+        message: t('form.fixed.scanNotFound', { value: scanValue }),
+      });
+    }
   };
 
   const assetSelectFilter = useMemo<NonNullable<SelectProps['filter']>>(
@@ -256,7 +318,7 @@ export function FixedKitBuilder({ value, onChange, kitId }: FixedKitBuilderProps
         </Alert>
       )}
 
-      <Group>
+      <Group align="flex-end">
         <Select
           placeholder={t('form.fixed.selectPlaceholder')}
           data={assetOptions}
@@ -265,6 +327,23 @@ export function FixedKitBuilder({ value, onChange, kitId }: FixedKitBuilderProps
           searchable
           filter={assetSelectFilter}
           style={{ flex: 1 }}
+        />
+        <TextInput
+          placeholder={t('form.fixed.scanPlaceholder')}
+          value={scanValue}
+          onChange={(e) => setScanValue(e.currentTarget.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              handleScan();
+            }
+          }}
+          rightSection={
+            <ActionIcon variant="subtle" onClick={handleScan} disabled={!scanValue}>
+              <IconScan size={16} />
+            </ActionIcon>
+          }
+          style={{ width: 200 }}
         />
         <Button
           leftSection={<IconPlus size={16} />}

@@ -145,7 +145,20 @@
     "deleteConfirm": "Are you sure you want to delete this rule?",
     "conflicts": "Rule Conflicts",
     "conflictWarning": "This rule conflicts with existing rules",
-    "viewConflicts": "View Conflicts"
+    "viewConflicts": "View Conflicts",
+    "testRuleButton": "Test rule",
+    "testRuleHelper": "Preview the upcoming schedule before saving the rule.",
+    "testRuleModalTitle": "Test maintenance rule",
+    "testRuleDescription": "Run a dry-run forecast to verify interval and lead time settings.",
+    "previewOccurrencesLabel": "Occurrences",
+    "previewAnchorLabel": "Assume today's date",
+    "previewStartOverrideLabel": "Override next due date",
+    "previewStartOverrideHelp": "Optional: choose a different date to start the preview.",
+    "previewEmptyState": "No preview could be generated with the current settings.",
+    "previewLeadTimeLabel": "Lead time window begins {{date}}",
+    "previewPastBadge": "Past",
+    "previewUpcomingBadge": "Upcoming",
+    "testRuleFallbackName": "Untitled rule"
   },
   "workOrders": {
     "title": "Work Orders",
@@ -381,7 +394,8 @@
     "actualEnd": "Select actual end date",
     "maintenanceRule": "Select maintenance rule (optional)",
     "scheduledEnd": "Select scheduled end date",
-    "approvalResponsible": "Select person responsible for approval"
+    "approvalResponsible": "Select person responsible for approval",
+    "scanBarcode": "Scan barcode or asset number"
   },
   "scheduleForm": {
     "types": {
@@ -429,11 +443,7 @@
       "timestamp": "Timestamp",
       "notes": "Notes"
     },
-    "actions": {
-      "logCompletion": "Log completion",
-      "markPending": "Mark pending",
-      "skipAsset": "Skip asset"
-    },
+
     "drawer": {
       "title": "Log maintenance outcome"
     },
@@ -659,7 +669,10 @@
     "offerRequested": "Offer requested successfully",
     "offerAccepted": "Offer accepted successfully",
     "recordCreated": "Maintenance recorded successfully",
-    "recordCreatedDescription": "The maintenance record was saved."
+    "recordCreatedDescription": "The maintenance record was saved.",
+    "assetAlreadySelected": "{{name}} is already selected",
+    "assetAdded": "Added {{name}}",
+    "assetNotFound": "No asset found for \"{{value}}\""
   },
   "errors": {
     "companyCreateFailed": "Failed to create company",

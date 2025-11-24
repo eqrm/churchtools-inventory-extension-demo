@@ -148,7 +148,11 @@
       "nonAvailableWarningItem": "{{assetNumber}} is {{status}}. The kit defaults will reapply when you save.",
       "nonAvailableWarningFootnote": "Only continue if you intend to sync the kit's status/location back to these assets.",
       "kitAssignmentHint": "{{count}} asset is hidden because it belongs to another kit. Remove it there first to reuse.",
-      "kitAssignmentHint_plural": "{{count}} assets are hidden because they belong to other kits. Remove them first to reuse."
+      "kitAssignmentHint_plural": "{{count}} assets are hidden because they belong to other kits. Remove them first to reuse.",
+      "scanPlaceholder": "Scan barcode or asset number",
+      "scanAlreadyAdded": "{{name}} is already in the list.",
+      "scanSuccess": "Added {{name}}",
+      "scanNotFound": "No asset found for \"{{value}}\""
     },
     "actions": {
       "addPool": "Add requirement",

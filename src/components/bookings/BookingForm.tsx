@@ -12,9 +12,8 @@ import { useState, useEffect, useMemo } from 'react'
 import { useForm } from '@mantine/form'
 import { Stack, TextInput, Textarea, Select, Button, Group, Text, SegmentedControl, NumberInput, Badge } from '@mantine/core'
 import { TimeInput } from '@mantine/dates'
-// date fields use DateField popovers
 import { notifications } from '@mantine/notifications'
-import { IconClock } from '@tabler/icons-react'
+import { IconClock, IconBarcode } from '@tabler/icons-react'
 import DateField from '../common/DateField'
 import { useAssets } from '../../hooks/useAssets'
 import { useKits } from '../../hooks/useKits'
@@ -24,6 +23,7 @@ import { PersonPicker } from '../common/PersonPicker'
 import { PersonAvatar } from '../common/PersonAvatar'
 import { BookingConflictService } from '../../services/booking/BookingConflictService'
 import { bookingStrings } from '../../i18n/bookingStrings'
+import { findAssetByScanValue } from '../../utils/scanUtils'
 import type { Booking, BookingCreate } from '../../types/entities'
 import type { PersonSearchResult } from '../../services/person/PersonSearchService'
 import { allocateBookingQuantity } from '../../services/bookings/quantityAllocator'
@@ -62,6 +62,46 @@ export function BookingForm({ booking, kitId, onSuccess, onCancel }: BookingForm
       type: 'person'
     } : null
   )
+
+  const [scanInput, setScanInput] = useState('')
+
+  const handleScan = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      const value = scanInput.trim()
+      if (!value) return
+
+      // Use filteredAssets to ensure we only select available assets
+      const asset = findAssetByScanValue(filteredAssets, value)
+      
+      if (asset) {
+        form.setFieldValue('asset', { id: asset.id, assetNumber: asset.assetNumber, name: asset.name })
+        form.setFieldValue('allocatedChildAssets', undefined)
+        notifications.show({
+          title: 'Asset Found',
+          message: `Selected ${asset.name}`,
+          color: 'green'
+        })
+        setScanInput('')
+      } else {
+        // Check if it exists in all assets but was filtered out
+        const rawAsset = findAssetByScanValue(assets || [], value)
+        if (rawAsset) {
+           notifications.show({
+            title: 'Asset Unavailable',
+            message: `Asset "${rawAsset.name}" is not available for the selected dates or is not bookable.`,
+            color: 'red'
+          })
+        } else {
+          notifications.show({
+            title: 'Asset Not Found',
+            message: `No asset found for "${value}"`,
+            color: 'red'
+          })
+        }
+      }
+    }
+  }
 
   const form = useForm<BookingCreate>({
     initialValues: booking ? {
@@ -541,6 +581,15 @@ export function BookingForm({ booking, kitId, onSuccess, onCancel }: BookingForm
         {/* T075-T076: Asset/Kit pickers - now show filtered available assets */}
         {!kitId && (
           <>
+            <TextInput
+              label="Scan Asset"
+              placeholder="Scan barcode or asset number"
+              leftSection={<IconBarcode size={16} />}
+              value={scanInput}
+              onChange={(e) => setScanInput(e.currentTarget.value)}
+              onKeyDown={handleScan}
+              mb="xs"
+            />
             <Select
               label="Asset (optional)"
               placeholder={getAssetPlaceholder()}

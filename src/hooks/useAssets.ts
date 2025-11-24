@@ -1,11 +1,13 @@
 import { useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { useStorageProvider } from './useStorageProvider';
 import type { Asset, AssetCreate, AssetUpdate, AssetFilters } from '../types/entities';
 import { useKitAssets } from './useKitAssets';
 import { useKitServiceInstance } from './useKits';
 import { resolveAssetById } from '../utils/assetResolution';
 import { isKitAssetId } from '../utils/kitAssets';
+import { useUndoStore } from '../state/undoStore';
 
 function normalizeAssetUpdate(update: AssetUpdate): Partial<Asset> {
   const {
@@ -158,6 +160,7 @@ export function useAssetByNumber(assetNumber: string | undefined) {
 export function useCreateAsset() {
   const queryClient = useQueryClient();
   const provider = useStorageProvider();
+  const { t } = useTranslation();
 
   return useMutation({
     mutationFn: async (data: AssetCreate) => {
@@ -196,7 +199,7 @@ export function useCreateAsset() {
         queryClient.setQueryData(assetKeys.lists(), context.previousAssets);
       }
     },
-    onSuccess: (newAsset) => {
+    onSuccess: (newAsset, variables) => {
       // Invalidate all asset lists
       void queryClient.invalidateQueries({ queryKey: assetKeys.lists() });
       
@@ -206,6 +209,24 @@ export function useCreateAsset() {
       
       // Invalidate change history for new asset (T262 - E3)
       void queryClient.invalidateQueries({ queryKey: ['changeHistory', 'asset', newAsset.id] });
+
+      // Undo support
+      let currentId = newAsset.id;
+      useUndoStore.getState().push({
+        label: t('undo.createAsset', { name: newAsset.name }),
+        undo: async () => {
+          if (!provider) return;
+          await provider.deleteAsset(currentId);
+          queryClient.removeQueries({ queryKey: assetKeys.detail(currentId) });
+          void queryClient.invalidateQueries({ queryKey: assetKeys.lists() });
+        },
+        redo: async () => {
+          if (!provider) return;
+          const reCreatedAsset = await provider.createAsset(variables);
+          currentId = reCreatedAsset.id;
+          void queryClient.invalidateQueries({ queryKey: assetKeys.lists() });
+        }
+      });
     },
   });
 }
@@ -241,6 +262,7 @@ export function useCreateMultiAsset() {
 export function useUpdateAsset() {
   const queryClient = useQueryClient();
   const provider = useStorageProvider();
+  const { t } = useTranslation();
 
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: AssetUpdate }) => {
@@ -272,7 +294,7 @@ export function useUpdateAsset() {
         queryClient.setQueryData(assetKeys.detail(id), context.previousAsset);
       }
     },
-    onSuccess: (updatedAsset) => {
+    onSuccess: (updatedAsset, variables, context) => {
       // Update caches with setQueryData to avoid refetches
       queryClient.setQueryData(assetKeys.detail(updatedAsset.id), updatedAsset);
       queryClient.setQueryData(assetKeys.byNumber(updatedAsset.assetNumber), updatedAsset);
@@ -293,6 +315,27 @@ export function useUpdateAsset() {
       setTimeout(() => {
         void queryClient.invalidateQueries({ queryKey: ['changeHistory', 'asset', updatedAsset.id] });
       }, 100);
+
+      // Undo support
+      if (context?.previousAsset) {
+        const previousAsset = context.previousAsset;
+        useUndoStore.getState().push({
+          label: t('undo.updateAsset', { name: updatedAsset.name }),
+          undo: async () => {
+            if (!provider) return;
+            // Best effort restore using updateAsset
+            await provider.updateAsset(updatedAsset.id, previousAsset as unknown as AssetUpdate);
+            queryClient.setQueryData(assetKeys.detail(updatedAsset.id), previousAsset);
+            void queryClient.invalidateQueries({ queryKey: assetKeys.lists() });
+          },
+          redo: async () => {
+            if (!provider) return;
+            await provider.updateAsset(updatedAsset.id, variables.data);
+            queryClient.setQueryData(assetKeys.detail(updatedAsset.id), updatedAsset);
+            void queryClient.invalidateQueries({ queryKey: assetKeys.lists() });
+          }
+        });
+      }
     },
   });
 }
@@ -303,6 +346,7 @@ export function useUpdateAsset() {
 export function useDeleteAsset() {
   const queryClient = useQueryClient();
   const provider = useStorageProvider();
+  const { t } = useTranslation();
 
   return useMutation({
     mutationFn: async (id: string) => {
@@ -310,10 +354,41 @@ export function useDeleteAsset() {
       await provider.deleteAsset(id);
       return id;
     },
-    onSuccess: (deletedId) => {
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: assetKeys.detail(id) });
+      const previousAsset = queryClient.getQueryData<Asset>(assetKeys.detail(id));
+      return { previousAsset };
+    },
+    onSuccess: (deletedId, _variables, context) => {
       // Remove from all caches
       queryClient.removeQueries({ queryKey: assetKeys.detail(deletedId) });
       void queryClient.invalidateQueries({ queryKey: assetKeys.lists() });
+
+      // Undo support
+      if (context?.previousAsset) {
+        const previousAsset = context.previousAsset;
+        let restoredId: string | null = null;
+
+        useUndoStore.getState().push({
+          label: t('undo.deleteAsset', { name: previousAsset.name }),
+          undo: async () => {
+            if (!provider) return;
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const { id, ...assetData } = previousAsset;
+            const newAsset = await provider.createAsset(assetData as unknown as AssetCreate);
+            restoredId = newAsset.id;
+            void queryClient.invalidateQueries({ queryKey: assetKeys.lists() });
+          },
+          redo: async () => {
+            if (!provider) return;
+            if (restoredId) {
+              await provider.deleteAsset(restoredId);
+              restoredId = null;
+            }
+            void queryClient.invalidateQueries({ queryKey: assetKeys.lists() });
+          }
+        });
+      }
     },
   });
 }

@@ -7,10 +7,12 @@
 
 import { useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { useStorageProvider } from './useStorageProvider';
-import type { Asset, KitCreate, KitUpdate } from '../types/entities';
+import type { Asset, Kit, KitCreate, KitUpdate } from '../types/entities';
 import { KitService } from '../services/KitService';
 import { useKitStore } from '../stores/kitStore';
+import { useUndoStore } from '../state/undoStore';
 
 /**
  * Query key factory for kits
@@ -154,6 +156,9 @@ export function useCreateKit() {
   const kitService = useKitServiceInternal();
   const queryClient = useQueryClient();
   const upsertKit = useKitStore((state) => state.upsertKit);
+  const removeKit = useKitStore((state) => state.removeKit);
+  const { t } = useTranslation();
+  const { push } = useUndoStore();
 
   return useMutation({
     mutationFn: (data: KitCreate) => {
@@ -162,10 +167,28 @@ export function useCreateKit() {
       }
       return kitService.createKit(data);
     },
-    onSuccess: (newKit) => {
+    onSuccess: (newKit, variables) => {
       upsertKit(newKit);
       queryClient.setQueryData(kitKeys.detail(newKit.id), newKit);
       void queryClient.invalidateQueries({ queryKey: kitKeys.lists() });
+
+      push({
+        label: t('undo.createKit', { name: newKit.name }),
+        undo: async () => {
+          if (!kitService) return;
+          await kitService.deleteKit(newKit.id);
+          removeKit(newKit.id);
+          queryClient.removeQueries({ queryKey: kitKeys.detail(newKit.id) });
+          void queryClient.invalidateQueries({ queryKey: kitKeys.lists() });
+        },
+        redo: async () => {
+          if (!kitService) return;
+          const recreated = await kitService.createKit(variables);
+          upsertKit(recreated);
+          queryClient.setQueryData(kitKeys.detail(recreated.id), recreated);
+          void queryClient.invalidateQueries({ queryKey: kitKeys.lists() });
+        },
+      });
     },
   });
 }
@@ -179,6 +202,8 @@ export function useUpdateKit() {
   const kitService = useKitServiceInternal();
   const queryClient = useQueryClient();
   const upsertKit = useKitStore((state) => state.upsertKit);
+  const { t } = useTranslation();
+  const { push } = useUndoStore();
 
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: KitUpdate }) => {
@@ -187,10 +212,50 @@ export function useUpdateKit() {
       }
       return kitService.updateKit(id, data);
     },
-    onSuccess: (updatedKit) => {
+    onMutate: async ({ id }) => {
+      await queryClient.cancelQueries({ queryKey: kitKeys.detail(id) });
+      const previousKit = queryClient.getQueryData<Kit>(kitKeys.detail(id));
+      return { previousKit };
+    },
+    onSuccess: (updatedKit, variables, context) => {
       upsertKit(updatedKit);
       queryClient.setQueryData(kitKeys.detail(updatedKit.id), updatedKit);
       void queryClient.invalidateQueries({ queryKey: kitKeys.lists() });
+
+      if (context?.previousKit) {
+        const { previousKit } = context;
+        push({
+          label: t('undo.updateKit', { name: updatedKit.name }),
+          undo: async () => {
+            if (!kitService) return;
+            const restoreUpdate: KitUpdate = {
+              name: previousKit.name,
+              description: previousKit.description,
+              type: previousKit.type,
+              location: previousKit.location,
+              status: previousKit.status,
+              tags: previousKit.tags,
+              inheritedProperties: previousKit.inheritedProperties,
+              completenessStatus: previousKit.completenessStatus,
+              assemblyDate: previousKit.assemblyDate,
+              disassemblyDate: previousKit.disassemblyDate,
+              boundAssets: previousKit.boundAssets,
+              poolRequirements: previousKit.poolRequirements,
+            };
+            const restored = await kitService.updateKit(previousKit.id, restoreUpdate);
+            upsertKit(restored);
+            queryClient.setQueryData(kitKeys.detail(restored.id), restored);
+            void queryClient.invalidateQueries({ queryKey: kitKeys.lists() });
+          },
+          redo: async () => {
+            if (!kitService) return;
+            const reUpdated = await kitService.updateKit(variables.id, variables.data);
+            upsertKit(reUpdated);
+            queryClient.setQueryData(kitKeys.detail(reUpdated.id), reUpdated);
+            void queryClient.invalidateQueries({ queryKey: kitKeys.lists() });
+          },
+        });
+      }
     },
   });
 }
@@ -204,6 +269,9 @@ export function useDeleteKit() {
   const kitService = useKitServiceInternal();
   const queryClient = useQueryClient();
   const removeKit = useKitStore((state) => state.removeKit);
+  const upsertKit = useKitStore((state) => state.upsertKit);
+  const { t } = useTranslation();
+  const { push } = useUndoStore();
 
   return useMutation({
     mutationFn: (id: string) => {
@@ -212,10 +280,55 @@ export function useDeleteKit() {
       }
       return kitService.deleteKit(id);
     },
-    onSuccess: (_, id) => {
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: kitKeys.detail(id) });
+      const previousKit = queryClient.getQueryData<Kit>(kitKeys.detail(id));
+      return { previousKit };
+    },
+    onSuccess: (_, id, context) => {
       removeKit(id);
       queryClient.removeQueries({ queryKey: kitKeys.detail(id) });
       void queryClient.invalidateQueries({ queryKey: kitKeys.lists() });
+
+      if (context?.previousKit) {
+        const { previousKit } = context;
+        let restoredId: string | null = null;
+
+        push({
+          label: t('undo.deleteKit', { name: previousKit.name }),
+          undo: async () => {
+            if (!kitService) return;
+            const createData: KitCreate = {
+              name: previousKit.name,
+              description: previousKit.description,
+              type: previousKit.type,
+              location: previousKit.location,
+              status: previousKit.status,
+              tags: previousKit.tags,
+              inheritedProperties: previousKit.inheritedProperties,
+              completenessStatus: previousKit.completenessStatus,
+              assemblyDate: previousKit.assemblyDate,
+              disassemblyDate: previousKit.disassemblyDate,
+              boundAssets: previousKit.boundAssets,
+              poolRequirements: previousKit.poolRequirements,
+            };
+            const restored = await kitService.createKit(createData);
+            restoredId = restored.id;
+            upsertKit(restored);
+            queryClient.setQueryData(kitKeys.detail(restored.id), restored);
+            void queryClient.invalidateQueries({ queryKey: kitKeys.lists() });
+          },
+          redo: async () => {
+            if (!kitService) return;
+            const idToDelete = restoredId || id;
+            await kitService.deleteKit(idToDelete);
+            removeKit(idToDelete);
+            queryClient.removeQueries({ queryKey: kitKeys.detail(idToDelete) });
+            void queryClient.invalidateQueries({ queryKey: kitKeys.lists() });
+            restoredId = null;
+          },
+        });
+      }
     },
   });
 }
@@ -224,6 +337,8 @@ export function useDisassembleKit() {
   const kitService = useKitServiceInternal();
   const queryClient = useQueryClient();
   const upsertKit = useKitStore((state) => state.upsertKit);
+  const { t } = useTranslation();
+  const { push } = useUndoStore();
 
   return useMutation({
     mutationFn: (id: string) => {
@@ -232,10 +347,40 @@ export function useDisassembleKit() {
       }
       return kitService.disassembleKit(id);
     },
-    onSuccess: (kit) => {
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: kitKeys.detail(id) });
+      const previousKit = queryClient.getQueryData<Kit>(kitKeys.detail(id));
+      return { previousKit };
+    },
+    onSuccess: (kit, id, context) => {
       upsertKit(kit);
       queryClient.setQueryData(kitKeys.detail(kit.id), kit);
       void queryClient.invalidateQueries({ queryKey: kitKeys.lists() });
+
+      if (context?.previousKit) {
+        const { previousKit } = context;
+        push({
+          label: t('undo.disassembleKit', { name: kit.name }),
+          undo: async () => {
+            if (!kitService) return;
+            const assembleData = {
+              boundAssets: previousKit.boundAssets,
+              inheritedProperties: previousKit.inheritedProperties,
+            };
+            const reassembled = await kitService.assembleKit(id, assembleData);
+            upsertKit(reassembled);
+            queryClient.setQueryData(kitKeys.detail(reassembled.id), reassembled);
+            void queryClient.invalidateQueries({ queryKey: kitKeys.lists() });
+          },
+          redo: async () => {
+            if (!kitService) return;
+            const disassembled = await kitService.disassembleKit(id);
+            upsertKit(disassembled);
+            queryClient.setQueryData(kitKeys.detail(disassembled.id), disassembled);
+            void queryClient.invalidateQueries({ queryKey: kitKeys.lists() });
+          },
+        });
+      }
     },
   });
 }

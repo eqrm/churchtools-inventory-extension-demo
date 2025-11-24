@@ -10,6 +10,7 @@
 
 import { useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { useStorageProvider } from './useStorageProvider';
 import type {
     MaintenanceRecord,
@@ -26,6 +27,7 @@ import type { InternalWorkOrderEvent } from '../services/machines/InternalWorkOr
 import type { ExternalWorkOrderEvent } from '../services/machines/ExternalWorkOrderMachine';
 import { MaintenanceService } from '../services/MaintenanceService';
 import { useMaintenanceStore } from '../stores/maintenanceStore';
+import { useUndoStore } from '../state/undoStore';
 
 /**
  * Query key factory for maintenance operations
@@ -481,6 +483,9 @@ export function useCreateMaintenanceRule() {
   const service = useMaintenanceServiceInternal();
   const queryClient = useQueryClient();
   const upsertRule = useMaintenanceStore((state) => state.upsertRule);
+  const removeRule = useMaintenanceStore((state) => state.removeRule);
+  const { t } = useTranslation();
+  const { push } = useUndoStore();
 
   return useMutation({
     mutationFn: (data: Omit<MaintenanceRule, 'id' | 'createdAt' | 'updatedAt'>) => {
@@ -489,11 +494,29 @@ export function useCreateMaintenanceRule() {
       }
       return service.createRule(data);
     },
-    onSuccess: (newRule) => {
+    onSuccess: (newRule, variables) => {
       upsertRule(newRule);
       queryClient.setQueryData(maintenanceKeys.rule(newRule.id), newRule);
       void queryClient.invalidateQueries({ queryKey: maintenanceKeys.rules() });
       void queryClient.invalidateQueries({ queryKey: maintenanceKeys.ruleConflicts() });
+
+      push({
+        label: t('undo.createMaintenanceRule', { name: newRule.name }),
+        undo: async () => {
+          if (!service) return;
+          await service.deleteRule(newRule.id);
+          removeRule(newRule.id);
+          queryClient.removeQueries({ queryKey: maintenanceKeys.rule(newRule.id) });
+          void queryClient.invalidateQueries({ queryKey: maintenanceKeys.rules() });
+        },
+        redo: async () => {
+          if (!service) return;
+          const recreated = await service.createRule(variables);
+          upsertRule(recreated);
+          queryClient.setQueryData(maintenanceKeys.rule(recreated.id), recreated);
+          void queryClient.invalidateQueries({ queryKey: maintenanceKeys.rules() });
+        },
+      });
     },
   });
 }
@@ -505,6 +528,8 @@ export function useUpdateMaintenanceRule() {
   const service = useMaintenanceServiceInternal();
   const queryClient = useQueryClient();
   const upsertRule = useMaintenanceStore((state) => state.upsertRule);
+  const { t } = useTranslation();
+  const { push } = useUndoStore();
 
   return useMutation({
     mutationFn: ({
@@ -519,11 +544,38 @@ export function useUpdateMaintenanceRule() {
       }
       return service.updateRule(id, data);
     },
-    onSuccess: (updatedRule) => {
+    onMutate: async ({ id }) => {
+      await queryClient.cancelQueries({ queryKey: maintenanceKeys.rule(id) });
+      const previousRule = queryClient.getQueryData<MaintenanceRule>(maintenanceKeys.rule(id));
+      return { previousRule };
+    },
+    onSuccess: (updatedRule, variables, context) => {
       upsertRule(updatedRule);
       queryClient.setQueryData(maintenanceKeys.rule(updatedRule.id), updatedRule);
       void queryClient.invalidateQueries({ queryKey: maintenanceKeys.rules() });
       void queryClient.invalidateQueries({ queryKey: maintenanceKeys.ruleConflicts() });
+
+      if (context?.previousRule) {
+        const { previousRule } = context;
+        push({
+          label: t('undo.updateMaintenanceRule', { name: updatedRule.name }),
+          undo: async () => {
+            if (!service) return;
+            const { id, createdAt, createdBy, ...rest } = previousRule;
+            const restored = await service.updateRule(id, rest);
+            upsertRule(restored);
+            queryClient.setQueryData(maintenanceKeys.rule(restored.id), restored);
+            void queryClient.invalidateQueries({ queryKey: maintenanceKeys.rules() });
+          },
+          redo: async () => {
+            if (!service) return;
+            const reUpdated = await service.updateRule(variables.id, variables.data);
+            upsertRule(reUpdated);
+            queryClient.setQueryData(maintenanceKeys.rule(reUpdated.id), reUpdated);
+            void queryClient.invalidateQueries({ queryKey: maintenanceKeys.rules() });
+          },
+        });
+      }
     },
   });
 }
@@ -535,6 +587,9 @@ export function useDeleteMaintenanceRule() {
   const service = useMaintenanceServiceInternal();
   const queryClient = useQueryClient();
   const removeRule = useMaintenanceStore((state) => state.removeRule);
+  const upsertRule = useMaintenanceStore((state) => state.upsertRule);
+  const { t } = useTranslation();
+  const { push } = useUndoStore();
 
   return useMutation({
     mutationFn: (id: UUID) => {
@@ -543,11 +598,43 @@ export function useDeleteMaintenanceRule() {
       }
       return service.deleteRule(id);
     },
-    onSuccess: (_, id) => {
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: maintenanceKeys.rule(id) });
+      const previousRule = queryClient.getQueryData<MaintenanceRule>(maintenanceKeys.rule(id));
+      return { previousRule };
+    },
+    onSuccess: (_, id, context) => {
       removeRule(id);
       queryClient.removeQueries({ queryKey: maintenanceKeys.rule(id) });
       void queryClient.invalidateQueries({ queryKey: maintenanceKeys.rules() });
       void queryClient.invalidateQueries({ queryKey: maintenanceKeys.ruleConflicts() });
+
+      if (context?.previousRule) {
+        const { previousRule } = context;
+        let restoredId: string | null = null;
+
+        push({
+          label: t('undo.deleteMaintenanceRule', { name: previousRule.name }),
+          undo: async () => {
+            if (!service) return;
+            const { id, createdAt, updatedAt, ...rest } = previousRule;
+            const restored = await service.createRule(rest);
+            restoredId = restored.id;
+            upsertRule(restored);
+            queryClient.setQueryData(maintenanceKeys.rule(restored.id), restored);
+            void queryClient.invalidateQueries({ queryKey: maintenanceKeys.rules() });
+          },
+          redo: async () => {
+            if (!service) return;
+            const idToDelete = restoredId || id;
+            await service.deleteRule(idToDelete);
+            removeRule(idToDelete);
+            queryClient.removeQueries({ queryKey: maintenanceKeys.rule(idToDelete) });
+            void queryClient.invalidateQueries({ queryKey: maintenanceKeys.rules() });
+            restoredId = null;
+          },
+        });
+      }
     },
   });
 }
@@ -608,6 +695,9 @@ export function useCreateWorkOrderFromRule() {
   const service = useMaintenanceServiceInternal();
   const queryClient = useQueryClient();
   const upsertWorkOrder = useMaintenanceStore((state) => state.upsertWorkOrder);
+  const removeWorkOrder = useMaintenanceStore((state) => state.removeWorkOrder);
+  const { t } = useTranslation();
+  const { push } = useUndoStore();
 
   return useMutation({
     mutationFn: (ruleId: UUID) => {
@@ -616,10 +706,28 @@ export function useCreateWorkOrderFromRule() {
       }
       return service.createWorkOrderFromRule(ruleId);
     },
-    onSuccess: (newWorkOrder) => {
+    onSuccess: (newWorkOrder, ruleId) => {
       upsertWorkOrder(newWorkOrder);
       queryClient.setQueryData(maintenanceKeys.workOrder(newWorkOrder.id), newWorkOrder);
       void queryClient.invalidateQueries({ queryKey: maintenanceKeys.workOrders() });
+
+      push({
+        label: t('undo.createWorkOrder', { number: newWorkOrder.workOrderNumber }),
+        undo: async () => {
+          if (!service) return;
+          await service.deleteWorkOrder(newWorkOrder.id);
+          removeWorkOrder(newWorkOrder.id);
+          queryClient.removeQueries({ queryKey: maintenanceKeys.workOrder(newWorkOrder.id) });
+          void queryClient.invalidateQueries({ queryKey: maintenanceKeys.workOrders() });
+        },
+        redo: async () => {
+          if (!service) return;
+          const recreated = await service.createWorkOrderFromRule(ruleId);
+          upsertWorkOrder(recreated);
+          queryClient.setQueryData(maintenanceKeys.workOrder(recreated.id), recreated);
+          void queryClient.invalidateQueries({ queryKey: maintenanceKeys.workOrders() });
+        },
+      });
     },
   });
 }
@@ -631,6 +739,9 @@ export function useCreateWorkOrder() {
   const service = useMaintenanceServiceInternal();
   const queryClient = useQueryClient();
   const upsertWorkOrder = useMaintenanceStore((state) => state.upsertWorkOrder);
+  const removeWorkOrder = useMaintenanceStore((state) => state.removeWorkOrder);
+  const { t } = useTranslation();
+  const { push } = useUndoStore();
 
   return useMutation({
     mutationFn: (data: Omit<WorkOrder, 'id' | 'createdAt' | 'updatedAt'>) => {
@@ -639,10 +750,86 @@ export function useCreateWorkOrder() {
       }
       return service.createWorkOrder(data);
     },
-    onSuccess: (newWorkOrder) => {
+    onSuccess: (newWorkOrder, variables) => {
       upsertWorkOrder(newWorkOrder);
       queryClient.setQueryData(maintenanceKeys.workOrder(newWorkOrder.id), newWorkOrder);
       void queryClient.invalidateQueries({ queryKey: maintenanceKeys.workOrders() });
+
+      push({
+        label: t('undo.createWorkOrder', { number: newWorkOrder.workOrderNumber }),
+        undo: async () => {
+          if (!service) return;
+          await service.deleteWorkOrder(newWorkOrder.id);
+          removeWorkOrder(newWorkOrder.id);
+          queryClient.removeQueries({ queryKey: maintenanceKeys.workOrder(newWorkOrder.id) });
+          void queryClient.invalidateQueries({ queryKey: maintenanceKeys.workOrders() });
+        },
+        redo: async () => {
+          if (!service) return;
+          const recreated = await service.createWorkOrder(variables);
+          upsertWorkOrder(recreated);
+          queryClient.setQueryData(maintenanceKeys.workOrder(recreated.id), recreated);
+          void queryClient.invalidateQueries({ queryKey: maintenanceKeys.workOrders() });
+        },
+      });
+    },
+  });
+}
+
+/**
+ * Hook to delete a work order
+ */
+export function useDeleteWorkOrder() {
+  const service = useMaintenanceServiceInternal();
+  const queryClient = useQueryClient();
+  const removeWorkOrder = useMaintenanceStore((state) => state.removeWorkOrder);
+  const upsertWorkOrder = useMaintenanceStore((state) => state.upsertWorkOrder);
+  const { t } = useTranslation();
+  const { push } = useUndoStore();
+
+  return useMutation({
+    mutationFn: (id: UUID) => {
+      if (!service) {
+        throw new Error('Maintenance service unavailable');
+      }
+      return service.deleteWorkOrder(id);
+    },
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: maintenanceKeys.workOrder(id) });
+      const previousWorkOrder = queryClient.getQueryData<WorkOrder>(maintenanceKeys.workOrder(id));
+      return { previousWorkOrder };
+    },
+    onSuccess: (_, id, context) => {
+      removeWorkOrder(id);
+      queryClient.removeQueries({ queryKey: maintenanceKeys.workOrder(id) });
+      void queryClient.invalidateQueries({ queryKey: maintenanceKeys.workOrders() });
+
+      if (context?.previousWorkOrder) {
+        const { previousWorkOrder } = context;
+        let restoredId: string | null = null;
+
+        push({
+          label: t('undo.deleteWorkOrder', { number: previousWorkOrder.workOrderNumber }),
+          undo: async () => {
+            if (!service) return;
+            const { id, createdAt, updatedAt, ...rest } = previousWorkOrder;
+            const restored = await service.createWorkOrder(rest);
+            restoredId = restored.id;
+            upsertWorkOrder(restored);
+            queryClient.setQueryData(maintenanceKeys.workOrder(restored.id), restored);
+            void queryClient.invalidateQueries({ queryKey: maintenanceKeys.workOrders() });
+          },
+          redo: async () => {
+            if (!service) return;
+            const idToDelete = restoredId || id;
+            await service.deleteWorkOrder(idToDelete);
+            removeWorkOrder(idToDelete);
+            queryClient.removeQueries({ queryKey: maintenanceKeys.workOrder(idToDelete) });
+            void queryClient.invalidateQueries({ queryKey: maintenanceKeys.workOrders() });
+            restoredId = null;
+          },
+        });
+      }
     },
   });
 }

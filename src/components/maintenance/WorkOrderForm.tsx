@@ -4,7 +4,7 @@
  * Form for creating work orders (from rule or manually) with line items.
  */
 
-import { useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useForm } from '@mantine/form';
 import {
   Button,
@@ -17,10 +17,14 @@ import {
   Tabs,
   MultiSelect,
   SegmentedControl,
+  TextInput,
 } from '@mantine/core';
 import { DateInput } from '@mantine/dates';
+import { IconBarcode } from '@tabler/icons-react';
+import { notifications } from '@mantine/notifications';
 import { useTranslation } from 'react-i18next';
 import { AssetScheduleTable } from './AssetScheduleTable';
+import { findAssetByScanValue } from '../../utils/scanUtils';
 import type {
   WorkOrder,
   WorkOrderLineItem,
@@ -34,7 +38,7 @@ interface WorkOrderFormProps {
   workOrder?: WorkOrder;
   type: WorkOrderType;
   companies?: Array<{ id: UUID; name: string }>;
-  assets: Array<{ id: UUID; name: string; assetNumber: string }>;
+  assets: Array<{ id: UUID; name: string; assetNumber: string; barcode?: string }>;
   rules?: Array<{ id: UUID; name: string }>;
   defaultLineItems?: WorkOrderLineItem[];
   onSubmit: (data: Omit<WorkOrder, 'id' | 'createdAt' | 'updatedAt' | 'createdBy' | 'createdByName' | 'workOrderNumber' | 'history'>) => void;
@@ -54,6 +58,8 @@ export function WorkOrderForm({
   isLoading = false,
 }: WorkOrderFormProps) {
   const { t } = useTranslation(['maintenance', 'common']);
+  const [scanInput, setScanInput] = useState('');
+
   const assetOptions = useMemo(
     () =>
       assets.map((asset) => ({
@@ -151,6 +157,47 @@ export function WorkOrderForm({
     form.setFieldValue('lineItems', nextItems);
   };
 
+  const handleAssetScan = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const value = scanInput.trim();
+      if (!value) return;
+
+      const asset = findAssetByScanValue(assets, value);
+      if (asset) {
+        const isAlreadySelected = form.values.lineItems.some(
+          (item) => item.assetId === asset.id
+        );
+
+        if (isAlreadySelected) {
+          notifications.show({
+            title: t('maintenance:messages.assetAlreadySelected', { name: asset.name }),
+            message: '',
+            color: 'yellow',
+          });
+        } else {
+          const newItem: WorkOrderLineItem = {
+            assetId: asset.id,
+            completionStatus: 'pending',
+          };
+          form.setFieldValue('lineItems', [...form.values.lineItems, newItem]);
+          notifications.show({
+            title: t('maintenance:messages.assetAdded', { name: asset.name }),
+            message: '',
+            color: 'green',
+          });
+        }
+        setScanInput('');
+      } else {
+        notifications.show({
+          title: t('maintenance:messages.assetNotFound', { value }),
+          message: '',
+          color: 'red',
+        });
+      }
+    }
+  };
+
   const selectedAssetIds = form.values.lineItems.map((item) => item.assetId);
 
   return (
@@ -237,6 +284,16 @@ export function WorkOrderForm({
               : t('maintenance:targetPicker.noMatches')
           }
           description={t('maintenance:descriptions.lineItems')}
+        />
+
+        <TextInput
+          label={t('maintenance:placeholders.scanBarcode')}
+          placeholder={t('maintenance:placeholders.scanBarcode')}
+          leftSection={<IconBarcode size={16} />}
+          value={scanInput}
+          onChange={(e) => setScanInput(e.currentTarget.value)}
+          onKeyDown={handleAssetScan}
+          mb="sm"
         />
 
         <Box>

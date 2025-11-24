@@ -64,6 +64,28 @@ describe('MaintenanceRuleForm', () => {
     expect(selectedModelLabels.length).toBeGreaterThan(0);
   });
 
+  it('opens the test rule modal and renders preview items', async () => {
+    const user = userEvent.setup();
+    render(
+      <MantineProvider>
+        <MaintenanceRuleForm
+          rule={baseRule}
+          companies={[]}
+          assets={[{ id: 'asset-1' as UUID, name: 'Stage Light' }]}
+          kits={[]}
+          models={[]}
+          tags={[]}
+          onSubmit={vi.fn()}
+          onCancel={vi.fn()}
+        />
+      </MantineProvider>,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'maintenance:rules.testRuleButton' }));
+
+    expect(await screen.findByText('2025-04-01')).toBeInTheDocument();
+  });
+
   it('requires custom work type label and submits full payload', async () => {
     const handleSubmit = vi.fn();
     const user = userEvent.setup();

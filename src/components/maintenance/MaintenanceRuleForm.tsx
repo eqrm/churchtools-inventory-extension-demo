@@ -4,7 +4,7 @@
  * Form for creating and editing maintenance rules with target selector.
  */
 
-import { useMemo, useState } from 'react';
+import { Fragment, useMemo, useState } from 'react';
 import { useForm } from '@mantine/form';
 import {
   TextInput,
@@ -27,9 +27,10 @@ import type {
   MaintenanceWorkType,
   MaintenanceRescheduleMode,
 } from '../../types/maintenance';
-import type { UUID } from '../../types/entities';
+import type { ISODate, ISOTimestamp, UUID } from '../../types/entities';
 import { MAINTENANCE_WORK_TYPES } from '../../constants/maintenanceWorkTypes';
 import { bindMultiSelectField, bindSelectField } from '../../utils/selectControl';
+import { MaintenanceRuleTestModal } from './MaintenanceRuleTestModal';
 
 interface MaintenanceRuleFormProps {
   rule?: MaintenanceRule;
@@ -59,6 +60,8 @@ export function MaintenanceRuleForm({
   const [targetType, setTargetType] = useState<MaintenanceTargetType>(
     rule?.targets?.[0]?.type || 'asset'
   );
+  const [isTestModalOpen, setIsTestModalOpen] = useState(false);
+  const [testRuleDraft, setTestRuleDraft] = useState<MaintenanceRule | null>(null);
 
   const workTypeOptions = useMemo(
     () =>
@@ -164,8 +167,65 @@ export function MaintenanceRuleForm({
   const currentTargetOptions = targetOptions[targetType] ?? [];
   const noTargetsAvailable = currentTargetOptions.length === 0;
 
+  const buildTestRulePayload = (): MaintenanceRule | null => {
+    const startDateValue = form.values.startDate;
+    if (!startDateValue) {
+      return null;
+    }
+
+    const startIso = startDateValue.toISOString().split('T')[0] as ISODate;
+    const fallbackTimestamp = new Date().toISOString() as ISOTimestamp;
+
+    return {
+      id: (rule?.id ?? 'preview-rule') as UUID,
+      name: form.values.name || t('maintenance:rules.testRuleFallbackName'),
+      workType: form.values.workType,
+      workTypeCustomLabel:
+        form.values.workType === 'custom'
+          ? form.values.workTypeCustomLabel?.trim() || undefined
+          : rule?.workTypeCustomLabel,
+      isInternal: form.values.isInternal,
+      serviceProviderId: form.values.isInternal ? undefined : form.values.serviceProviderId || undefined,
+      targets: [
+        {
+          type: targetType,
+          ids: (form.values.targetIds as UUID[]) ?? [],
+        },
+      ],
+      intervalType: form.values.intervalType,
+      intervalValue: form.values.intervalValue,
+      startDate: startIso,
+      nextDueDate: (rule?.nextDueDate as ISODate) ?? startIso,
+      leadTimeDays: form.values.leadTimeDays,
+      rescheduleMode: form.values.rescheduleMode,
+      createdBy: (rule?.createdBy ?? 'preview-user') as UUID,
+      createdByName: rule?.createdByName,
+      createdAt: (rule?.createdAt ?? fallbackTimestamp) as ISOTimestamp,
+      updatedAt: (rule?.updatedAt ?? fallbackTimestamp) as ISOTimestamp,
+    };
+  };
+
+  const handleOpenTestModal = () => {
+    const validation = form.validate();
+    if (validation.hasErrors) {
+      return;
+    }
+    const payload = buildTestRulePayload();
+    if (!payload) {
+      return;
+    }
+    setTestRuleDraft(payload);
+    setIsTestModalOpen(true);
+  };
+
+  const handleCloseTestModal = () => {
+    setIsTestModalOpen(false);
+    setTestRuleDraft(null);
+  };
+
   return (
-    <form onSubmit={form.onSubmit(handleSubmit)}>
+    <Fragment>
+      <form onSubmit={form.onSubmit(handleSubmit)}>
       <Stack gap="md">
         <TextInput
           label={t('maintenance:fields.ruleName')}
@@ -328,6 +388,15 @@ export function MaintenanceRuleForm({
           </Text>
         </Box>
 
+        <Group justify="space-between" align="flex-start" mt="sm">
+          <Text size="sm" c="dimmed" maw="70%">
+            {t('maintenance:rules.testRuleHelper')}
+          </Text>
+          <Button variant="light" type="button" onClick={handleOpenTestModal}>
+            {t('maintenance:rules.testRuleButton')}
+          </Button>
+        </Group>
+
         <Group justify="flex-end" mt="md">
           <Button variant="subtle" onClick={onCancel} disabled={isLoading}>
             {t('common:actions.cancel')}
@@ -337,6 +406,15 @@ export function MaintenanceRuleForm({
           </Button>
         </Group>
       </Stack>
-    </form>
+      </form>
+
+      {testRuleDraft && (
+        <MaintenanceRuleTestModal
+          opened={isTestModalOpen}
+          onClose={handleCloseTestModal}
+          rule={testRuleDraft}
+        />
+      )}
+    </Fragment>
   );
 }

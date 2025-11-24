@@ -50,12 +50,13 @@ export function WorkOrders() {
   const workOrderList = useMemo(() => (workOrders as WorkOrder[]) || [], [workOrders]);
   const assetsForForm = useMemo(
     () =>
-      (assets as Array<{ id: string; assetNumber: string; name?: string; status?: string }>)
+      (assets as Array<{ id: string; assetNumber: string; name?: string; status?: string; barcode?: string }>)
         .filter((asset) => asset.status !== 'deleted')
         .map((asset) => ({
           id: asset.id,
           assetNumber: asset.assetNumber,
           name: asset.name || asset.assetNumber,
+          barcode: asset.barcode,
         })),
     [assets],
   );
