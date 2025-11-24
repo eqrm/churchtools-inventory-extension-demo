@@ -1141,13 +1141,13 @@ type AssetTypeViewFilters = {
 <span class="cstat-no" title="statement not covered" >      await deleteAssetType.mutateAsync(category.id);</span>
 <span class="cstat-no" title="statement not covered" >      notifications.show({</span>
 <span class="cstat-no" title="statement not covered" >        title: 'Success',</span>
-<span class="cstat-no" title="statement not covered" >        message: `Category "${category.name}" has been deleted`,</span>
+<span class="cstat-no" title="statement not covered" >        message: `Asset type "${category.name}" has been deleted`,</span>
 <span class="cstat-no" title="statement not covered" >        color: 'green',</span>
 <span class="cstat-no" title="statement not covered" >      });</span>
 <span class="cstat-no" title="statement not covered" >    } catch (err) {</span>
 <span class="cstat-no" title="statement not covered" >      notifications.show({</span>
 <span class="cstat-no" title="statement not covered" >        title: 'Error',</span>
-<span class="cstat-no" title="statement not covered" >        message: err instanceof Error ? err.message : 'Failed to delete category',</span>
+<span class="cstat-no" title="statement not covered" >        message: err instanceof Error ? err.message : 'Failed to delete asset type',</span>
 <span class="cstat-no" title="statement not covered" >        color: 'red',</span>
 <span class="cstat-no" title="statement not covered" >      });</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
@@ -1164,13 +1164,13 @@ type AssetTypeViewFilters = {
 &nbsp;
 <span class="cstat-no" title="statement not covered" >      notifications.show({</span>
 <span class="cstat-no" title="statement not covered" >        title: 'Success',</span>
-<span class="cstat-no" title="statement not covered" >        message: `Category "${duplicated.name}" has been created`,</span>
+<span class="cstat-no" title="statement not covered" >        message: `Asset type "${duplicated.name}" has been created`,</span>
 <span class="cstat-no" title="statement not covered" >        color: 'green',</span>
 <span class="cstat-no" title="statement not covered" >      });</span>
 <span class="cstat-no" title="statement not covered" >    } catch (err) {</span>
 <span class="cstat-no" title="statement not covered" >      notifications.show({</span>
 <span class="cstat-no" title="statement not covered" >        title: 'Error',</span>
-<span class="cstat-no" title="statement not covered" >        message: err instanceof Error ? err.message : 'Failed to duplicate category',</span>
+<span class="cstat-no" title="statement not covered" >        message: err instanceof Error ? err.message : 'Failed to duplicate asset type',</span>
 <span class="cstat-no" title="statement not covered" >        color: 'red',</span>
 <span class="cstat-no" title="statement not covered" >      });</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
@@ -1193,7 +1193,7 @@ type AssetTypeViewFilters = {
 <span class="cstat-no" title="statement not covered" >      &lt;Group align="flex-end" justify="space-between" wrap="wrap"&gt;</span>
 <span class="cstat-no" title="statement not covered" >        &lt;TextInput</span>
 <span class="cstat-no" title="statement not covered" >          label="Search"</span>
-<span class="cstat-no" title="statement not covered" >          placeholder="Search categories"</span>
+<span class="cstat-no" title="statement not covered" >          placeholder="Search asset types"</span>
 <span class="cstat-no" title="statement not covered" >          leftSection={&lt;IconSearch size={16} /&gt;}</span>
 <span class="cstat-no" title="statement not covered" >          value={filters.search ?? ''}</span>
 <span class="cstat-no" title="statement not covered" >          onChange={(event) =&gt; {</span>
@@ -1220,14 +1220,14 @@ type AssetTypeViewFilters = {
 <span class="cstat-no" title="statement not covered" >  if (error) {</span>
 <span class="cstat-no" title="statement not covered" >    return (</span>
 <span class="cstat-no" title="statement not covered" >      &lt;Card withBorder&gt;</span>
-<span class="cstat-no" title="statement not covered" >        &lt;Text c="red"&gt;Error loading categories: {error.message}&lt;/Text&gt;</span>
+<span class="cstat-no" title="statement not covered" >        &lt;Text c="red"&gt;Error loading asset types: {error.message}&lt;/Text&gt;</span>
 <span class="cstat-no" title="statement not covered" >      &lt;/Card&gt;</span>
     );
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  return (</span>
 <span class="cstat-no" title="statement not covered" >    &lt;DataViewLayout</span>
-<span class="cstat-no" title="statement not covered" >      title="Asset Categories"</span>
+<span class="cstat-no" title="statement not covered" >      title="Asset Types"</span>
 <span class="cstat-no" title="statement not covered" >      mode={viewMode}</span>
 <span class="cstat-no" title="statement not covered" >      availableModes={['table']}</span>
 <span class="cstat-no" title="statement not covered" >      onModeChange={setViewMode}</span>
@@ -1259,10 +1259,10 @@ type AssetTypeViewFilters = {
 <span class="cstat-no" title="statement not covered" >          onSortStatusChange={setSortStatus}</span>
 <span class="cstat-no" title="statement not covered" >          fetching={isLoading}</span>
 <span class="cstat-no" title="statement not covered" >          paginationText={({ from, to, totalRecords: total }) =&gt;</span>
-<span class="cstat-no" title="statement not covered" >            `Showing ${from} to ${to} of ${total} categories`</span>
+<span class="cstat-no" title="statement not covered" >            `Showing ${from} to ${to} of ${total} asset types`</span>
           }
 <span class="cstat-no" title="statement not covered" >          noRecordsText={</span>
-<span class="cstat-no" title="statement not covered" >            hasActiveFilters ? 'No categories match your filters' : 'No categories found'</span>
+<span class="cstat-no" title="statement not covered" >            hasActiveFilters ? 'No asset types match your filters' : 'No asset types found'</span>
           }
 <span class="cstat-no" title="statement not covered" >        /&gt;</span>
 <span class="cstat-no" title="statement not covered" >      &lt;/Card&gt;</span>
@@ -1276,7 +1276,7 @@ type AssetTypeViewFilters = {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-11-17T11:21:58.186Z
+                at 2025-11-24T20:49:55.914Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

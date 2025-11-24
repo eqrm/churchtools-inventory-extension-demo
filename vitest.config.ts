@@ -37,10 +37,10 @@ export default defineConfig({
             ],
             thresholds: {
                 global: {
-                    lines: 25,
-                    functions: 25,
-                    branches: 15,
-                    statements: 25,
+                    lines: 22.4,
+                    functions: 47,
+                    branches: 63,
+                    statements: 22.4,
                 },
                 'src/services/UndoService.ts': {
                     lines: 80,
@@ -83,6 +83,18 @@ export default defineConfig({
                     functions: 60,
                     branches: 60,
                     statements: 55,
+                },
+                'src/services/settings/settingsSnapshot.ts': {
+                    lines: 90,
+                    functions: 100,
+                    branches: 65,
+                    statements: 90,
+                },
+                'src/services/storage/churchToolsProvider/kits.ts': {
+                    lines: 70,
+                    functions: 90,
+                    branches: 55,
+                    statements: 70,
                 },
             },
         },

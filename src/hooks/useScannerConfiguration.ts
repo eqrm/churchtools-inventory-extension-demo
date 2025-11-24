@@ -1,14 +1,18 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { ScannerModel } from '../types/entities'
-import { loadScannerModels } from '../services/settings/scannerModels'
+import { loadScannerModelsAsync } from '../services/settings/scannerModels'
 import { useScannerPreference } from './useScannerPreference'
 
 export function useScannerConfiguration() {
   const { preferredScannerId, setPreference, clearPreference } = useScannerPreference()
   const [scannerModels, setScannerModels] = useState<ScannerModel[]>([])
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    setScannerModels(loadScannerModels())
+    loadScannerModelsAsync().then(models => {
+      setScannerModels(models)
+      setIsLoading(false)
+    })
   }, [])
 
   const activeScanner = useMemo(() => {
@@ -23,8 +27,11 @@ export function useScannerConfiguration() {
     return scannerModels.find((model) => model.id === preferredScannerId) ?? scannerModels[0]
   }, [preferredScannerId, scannerModels])
 
-  const refreshScannerModels = () => {
-    setScannerModels(loadScannerModels())
+  const refreshScannerModels = async () => {
+    setIsLoading(true)
+    const models = await loadScannerModelsAsync()
+    setScannerModels(models)
+    setIsLoading(false)
   }
 
   return {
@@ -34,5 +41,6 @@ export function useScannerConfiguration() {
     setPreferredScannerId: setPreference,
     clearPreferredScannerId: clearPreference,
     refreshScannerModels,
+    isLoading,
   }
 }

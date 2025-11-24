@@ -16,6 +16,8 @@ const masterDataMocks = vi.hoisted(() => ({
 const providerMocks = vi.hoisted(() => ({
   getModuleDefaultPrefixId: vi.fn(),
   setModuleDefaultPrefixId: vi.fn(),
+  getGlobalSetting: vi.fn(),
+  setGlobalSetting: vi.fn(),
 }));
 
 const autoNumberingMocks = vi.hoisted(() => ({
@@ -38,7 +40,9 @@ const hoistedScannerMocks = vi.hoisted(() => {
 
   const mocks = {
     loadScannerModels: vi.fn(() => [sample]),
+    loadScannerModelsAsync: vi.fn(() => Promise.resolve([sample])),
     saveScannerModels: vi.fn(),
+    saveScannerModelsAsync: vi.fn(() => Promise.resolve()),
   };
 
   return { scannerModelSample: sample, scannerModelMocks: mocks };
@@ -170,7 +174,7 @@ describe('settingsSnapshot integration', () => {
     expect(masterDataMocks.create).toHaveBeenCalledWith('locations', 'Lab');
     expect(masterDataMocks.remove).toHaveBeenCalledWith('locations', 'loc-1');
     expect(masterDataMocks.remove).not.toHaveBeenCalledWith('maintenanceCompanies', expect.any(String));
-    expect(scannerModelMocks.saveScannerModels).toHaveBeenCalledWith([scannerModelSample]);
+    expect(scannerModelMocks.saveScannerModelsAsync).toHaveBeenCalledWith([scannerModelSample]);
     expect(state.bookingsEnabled).toBe(true);
     expect(state.kitsEnabled).toBe(false);
     expect(state.maintenanceEnabled).toBe(true);

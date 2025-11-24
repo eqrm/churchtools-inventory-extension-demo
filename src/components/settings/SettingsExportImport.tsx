@@ -12,12 +12,13 @@ export function SettingsExportImport() {
   const [summary, setSummary] = useState('');
   const [isExporting, setIsExporting] = useState(false);
 
-  const handleExport = async () => {
+  const handleExport = async (scope: 'full' | 'scanner-only' = 'scanner-only') => {
     setIsExporting(true);
     try {
-      const payload = await exportSettings();
+      const payload = await exportSettings({ scope });
       const blob = new Blob([payload], { type: 'application/json' });
-      const fileName = `inventory-settings-${formatTimestampForFile(new Date())}.json`;
+      const prefix = scope === 'scanner-only' ? 'inventory-scanner-settings' : 'inventory-full-settings';
+      const fileName = `${prefix}-${formatTimestampForFile(new Date())}.json`;
       const url = URL.createObjectURL(blob);
       const anchor = document.createElement('a');
       anchor.href = url;
@@ -78,8 +79,11 @@ export function SettingsExportImport() {
             {t('export.description')}
           </Text>
           <Group>
-            <Button leftSection={<IconDownload size={16} />} onClick={handleExport} loading={isExporting}>
-              {t('export.button')}
+            <Button leftSection={<IconDownload size={16} />} onClick={() => handleExport('scanner-only')} loading={isExporting}>
+              {t('export.buttonScannerOnly') || 'Export Scanner Settings'}
+            </Button>
+            <Button variant="subtle" size="xs" onClick={() => handleExport('full')} loading={isExporting}>
+              {t('export.buttonFull') || 'Export All (Admin)'}
             </Button>
           </Group>
         </Stack>

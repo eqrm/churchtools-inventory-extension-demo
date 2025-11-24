@@ -756,6 +756,7 @@ export interface ChangeHistoryEntry {
     | 'master-data'
     | 'damage-report'
     | 'model'
+    | 'settings'
   entityId: UUID
   entityName?: string
   action: ChangeAction

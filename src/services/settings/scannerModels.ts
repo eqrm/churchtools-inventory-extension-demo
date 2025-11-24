@@ -1,4 +1,5 @@
 import type { ScannerModel, ScannerModelCreate } from '../../types/entities';
+import { getChurchToolsStorageProvider } from '../churchTools/storageProvider';
 
 const STORAGE_KEY = 'scannerModels';
 
@@ -14,7 +15,7 @@ const getSafeStorage = (): Storage | null => {
   }
 };
 
-export function loadScannerModels(): ScannerModel[] {
+export function loadScannerModelsFromLocalStorage(): ScannerModel[] {
   const storage = getSafeStorage();
   if (!storage) {
     return [];
@@ -33,6 +34,21 @@ export function loadScannerModels(): ScannerModel[] {
   }
 };
 
+// Deprecated: Use loadScannerModelsAsync
+export function loadScannerModels(): ScannerModel[] {
+    return loadScannerModelsFromLocalStorage();
+}
+
+export async function loadScannerModelsAsync(): Promise<ScannerModel[]> {
+    try {
+        const provider = getChurchToolsStorageProvider();
+        return await provider.getScannerModels();
+    } catch (error) {
+        console.warn('Failed to load scanner models from provider', error);
+        return loadScannerModelsFromLocalStorage();
+    }
+}
+
 const createScannerModelId = (): string => {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
     return crypto.randomUUID();
@@ -40,7 +56,7 @@ const createScannerModelId = (): string => {
   return `scanner-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 };
 
-export function saveScannerModels(models: ScannerModel[]): void {
+export function saveScannerModelsToLocalStorage(models: ScannerModel[]): void {
   const storage = getSafeStorage();
   if (!storage) {
     return;
@@ -51,6 +67,21 @@ export function saveScannerModels(models: ScannerModel[]): void {
   } catch (error) {
     console.warn('Failed to persist scanner models', error);
   }
+}
+
+// Deprecated: Use saveScannerModelsAsync
+export function saveScannerModels(models: ScannerModel[]): void {
+    saveScannerModelsToLocalStorage(models);
+}
+
+export async function saveScannerModelsAsync(models: ScannerModel[]): Promise<void> {
+    try {
+        const provider = getChurchToolsStorageProvider();
+        await provider.saveScannerModels(models);
+    } catch (error) {
+        console.warn('Failed to save scanner models to provider', error);
+        saveScannerModelsToLocalStorage(models);
+    }
 }
 
 export function upsertScannerModel(models: ScannerModel[], data: ScannerModelCreate, existing?: ScannerModel): ScannerModel[] {

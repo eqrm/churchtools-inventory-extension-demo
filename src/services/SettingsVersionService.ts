@@ -5,7 +5,7 @@ import type { SettingsDatabase } from './db/SettingsDatabase';
 export interface SettingsVersionServiceOptions {
   db: SettingsDatabase;
   getCurrentActor: () => Promise<{ id: string; name?: string }>;
-  applySnapshot: (snapshot: SettingsSnapshot) => Promise<void>;
+  applySnapshot: (snapshot: SettingsSnapshot, type?: 'full' | 'scanner-only') => Promise<void>;
   collectSnapshot?: () => Promise<SettingsSnapshot>;
   validateSnapshot?: (snapshot: unknown) => SettingsSnapshot;
   retentionDays?: number;
@@ -89,7 +89,7 @@ export class SettingsVersionService {
     });
   }
 
-  async exportSettings(): Promise<string> {
+  async exportSettings(options: { scope?: 'full' | 'scanner-only' } = {}): Promise<string> {
     if (!this.options.collectSnapshot) {
       throw new Error('Settings snapshot collector not configured');
     }
@@ -98,6 +98,7 @@ export class SettingsVersionService {
     const snapshot = await this.options.collectSnapshot();
     const payload = settingsExportSchema.parse({
       version: '1.0',
+      type: options.scope ?? 'full',
       exportedAt: this.getNow().toISOString(),
       exportedBy: { id: actor.id, name: actor.name },
       settings: this.validateSnapshot(snapshot),
@@ -117,7 +118,7 @@ export class SettingsVersionService {
     const envelope = settingsExportSchema.parse(parsed);
     const snapshot = this.validateSnapshot(envelope.settings);
 
-    await this.options.applySnapshot(snapshot);
+    await this.options.applySnapshot(snapshot, envelope.type);
 
     return await this.createVersion(snapshot, summary, {
       origin: 'import',

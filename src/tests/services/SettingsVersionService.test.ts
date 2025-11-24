@@ -131,6 +131,45 @@ describe('SettingsVersionService (T178-T187)', () => {
     expect(parsed.settings.featureToggles.bookingsEnabled).toBe(true);
   });
 
+  it('exports scanner-only settings (T182)', async () => {
+    const service = createService({
+      collectSnapshot: async () =>
+        createSnapshot({
+          scannerModels: [{ id: '123e4567-e89b-12d3-a456-426614174000', manufacturer: 'Zebra', modelName: 'TC21', supportedFunctions: [], createdAt: '2025-01-01T00:00:00.000Z', lastModifiedAt: '2025-01-01T00:00:00.000Z' }],
+          assetNumberPrefix: 'IGNORED',
+        }),
+    });
+
+    const json = await service.exportSettings({ scope: 'scanner-only' });
+    const parsed = JSON.parse(json) as { version: string; type: string; settings: SettingsSnapshot };
+
+    expect(parsed.type).toBe('scanner-only');
+    expect(parsed.settings.scannerModels).toHaveLength(1);
+  });
+
+  it('imports scanner-only settings and applies only scanner models', async () => {
+    const applySnapshot = vi.fn(async (_snapshot: SettingsSnapshot, _type?: string) => {});
+    const service = createService({ applySnapshot });
+
+    const payload = JSON.stringify({
+      version: '1.0',
+      type: 'scanner-only',
+      exportedAt: BASE_DATE.toISOString(),
+      exportedBy: { id: 'user-1', name: 'Test User' },
+      settings: createSnapshot({
+        scannerModels: [{ id: '123e4567-e89b-12d3-a456-426614174000', manufacturer: 'Zebra', modelName: 'TC21', supportedFunctions: [], createdAt: '2025-01-01T00:00:00.000Z', lastModifiedAt: '2025-01-01T00:00:00.000Z' }],
+        assetNumberPrefix: 'IGNORED',
+      }),
+    });
+
+    await service.importSettings(payload, 'Imported scanner settings');
+
+    expect(applySnapshot).toHaveBeenCalledWith(
+      expect.anything(),
+      'scanner-only'
+    );
+  });
+
   it('imports settings from JSON and applies snapshot (T183-T185)', async () => {
     const applySnapshot = vi.fn(async (_snapshot: SettingsSnapshot) => {});
     const service = createService({ applySnapshot });
@@ -151,6 +190,7 @@ describe('SettingsVersionService (T178-T187)', () => {
 
     expect(applySnapshot).toHaveBeenCalledWith(
       expect.objectContaining({ masterData: expect.objectContaining({ locations: [{ id: 'loc-1', name: 'Auditorium' }] }) }),
+      'full'
     );
     expect(version.origin).toBe('import');
   });

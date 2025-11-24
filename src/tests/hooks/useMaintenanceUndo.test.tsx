@@ -3,8 +3,9 @@ import { useCreateMaintenanceRule, useDeleteMaintenanceRule } from '../../hooks/
 import { useUndoStore } from '../../state/undoStore';
 import { MaintenanceService } from '../../services/MaintenanceService';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { vi, describe, it, expect, beforeEach } from 'vitest';
+import { vi, describe, it, expect, beforeEach, type Mock } from 'vitest';
 import React from 'react';
+import type { MaintenanceRule } from '../../types/maintenance';
 
 // Mock MaintenanceService
 vi.mock('../../services/MaintenanceService');
@@ -21,7 +22,7 @@ vi.mock('react-i18next', () => ({
 
 describe('useMaintenance Undo Integration', () => {
   let queryClient: QueryClient;
-  let mockService: any;
+  let mockService: Record<string, Mock>;
 
   beforeEach(() => {
     queryClient = new QueryClient();
@@ -36,7 +37,7 @@ describe('useMaintenance Undo Integration', () => {
       deleteWorkOrder: vi.fn(),
     };
 
-    (MaintenanceService as any).mockImplementation(() => mockService);
+    (MaintenanceService as unknown as Mock).mockImplementation(() => mockService);
   });
 
   const wrapper = ({ children }: { children: React.ReactNode }) => (
@@ -50,7 +51,7 @@ describe('useMaintenance Undo Integration', () => {
     const { result } = renderHook(() => useCreateMaintenanceRule(), { wrapper });
 
     await act(async () => {
-      await result.current.mutateAsync({ name: 'Test Rule' } as any);
+      await result.current.mutateAsync({ name: 'Test Rule' } as unknown as Omit<MaintenanceRule, 'id' | 'createdAt' | 'updatedAt'>);
     });
 
     const { past } = useUndoStore.getState();

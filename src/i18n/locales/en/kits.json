@@ -114,7 +114,7 @@
     },
     "inheritance": {
       "heading": "Inherited properties",
-      "description": "Choose which properties stay locked on sub-assets.",
+      "description": "Choose which properties stay locked on sub-assets. When enabled, the kit's value overwrites and locks the asset's value.",
       "location": "Location",
       "status": "Status",
       "tags": "Tags"

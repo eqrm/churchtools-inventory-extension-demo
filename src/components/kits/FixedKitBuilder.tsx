@@ -14,6 +14,7 @@ import { matchesBoundAssetSearch } from '../../utils/matchesBoundAssetSearch';
 import { ASSET_STATUS_KANBAN_COLORS, ASSET_STATUS_LABELS } from '../../constants/assetStatuses';
 import type { Asset } from '../../types/entities';
 import { findAssetByScanValue } from '../../utils/scanUtils';
+import { buildSelectableKitAssets } from '../../utils/kitAssets';
 
 interface BoundAsset {
   assetId: string;
@@ -32,25 +33,6 @@ export interface AssetSelectOption extends SelectItem {
   assetName: string;
   assetDescription: string;
   assetLocation: string;
-}
-
-export function buildSelectableKitAssets(assets: Asset[] | undefined, kitId?: string): Asset[] {
-  if (!Array.isArray(assets)) {
-    return [];
-  }
-
-  return assets.filter((asset) => {
-    if (asset.status === 'deleted') {
-      return false;
-    }
-    if (asset.isKit) {
-      return false;
-    }
-    if (asset.kitId && asset.kitId !== kitId) {
-      return false;
-    }
-    return true;
-  });
 }
 
 export function FixedKitBuilder({ value, onChange, kitId }: FixedKitBuilderProps) {

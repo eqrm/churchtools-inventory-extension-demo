@@ -6,6 +6,10 @@ import type { Asset } from '../../../types/entities';
 import type { Tag, InheritedTag } from '../../../types/tag';
 import { KitSummaryPanel } from '../../../components/assets/KitSummaryPanel';
 
+vi.mock('../../../components/scanner/BarcodeDisplay', () => ({
+  BarcodeDisplay: ({ value }: { value: string }) => <div data-testid="barcode-display">{value}</div>,
+}));
+
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
     t: (key: string, params?: Record<string, unknown>) => {
@@ -122,7 +126,7 @@ describe('KitSummaryPanel', () => {
     expect(screen.getByText('5 members')).toBeInTheDocument();
     expect(screen.getByText('A-001')).toBeInTheDocument();
     expect(screen.getByText('+1 more members')).toBeInTheDocument();
-    expect(screen.getByText('KIT-001-BAR')).toBeInTheDocument();
+    expect(screen.getAllByText('KIT-001-BAR')).toHaveLength(2);
     expect(screen.getByText('Properties inherited by members')).toBeInTheDocument();
     expect(screen.getByText('location')).toBeInTheDocument();
     expect(screen.getByText('Tags & inheritance')).toBeInTheDocument();

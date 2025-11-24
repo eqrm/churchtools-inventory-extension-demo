@@ -6,7 +6,6 @@ import type {
   FilterOperator,
   RelativeDateFilterValue,
   ViewFilter,
-  ViewFilterCondition,
   ViewFilterGroup,
 } from '../types/entities';
 import { hasActiveFilters, isFilterGroup, normalizeFilterGroup } from './viewFilters';

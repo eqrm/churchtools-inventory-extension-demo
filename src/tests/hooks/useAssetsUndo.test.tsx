@@ -4,6 +4,7 @@ import { useUndoStore } from '../../state/undoStore';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import React from 'react';
+import type { Asset } from '../../types/entities';
 
 // Mock translation
 vi.mock('react-i18next', () => ({
@@ -41,7 +42,7 @@ describe('useAssets Undo Integration', () => {
     const { result } = renderHook(() => useCreateAsset(), { wrapper });
 
     await act(async () => {
-      await result.current.mutateAsync({ name: 'Test Asset' } as any);
+      await result.current.mutateAsync({ name: 'Test Asset' } as unknown as Omit<Asset, 'id' | 'createdAt' | 'updatedAt'>);
     });
 
     const { past } = useUndoStore.getState();

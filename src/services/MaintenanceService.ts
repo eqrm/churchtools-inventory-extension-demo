@@ -11,7 +11,7 @@ import type {
   ExternalWorkOrderState,
 } from '../types/maintenance';
 import type { IStorageProvider } from '../types/storage';
-import type { UUID, ISOTimestamp, ISODate } from '../types/entities';
+import type { UUID, ISOTimestamp } from '../types/entities';
 import type { UndoActionType } from '../types/undo';
 import { internalWorkOrderMachine } from './machines/InternalWorkOrderMachine';
 import { externalWorkOrderMachine } from './machines/ExternalWorkOrderMachine';

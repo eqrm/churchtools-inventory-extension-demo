@@ -164,3 +164,22 @@ export function kitMatchesAssetFilters(kit: Kit, filters?: AssetFilters): boolea
 
   return true
 }
+
+export function buildSelectableKitAssets(assets: Asset[] | undefined, kitId?: string): Asset[] {
+  if (!Array.isArray(assets)) {
+    return [];
+  }
+
+  return assets.filter((asset) => {
+    if (asset.status === 'deleted') {
+      return false;
+    }
+    if (asset.isKit) {
+      return false;
+    }
+    if (asset.kitId && asset.kitId !== kitId) {
+      return false;
+    }
+    return true;
+  });
+}

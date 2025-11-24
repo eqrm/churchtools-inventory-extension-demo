@@ -857,9 +857,9 @@ interface AssetTypeFormProps {
 <span class="cstat-no" title="statement not covered" >    },</span>
 <span class="cstat-no" title="statement not covered" >    validate: {</span>
 <span class="cstat-no" title="statement not covered" >      name: (value) =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >        if (!value.trim()) return 'Category name is required';</span>
-<span class="cstat-no" title="statement not covered" >        if (value.length &lt; 2) return 'Category name must be at least 2 characters';</span>
-<span class="cstat-no" title="statement not covered" >        if (value.length &gt; 100) return 'Category name must not exceed 100 characters';</span>
+<span class="cstat-no" title="statement not covered" >        if (!value.trim()) return 'Asset type name is required';</span>
+<span class="cstat-no" title="statement not covered" >        if (value.length &lt; 2) return 'Asset type name must be at least 2 characters';</span>
+<span class="cstat-no" title="statement not covered" >        if (value.length &gt; 100) return 'Asset type name must not exceed 100 characters';</span>
 <span class="cstat-no" title="statement not covered" >        return null;</span>
 <span class="cstat-no" title="statement not covered" >      },</span>
 <span class="cstat-no" title="statement not covered" >      customFields: {</span>
@@ -902,7 +902,7 @@ interface AssetTypeFormProps {
 <span class="cstat-no" title="statement not covered" >        });</span>
 <span class="cstat-no" title="statement not covered" >        notifications.show({</span>
 <span class="cstat-no" title="statement not covered" >          title: 'Success',</span>
-<span class="cstat-no" title="statement not covered" >          message: `Category "${updated.name}" has been updated`,</span>
+<span class="cstat-no" title="statement not covered" >          message: `Asset type "${updated.name}" has been updated`,</span>
 <span class="cstat-no" title="statement not covered" >          color: 'green',</span>
 <span class="cstat-no" title="statement not covered" >        });</span>
 <span class="cstat-no" title="statement not covered" >        onSuccess?.(updated);</span>
@@ -917,7 +917,7 @@ interface AssetTypeFormProps {
 <span class="cstat-no" title="statement not covered" >        const created = await createAssetType.mutateAsync(categoryData);</span>
 <span class="cstat-no" title="statement not covered" >        notifications.show({</span>
 <span class="cstat-no" title="statement not covered" >          title: 'Success',</span>
-<span class="cstat-no" title="statement not covered" >          message: `Category "${created.name}" has been created`,</span>
+<span class="cstat-no" title="statement not covered" >          message: `Asset type "${created.name}" has been created`,</span>
 <span class="cstat-no" title="statement not covered" >          color: 'green',</span>
 <span class="cstat-no" title="statement not covered" >        });</span>
 <span class="cstat-no" title="statement not covered" >        form.reset();</span>
@@ -926,7 +926,7 @@ interface AssetTypeFormProps {
 <span class="cstat-no" title="statement not covered" >    } catch (err) {</span>
 <span class="cstat-no" title="statement not covered" >      notifications.show({</span>
 <span class="cstat-no" title="statement not covered" >        title: 'Error',</span>
-<span class="cstat-no" title="statement not covered" >        message: err instanceof Error ? err.message : 'Failed to save category',</span>
+<span class="cstat-no" title="statement not covered" >        message: err instanceof Error ? err.message : 'Failed to save asset type',</span>
 <span class="cstat-no" title="statement not covered" >        color: 'red',</span>
 <span class="cstat-no" title="statement not covered" >      });</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
@@ -985,7 +985,7 @@ interface AssetTypeFormProps {
 <span class="cstat-no" title="statement not covered" >    &lt;form onSubmit={form.onSubmit(handleSubmit)}&gt;</span>
 <span class="cstat-no" title="statement not covered" >      &lt;Stack gap="md"&gt;</span>
 <span class="cstat-no" title="statement not covered" >        &lt;TextInput</span>
-<span class="cstat-no" title="statement not covered" >          label="Category Name"</span>
+<span class="cstat-no" title="statement not covered" >          label="Asset type name"</span>
 <span class="cstat-no" title="statement not covered" >          placeholder="e.g., Sound Equipment, Cameras, Microphones"</span>
 <span class="cstat-no" title="statement not covered" >          required</span>
 <span class="cstat-no" title="statement not covered" >          {...form.getInputProps('name')}</span>
@@ -1004,13 +1004,13 @@ interface AssetTypeFormProps {
 <span class="cstat-no" title="statement not covered" >            disabled={isPending}</span>
 <span class="cstat-no" title="statement not covered" >          /&gt;</span>
 <span class="cstat-no" title="statement not covered" >          &lt;Text size="xs" c="dimmed"&gt;</span>
-            Optional icon to represent this category
+            Optional icon to represent this asset type
 <span class="cstat-no" title="statement not covered" >          &lt;/Text&gt;</span>
 <span class="cstat-no" title="statement not covered" >        &lt;/Stack&gt;</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >        &lt;MainImageUpload</span>
 <span class="cstat-no" title="statement not covered" >          label="Main image"</span>
-<span class="cstat-no" title="statement not covered" >          description="Displayed in category cards and asset suggestions."</span>
+<span class="cstat-no" title="statement not covered" >          description="Displayed in asset type cards and asset suggestions."</span>
 <span class="cstat-no" title="statement not covered" >          value={form.values.mainImage}</span>
 <span class="cstat-no" title="statement not covered" >          onChange={(next) =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >            form.setFieldValue('mainImage', next);</span>
@@ -1023,7 +1023,7 @@ interface AssetTypeFormProps {
 <span class="cstat-no" title="statement not covered" >        &lt;Divider label="Asset Name Template" labelPosition="left" mt="xl" /&gt;</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >        &lt;Text size="sm" c="dimmed"&gt;</span>
-<span class="cstat-no" title="statement not covered" >          Define how asset names are generated for this category. Use variables like %Manufacturer%, %Model%, %Asset Number% and any custom field names wrapped in %%. Example: &lt;code&gt;%Manufacturer% %Model% %Asset Number%&lt;/code&gt;</span>
+<span class="cstat-no" title="statement not covered" >          Define how asset names are generated for this asset type. Use variables like %Manufacturer%, %Model%, %Asset Number% and any custom field names wrapped in %%. Example: &lt;code&gt;%Manufacturer% %Model% %Asset Number%&lt;/code&gt;</span>
 <span class="cstat-no" title="statement not covered" >        &lt;/Text&gt;</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >        {prefixesLoading ? (</span>
@@ -1069,7 +1069,7 @@ interface AssetTypeFormProps {
 <span class="cstat-no" title="statement not covered" >        &lt;/Group&gt;</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >        &lt;Text size="sm" c="dimmed"&gt;</span>
-          Define custom fields that will be available for all assets in this category.
+          Define custom fields that will be available for all assets in this asset type.
 <span class="cstat-no" title="statement not covered" >        &lt;/Text&gt;</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >        &lt;Stack gap="md"&gt;</span>
@@ -1124,7 +1124,7 @@ interface AssetTypeFormProps {
 <span class="cstat-no" title="statement not covered" >            &lt;/Button&gt;</span>
           )}
 <span class="cstat-no" title="statement not covered" >          &lt;Button type="submit" loading={isPending}&gt;</span>
-<span class="cstat-no" title="statement not covered" >            {isEditing ? 'Update Category' : 'Create Category'}</span>
+<span class="cstat-no" title="statement not covered" >            {isEditing ? 'Update asset type' : 'Create asset type'}</span>
 <span class="cstat-no" title="statement not covered" >          &lt;/Button&gt;</span>
 <span class="cstat-no" title="statement not covered" >        &lt;/Group&gt;</span>
 <span class="cstat-no" title="statement not covered" >      &lt;/Stack&gt;</span>
@@ -1153,7 +1153,7 @@ interface AssetTypeFormProps {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-11-17T11:21:58.186Z
+                at 2025-11-24T20:49:55.914Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

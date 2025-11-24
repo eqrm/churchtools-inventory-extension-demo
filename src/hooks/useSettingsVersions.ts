@@ -108,8 +108,8 @@ export function useSettingsVersions() {
     [recordSettingsUndo, refresh, setError, setRollbackVersionId],
   );
 
-  const exportSettings = useCallback(async (): Promise<string> => {
-    return await getSettingsVersionService().exportSettings();
+  const exportSettings = useCallback(async (options?: { scope?: 'full' | 'scanner-only' }): Promise<string> => {
+    return await getSettingsVersionService().exportSettings(options);
   }, []);
 
   const importSettings = useCallback(

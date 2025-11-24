@@ -3,7 +3,8 @@ import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Asset } from '../../../types/entities';
-import { FixedKitBuilder, buildSelectableKitAssets } from '../../../components/kits/FixedKitBuilder';
+import { FixedKitBuilder } from '../../../components/kits/FixedKitBuilder';
+import { buildSelectableKitAssets } from '../../../utils/kitAssets';
 
 const mockUseAssets = vi.fn();
 

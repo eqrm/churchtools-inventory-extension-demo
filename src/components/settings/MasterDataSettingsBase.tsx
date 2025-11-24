@@ -15,6 +15,7 @@ import {
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { notifications } from '@mantine/notifications';
+import { useNavigate } from 'react-router-dom';
 import {
   IconAlertCircle,
   IconCheck,
@@ -33,6 +34,8 @@ import {
 } from '../../utils/masterData';
 import type { MasterDataDefinition, MasterDataItem } from '../../utils/masterData';
 import { useMasterData } from '../../hooks/useMasterDataNames';
+import { serializeFiltersToUrl } from '../../utils/urlFilters';
+import { createFilterCondition, createFilterGroup } from '../../utils/viewFilters';
 
 type IconComponent = ComponentType<{ size?: number | string }>;
 
@@ -86,6 +89,7 @@ export function MasterDataSettingsBase(config: MasterDataSettingsConfig) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   const sortedItems = useMemo(() => sortMasterDataItems(items), [items]);
 
@@ -100,6 +104,20 @@ export function MasterDataSettingsBase(config: MasterDataSettingsConfig) {
       assetCount: counts.get(canonicalMasterDataName(item.name)) ?? 0,
     }));
   }, [assets, definition.assetField, sortedItems]);
+
+  const handleBadgeClick = (item: MasterDataItem) => {
+    if (!definition.assetField || (item.assetCount ?? 0) === 0) return;
+
+    const condition = createFilterCondition({
+      field: definition.assetField,
+      operator: 'equals',
+      value: item.name,
+    });
+    const filterGroup = createFilterGroup('AND', [condition]);
+    const serialized = serializeFiltersToUrl(filterGroup);
+
+    navigate(`/assets?filters=${serialized}`);
+  };
 
   const form = useForm<FormValues>({
     initialValues: { name: '' },
@@ -309,7 +327,13 @@ export function MasterDataSettingsBase(config: MasterDataSettingsConfig) {
                     </Group>
                   </Table.Td>
                   <Table.Td>
-                    <Badge color={(item.assetCount ?? 0) > 0 ? 'blue' : 'gray'}>
+                    <Badge
+                      color={(item.assetCount ?? 0) > 0 ? 'blue' : 'gray'}
+                      style={{
+                        cursor: definition.assetField && (item.assetCount ?? 0) > 0 ? 'pointer' : 'default',
+                      }}
+                      onClick={() => handleBadgeClick(item)}
+                    >
                       {item.assetCount ?? 0}
                     </Badge>
                   </Table.Td>

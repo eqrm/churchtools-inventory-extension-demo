@@ -71,6 +71,7 @@ export const settingsVersionSchema = z.object({
 
 export const settingsExportSchema = z.object({
     version: z.string().min(1),
+    type: z.enum(['full', 'scanner-only']).default('full'),
     exportedAt: isoTimestampSchema,
     exportedBy: z.object({
         id: actorIdSchema,

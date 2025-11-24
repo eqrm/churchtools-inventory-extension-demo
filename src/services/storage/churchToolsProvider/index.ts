@@ -17,5 +17,7 @@ import './assignment.provider'
 import './models.provider'
 import './masterData.provider'
 import './prefixPreferences.provider'
+import './globalSettings.provider'
+import './scannerModels.provider'
 
 export { ChurchToolsStorageProvider }

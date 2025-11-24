@@ -561,8 +561,8 @@ export function useUpdateMaintenanceRule() {
           label: t('undo.updateMaintenanceRule', { name: updatedRule.name }),
           undo: async () => {
             if (!service) return;
-            const { id, createdAt, createdBy, ...rest } = previousRule;
-            const restored = await service.updateRule(id, rest);
+            const { id: _id, createdAt: _createdAt, createdBy: _createdBy, ...rest } = previousRule;
+            const restored = await service.updateRule(_id, rest);
             upsertRule(restored);
             queryClient.setQueryData(maintenanceKeys.rule(restored.id), restored);
             void queryClient.invalidateQueries({ queryKey: maintenanceKeys.rules() });
@@ -617,7 +617,7 @@ export function useDeleteMaintenanceRule() {
           label: t('undo.deleteMaintenanceRule', { name: previousRule.name }),
           undo: async () => {
             if (!service) return;
-            const { id, createdAt, updatedAt, ...rest } = previousRule;
+            const { id: _id, createdAt: _createdAt, updatedAt: _updatedAt, ...rest } = previousRule;
             const restored = await service.createRule(rest);
             restoredId = restored.id;
             upsertRule(restored);
@@ -812,7 +812,7 @@ export function useDeleteWorkOrder() {
           label: t('undo.deleteWorkOrder', { number: previousWorkOrder.workOrderNumber }),
           undo: async () => {
             if (!service) return;
-            const { id, createdAt, updatedAt, ...rest } = previousWorkOrder;
+            const { id: _id, createdAt: _createdAt, updatedAt: _updatedAt, ...rest } = previousWorkOrder;
             const restored = await service.createWorkOrder(rest);
             restoredId = restored.id;
             upsertWorkOrder(restored);

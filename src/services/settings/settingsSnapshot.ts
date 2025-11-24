@@ -1,7 +1,7 @@
 import type { SettingsSnapshot, SettingsMasterDataItem, SettingsMasterDataSnapshot } from '../../types/settings';
 import { settingsSnapshotSchema } from '../../schemas/settings';
 import { MASTER_DATA_DEFINITIONS, canonicalMasterDataName, normalizeMasterDataName } from '../../utils/masterData';
-import { loadScannerModels, saveScannerModels } from './scannerModels';
+import { loadScannerModelsAsync, saveScannerModelsAsync } from './scannerModels';
 import { useFeatureSettingsStore } from '../../stores/featureSettingsStore';
 import { getStoredModuleDefaultPrefixId, setStoredModuleDefaultPrefixId } from '../assets/autoNumbering';
 import { masterDataService } from '../MasterDataService';
@@ -147,10 +147,24 @@ export async function collectSettingsSnapshot(): Promise<SettingsSnapshot> {
   const storage = getLocalStorage();
   const featureState = useFeatureSettingsStore.getState();
   const masterData = await collectMasterDataSnapshot();
+  const provider = getChurchToolsStorageProvider();
+
+  let assetNumberPrefix = DEFAULT_PREFIX;
+  try {
+    const val = await provider.getGlobalSetting(ASSET_PREFIX_STORAGE_KEY);
+    if (typeof val === 'string') {
+      assetNumberPrefix = val;
+    } else {
+      assetNumberPrefix = storage?.getItem(ASSET_PREFIX_STORAGE_KEY) ?? DEFAULT_PREFIX;
+    }
+  } catch (e) {
+    console.warn('Failed to fetch assetNumberPrefix from provider', e);
+    assetNumberPrefix = storage?.getItem(ASSET_PREFIX_STORAGE_KEY) ?? DEFAULT_PREFIX;
+  }
 
   const snapshot: SettingsSnapshot = {
     schemaVersion: '1.0',
-    assetNumberPrefix: storage?.getItem(ASSET_PREFIX_STORAGE_KEY) ?? DEFAULT_PREFIX,
+    assetNumberPrefix,
     moduleDefaultPrefixId: await resolveModuleDefaultPrefixId(),
     featureToggles: {
       bookingsEnabled: featureState.bookingsEnabled,
@@ -158,30 +172,39 @@ export async function collectSettingsSnapshot(): Promise<SettingsSnapshot> {
       maintenanceEnabled: featureState.maintenanceEnabled,
     },
     masterData,
-    scannerModels: loadScannerModels(),
+    scannerModels: await loadScannerModelsAsync(),
   };
 
   return validateSettingsSnapshot(snapshot);
 }
 
-export async function applySettingsSnapshot(snapshot: SettingsSnapshot): Promise<void> {
+export async function applySettingsSnapshot(snapshot: SettingsSnapshot, type: 'full' | 'scanner-only' = 'full'): Promise<void> {
   const normalized = validateSettingsSnapshot(snapshot);
-  const storage = getLocalStorage();
+  const provider = getChurchToolsStorageProvider();
+  
+  if (type === 'full') {
+    const storage = getLocalStorage();
 
-  if (storage) {
-    storage.setItem(ASSET_PREFIX_STORAGE_KEY, normalized.assetNumberPrefix);
+    try {
+      await provider.setGlobalSetting(ASSET_PREFIX_STORAGE_KEY, normalized.assetNumberPrefix);
+    } catch (e) {
+      console.warn('Failed to save assetNumberPrefix to provider', e);
+      if (storage) {
+        storage.setItem(ASSET_PREFIX_STORAGE_KEY, normalized.assetNumberPrefix);
+      }
+    }
+
+    await applyModuleDefaultPrefix(normalized.moduleDefaultPrefixId);
+
+    await syncMasterDataCollections(normalized.masterData);
+
+    useFeatureSettingsStore.setState((state) => ({
+      ...state,
+      ...normalized.featureToggles,
+    }));
   }
 
-  await applyModuleDefaultPrefix(normalized.moduleDefaultPrefixId);
-
-  await syncMasterDataCollections(normalized.masterData);
-
-  saveScannerModels(normalized.scannerModels);
-
-  useFeatureSettingsStore.setState((state) => ({
-    ...state,
-    ...normalized.featureToggles,
-  }));
+  await saveScannerModelsAsync(normalized.scannerModels);
 }
 
 export function validateSettingsSnapshot(snapshot: unknown): SettingsSnapshot {

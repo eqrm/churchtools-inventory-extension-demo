@@ -16,8 +16,10 @@ describe('urlFilters quick filter support', () => {
     const decoded = deserializeFiltersFromUrl(encoded);
 
     expect(decoded).toBeDefined();
-    expect(countFilterConditions(decoded!)).toBe(1);
-    expect(decoded?.children[0]).toMatchObject({ field: 'name', value: 'camera' });
+    if (decoded) {
+      expect(countFilterConditions(decoded)).toBe(1);
+      expect(decoded.children[0]).toMatchObject({ field: 'name', value: 'camera' });
+    }
   });
 
   it('parses quick filters from the query string', () => {
@@ -26,6 +28,8 @@ describe('urlFilters quick filter support', () => {
 
     const state = readFiltersFromUrl();
     expect(state.quickFilters).toBeDefined();
-    expect(countFilterConditions(state.quickFilters!)).toBe(1);
+    if (state.quickFilters) {
+      expect(countFilterConditions(state.quickFilters)).toBe(1);
+    }
   });
 });

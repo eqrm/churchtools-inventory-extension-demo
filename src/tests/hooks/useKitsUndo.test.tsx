@@ -1,10 +1,11 @@
-import { renderHook, act, waitFor } from '@testing-library/react';
+import { renderHook, act } from '@testing-library/react';
 import { useCreateKit, useDeleteKit } from '../../hooks/useKits';
 import { useUndoStore } from '../../state/undoStore';
 import { KitService } from '../../services/KitService';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { vi, describe, it, expect, beforeEach } from 'vitest';
+import { vi, describe, it, expect, beforeEach, type Mock } from 'vitest';
 import React from 'react';
+import type { Kit } from '../../types/entities';
 
 // Mock KitService
 vi.mock('../../services/KitService');
@@ -21,7 +22,7 @@ vi.mock('react-i18next', () => ({
 
 describe('useKits Undo Integration', () => {
   let queryClient: QueryClient;
-  let mockKitService: any;
+  let mockKitService: Record<string, Mock>;
 
   beforeEach(() => {
     queryClient = new QueryClient();
@@ -37,7 +38,7 @@ describe('useKits Undo Integration', () => {
     };
 
     // Mock the constructor of KitService to return our mock
-    (KitService as any).mockImplementation(() => mockKitService);
+    (KitService as unknown as Mock).mockImplementation(() => mockKitService);
   });
 
   const wrapper = ({ children }: { children: React.ReactNode }) => (
@@ -51,7 +52,7 @@ describe('useKits Undo Integration', () => {
     const { result } = renderHook(() => useCreateKit(), { wrapper });
 
     await act(async () => {
-      await result.current.mutateAsync({ name: 'Test Kit', type: 'fixed' } as any);
+      await result.current.mutateAsync({ name: 'Test Kit', type: 'fixed' } as unknown as Omit<Kit, 'id' | 'createdAt' | 'updatedAt'>);
     });
 
     const { past } = useUndoStore.getState();

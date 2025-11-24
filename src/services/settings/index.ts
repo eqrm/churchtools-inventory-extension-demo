@@ -34,8 +34,8 @@ export function getSettingsVersionService(): SettingsVersionService {
         const actor = await churchToolsAPIClient.getCurrentUser();
         return { id: actor.id, name: actor.name };
       },
-      applySnapshot: async (snapshot: SettingsSnapshot) => {
-        await applySettingsSnapshot(snapshot);
+      applySnapshot: async (snapshot: SettingsSnapshot, type?: 'full' | 'scanner-only') => {
+        await applySettingsSnapshot(snapshot, type);
       },
       collectSnapshot: async () => await collectSettingsSnapshot(),
       validateSnapshot: (snapshot) => validateSettingsSnapshot(snapshot),

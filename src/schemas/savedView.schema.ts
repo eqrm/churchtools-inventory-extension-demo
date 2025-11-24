@@ -7,7 +7,7 @@
 
 import { z } from 'zod';
 
-import type { LegacyViewFilter, ViewFilter, ViewFilterGroup } from '../types/entities';
+import type { LegacyViewFilter, ViewFilterGroup } from '../types/entities';
 import { LEGACY_SAVED_VIEW_SCHEMA_VERSION, SAVED_VIEW_SCHEMA_VERSION } from '../constants/schemaVersions';
 import { convertLegacyFiltersToGroup, normalizeFilterGroup } from '../utils/viewFilters';
 
@@ -50,8 +50,6 @@ const FilterGroupSchema: z.ZodType<ViewFilterGroup> = z.lazy(() =>
     children: z.array(z.union([FilterConditionSchema, FilterGroupSchema])),
   }),
 );
-
-const FilterNodeSchema: z.ZodType<ViewFilter> = z.union([FilterConditionSchema, FilterGroupSchema]);
 
 const QuickFiltersSchema = FilterGroupSchema.optional();
 
@@ -119,7 +117,7 @@ export function migrateSavedView(data: unknown): SavedViewSchemaType {
 
   const legacy = LegacySavedViewSchema.safeParse(data);
   if (legacy.success) {
-    const { schemaVersion, filters, sortDirection, quickFilters, ...rest } = legacy.data;
+    const { schemaVersion: _schemaVersion, filters, sortDirection, quickFilters, ...rest } = legacy.data;
     const normalizedFilters = convertLegacyFiltersToGroup(filters as LegacyViewFilter[]);
     return {
       ...rest,

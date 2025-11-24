@@ -39,7 +39,8 @@ import type {
   SavedView,
   SavedViewCreate,
   PersonInfo,
-  UUID
+  UUID,
+  ScannerModel
 } from './entities'
 import type { AssetModel, AssetModelCreate, AssetModelUpdate } from './model'
 import type {
@@ -180,7 +181,7 @@ export interface IStorageProvider {
   regenerateAssetBarcode(id: string, reason?: string, customBarcode?: string): Promise<Asset>
   
   /**
-   * Search assets by name, manufacturer, model, or asset number
+   * Search assets with query
    * @param query - Search query string
    * @returns Array of matching assets
    */
@@ -937,6 +938,36 @@ export interface IStorageProvider {
    * Delete a work order
    */
   deleteWorkOrder(id: UUID): Promise<void>
+
+  // ============================================================================
+  // Global Settings & Scanner Models
+  // ============================================================================
+
+  /**
+   * Get a global setting value
+   * @param key - Setting key
+   * @returns Setting value or null if not found
+   */
+  getGlobalSetting(key: string): Promise<unknown>
+
+  /**
+   * Set a global setting value
+   * @param key - Setting key
+   * @param value - Setting value
+   */
+  setGlobalSetting(key: string, value: unknown): Promise<void>
+
+  /**
+   * Get all scanner models
+   * @returns Array of scanner models
+   */
+  getScannerModels(): Promise<ScannerModel[]>
+
+  /**
+   * Save all scanner models
+   * @param models - Array of scanner models to save
+   */
+  saveScannerModels(models: ScannerModel[]): Promise<void>
 }
 
 /**

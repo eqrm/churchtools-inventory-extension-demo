@@ -224,22 +224,22 @@ This document breaks the overhaul plan into numbered phases and concrete, tracka
 **Goal:** Focus settings export on scanner configuration and move master data into ChurchTools.
 
 9.1 Narrow settings export scope
-- 9.1.1 Review current settings export/import implementation.
-- 9.1.2 Limit the UI-driven export to scanner-related settings: active scanner, configured models, and related options.
-- 9.1.3 Ensure import is symmetrical for scanner settings.
-- 9.1.4 Maintain (or deprecate) a separate full export/import path for admin-only use.
+- [x] 9.1.1 Review current settings export/import implementation. (Reviewed `SettingsExportImport.tsx` and `SettingsVersionService.ts`.)
+- [x] 9.1.2 Limit the UI-driven export to scanner-related settings: active scanner, configured models, and related options. (Implemented `scope` option in `exportSettings` and updated UI to default to scanner-only.)
+- [x] 9.1.3 Ensure import is symmetrical for scanner settings. (Implemented `type` field in export schema and updated `applySettingsSnapshot` to handle `scanner-only` type.)
+- [x] 9.1.4 Maintain (or deprecate) a separate full export/import path for admin-only use. (Added "Export All (Admin)" button in UI.)
 
 9.2 Move master data into ChurchTools
-- 9.2.1 Identify all master data currently kept in localStorage: manufacturers, models, locations, scanner presets, default asset prefix, etc.
-- 9.2.2 Design ChurchTools custom data categories to store these lists as structured JSON per entry.
-- 9.2.3 Implement provider methods to read/write master data via ChurchTools custom data API.
-- 9.2.4 Add a migration routine that moves existing local data into ChurchTools on first run, guarded by a one-time flag.
-- 9.2.5 Add tests for provider behavior and migration (including idempotency).
+- [x] 9.2.1 Identify all master data currently kept in localStorage: manufacturers, models, locations, scanner presets, default asset prefix, etc. (Identified `scannerModels` and `assetNumberPrefix`.)
+- [x] 9.2.2 Design ChurchTools custom data categories to store these lists as structured JSON per entry. (Designed `__ScannerModels__` and `__GlobalSettings__`.)
+- [x] 9.2.3 Implement provider methods to read/write master data via ChurchTools custom data API. (Implemented `globalSettings.provider.ts` and `scannerModels.provider.ts`.)
+- [x] 9.2.4 Add a migration routine that moves existing local data into ChurchTools on first run, guarded by a one-time flag. (Implemented `moveLocalSettingsToCt.ts` and registered in `migrations-list.ts`.)
+- [x] 9.2.5 Add tests for provider behavior and migration (including idempotency). (Added `moveLocalSettingsToCt.test.ts` and `settingsSnapshot.test.ts`.)
 
 9.3 Link master data counts to AssetList
-- 9.3.1 Update settings UI so count badges for manufacturers/models/locations are clickable.
-- 9.3.2 Implement navigation from these badges to `AssetList` with pre-populated filters (e.g. filter by manufacturer).
-- 9.3.3 Add tests verifying deep links/filters work as expected.
+- [x] 9.3.1 Update settings UI so count badges for manufacturers/models/locations are clickable. (Updated `MasterDataSettingsBase.tsx` to link to `/assets` with filters.)
+- [x] 9.3.2 Implement navigation from these badges to `AssetList` with pre-populated filters (e.g. filter by manufacturer). (Implemented via `serializeFiltersToUrl` and `navigate`.)
+- [x] 9.3.3 Add tests verifying deep links/filters work as expected. (Added `src/components/settings/__tests__/MasterDataSettingsBase.test.tsx`.)
 
 ---
 
@@ -248,14 +248,14 @@ This document breaks the overhaul plan into numbered phases and concrete, tracka
 **Goal:** Align frontend and backend rules for kit membership and asset availability.
 
 10.1 Relax and align selection constraints
-- 10.1.1 Ensure kit builders allow selecting any non-deleted asset.
-- 10.1.2 Document business rules applied when binding assets to kits (status/location inheritance, etc.).
-- 10.1.3 Update UI to clearly communicate these effects to users.
+- [x] 10.1.1 Ensure kit builders allow selecting any non-deleted asset. (Verified in `FixedKitBuilder.tsx` and `kits.ts`.)
+- [x] 10.1.2 Document business rules applied when binding assets to kits (status/location inheritance, etc.). (Created `docs/KIT_BUSINESS_RULES.md`.)
+- [x] 10.1.3 Update UI to clearly communicate these effects to users. (Updated `src/i18n/locales/en/kits.json`.)
 
 10.2 Backend validation alignment
-- 10.2.1 Audit backend validation for kit membership ("Asset X is not available" errors).
-- 10.2.2 Either relax backend checks or update frontend rules to match server constraints.
-- 10.2.3 Add tests (or contract tests) to ensure no unexpected validation failures during kit saves.
+- [x] 10.2.1 Audit backend validation for kit membership ("Asset X is not available" errors). (Audited `kits.ts`, no such error found, only deleted check.)
+- [x] 10.2.2 Either relax backend checks or update frontend rules to match server constraints. (Already aligned.)
+- [x] 10.2.3 Add tests (or contract tests) to ensure no unexpected validation failures during kit saves. (Added `src/tests/unit/storage/kits.test.ts`.)
 
 ---
 
@@ -264,17 +264,17 @@ This document breaks the overhaul plan into numbered phases and concrete, tracka
 **Goal:** Raise confidence with targeted tests and realistic coverage thresholds.
 
 11.1 Review and tune coverage thresholds
-- 11.1.1 Review `vitest.config.ts` and any coverage thresholds in place.
-- 11.1.2 Compare current coverage report to thresholds.
-- 11.1.3 Adjust thresholds to slightly above current baseline while keeping them achievable.
+- [x] 11.1.1 Review `vitest.config.ts` and any coverage thresholds in place.
+- [x] 11.1.2 Compare current coverage report to thresholds.
+- [x] 11.1.3 Adjust thresholds to slightly above current baseline while keeping them achievable.
 
 11.2 Add focused test suites
-- 11.2.1 Write tests for new filter operators and Notion-style filter builder interactions.
-- 11.2.2 Add tests for kit tooltip behaviors and kit-aware asset detail view.
-- 11.2.3 Ensure asset models view rendering and filtering are covered (including empty states).
-- 11.2.4 Add tests for scanner-based asset selection helpers and error handling.
-- 11.2.5 Test undo history store limits and undo/redo operations.
-- 11.2.6 Test that settings export is restricted to scanner settings in the main UI path.
+- [x] 11.2.1 Write tests for new filter operators and Notion-style filter builder interactions.
+- [x] 11.2.2 Add tests for kit tooltip behaviors and kit-aware asset detail view.
+- [x] 11.2.3 Ensure asset models view rendering and filtering are covered (including empty states).
+- [x] 11.2.4 Add tests for scanner-based asset selection helpers and error handling.
+- [x] 11.2.5 Test undo history store limits and undo/redo operations.
+- [x] 11.2.6 Test that settings export is restricted to scanner settings in the main UI path.
 
 ---
 

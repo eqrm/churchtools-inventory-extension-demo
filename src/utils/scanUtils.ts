@@ -1,4 +1,4 @@
-import type { Asset } from '../types/entities';
+
 
 /**
  * Find an asset by scanning a barcode or asset number.
