@@ -1,11 +1,13 @@
  
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
+  Alert,
   Button,
   Card,
   Checkbox,
   Grid,
   Group,
+  Switch,
   NumberInput,
   Select,
   Stack,
@@ -17,19 +19,29 @@ import {
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { notifications } from '@mantine/notifications';
-import { IconDeviceFloppy, IconX } from '@tabler/icons-react';
+import { IconDeviceFloppy, IconUsersGroup, IconX } from '@tabler/icons-react';
 import { useCategories, useCategory } from '../../hooks/useCategories';
 import { useCreateAsset, useCreateMultiAsset, useUpdateAsset } from '../../hooks/useAssets';
 import { useAssetPrefixes } from '../../hooks/useAssetPrefixes';
+import { useCurrentUser } from '../../hooks/useCurrentUser';
+import {
+  getStoredModuleDefaultPrefixId,
+  getStoredPersonDefaultPrefixId,
+  resolvePrefixForAutoNumbering,
+  setStoredPersonDefaultPrefixId,
+} from '../../services/assets/autoNumbering';
 import { useMasterData } from '../../hooks/useMasterDataNames';
 import { generateAssetNameFromTemplate, DEFAULT_ASSET_NAME_TEMPLATE } from '../../utils/assetNameTemplate';
 import { MASTER_DATA_DEFINITIONS, normalizeMasterDataName } from '../../utils/masterData';
 import { CustomFieldInput } from './CustomFieldInput';
 import { MasterDataSelectInput } from '../common/MasterDataSelectInput';
-// Photo features removed due to storage size constraints
-import type { Asset, AssetCreate, AssetStatus, CustomFieldValue } from '../../types/entities';
- import { validateCustomFieldValue } from '../../utils/validators';
+import { MainImageUpload } from '../common/MainImageUpload';
+import type { Asset, AssetCreate, AssetGroupFieldSource, AssetStatus, CustomFieldValue } from '../../types/entities';
+import { validateCustomFieldValue } from '../../utils/validators';
 import { ASSET_STATUS_OPTIONS } from '../../constants/assetStatuses';
+import { useAssetGroup } from '../../hooks/useAssetGroups';
+import { getInheritanceRuleForField } from '../../services/asset-groups/inheritance';
+import { CUSTOM_FIELD_SOURCE_PREFIX } from '../../services/asset-groups/constants';
 
 interface AssetFormProps {
   asset?: Asset;
@@ -42,7 +54,8 @@ interface AssetFormValues {
   manufacturer?: string;
   model?: string;
   description?: string;
-  categoryId: string;
+  mainImage: string | null;
+  assetTypeId: string;
   prefixId?: string; // T272: Asset prefix selection
   status: AssetStatus;
   location?: string;
@@ -66,6 +79,9 @@ export function AssetForm({ asset, onSuccess, onCancel }: AssetFormProps) {
   const createAsset = useCreateAsset();
   const createMultiAsset = useCreateMultiAsset();
   const updateAsset = useUpdateAsset();
+  const { data: currentUser } = useCurrentUser();
+  const assetGroup = asset?.assetGroup;
+  const { data: assetGroupDetail } = useAssetGroup(assetGroup?.id);
 
 
   const form = useForm<AssetFormValues>({
@@ -74,8 +90,9 @@ export function AssetForm({ asset, onSuccess, onCancel }: AssetFormProps) {
       manufacturer: asset?.manufacturer || '',
       model: asset?.model || '',
       description: asset?.description || '',
-      categoryId: asset?.category.id || '',
-  prefixId: '', // Default to first prefix or empty
+      mainImage: asset?.mainImage ?? null,
+      assetTypeId: asset?.assetType.id || '',
+      prefixId: '', // Default to first prefix or empty
       status: asset?.status || 'available',
       location: asset?.location || '',
       parentAssetId: asset?.parentAssetId || '',
@@ -97,9 +114,84 @@ export function AssetForm({ asset, onSuccess, onCancel }: AssetFormProps) {
         }
         return null;
       },
-      categoryId: (value) => (!value ? 'Category is required' : null),
+      assetTypeId: (value) => (!value ? 'Asset type is required' : null),
     },
   });
+
+  const currentUserId = currentUser?.id ?? null;
+  const selectedPrefixId = form.values.prefixId;
+
+  const [fieldSources, setFieldSources] = useState<Record<string, AssetGroupFieldSource>>({
+    ...(asset?.fieldSources ?? {}),
+  });
+
+  useEffect(() => {
+    setFieldSources({ ...(asset?.fieldSources ?? {}) });
+  }, [asset?.fieldSources, asset?.id]);
+
+  const prefixOptions = useMemo(
+    () =>
+      prefixes.map(prefix => ({
+        value: prefix.id,
+        label: prefix.description ? `${prefix.prefix} - ${prefix.description}` : prefix.prefix,
+      })),
+    [prefixes]
+  );
+
+  const selectedPrefix = useMemo(
+    () => prefixes.find(prefix => prefix.id === selectedPrefixId) ?? null,
+    [prefixes, selectedPrefixId]
+  );
+
+  const prefixDescription = selectedPrefix
+    ? (
+        <Group gap="xs">
+          <Text size="xs" c="dimmed">
+            Next asset number:
+          </Text>
+          <Badge color={selectedPrefix.color} size="sm">
+            {`${selectedPrefix.prefix}-${String(selectedPrefix.sequence + 1).padStart(3, '0')}`}
+          </Badge>
+        </Group>
+      )
+    : 'Choose a prefix for this asset\'s numbering sequence';
+
+  useEffect(() => {
+    if (isEditing) {
+      return;
+    }
+
+    if (selectedPrefixId) {
+      return;
+    }
+
+    if (prefixes.length === 0) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const applyStoredDefaults = async () => {
+      const moduleDefault = getStoredModuleDefaultPrefixId();
+      const personDefault = currentUserId ? await getStoredPersonDefaultPrefixId(currentUserId) : null;
+
+      const resolution = resolvePrefixForAutoNumbering({
+        prefixes,
+        personDefaultPrefixId: personDefault,
+        moduleDefaultPrefixId: moduleDefault,
+      });
+
+      if (!cancelled && resolution.prefixId) {
+        form.setFieldValue('prefixId', resolution.prefixId);
+      }
+    };
+
+    void applyStoredDefaults();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isEditing, prefixes, selectedPrefixId, currentUserId, form]);
 
   // Track whether the user has manually edited the name field. If not, we auto-fill
   // the name with a generated value based on other fields so the user sees a preview.
@@ -145,7 +237,7 @@ export function AssetForm({ asset, onSuccess, onCancel }: AssetFormProps) {
   }, [asset?.id]);
 
   // Get selected category details
-  const { data: selectedCategory } = useCategory(form.values.categoryId || '');
+  const { data: selectedCategory } = useCategory(form.values.assetTypeId || '');
 
   // Update custom field values when category changes
   useEffect(() => {
@@ -167,6 +259,91 @@ export function AssetForm({ asset, onSuccess, onCancel }: AssetFormProps) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCategory?.id, isEditing]);
+
+  const getFieldRule = useCallback(
+    (fieldKey: string) => assetGroupDetail ? getInheritanceRuleForField(fieldKey, assetGroupDetail) : undefined,
+    [assetGroupDetail],
+  );
+
+  const getFieldSource = useCallback(
+    (fieldKey: string): AssetGroupFieldSource | 'local' => {
+      const explicit = fieldSources[fieldKey];
+      if (explicit) {
+        return explicit;
+      }
+      const rule = getFieldRule(fieldKey);
+      if (rule?.inherited) {
+        return 'group';
+      }
+      return 'local';
+    },
+    [fieldSources, getFieldRule],
+  );
+
+  const isFieldInherited = useCallback(
+    (fieldKey: string) => Boolean(assetGroup && getFieldRule(fieldKey)?.inherited && getFieldSource(fieldKey) === 'group'),
+    [assetGroup, getFieldRule, getFieldSource],
+  );
+
+  const isFieldOverridden = useCallback(
+    (fieldKey: string) => getFieldSource(fieldKey) === 'override',
+    [getFieldSource],
+  );
+
+  const fieldSupportsOverride = useCallback(
+    (fieldKey: string) => Boolean(assetGroup && getFieldRule(fieldKey)?.inherited && getFieldRule(fieldKey)?.overridable),
+    [assetGroup, getFieldRule],
+  );
+
+  const updateFieldSource = useCallback((fieldKey: string, source: AssetGroupFieldSource | 'local') => {
+    setFieldSources((prev) => {
+      const next = { ...prev };
+      if (source === 'local') {
+        Reflect.deleteProperty(next, fieldKey);
+      } else {
+        next[fieldKey] = source;
+      }
+      return next;
+    });
+  }, []);
+
+  const applyGroupValue = (fieldKey: string) => {
+    if (!assetGroupDetail) {
+      return;
+    }
+
+    switch (fieldKey) {
+      case 'manufacturer':
+        form.setFieldValue('manufacturer', assetGroupDetail.manufacturer ?? '');
+        break;
+      case 'model':
+        form.setFieldValue('model', assetGroupDetail.model ?? '');
+        break;
+      case 'description':
+        form.setFieldValue('description', assetGroupDetail.description ?? '');
+        break;
+      default:
+        break;
+    }
+  };
+
+  const applyGroupCustomFieldValue = (fieldId: string, fieldKey: string) => {
+    if (!assetGroupDetail) {
+      return;
+    }
+
+    const sharedValue = assetGroupDetail.sharedCustomFields?.[fieldId];
+    if (sharedValue === undefined) {
+      const { [fieldKey]: _removed, ...rest } = form.values.customFieldValues;
+      form.setFieldValue('customFieldValues', rest);
+      return;
+    }
+
+    form.setFieldValue('customFieldValues', {
+      ...form.values.customFieldValues,
+      [fieldKey]: sharedValue as CustomFieldValue,
+    });
+  };
 
   const handleSubmit = async (values: AssetFormValues) => {
     try {
@@ -194,6 +371,16 @@ export function AssetForm({ asset, onSuccess, onCancel }: AssetFormProps) {
       }
 
       if (isEditing && asset) {
+        const nextFieldSources = assetGroup
+          ? Object.entries(fieldSources).reduce<Record<string, AssetGroupFieldSource>>((acc, [key, value]) => {
+              if (value === 'local') {
+                return acc;
+              }
+              acc[key] = value;
+              return acc;
+            }, {})
+          : undefined;
+
         // Update existing asset
         const updated = await updateAsset.mutateAsync({
           id: asset.id,
@@ -202,19 +389,21 @@ export function AssetForm({ asset, onSuccess, onCancel }: AssetFormProps) {
             manufacturer: values.manufacturer || undefined,
             model: values.model || undefined,
             description: values.description || undefined,
-            category: {
-              id: values.categoryId,
-              name: categories.find(c => c.id === values.categoryId)?.name || '',
+            assetType: {
+              id: values.assetTypeId,
+              name: categories.find(c => c.id === values.assetTypeId)?.name || '',
             },
             status: values.status,
             location: values.location || undefined,
             parentAssetId: values.parentAssetId || undefined,
             bookable: values.bookable, // T070: Include bookable status
             customFieldValues: values.customFieldValues,
+            mainImage: values.mainImage ?? null,
             isParent: asset.isParent,
             childAssetIds: asset.childAssetIds,
             barcode: asset.barcode,
             qrCode: asset.qrCode,
+            fieldSources: nextFieldSources,
           },
         });
 
@@ -229,16 +418,16 @@ export function AssetForm({ asset, onSuccess, onCancel }: AssetFormProps) {
         }
       } else {
         // Create new asset(s)
-        const categoryName = categories.find(c => c.id === values.categoryId)?.name || '';
+        const assetTypeName = categories.find(c => c.id === values.assetTypeId)?.name || '';
         
         const newAssetData: AssetCreate = {
           name: values.name,
           manufacturer: values.manufacturer || undefined,
           model: values.model || undefined,
           description: values.description || undefined,
-          category: {
-            id: values.categoryId,
-            name: categoryName,
+          assetType: {
+            id: values.assetTypeId,
+            name: assetTypeName,
           },
           status: values.status,
           location: values.location || undefined,
@@ -248,7 +437,12 @@ export function AssetForm({ asset, onSuccess, onCancel }: AssetFormProps) {
           bookable: values.bookable, // T070: Include bookable status
           customFieldValues: values.customFieldValues,
           prefixId: values.prefixId || undefined, // T272: Pass selected prefix
+          fieldSources: assetGroup ? fieldSources : undefined,
         };
+
+        if (values.mainImage !== null) {
+          newAssetData.mainImage = values.mainImage;
+        }
 
         // T092-T096: Handle multi-asset creation
         if (values.isParent && values.quantity >= 2) {
@@ -321,6 +515,18 @@ export function AssetForm({ asset, onSuccess, onCancel }: AssetFormProps) {
             <Title order={3}>{isEditing ? 'Edit Asset' : 'Create New Asset'}</Title>
           </Group>
 
+          {assetGroup && (
+            <Alert
+              icon={<IconUsersGroup size={16} />}
+              color="grape"
+              title="Asset model"
+            >
+              {assetGroupDetail
+                ? `This asset inherits shared fields from ${assetGroupDetail.name}.`
+                : 'Loading asset model details...'}
+            </Alert>
+          )}
+
           <Grid>
             <Grid.Col span={{ base: 12, md: 6 }}>
               <TextInput
@@ -344,15 +550,15 @@ export function AssetForm({ asset, onSuccess, onCancel }: AssetFormProps) {
 
             <Grid.Col span={{ base: 12, md: 6 }}>
               <Select
-                label="Category"
-                placeholder="Select category"
+                label="Asset Type"
+                placeholder="Select asset type"
                 required
                 disabled={isEditing}
                 data={categories.map(cat => ({
                   value: cat.id,
                   label: `${cat.icon || ''} ${cat.name}`.trim(),
                 }))}
-                {...form.getInputProps('categoryId')}
+                {...form.getInputProps('assetTypeId')}
               />
             </Grid.Col>
 
@@ -362,31 +568,17 @@ export function AssetForm({ asset, onSuccess, onCancel }: AssetFormProps) {
                 <Select
                   label="Asset Prefix"
                   placeholder="Select prefix"
-                  description={
-                    form.values.prefixId
-                      ? (() => {
-                          const selectedPrefix = prefixes.find(p => p.id === form.values.prefixId);
-                          if (selectedPrefix) {
-                            const nextNumber = String(selectedPrefix.sequence + 1).padStart(3, '0');
-                            return (
-                              <Group gap="xs">
-                                <Text size="xs" c="dimmed">Next asset number:</Text>
-                                <Badge color={selectedPrefix.color} size="sm">
-                                  {selectedPrefix.prefix}-{nextNumber}
-                                </Badge>
-                              </Group>
-                            );
-                          }
-                          return null;
-                        })()
-                      : 'Choose a prefix for this asset\'s numbering sequence'
-                  }
+                  description={prefixDescription}
                   descriptionProps={{ component: 'div' }}
-                  data={prefixes.map(prefix => ({
-                    value: prefix.id,
-                    label: `${prefix.prefix} - ${prefix.description}`,
-                  }))}
-                  {...form.getInputProps('prefixId')}
+                  data={prefixOptions}
+                  value={form.values.prefixId || null}
+                  clearable
+                  onChange={(value) => {
+                    form.setFieldValue('prefixId', value ?? '');
+                    if (currentUser) {
+                      void setStoredPersonDefaultPrefixId(currentUser, value ?? null);
+                    }
+                  }}
                 />
               </Grid.Col>
             )}
@@ -438,11 +630,17 @@ export function AssetForm({ asset, onSuccess, onCancel }: AssetFormProps) {
                 onChange={(next) => form.setFieldValue('manufacturer', next)}
                 nothingFound="No manufacturers"
                 error={form.errors['manufacturer'] as string | undefined}
+                disabled={isEditing && assetGroup ? isFieldInherited('manufacturer') && !isFieldOverridden('manufacturer') : false}
                 onCreateOption={(name) => {
                   const created = addManufacturer(name);
                   return created?.name ?? normalizeMasterDataName(name);
                 }}
               />
+              {isEditing && assetGroup && isFieldInherited('manufacturer') && (
+                <Text size="xs" c="dimmed" mt={4}>
+                  Inherited from {assetGroup.name}. Update the asset model to change this value.
+                </Text>
+              )}
             </Grid.Col>
 
             <Grid.Col span={{ base: 12, md: 6 }}>
@@ -455,19 +653,63 @@ export function AssetForm({ asset, onSuccess, onCancel }: AssetFormProps) {
                 onChange={(next) => form.setFieldValue('model', next)}
                 nothingFound="No models"
                 error={form.errors['model'] as string | undefined}
+                disabled={isEditing && assetGroup ? isFieldInherited('model') && !isFieldOverridden('model') : false}
                 onCreateOption={(name) => {
                   const created = addModel(name);
                   return created?.name ?? normalizeMasterDataName(name);
                 }}
               />
+              {isEditing && assetGroup && isFieldInherited('model') && (
+                <Text size="xs" c="dimmed" mt={4}>
+                  Inherited from {assetGroup.name}. Update the asset model to change this value.
+                </Text>
+              )}
             </Grid.Col>
 
             <Grid.Col span={12}>
+              {assetGroup && fieldSupportsOverride('description') && (
+                <Switch
+                  size="sm"
+                  label={`Override ${assetGroup.name} description`}
+                  checked={isFieldOverridden('description')}
+                  onChange={(event) => {
+                    const checked = event.currentTarget.checked;
+                    if (checked) {
+                      updateFieldSource('description', 'override');
+                    } else {
+                      updateFieldSource('description', 'group');
+                      applyGroupValue('description');
+                    }
+                  }}
+                  mb="xs"
+                />
+              )}
               <Textarea
                 label="Description"
                 placeholder="Additional details about this asset"
                 rows={3}
                 {...form.getInputProps('description')}
+                disabled={isEditing && assetGroup ? isFieldInherited('description') && !isFieldOverridden('description') : false}
+              />
+              {assetGroup && isFieldInherited('description') && !isFieldOverridden('description') && (
+                <Text size="xs" c="dimmed" mt={4}>
+                  Inherited from {assetGroup.name}. Override this field to customize it for the asset.
+                </Text>
+              )}
+              {assetGroup && isFieldOverridden('description') && (
+                <Text size="xs" c="dimmed" mt={4}>
+                  Currently overriding the shared description from {assetGroup.name}.
+                </Text>
+              )}
+            </Grid.Col>
+
+            <Grid.Col span={12}>
+              <MainImageUpload
+                label="Main Image"
+                description="Displayed in asset lists and detail views."
+                value={form.values.mainImage}
+                onChange={(next) => form.setFieldValue('mainImage', next)}
+                disabled={isLoading}
               />
             </Grid.Col>
 
@@ -505,15 +747,49 @@ export function AssetForm({ asset, onSuccess, onCancel }: AssetFormProps) {
               <Grid>
                 {selectedCategory.customFields.map((field) => (
                   <Grid.Col key={field.id} span={{ base: 12, md: 6 }}>
-                    <CustomFieldInput
-                      field={field}
-                      value={form.values.customFieldValues[field.name]}
-                      onChange={(value) => {
-                        form.setFieldValue(`customFieldValues.${field.name}`, value);
-                      }}
-                      error={form.errors[`customFieldValues.${field.name}`] as string | undefined}
-                      disabled={isLoading}
-                    />
+                    <Stack gap="xs">
+                      {assetGroup && fieldSupportsOverride(`${CUSTOM_FIELD_SOURCE_PREFIX}${field.id}`) && (
+                        <Switch
+                          size="sm"
+                          label={`Override ${assetGroup.name} value`}
+                          checked={isFieldOverridden(`${CUSTOM_FIELD_SOURCE_PREFIX}${field.id}`)}
+                          onChange={(event) => {
+                            const checked = event.currentTarget.checked;
+                            const key = `${CUSTOM_FIELD_SOURCE_PREFIX}${field.id}`;
+                            if (checked) {
+                              updateFieldSource(key, 'override');
+                            } else {
+                              updateFieldSource(key, 'group');
+                              applyGroupCustomFieldValue(field.id, field.name);
+                            }
+                          }}
+                        />
+                      )}
+                      <CustomFieldInput
+                        field={field}
+                        value={form.values.customFieldValues[field.name]}
+                        onChange={(value) => {
+                          form.setFieldValue('customFieldValues', {
+                            ...form.values.customFieldValues,
+                            [field.name]: value,
+                          });
+                        }}
+                        error={form.errors[`customFieldValues.${field.name}`] as string | undefined}
+                        disabled={isLoading || (assetGroup ? isFieldInherited(`${CUSTOM_FIELD_SOURCE_PREFIX}${field.id}`) && !isFieldOverridden(`${CUSTOM_FIELD_SOURCE_PREFIX}${field.id}`) : false)}
+                      />
+                      {assetGroup && isFieldInherited(`${CUSTOM_FIELD_SOURCE_PREFIX}${field.id}`) && !isFieldOverridden(`${CUSTOM_FIELD_SOURCE_PREFIX}${field.id}`) && (
+                        <Text size="xs" c="dimmed">
+                          {fieldSupportsOverride(`${CUSTOM_FIELD_SOURCE_PREFIX}${field.id}`)
+                            ? `Inherited from ${assetGroup.name}. Override this field to set a custom value.`
+                            : `Inherited from ${assetGroup.name}. Update the asset model to change this value.`}
+                        </Text>
+                      )}
+                      {assetGroup && isFieldOverridden(`${CUSTOM_FIELD_SOURCE_PREFIX}${field.id}`) && (
+                        <Text size="xs" c="dimmed">
+                          Custom value overrides the shared field from {assetGroup.name}.
+                        </Text>
+                      )}
+                    </Stack>
                   </Grid.Col>
                 ))}
               </Grid>

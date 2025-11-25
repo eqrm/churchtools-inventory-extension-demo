@@ -84,8 +84,15 @@ export function updateUrlWithFilters(
   }
   
   // Update URL without reload
-  const newUrl = `${window.location.pathname}?${params.toString()}`;
-  window.history.pushState({}, '', newUrl);
+  const nextSearch = params.toString();
+  const nextUrl = nextSearch ? `${window.location.pathname}?${nextSearch}` : window.location.pathname;
+  const currentUrl = `${window.location.pathname}${window.location.search}`;
+
+  if (nextUrl === currentUrl) {
+    return;
+  }
+
+  window.history.replaceState({}, '', nextUrl);
 }
 
 /**
@@ -148,6 +155,12 @@ export function generateShareableLink(
  * Clear all filters from URL
  */
 export function clearUrlFilters(): void {
-  const newUrl = window.location.pathname;
-  window.history.pushState({}, '', newUrl);
+  const currentUrl = `${window.location.pathname}${window.location.search}`;
+  const nextUrl = window.location.pathname;
+
+  if (currentUrl === nextUrl) {
+    return;
+  }
+
+  window.history.replaceState({}, '', nextUrl);
 }

@@ -92,7 +92,7 @@ export function KitDetail() {
               <Text fw={500}>Pool-Anforderungen:</Text>
               {kit.poolRequirements.map((pool, idx) => (
                 <Text key={idx} size="sm">
-                  • {pool.quantity}x {pool.categoryName}
+                  • {pool.quantity}x {pool.assetTypeName}
                 </Text>
               ))}
             </div>
@@ -110,7 +110,10 @@ export function KitDetail() {
           kitId={kit.id}
           onSuccess={() => {
             setBookingModalOpened(false);
-            navigate('/bookings');
+            // Return to the previous page instead of forcing a specific route
+            if (window.history.length > 1) {
+              window.history.back();
+            }
           }}
           onCancel={() => setBookingModalOpened(false)}
         />

@@ -13,9 +13,13 @@ import type {
   AssetCreate,
   AssetUpdate,
   AssetFilters,
-  AssetCategory,
-  CategoryCreate,
-  CategoryUpdate,
+  AssetType,
+  AssetTypeCreate,
+  AssetTypeUpdate,
+  AssetGroup,
+  AssetGroupCreate,
+  AssetGroupUpdate,
+  AssetGroupFilters,
   Booking,
   BookingCreate,
   BookingUpdate,
@@ -27,14 +31,28 @@ import type {
   MaintenanceRecordCreate,
   MaintenanceSchedule,
   MaintenanceScheduleCreate,
+  MaintenanceCalendarHold,
   StockTakeSession,
   StockTakeSessionCreate,
   StockTakeStatus,
   ChangeHistoryEntry,
   SavedView,
   SavedViewCreate,
-  PersonInfo
+  PersonInfo,
+  UUID
 } from './entities'
+
+export interface GroupBookingCreate {
+  groupId: UUID
+  assetIds: UUID[]
+  booking: Omit<BookingCreate, 'asset' | 'kit' | 'quantity' | 'allocatedChildAssets'>
+  stopOnError?: boolean
+}
+
+export interface GroupBookingResult {
+  successes: Array<{ assetId: UUID; booking: Booking }>
+  failures: Array<{ assetId: UUID; error: string }>
+}
 
 /**
  * Core storage provider interface
@@ -42,43 +60,43 @@ import type {
  */
 export interface IStorageProvider {
   // ============================================================================
-  // Asset Categories
+  // Asset Types
   // ============================================================================
   
   /**
-   * Get all asset categories
-   * @returns Array of all categories
+   * Get all asset types
+   * @returns Array of all asset types
    */
-  getCategories(): Promise<AssetCategory[]>
+  getAssetTypes(): Promise<AssetType[]>
   
   /**
-   * Get a single category by ID
-   * @param id - Category ID
-   * @returns Category or null if not found
+   * Get a single asset type by ID
+   * @param id - Asset type ID
+   * @returns Asset type or null if not found
    */
-  getCategory(id: string): Promise<AssetCategory | null>
+  getAssetType(id: string): Promise<AssetType | null>
   
   /**
-   * Create a new asset category
-   * @param category - Category data without ID
-   * @returns Created category with generated ID
+   * Create a new asset type
+   * @param assetType - Asset type data without ID
+   * @returns Created asset type with generated ID
    */
-  createCategory(category: CategoryCreate): Promise<AssetCategory>
+  createAssetType(assetType: AssetTypeCreate): Promise<AssetType>
   
   /**
-   * Update an existing category
-   * @param id - Category ID
-   * @param category - Partial category data to update
-   * @returns Updated category
+   * Update an existing asset type
+   * @param id - Asset type ID
+   * @param assetType - Partial asset type data to update
+   * @returns Updated asset type
    */
-  updateCategory(id: string, category: CategoryUpdate): Promise<AssetCategory>
+  updateAssetType(id: string, assetType: AssetTypeUpdate): Promise<AssetType>
   
   /**
-   * Delete a category
-   * Note: Should fail if assets exist in this category
-   * @param id - Category ID
+   * Delete an asset type
+   * Note: Should fail if assets exist for this type
+   * @param id - Asset type ID
    */
-  deleteCategory(id: string): Promise<void>
+  deleteAssetType(id: string): Promise<void>
   
   // ============================================================================
   // Assets
@@ -156,6 +174,87 @@ export interface IStorageProvider {
   searchAssets(query: string): Promise<Asset[]>
   
   // ============================================================================
+  // Asset Groups
+  // ============================================================================
+
+  /**
+   * List asset groups with optional filtering
+   */
+  getAssetGroups(filters?: AssetGroupFilters): Promise<AssetGroup[]>
+
+  /**
+   * Get a single asset group by ID
+   */
+  getAssetGroup(id: string): Promise<AssetGroup | null>
+
+  /**
+   * Create a new asset group definition
+   */
+  createAssetGroup(data: AssetGroupCreate): Promise<AssetGroup>
+
+  /**
+   * Update an existing asset group
+   */
+  updateAssetGroup(id: string, data: AssetGroupUpdate): Promise<AssetGroup>
+
+  /**
+   * Delete an asset group, optionally reassigning members
+   */
+  deleteAssetGroup(id: string, options?: { reassignAssets?: boolean }): Promise<void>
+
+  /**
+   * Associate an asset with a group
+   */
+  addAssetToGroup(assetId: string, groupId: string): Promise<Asset>
+
+  /**
+   * Remove an asset from its group
+   */
+  removeAssetFromGroup(assetId: string): Promise<Asset>
+
+  /**
+   * Remove all members while keeping the group definition
+   */
+  dissolveAssetGroup(id: string): Promise<AssetGroup>
+
+  /**
+   * Regenerate the barcode for an asset group using the shared reassignment flow
+   */
+  regenerateAssetGroupBarcode(id: string, reason?: string, customBarcode?: string): Promise<AssetGroup>
+
+  /**
+   * Move an asset from its current group to another group
+   */
+  reassignAssetToGroup(assetId: string, targetGroupId: string): Promise<Asset>
+
+  /**
+   * Bulk-create assets assigned to a group
+   */
+  bulkCreateAssetsForGroup(groupId: string, count: number, baseData?: Partial<AssetCreate>): Promise<Asset[]>
+
+  /**
+   * Apply updates to all members of an asset group
+   */
+  bulkUpdateGroupMembers(
+    groupId: string,
+    update: AssetUpdate,
+    options?: { clearOverrides?: boolean }
+  ): Promise<Asset[]>
+
+  /**
+   * Get all assets that are members of a group
+   */
+  getGroupMembers(groupId: string): Promise<Asset[]>
+
+  /**
+   * Resolve the value for a field, considering group inheritance
+   */
+  resolveAssetFieldValue(
+    assetId: string,
+    fieldKey: string
+  ): Promise<{ value: unknown; source: 'group' | 'local' | 'override' }>
+
+  // ============================================================================
   // Bookings
   // ============================================================================
   
@@ -198,6 +297,11 @@ export interface IStorageProvider {
    * @throws Error if asset is not available
    */
   createBooking(booking: BookingCreate): Promise<Booking>
+
+  /**
+   * Create bookings for multiple assets within a group using shared booking data
+   */
+  createGroupBooking(request: GroupBookingCreate): Promise<GroupBookingResult>
   
   /**
    * Update a booking
@@ -213,6 +317,12 @@ export interface IStorageProvider {
    * @param reason - Optional cancellation reason
    */
   cancelBooking(id: string, reason?: string): Promise<void>
+
+  /**
+   * Delete a booking record entirely (demo/reset tooling)
+   * @param id - Booking ID
+   */
+  deleteBooking(id: string): Promise<void>
   
   /**
    * Check out an asset (start booking)
@@ -318,6 +428,12 @@ export interface IStorageProvider {
    * @returns Updated maintenance record
    */
   updateMaintenanceRecord(id: string, record: Partial<MaintenanceRecord>): Promise<MaintenanceRecord>
+
+  /**
+   * Delete a maintenance record (cleanup tooling)
+   * @param id - Record ID
+   */
+  deleteMaintenanceRecord(id: string): Promise<void>
   
   /**
    * Get maintenance schedules, optionally filtered by asset
@@ -372,6 +488,30 @@ export interface IStorageProvider {
    * @returns Array of assets with upcoming maintenance
    */
   getUpcomingMaintenance(daysAhead: number): Promise<Asset[]>
+
+  /**
+   * Retrieve maintenance calendar holds filtered by plan or asset.
+   * @param filters Optional planId or assetId filters
+   */
+  getMaintenanceHolds(filters?: { planId?: string; assetId?: string; status?: 'active' | 'released' }): Promise<MaintenanceCalendarHold[]>
+
+  /**
+   * Create a maintenance calendar hold entry linked to a maintenance plan.
+   * @param hold Hold metadata including associated booking identifier
+   */
+  createMaintenanceHold(
+    hold: Omit<MaintenanceCalendarHold, 'id' | 'status' | 'createdAt' | 'releasedAt'> & { status?: 'active' | 'released' }
+  ): Promise<MaintenanceCalendarHold>
+
+  /**
+   * Release an existing maintenance hold and optionally update metadata.
+   * @param holdId Hold identifier
+   * @param updates Optional updates (bookingId, holdColor, releasedAt)
+   */
+  releaseMaintenanceHold(
+    holdId: string,
+    updates?: Partial<Omit<MaintenanceCalendarHold, 'id' | 'planId' | 'assetId' | 'startDate' | 'endDate' | 'createdAt'>>
+  ): Promise<MaintenanceCalendarHold>
   
   // ============================================================================
   // Stock Take
@@ -427,6 +567,12 @@ export interface IStorageProvider {
    * @param sessionId - Session ID
    */
   cancelStockTakeSession(sessionId: string): Promise<void>
+
+  /**
+   * Delete a stock take session entirely
+   * @param sessionId - Session ID
+   */
+  deleteStockTakeSession(sessionId: string): Promise<void>
   
   // ============================================================================
   // Change History / Audit Trail

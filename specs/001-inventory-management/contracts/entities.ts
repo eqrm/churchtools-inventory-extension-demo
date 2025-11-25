@@ -47,12 +47,12 @@ export interface AssetCategory {
   lastModifiedAt: ISOTimestamp
 }
 
-export type CategoryCreate = Omit<
+export type AssetTypeCreate = Omit<
   AssetCategory,
   'id' | 'createdBy' | 'createdByName' | 'createdAt' | 'lastModifiedBy' | 'lastModifiedByName' | 'lastModifiedAt'
 >
 
-export type CategoryUpdate = Partial<Omit<AssetCategory, 'id' | 'createdBy' | 'createdByName' | 'createdAt'>>
+export type AssetTypeUpdate = Partial<Omit<AssetCategory, 'id' | 'createdBy' | 'createdByName' | 'createdAt'>>
 
 export interface CustomFieldDefinition {
   id: UUID
@@ -155,7 +155,7 @@ export type AssetCreate = Omit<
 export type AssetUpdate = Partial<Omit<Asset, 'id' | 'assetNumber' | 'createdBy' | 'createdByName' | 'createdAt'>>
 
 export interface AssetFilters {
-  categoryId?: UUID
+  assetTypeId?: UUID
   status?: AssetStatus | AssetStatus[]
   location?: string
   parentAssetId?: UUID
@@ -260,7 +260,7 @@ export interface Kit {
     name: string
   }[]
   poolRequirements?: {
-    categoryId: UUID
+    assetTypeId: UUID
     categoryName: string
     quantity: number
     filters?: Record<string, any>
@@ -361,7 +361,7 @@ export interface StockTakeSession {
   status: StockTakeStatus
   scope: {
     type: 'all' | 'category' | 'location' | 'custom'
-    categoryIds?: UUID[]
+    assetTypeIds?: UUID[]
     locations?: string[]
     assetIds?: UUID[]
   }
@@ -555,7 +555,7 @@ export interface CustomDataCategory {
  */
 export interface CustomDataValue {
   id: number
-  categoryId: number
+  assetTypeId: number
   [key: string]: any  // Dynamic properties based on category
 }
 

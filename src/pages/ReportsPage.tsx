@@ -1,10 +1,12 @@
 import { Container, Stack, Title, Text } from '@mantine/core';
-import { useParams } from 'react-router-dom';
+import { useMemo } from 'react';
+import { Navigate, useParams } from 'react-router-dom';
 import { ReportList } from '../components/reports/ReportList';
 import { AssetUtilizationReport } from '../components/reports/AssetUtilizationReport';
 import { MaintenanceComplianceReport } from '../components/reports/MaintenanceComplianceReport';
 import { StockTakeSummaryReport } from '../components/reports/StockTakeSummaryReport';
 import { BookingHistoryReport } from '../components/reports/BookingHistoryReport';
+import { useFeatureSettingsStore } from '../stores';
 
 /**
  * Reports Page - Central hub for all reporting features
@@ -16,6 +18,38 @@ import { BookingHistoryReport } from '../components/reports/BookingHistoryReport
  */
 export function ReportsPage() {
   const { reportId } = useParams<{ reportId?: string }>();
+  const { bookingsEnabled, maintenanceEnabled } = useFeatureSettingsStore((state) => ({
+    bookingsEnabled: state.bookingsEnabled,
+    maintenanceEnabled: state.maintenanceEnabled,
+  }));
+
+  const reportSummary = useMemo(() => {
+    const parts: string[] = ['assets', 'stock take'];
+    if (maintenanceEnabled) {
+      parts.push('maintenance');
+    }
+    if (bookingsEnabled) {
+      parts.push('bookings');
+    }
+
+    if (parts.length === 1) {
+      return `Generate and view reports for ${parts[0]}.`;
+    }
+    if (parts.length === 2) {
+      return `Generate and view reports for ${parts[0]} and ${parts[1]}.`;
+    }
+
+    const last = parts.pop();
+    return `Generate and view reports for ${parts.join(', ')}, and ${last}.`;
+  }, [bookingsEnabled, maintenanceEnabled]);
+
+  if (reportId === 'bookings' && !bookingsEnabled) {
+    return <Navigate to="/reports" replace />;
+  }
+
+  if (reportId === 'maintenance' && !maintenanceEnabled) {
+    return <Navigate to="/reports" replace />;
+  }
 
   // If a specific report is selected, show that report
   if (reportId) {
@@ -44,7 +78,7 @@ export function ReportsPage() {
           <div>
             <Title order={1}>Reports</Title>
             <Text size="lg" c="dimmed" mt="xs">
-              Generate and view reports for bookings, maintenance, assets, and stock take
+                {reportSummary}
             </Text>
           </div>
 
@@ -61,7 +95,7 @@ export function ReportsPage() {
         <div>
           <Title order={1}>Reports</Title>
           <Text size="lg" c="dimmed" mt="xs">
-            Generate and view reports for bookings, maintenance, assets, and stock take
+            {reportSummary}
           </Text>
         </div>
 

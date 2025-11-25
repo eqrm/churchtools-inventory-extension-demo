@@ -3,13 +3,15 @@
  * Displays maintenance history in a sortable, filterable table
  */
 
+import { useMemo } from 'react';
 import { Badge, Group, Text } from '@mantine/core';
-import { DataTable } from 'mantine-datatable';
+import type { DataTableColumn } from 'mantine-datatable';
 import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
 import type { MaintenanceRecord } from '../../types/entities';
+import { DataViewTable } from '../dataView/DataViewTable';
 
-interface MaintenanceRecordListProps {
+export interface MaintenanceRecordListProps {
   records: MaintenanceRecord[];
   onRecordClick?: (record: MaintenanceRecord) => void;
 }
@@ -17,7 +19,7 @@ interface MaintenanceRecordListProps {
 /**
  * Badge for maintenance type
  */
-function MaintenanceTypeBadge({ type }: { type: MaintenanceRecord['type'] }) {
+export function MaintenanceTypeBadge({ type }: { type: MaintenanceRecord['type'] }) {
   const colors = {
     inspection: 'blue',
     cleaning: 'cyan',
@@ -48,7 +50,8 @@ function MaintenanceTypeBadge({ type }: { type: MaintenanceRecord['type'] }) {
 /**
  * Get table columns configuration
  */
-function getTableColumns() {
+// eslint-disable-next-line react-refresh/only-export-components
+export function getMaintenanceRecordColumns(): DataTableColumn<MaintenanceRecord>[] {
   return [
     {
       accessor: 'date',
@@ -80,8 +83,7 @@ function getTableColumns() {
       accessor: 'cost',
       title: 'Kosten',
       sortable: true,
-      render: (record: MaintenanceRecord) =>
-        record.cost ? `${record.cost.toFixed(2)} €` : '-',
+      render: (record: MaintenanceRecord) => (record.cost ? `${record.cost.toFixed(2)} €` : '-'),
     },
     {
       accessor: 'nextDueDate',
@@ -99,11 +101,22 @@ function getTableColumns() {
  * Display maintenance history in a table
  */
 export function MaintenanceRecordList({ records, onRecordClick }: MaintenanceRecordListProps) {
+  const columns = useMemo(() => getMaintenanceRecordColumns(), []);
+
   return (
-    <DataTable
+    <DataViewTable<MaintenanceRecord>
       records={records}
-      columns={getTableColumns()}
-      onRowClick={onRecordClick ? ({ record }) => onRecordClick(record) : undefined}
+      columns={columns}
+      highlightOnHover={Boolean(onRecordClick)}
+      onRowClick={
+        onRecordClick
+          ? ({ record }) => {
+              onRecordClick(record);
+            }
+          : undefined
+      }
+      rowStyle={() => (onRecordClick ? { cursor: 'pointer' } : undefined)}
+      noRecordsText="Keine Wartungseinträge vorhanden"
       emptyState={
         <Group justify="center" p="xl">
           <Text c="dimmed">Keine Wartungseinträge vorhanden</Text>

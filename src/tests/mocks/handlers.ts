@@ -22,7 +22,7 @@ const API_BASE_URL = 'https://test.church.tools/api';
  */
 export const handlers = [
     // Get all inventory items
-    http.get(`${API_BASE_URL}/modules/test-fkoinventorymanagement/items`, () => {
+    http.get(`${API_BASE_URL}/modules/testfkoinventorymanagement/items`, () => {
         return HttpResponse.json({
             data: [
                 createMockInventoryItem({ id: 1, name: 'Test Item 1' }),
@@ -33,7 +33,7 @@ export const handlers = [
     }),
 
     // Get single inventory item
-    http.get(`${API_BASE_URL}/modules/test-fkoinventorymanagement/items/:id`, ({ params }) => {
+    http.get(`${API_BASE_URL}/modules/testfkoinventorymanagement/items/:id`, ({ params }) => {
         const id = String(params['id'] ?? '1');
         return HttpResponse.json({
             data: createMockInventoryItemDetail({
@@ -44,7 +44,7 @@ export const handlers = [
     }),
 
     // Create inventory item
-    http.post(`${API_BASE_URL}/modules/test-fkoinventorymanagement/items`, async ({ request }) => {
+    http.post(`${API_BASE_URL}/modules/testfkoinventorymanagement/items`, async ({ request }) => {
         const body = (await request.json()) as Partial<InventoryItem>;
         return HttpResponse.json({
             data: createMockInventoryItem({
@@ -55,7 +55,7 @@ export const handlers = [
     }),
 
     // Update inventory item
-    http.patch(`${API_BASE_URL}/modules/test-fkoinventorymanagement/items/:id`, async ({ params, request }) => {
+    http.patch(`${API_BASE_URL}/modules/testfkoinventorymanagement/items/:id`, async ({ params, request }) => {
         const id = String(params['id'] ?? '1');
         const body = (await request.json()) as Partial<InventoryItemDetail>;
         return HttpResponse.json({
@@ -67,12 +67,12 @@ export const handlers = [
     }),
 
     // Delete inventory item
-    http.delete(`${API_BASE_URL}/modules/test-fkoinventorymanagement/items/:id`, () => {
+    http.delete(`${API_BASE_URL}/modules/testfkoinventorymanagement/items/:id`, () => {
         return new HttpResponse(null, { status: 204 });
     }),
 
     // Get all templates
-    http.get(`${API_BASE_URL}/modules/test-fkoinventorymanagement/templates`, () => {
+    http.get(`${API_BASE_URL}/modules/testfkoinventorymanagement/templates`, () => {
         return HttpResponse.json({
             data: [
                 createMockItemTemplate({ id: 1, name: 'Electronics' }),
@@ -82,7 +82,7 @@ export const handlers = [
     }),
 
     // Get single template
-    http.get(`${API_BASE_URL}/modules/test-fkoinventorymanagement/templates/:id`, ({ params }) => {
+    http.get(`${API_BASE_URL}/modules/testfkoinventorymanagement/templates/:id`, ({ params }) => {
         const id = String(params['id'] ?? '1');
         return HttpResponse.json({
             data: createMockItemTemplate({
@@ -116,7 +116,7 @@ export const handlers = [
  */
 export const errorHandlers = {
     // 404 Not Found
-    notFound: http.get(`${API_BASE_URL}/modules/test-fkoinventorymanagement/items/:id`, () => {
+    notFound: http.get(`${API_BASE_URL}/modules/testfkoinventorymanagement/items/:id`, () => {
         return HttpResponse.json(
             { error: 'Not found' },
             { status: 404 }
@@ -124,7 +124,7 @@ export const errorHandlers = {
     }),
 
     // 401 Unauthorized
-    unauthorized: http.get(`${API_BASE_URL}/modules/test-fkoinventorymanagement/items`, () => {
+    unauthorized: http.get(`${API_BASE_URL}/modules/testfkoinventorymanagement/items`, () => {
         return HttpResponse.json(
             { error: 'Unauthorized' },
             { status: 401 }
@@ -132,7 +132,7 @@ export const errorHandlers = {
     }),
 
     // 500 Internal Server Error
-    serverError: http.get(`${API_BASE_URL}/modules/test-fkoinventorymanagement/items`, () => {
+    serverError: http.get(`${API_BASE_URL}/modules/testfkoinventorymanagement/items`, () => {
         return HttpResponse.json(
             { error: 'Internal server error' },
             { status: 500 }
@@ -140,7 +140,7 @@ export const errorHandlers = {
     }),
 
     // Network error
-    networkError: http.get(`${API_BASE_URL}/modules/test-fkoinventorymanagement/items`, () => {
+    networkError: http.get(`${API_BASE_URL}/modules/testfkoinventorymanagement/items`, () => {
         return HttpResponse.error();
     }),
 };

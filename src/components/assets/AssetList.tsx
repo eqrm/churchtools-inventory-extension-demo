@@ -1,5 +1,5 @@
  
-import { useState, useMemo, memo, useEffect } from 'react';
+import { useState, useMemo, memo, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ActionIcon,
@@ -13,14 +13,13 @@ import {
   Stack,
   Text,
   TextInput,
-  Title,
+  SegmentedControl,
 } from '@mantine/core';
-import { DataTable, type DataTableSortStatus } from 'mantine-datatable';
+import type { DataTableSortStatus } from 'mantine-datatable';
 import {
   IconDots,
   IconEdit,
   IconEye,
-  IconFilter,
   IconPlus,
   IconSearch,
   IconTrash,
@@ -29,6 +28,7 @@ import {
 import { useAssets, useDeleteAsset, useCreateAsset } from '../../hooks/useAssets';
 import { useCategories } from '../../hooks/useCategories';
 import { useAssetPrefixes } from '../../hooks/useAssetPrefixes';
+import { useAssetGroups } from '../../hooks/useAssetGroups';
 import { useUndoStore } from '../../stores/undoStore';
 import { useMaintenanceSchedules } from '../../hooks/useMaintenance';
 import { notifications } from '@mantine/notifications';
@@ -36,8 +36,11 @@ import { AssetStatusBadge } from './AssetStatusBadge';
 import { CustomFieldFilterInput } from './CustomFieldFilterInput';
 import { IconDisplay } from '../categories/IconDisplay';
 import { MaintenanceReminderBadge } from '../maintenance/MaintenanceReminderBadge';
-import type { Asset, AssetStatus, AssetFilters } from '../../types/entities';
+import type { Asset, AssetStatus, AssetFilters, AssetGroup } from '../../types/entities';
 import { ASSET_STATUS_OPTIONS } from '../../constants/assetStatuses';
+import { DataViewLayout } from '../dataView/DataViewLayout';
+import { DataViewTable } from '../dataView/DataViewTable';
+import { useDataViewState } from '../../hooks/useDataViewState';
 
 interface AssetListProps {
   onView?: (asset: Asset) => void;
@@ -56,16 +59,84 @@ const ASSET_TYPE_OPTIONS = [
   { value: 'standalone', label: 'Standalone Assets Only' },
 ];
 
+const GROUP_MEMBERSHIP_OPTIONS = [
+  { value: 'all', label: 'All Assets' },
+  { value: 'grouped', label: 'Grouped Assets' },
+  { value: 'ungrouped', label: 'Without Group' },
+];
+
 const ASSET_PAGE_SIZE_OPTIONS: number[] = [25, 50, 100, 200];
 const ASSET_PAGE_SIZE_STORAGE_KEY = 'asset-list-page-size';
 const DEFAULT_ASSET_PAGE_SIZE = 50;
+const GROUP_VIEW_STORAGE_KEY = 'asset-list-group-view-enabled';
+const UNGROUPED_GROUP_ID = '__ungrouped__';
 
-interface AssetListRow extends Asset {
+type AssetTypeFilter = 'parent' | 'child' | 'standalone';
+
+type AssetViewFilters = (AssetFilters & {
+  assetType?: AssetTypeFilter;
+  prefixId?: string;
+  hasAssetGroup?: boolean;
+  assetGroupId?: string;
+}) & Record<string, unknown>;
+
+function getActiveAssetFilterCount(filters: AssetViewFilters): number {
+  let count = 0;
+
+  if (filters.search) count += 1;
+  if (filters.assetTypeId) count += 1;
+  if (filters.status) count += 1;
+  if (filters.location) count += 1;
+  if (filters.parentAssetId) count += 1;
+  if (typeof filters.isParent === 'boolean') count += 1;
+  if (filters.assetType) count += 1;
+  if (filters.prefixId) count += 1;
+  if (typeof filters.hasAssetGroup === 'boolean') count += 1;
+  if (filters.assetGroupId) count += 1;
+
+  if (filters.customFields) {
+    count += Object.values(filters.customFields).filter((value) => {
+      if (Array.isArray(value)) {
+        return value.length > 0;
+      }
+      return value !== undefined && value !== null && value !== '';
+    }).length;
+  }
+
+  return count;
+}
+
+type AssetListAssetRow = Asset & {
+  __kind: 'asset';
   __depth: number;
   __parentId?: string;
   __hasVisibleChildren: boolean;
   __isExpanded?: boolean;
+  __groupId?: string | null;
+};
+
+interface AssetListGroupRow {
+  __kind: 'group';
+  id: string;
+  assetNumber: string;
+  groupNumber: string;
+  name: string;
+  memberCount: number;
+  members: Asset[];
+  assetType: Asset['assetType'] | null;
+  manufacturer?: string;
+  model?: string;
+  inheritedFieldCount?: number;
+  __depth: number;
+  __isExpanded: boolean;
 }
+
+type AssetListRow = AssetListAssetRow | AssetListGroupRow;
+
+const isGroupRow = (row: AssetListRow): row is AssetListGroupRow => row.__kind === 'group';
+const isAssetRow = (row: AssetListRow): row is AssetListAssetRow => row.__kind === 'asset';
+
+type AssetListSortStatus = DataTableSortStatus<AssetListRow> & DataTableSortStatus<unknown>;
 
 export function AssetList({
   onView,
@@ -77,32 +148,23 @@ export function AssetList({
   hideFilterButton,
 }: AssetListProps) {
   const navigate = useNavigate(); // T263 - E4: Router navigation for direct clicks
-  const [filters, setFilters] = useState<AssetFilters>(initialFilters || {});
   const [internalFiltersOpen, setInternalFiltersOpen] = useState(false);
-  const [assetTypeFilter, setAssetTypeFilter] = useState<string>('all');
-  const [prefixFilter, setPrefixFilter] = useState<string>('all'); // T275: Prefix-based filtering
-  const [sortStatus, setSortStatus] = useState<DataTableSortStatus<AssetListRow>>({
-    columnAccessor: 'assetNumber',
-    direction: 'asc',
-  });
   const [expandedParents, setExpandedParents] = useState<Record<string, boolean>>({});
-  
-  // T214: Pagination for large asset lists (performance optimization)
-  const [pageSize, setPageSize] = useState<number>(() => {
-    if (typeof window === 'undefined') {
-      return DEFAULT_ASSET_PAGE_SIZE;
+  const [groupViewEnabled, setGroupViewEnabled] = useState<boolean>(() => {
+    try {
+      const stored = localStorage.getItem(GROUP_VIEW_STORAGE_KEY);
+      return stored ? JSON.parse(stored) === true : false;
+    } catch {
+      return false;
     }
-    const stored = window.localStorage.getItem(ASSET_PAGE_SIZE_STORAGE_KEY);
-    const parsed = stored ? Number.parseInt(stored, 10) : NaN;
-    return ASSET_PAGE_SIZE_OPTIONS.includes(parsed) ? parsed : DEFAULT_ASSET_PAGE_SIZE;
   });
-  const [page, setPage] = useState(1);
-  useEffect(() => {
-    if (typeof window === 'undefined') {
-      return;
-    }
-    window.localStorage.setItem(ASSET_PAGE_SIZE_STORAGE_KEY, String(pageSize));
-  }, [pageSize]);
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
+  const toggleGroupExpansion = useCallback((groupId: string) => {
+    setExpandedGroups((prev) => ({
+      ...prev,
+      [groupId]: !(prev[groupId] ?? true),
+    }));
+  }, []);
 
   const filtersPanelOpen = filtersOpen ?? internalFiltersOpen;
   const toggleFilters = () => {
@@ -118,29 +180,86 @@ export function AssetList({
     [initialFilters],
   );
 
-  useEffect(() => {
-    if (initialFilters && Object.keys(initialFilters).length > 0) {
-      setFilters({
-        ...initialFilters,
-        customFields: initialFilters.customFields
-          ? { ...initialFilters.customFields }
-          : undefined,
-      });
-    } else {
-      setFilters({});
+  const initialViewFilters = useMemo<AssetViewFilters>(() => {
+    if (!initialFilters) {
+      return {} as AssetViewFilters;
     }
-  }, [initialFiltersSnapshot, initialFilters]);
+
+    const base: AssetViewFilters = {
+      ...initialFilters,
+      customFields: initialFilters.customFields ? { ...initialFilters.customFields } : undefined,
+    } as AssetViewFilters;
+
+    return base;
+  }, [initialFilters]);
+
+  const {
+    viewMode,
+    setViewMode,
+    filters,
+    setFilters,
+    resetFilters,
+    hasActiveFilters,
+    activeFilterCount,
+    sortStatus,
+    setSortStatus,
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
+    pageSizeOptions,
+  } = useDataViewState<AssetViewFilters, AssetListSortStatus>({
+    storageKey: 'asset-data-view',
+    initialFilters: initialViewFilters,
+    initialFiltersKey: initialFiltersSnapshot,
+    defaultMode: 'table',
+    initialSort: {
+      columnAccessor: 'assetNumber',
+      direction: 'asc',
+    } satisfies AssetListSortStatus,
+    defaultPageSize: DEFAULT_ASSET_PAGE_SIZE,
+    pageSizeOptions: ASSET_PAGE_SIZE_OPTIONS,
+    pageSizeStorageKey: ASSET_PAGE_SIZE_STORAGE_KEY,
+    getActiveFilterCount: getActiveAssetFilterCount,
+  });
 
 
-  const { data: categories = [] } = useCategories();
+  const { data: assetTypes = [] } = useCategories();
   const { data: prefixes = [] } = useAssetPrefixes(); // T275: Load prefixes for filtering
-  const { data: assets = [], isLoading, error } = useAssets(filters);
+  const assetFilters = useMemo<AssetFilters>(() => {
+    const { assetType: _assetType, prefixId: _prefixId, ...rest } = filters;
+    const next: AssetFilters = { ...rest };
+    if (rest.customFields) {
+      next.customFields = { ...rest.customFields };
+    }
+    return next;
+  }, [filters]);
+
+  const { data: assets = [], isLoading, error } = useAssets(assetFilters);
   const { data: maintenanceSchedules = [] } = useMaintenanceSchedules();
+  const { data: assetGroups = [], isLoading: loadingAssetGroups } = useAssetGroups();
   const deleteAsset = useDeleteAsset();
   const createAsset = useCreateAsset();
   const addUndoAction = useUndoStore((state) => state.addAction);
   const getUndoAction = useUndoStore((state) => state.getAction);
   const removeUndoAction = useUndoStore((state) => state.removeAction);
+
+  const groupMetadataById = useMemo(() => {
+    const map = new Map<string, AssetGroup>();
+    assetGroups.forEach((group) => {
+      map.set(group.id, group);
+    });
+    return map;
+  }, [assetGroups]);
+
+  const groupOptions = useMemo(
+    () =>
+      assetGroups.map((group) => ({
+        value: group.id,
+        label: group.groupNumber ? `${group.groupNumber} — ${group.name}` : group.name,
+      })),
+    [assetGroups],
+  );
 
   useEffect(() => {
     setExpandedParents((prev) => {
@@ -170,14 +289,19 @@ export function AssetList({
   }, [assets]);
 
   // T263 - E4: Handle row click for direct navigation
-  const handleRowClick = (params: { record: Asset; index: number; event: React.MouseEvent }) => {
-    const asset = params.record;
-    
-    // If onView callback provided, use it (for modal/drawer behavior)
+  const handleRowClick = (params: { record: AssetListRow; index: number; event: React.MouseEvent }) => {
+    const { record } = params;
+
+    if (isGroupRow(record)) {
+      toggleGroupExpansion(record.id);
+      return;
+    }
+
+    const asset = record;
+
     if (onView) {
       onView(asset);
     } else {
-      // Otherwise, navigate to asset detail page
       navigate(`/assets/${asset.id}`);
     }
   };
@@ -186,22 +310,34 @@ export function AssetList({
   // T275: Also filter by prefix
   const filteredAssets = useMemo(() => {
     return assets.filter(asset => {
-      // Filter by asset type
-      if (assetTypeFilter === 'parent' && !asset.isParent) return false;
-      if (assetTypeFilter === 'child' && !asset.parentAssetId) return false;
-      if (assetTypeFilter === 'standalone' && (asset.isParent || asset.parentAssetId)) return false;
-      
-      // T275: Filter by prefix
-      if (prefixFilter !== 'all') {
-        const selectedPrefix = prefixes.find(p => p.id === prefixFilter);
+      if (filters.assetType === 'parent' && !asset.isParent) return false;
+      if (filters.assetType === 'child' && !asset.parentAssetId) return false;
+      if (filters.assetType === 'standalone' && (asset.isParent || asset.parentAssetId)) return false;
+
+      if (filters.prefixId) {
+        const selectedPrefix = prefixes.find(prefix => prefix.id === filters.prefixId);
         if (selectedPrefix && !asset.assetNumber.startsWith(`${selectedPrefix.prefix}-`)) {
           return false;
         }
       }
-      
+
+      if (typeof filters.hasAssetGroup === 'boolean') {
+        const hasGroup = Boolean(asset.assetGroup?.id);
+        if (filters.hasAssetGroup && !hasGroup) {
+          return false;
+        }
+        if (!filters.hasAssetGroup && hasGroup) {
+          return false;
+        }
+      }
+
+      if (filters.assetGroupId && asset.assetGroup?.id !== filters.assetGroupId) {
+        return false;
+      }
+
       return true;
     });
-  }, [assets, assetTypeFilter, prefixFilter, prefixes]);
+  }, [assets, filters.assetType, filters.prefixId, filters.hasAssetGroup, filters.assetGroupId, prefixes]);
 
   // Sort assets (memoized to avoid re-sorting on every render) - T217
   const sortedAssets = useMemo(() => {
@@ -217,9 +353,9 @@ export function AssetList({
       } else if (columnAccessor === 'name') {
         aValue = a.name;
         bValue = b.name;
-      } else if (columnAccessor === 'category') {
-        aValue = a.category.name;
-        bValue = b.category.name;
+      } else if (columnAccessor === 'assetType') {
+        aValue = a.assetType.name;
+        bValue = b.assetType.name;
       } else if (columnAccessor === 'status') {
         aValue = a.status;
         bValue = b.status;
@@ -234,6 +370,28 @@ export function AssetList({
       return aValue < bValue ? 1 : -1;
     });
   }, [filteredAssets, sortStatus]);
+
+  const groupedMembers = useMemo(() => {
+    const map = new Map<string, Asset[]>();
+    for (const asset of sortedAssets) {
+      const groupId = asset.assetGroup?.id;
+      if (!groupId) {
+        continue;
+      }
+      const existing = map.get(groupId);
+      if (existing) {
+        existing.push(asset);
+      } else {
+        map.set(groupId, [asset]);
+      }
+    }
+    return map;
+  }, [sortedAssets]);
+
+  const ungroupedAssets = useMemo(
+    () => sortedAssets.filter((asset) => !asset.assetGroup?.id),
+    [sortedAssets],
+  );
 
   const visibleChildrenMap = useMemo(() => {
     const map: Record<string, Asset[]> = {};
@@ -257,47 +415,180 @@ export function AssetList({
     });
   }, [sortedAssets, assetIdSet]);
 
-  useEffect(() => {
-    const maxPage = Math.max(1, Math.ceil(topLevelAssets.length / pageSize));
-    if (page > maxPage) {
-      setPage(maxPage);
-    }
-  }, [page, topLevelAssets.length, pageSize]);
-
   const paginatedTopLevelAssets = useMemo(() => {
     const from = (page - 1) * pageSize;
     const to = from + pageSize;
     return topLevelAssets.slice(from, to);
   }, [topLevelAssets, page, pageSize]);
 
+  const groupEntries = useMemo(() => {
+    const entries: AssetListGroupRow[] = [];
+
+    groupedMembers.forEach((members, groupId) => {
+      const metadata = groupMetadataById.get(groupId);
+      const sample = members[0];
+      const groupNumber = metadata?.groupNumber ?? sample?.assetGroup?.groupNumber ?? 'Group';
+      const inheritedCount = metadata
+        ? Object.values(metadata.inheritanceRules ?? {}).filter((rule) => rule?.inherited).length
+        : undefined;
+      const assetType = sample?.assetType ?? metadata?.assetType ?? null;
+
+      entries.push({
+        __kind: 'group',
+        id: groupId,
+        assetNumber: groupNumber,
+        groupNumber,
+        name: metadata?.name ?? sample?.assetGroup?.name ?? 'Asset Model',
+        memberCount: metadata?.memberCount ?? members.length,
+        members,
+        assetType,
+        manufacturer: metadata?.manufacturer ?? sample?.manufacturer ?? undefined,
+        model: metadata?.model ?? sample?.model ?? undefined,
+        inheritedFieldCount: inheritedCount,
+        __depth: 0,
+        __isExpanded: true,
+      });
+    });
+
+    entries.sort((a, b) => a.groupNumber.localeCompare(b.groupNumber));
+
+    if (ungroupedAssets.length > 0) {
+      entries.push({
+        __kind: 'group',
+        id: UNGROUPED_GROUP_ID,
+        assetNumber: 'Ungrouped',
+        groupNumber: 'Ungrouped',
+        name: 'Ungrouped Assets',
+        memberCount: ungroupedAssets.length,
+        members: ungroupedAssets,
+        assetType: null,
+        __depth: 0,
+        __isExpanded: true,
+      });
+    }
+
+    return entries;
+  }, [groupMetadataById, groupedMembers, ungroupedAssets]);
+
+  const paginatedGroupEntries = useMemo(() => {
+    if (!groupViewEnabled) {
+      return [];
+    }
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize;
+    return groupEntries.slice(from, to);
+  }, [groupEntries, groupViewEnabled, page, pageSize]);
+
+  const totalRecordCount = groupViewEnabled ? groupEntries.length : topLevelAssets.length;
+
+  useEffect(() => {
+    const maxPage = Math.max(1, Math.ceil(totalRecordCount / pageSize));
+    if (page > maxPage) {
+      setPage(maxPage);
+    }
+  }, [page, pageSize, totalRecordCount, setPage]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(GROUP_VIEW_STORAGE_KEY, JSON.stringify(groupViewEnabled));
+    } catch (error) {
+      console.warn('Failed to persist group view preference:', error);
+    }
+  }, [groupViewEnabled]);
+
+  useEffect(() => {
+    if (!groupViewEnabled) {
+      return;
+    }
+    setExpandedGroups((prev) => {
+      const next: Record<string, boolean> = { ...prev };
+      let changed = false;
+      for (const entry of groupEntries) {
+        if (next[entry.id] === undefined) {
+          next[entry.id] = true;
+          changed = true;
+        }
+      }
+      return changed ? next : prev;
+    });
+  }, [groupEntries, groupViewEnabled]);
+
   const displayRecords = useMemo<AssetListRow[]>(() => {
     const rows: AssetListRow[] = [];
 
-    const appendAsset = (asset: Asset, depth: number) => {
+    const appendAsset = (
+      asset: Asset,
+      depth: number,
+      groupId: string | null,
+      allowedIds?: Set<string>,
+    ) => {
       const children = visibleChildrenMap[asset.id] ?? [];
-      const hasVisibleChildren = children.length > 0;
+      const filteredChildren = allowedIds
+        ? children.filter((child) => allowedIds.has(child.id))
+        : children;
+      const hasVisibleChildren = filteredChildren.length > 0;
       const isExpanded = hasVisibleChildren ? (expandedParents[asset.id] ?? true) : undefined;
 
       rows.push({
         ...asset,
+        __kind: 'asset',
         __depth: depth,
         __parentId: asset.parentAssetId,
         __hasVisibleChildren: hasVisibleChildren,
         __isExpanded: isExpanded,
+        __groupId: groupId,
       });
 
       if (hasVisibleChildren && isExpanded) {
-        children.forEach(child => appendAsset(child, depth + 1));
+        const nextDepth = depth + 1;
+        filteredChildren.forEach((child) => appendAsset(child, nextDepth, groupId, allowedIds));
       }
     };
 
-    paginatedTopLevelAssets.forEach(asset => {
+    if (groupViewEnabled) {
+      paginatedGroupEntries.forEach((entry) => {
+        const isExpanded = expandedGroups[entry.id] ?? true;
+
+        rows.push({
+          ...entry,
+          __isExpanded: isExpanded,
+        });
+
+        if (!isExpanded) {
+          return;
+        }
+
+        const memberIdSet = new Set(entry.members.map((member) => member.id));
+        const groupId = entry.id === UNGROUPED_GROUP_ID ? null : entry.id;
+        const topLevelMembers = entry.members.filter((member) => {
+          if (!member.parentAssetId) {
+            return true;
+          }
+          return !memberIdSet.has(member.parentAssetId);
+        });
+
+        topLevelMembers.forEach((member) => {
+          appendAsset(member, 1, groupId, memberIdSet);
+        });
+      });
+
+      return rows;
+    }
+
+    paginatedTopLevelAssets.forEach((asset) => {
       const initialDepth = asset.parentAssetId ? 1 : 0;
-      appendAsset(asset, initialDepth);
+      appendAsset(asset, initialDepth, asset.assetGroup?.id ?? null);
     });
 
     return rows;
-  }, [expandedParents, paginatedTopLevelAssets, visibleChildrenMap]);
+  }, [
+    expandedGroups,
+    expandedParents,
+    groupViewEnabled,
+    paginatedGroupEntries,
+    paginatedTopLevelAssets,
+    visibleChildrenMap,
+  ]);
 
   const handleDelete = async (asset: Asset) => {
     // T102: Parent deletion validation
@@ -377,19 +668,225 @@ export function AssetList({
   };
 
   const clearFilters = () => {
-    setFilters({});
+    resetFilters();
   };
 
-  // Memoize filter check to avoid recalculation on every render - T217
-  const hasActiveFilters = useMemo(() => {
-    return Boolean(
-      filters.categoryId || 
-      filters.status || 
-      filters.location || 
-      filters.search ||
-      (filters.customFields && Object.keys(filters.customFields).length > 0)
-    );
-  }, [filters]);
+  const filterContent = (
+    <Stack gap="md">
+      <Group align="flex-end">
+        <TextInput
+          label="Search"
+          placeholder="Search by name, asset number, or description"
+          leftSection={<IconSearch size={16} />}
+          value={filters.search ?? ''}
+          onChange={(e) => {
+            const nextValue = e.currentTarget.value;
+            setFilters((prev) => ({
+              ...prev,
+              search: nextValue,
+            }));
+          }}
+          style={{ flex: 1 }}
+        />
+        {hasActiveFilters && (
+          <Button
+            variant="subtle"
+            color="gray"
+            leftSection={<IconX size={16} />}
+            onClick={clearFilters}
+          >
+            Clear All
+          </Button>
+        )}
+      </Group>
+
+      <Group grow>
+        <Select
+          label="Asset Type"
+          value={filters.assetType ?? 'all'}
+          onChange={(val) => {
+            setFilters((prev) => ({
+              ...prev,
+              assetType: val && val !== 'all' ? (val as AssetTypeFilter) : undefined,
+            }));
+          }}
+          data={ASSET_TYPE_OPTIONS}
+        />
+
+        <Select
+          label="Group Membership"
+          value={
+            typeof filters.hasAssetGroup === 'boolean'
+              ? filters.hasAssetGroup
+                ? 'grouped'
+                : 'ungrouped'
+              : 'all'
+          }
+          onChange={(val) => {
+            setFilters((prev) => {
+              if (val === 'grouped') {
+                return { ...prev, hasAssetGroup: true };
+              }
+              if (val === 'ungrouped') {
+                return { ...prev, hasAssetGroup: false, assetGroupId: undefined };
+              }
+              return { ...prev, hasAssetGroup: undefined };
+            });
+          }}
+          data={GROUP_MEMBERSHIP_OPTIONS}
+        />
+
+        <Select
+          label="Asset Model"
+          placeholder={loadingAssetGroups ? 'Loading groups...' : 'All groups'}
+          value={filters.assetGroupId ?? null}
+          onChange={(val) => {
+            setFilters((prev) => {
+              if (!val) {
+                return { ...prev, assetGroupId: undefined };
+              }
+              return { ...prev, assetGroupId: val, hasAssetGroup: true };
+            });
+          }}
+          data={groupOptions}
+          clearable
+          searchable
+          disabled={loadingAssetGroups || groupOptions.length === 0}
+        />
+
+        {prefixes.length > 0 && (
+          <Select
+            label="Asset Prefix"
+            placeholder="All prefixes"
+            value={filters.prefixId ?? null}
+            onChange={(val) => {
+              setFilters((prev) => ({
+                ...prev,
+                prefixId: val ?? undefined,
+              }));
+            }}
+            data={prefixes.map((prefix) => ({
+              value: prefix.id,
+              label: `${prefix.prefix} - ${prefix.description}`,
+            }))}
+            clearable
+          />
+        )}
+
+        <Select
+          label="Asset Type"
+          placeholder="All asset types"
+          value={filters.assetTypeId ?? null}
+          onChange={(val) => {
+            setFilters((prev) => ({
+              ...prev,
+              assetTypeId: val ?? undefined,
+              customFields:
+                val && val === prev.assetTypeId ? prev.customFields : undefined,
+            }));
+          }}
+          data={assetTypes.map((type) => ({
+            value: type.id,
+            label: `${type.icon || ''} ${type.name}`.trim(),
+          }))}
+          clearable
+        />
+
+        <Select
+          label="Status"
+          placeholder="All statuses"
+          value={(filters.status as string | undefined) ?? null}
+          onChange={(val) => {
+            setFilters((prev) => ({
+              ...prev,
+              status: val ? (val as AssetStatus) : undefined,
+            }));
+          }}
+          data={ASSET_STATUS_OPTIONS}
+          clearable
+        />
+
+        <TextInput
+          label="Location"
+          placeholder="Filter by location"
+          value={filters.location ?? ''}
+          onChange={(e) => {
+            const nextValue = e.currentTarget.value;
+            setFilters((prev) => ({
+              ...prev,
+              location: nextValue ? nextValue : undefined,
+            }));
+          }}
+        />
+      </Group>
+
+      {filters.assetTypeId && (() => {
+        const selectedAssetType = assetTypes.find((type) => type.id === filters.assetTypeId);
+        if (selectedAssetType && selectedAssetType.customFields.length > 0) {
+          return (
+            <>
+              <Text size="sm" fw={600} mt="md">
+                Custom Field Filters
+              </Text>
+              <Group grow>
+                {selectedAssetType.customFields.map((field) => (
+                  <CustomFieldFilterInput
+                    key={field.id}
+                    field={field}
+                    value={filters.customFields?.[field.id]}
+                    onChange={(value) => {
+                      setFilters((prev) => {
+                        const currentCustomFields = { ...(prev.customFields ?? {}) };
+
+                        let nextCustomFields: Record<string, unknown> | undefined;
+                        if (value === undefined) {
+                          const { [field.id]: _removed, ...remaining } = currentCustomFields;
+                          nextCustomFields = Object.keys(remaining).length > 0 ? remaining : undefined;
+                        } else {
+                          nextCustomFields = {
+                            ...currentCustomFields,
+                            [field.id]: value,
+                          };
+                        }
+
+                        return {
+                          ...prev,
+                          customFields: nextCustomFields,
+                        };
+                      });
+                    }}
+                  />
+                ))}
+              </Group>
+            </>
+          );
+        }
+        return null;
+      })()}
+    </Stack>
+  );
+
+  const groupViewActions = (
+    <Group gap="xs" align="center">
+      <Text size="sm" c="dimmed">
+        View
+      </Text>
+      <SegmentedControl
+        size="xs"
+        value={groupViewEnabled ? 'groups' : 'assets'}
+        onChange={(value) => {
+          const nextEnabled = value === 'groups';
+          setGroupViewEnabled(nextEnabled);
+          setPage(1);
+        }}
+        data={[
+          { value: 'assets', label: 'Assets' },
+          { value: 'groups', label: 'Groups' },
+        ]}
+        disabled={!groupEntries.length && !groupViewEnabled}
+      />
+    </Group>
+  );
 
   if (error) {
     return (
@@ -399,204 +896,100 @@ export function AssetList({
     );
   }
 
+  const primaryAction = onCreateNew
+    ? {
+        label: 'New Asset',
+        icon: <IconPlus size={16} />,
+        onClick: onCreateNew,
+      }
+    : undefined;
+
   return (
-    <Stack gap="md">
-      <Group justify="space-between">
-        <Title order={2}>Assets</Title>
-        <Group>
-          {hideFilterButton !== true && (
-            <Button
-              variant={filtersPanelOpen ? 'filled' : 'default'}
-              leftSection={<IconFilter size={16} />}
-              onClick={toggleFilters}
-            >
-              Filters
-              {hasActiveFilters && (
-                <Badge size="xs" circle ml="xs">
-                  {[
-                    filters.categoryId,
-                    filters.status,
-                    filters.location,
-                    filters.search,
-                    ...(filters.customFields ? Object.keys(filters.customFields) : []),
-                  ]
-                    .filter(Boolean)
-                    .length}
-                </Badge>
-              )}
-            </Button>
-          )}
-          {onCreateNew && (
-            <Button
-              leftSection={<IconPlus size={16} />}
-              onClick={onCreateNew}
-            >
-              New Asset
-            </Button>
-          )}
-        </Group>
-      </Group>
-
-      {filtersPanelOpen && (
-        <Card withBorder>
-          <Stack gap="md">
-            <Group align="flex-end">
-              <TextInput
-                label="Search"
-                placeholder="Search by name, asset number, or description"
-                leftSection={<IconSearch size={16} />}
-                value={filters.search || ''}
-                onChange={(e) => {
-                  setFilters({ ...filters, search: e.currentTarget.value });
-                }}
-                style={{ flex: 1 }}
-              />
-              {hasActiveFilters && (
-                <Button
-                  variant="subtle"
-                  color="gray"
-                  leftSection={<IconX size={16} />}
-                  onClick={clearFilters}
-                >
-                  Clear All
-                </Button>
-              )}
-            </Group>
-
-            <Group grow>
-              <Select
-                label="Asset Type"
-                value={assetTypeFilter}
-                onChange={(val) => setAssetTypeFilter(val || 'all')}
-                data={ASSET_TYPE_OPTIONS}
-              />
-
-              {/* T275: Asset Prefix Filter */}
-              {prefixes.length > 0 && (
-                <Select
-                  label="Asset Prefix"
-                  placeholder="All prefixes"
-                  value={prefixFilter}
-                  onChange={(val) => setPrefixFilter(val || 'all')}
-                  data={[
-                    { value: 'all', label: 'All Prefixes' },
-                    ...prefixes.map(prefix => ({
-                      value: prefix.id,
-                      label: `${prefix.prefix} - ${prefix.description}`,
-                    })),
-                  ]}
-                  clearable
-                />
-              )}
-
-              <Select
-                label="Category"
-                placeholder="All categories"
-                value={filters.categoryId || null}
-                onChange={(val) => {
-                  setFilters({ ...filters, categoryId: val || undefined });
-                }}
-                data={categories.map(cat => ({
-                  value: cat.id,
-                  label: `${cat.icon || ''} ${cat.name}`.trim(),
-                }))}
-                clearable
-              />
-
-              <Select
-                label="Status"
-                placeholder="All statuses"
-                value={(filters.status as string) || null}
-                onChange={(val) => {
-                  setFilters({ ...filters, status: val ? (val as AssetStatus) : undefined });
-                }}
-                data={ASSET_STATUS_OPTIONS}
-                clearable
-              />
-
-              <TextInput
-                label="Location"
-                placeholder="Filter by location"
-                value={filters.location || ''}
-                onChange={(e) => {
-                  setFilters({ ...filters, location: e.currentTarget.value || undefined });
-                }}
-              />
-            </Group>
-
-            {filters.categoryId && (() => {
-              const selectedCategory = categories.find(c => c.id === filters.categoryId);
-              if (selectedCategory && selectedCategory.customFields.length > 0) {
-                return (
-                  <>
-                    <Text size="sm" fw={600} mt="md">Custom Field Filters</Text>
-                    <Group grow>
-                      {selectedCategory.customFields.map((field) => (
-                        <CustomFieldFilterInput
-                          key={field.id}
-                          field={field}
-                          value={filters.customFields?.[field.id]}
-                          onChange={(value) => {
-                            const currentCustomFields = filters.customFields || {};
-                            const newCustomFields = value === undefined
-                              ? Object.fromEntries(
-                                  Object.entries(currentCustomFields).filter(([k]) => k !== field.id)
-                                )
-                              : { ...currentCustomFields, [field.id]: value };
-                            
-                            setFilters({
-                              ...filters,
-                              customFields: Object.keys(newCustomFields).length > 0 
-                                ? newCustomFields 
-                                : undefined,
-                            });
-                          }}
-                        />
-                      ))}
-                    </Group>
-                  </>
-                );
-              }
-              return null;
-            })()}
-          </Stack>
-        </Card>
-      )}
-
+    <DataViewLayout
+      title="Assets"
+      mode={viewMode}
+      availableModes={['table']}
+      onModeChange={setViewMode}
+      filtersOpen={filtersPanelOpen}
+      onToggleFilters={toggleFilters}
+      hasActiveFilters={hasActiveFilters}
+      activeFilterCount={activeFilterCount}
+      primaryAction={primaryAction}
+      showFilterButton={hideFilterButton !== true}
+      filterContent={filterContent}
+      actions={groupViewActions}
+    >
       <Card withBorder>
-        <DataTable<AssetListRow>
-          withTableBorder
-          borderRadius="sm"
-          striped
-          highlightOnHover
+        <DataViewTable<AssetListRow>
           records={displayRecords}
           onRowClick={handleRowClick}
           rowStyle={() => ({ cursor: 'pointer' })}
-          totalRecords={topLevelAssets.length}
+          totalRecords={totalRecordCount}
           recordsPerPage={pageSize}
-          recordsPerPageOptions={ASSET_PAGE_SIZE_OPTIONS}
+          recordsPerPageOptions={pageSizeOptions}
           page={page}
           onPageChange={setPage}
-          onRecordsPerPageChange={(size) => {
+          onRecordsPerPageChange={(size: number) => {
             setPageSize(size);
             setPage(1);
           }}
-          paginationText={({ from, to, totalRecords }) =>
-            `Showing ${from} to ${to} of ${totalRecords} assets`
-          }
+          paginationText={({ from, to, totalRecords }: { from: number; to: number; totalRecords: number }) => {
+            const label = groupViewEnabled ? 'groups' : 'assets';
+            return `Showing ${from} to ${to} of ${totalRecords} ${label}`;
+          }}
           columns={[
             {
               accessor: '__expander',
               title: '',
               width: 90,
-              render: (asset) => {
-                const childCount = asset.childAssetIds?.length ?? 0;
-                const isExpanded = asset.__isExpanded ?? false;
-                const isParent = asset.isParent;
+              render: (row) => {
+                if (isGroupRow(row)) {
+                  const isExpanded = row.__isExpanded;
+                  const hasMembers = row.memberCount > 0;
+
+                  return (
+                    <Group gap="xs">
+                      {hasMembers ? (
+                        <ActionIcon
+                          size="sm"
+                          variant="subtle"
+                          aria-label={isExpanded ? 'Collapse group members' : 'Expand group members'}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleGroupExpansion(row.id);
+                          }}
+                        >
+                          <Box
+                            component="span"
+                            style={{
+                              display: 'inline-block',
+                              transform: isExpanded ? 'rotate(90deg)' : 'none',
+                              transition: 'transform 150ms ease',
+                              fontWeight: 600,
+                              fontSize: 14,
+                              lineHeight: 1,
+                            }}
+                          >
+                            {'>'}
+                          </Box>
+                        </ActionIcon>
+                      ) : (
+                        <Box w={28} />
+                      )}
+                      <Badge size="sm" variant="light" color="blue">
+                        {row.memberCount}
+                      </Badge>
+                    </Group>
+                  );
+                }
+
+                const childCount = row.childAssetIds?.length ?? 0;
+                const isExpanded = row.__isExpanded ?? false;
+                const isParent = row.isParent;
 
                 return (
                   <Group gap="xs">
-                    {asset.__hasVisibleChildren ? (
+                    {row.__hasVisibleChildren ? (
                       <ActionIcon
                         size="sm"
                         variant="subtle"
@@ -605,7 +998,7 @@ export function AssetList({
                           e.stopPropagation();
                           setExpandedParents((prev) => ({
                             ...prev,
-                            [asset.id]: !(prev[asset.id] ?? true),
+                            [row.id]: !(prev[row.id] ?? true),
                           }));
                         }}
                       >
@@ -640,44 +1033,85 @@ export function AssetList({
               title: 'Asset #',
               sortable: true,
               width: 140,
-              render: (asset) => (
-                <Text
-                  fw={600}
-                  size="sm"
-                  style={{ paddingLeft: `${asset.__depth * 16}px` }}
-                >
-                  {asset.assetNumber}
-                </Text>
-              ),
+              render: (row) => {
+                if (isGroupRow(row)) {
+                  return (
+                    <Text fw={600} size="sm">
+                      {row.groupNumber}
+                    </Text>
+                  );
+                }
+
+                return (
+                  <Text
+                    fw={600}
+                    size="sm"
+                    style={{ paddingLeft: `${row.__depth * 16}px` }}
+                  >
+                    {row.assetNumber}
+                  </Text>
+                );
+              },
             },
             {
               accessor: 'name',
               title: 'Name',
               sortable: true,
-              render: (asset) => (
-                <Box style={{ marginLeft: `${asset.__depth * 16}px` }}>
-                  <Text fw={500}>{asset.name}</Text>
-                  {asset.description && (
-                    <Text size="xs" c="dimmed" lineClamp={1}>
-                      {asset.description}
-                    </Text>
-                  )}
-                </Box>
-              ),
+              render: (row) => {
+                if (isGroupRow(row)) {
+                  return (
+                    <Box>
+                      <Text fw={600}>{row.name}</Text>
+                      <Text size="xs" c="dimmed">
+                        {row.memberCount} members
+                        {typeof row.inheritedFieldCount === 'number' && row.inheritedFieldCount > 0
+                          ? ` · ${row.inheritedFieldCount} inherited fields`
+                          : ''}
+                      </Text>
+                    </Box>
+                  );
+                }
+
+                return (
+                  <Box style={{ marginLeft: `${row.__depth * 16}px` }}>
+                    <Text fw={500}>{row.name}</Text>
+                    {row.description && (
+                      <Text size="xs" c="dimmed" lineClamp={1}>
+                        {row.description}
+                      </Text>
+                    )}
+                  </Box>
+                );
+              },
             },
             {
-              accessor: 'category',
-              title: 'Category',
+              accessor: 'assetType',
+              title: 'Asset Type',
               sortable: true,
-              render: (asset) => {
-                const icon = asset.category.icon;
+              render: (row) => {
+                if (isGroupRow(row)) {
+                  if (!row.assetType) {
+                    return (
+                      <Text size="sm" c="dimmed">
+                        —
+                      </Text>
+                    );
+                  }
+                  return (
+                    <Badge variant="light" color="blue">
+                      {row.assetType.name}
+                    </Badge>
+                  );
+                }
+
+                const icon = row.assetType.icon;
                 return (
                   <Badge
                     variant="light"
                     color="blue"
                     leftSection={icon ? <IconDisplay iconName={icon} size={14} /> : undefined}
                   >
-                    {asset.category.name}
+                    {row.assetType.name}
                   </Badge>
                 );
               },
@@ -686,40 +1120,83 @@ export function AssetList({
               accessor: 'status',
               title: 'Status',
               sortable: true,
-              render: (asset) => <AssetStatusBadge status={asset.status} />,
+              render: (row) => {
+                if (isGroupRow(row)) {
+                  return (
+                    <Text size="sm" c="dimmed">
+                      —
+                    </Text>
+                  );
+                }
+                return <AssetStatusBadge status={row.status} />;
+              },
             },
             {
               accessor: 'location',
               title: 'Location',
               sortable: true,
-              render: (asset) => (
-                <Text size="sm" c={asset.location ? undefined : 'dimmed'}>
-                  {asset.location || '—'}
-                </Text>
-              ),
+              render: (row) => {
+                if (isGroupRow(row)) {
+                  return (
+                    <Text size="sm" c="dimmed">
+                      —
+                    </Text>
+                  );
+                }
+                return (
+                  <Text size="sm" c={row.location ? undefined : 'dimmed'}>
+                    {row.location || '—'}
+                  </Text>
+                );
+              },
             },
             {
               accessor: 'manufacturer',
               title: 'Manufacturer',
-              render: (asset) => (
-                <Box>
-                  <Text size="sm" c={asset.manufacturer ? undefined : 'dimmed'}>
-                    {asset.manufacturer || '—'}
-                  </Text>
-                  {asset.model && (
-                    <Text size="xs" c="dimmed">
-                      {asset.model}
+              render: (row) => {
+                if (isGroupRow(row)) {
+                  if (!row.manufacturer && !row.model) {
+                    return (
+                      <Text size="sm" c="dimmed">
+                        —
+                      </Text>
+                    );
+                  }
+                  return (
+                    <Box>
+                      <Text size="sm">{row.manufacturer ?? 'Mixed manufacturers'}</Text>
+                      {row.model && (
+                        <Text size="xs" c="dimmed">
+                          {row.model}
+                        </Text>
+                      )}
+                    </Box>
+                  );
+                }
+
+                return (
+                  <Box>
+                    <Text size="sm" c={row.manufacturer ? undefined : 'dimmed'}>
+                      {row.manufacturer || '—'}
                     </Text>
-                  )}
-                </Box>
-              ),
+                    {row.model && (
+                      <Text size="xs" c="dimmed">
+                        {row.model}
+                      </Text>
+                    )}
+                  </Box>
+                );
+              },
             },
             {
               accessor: 'maintenance',
               title: 'Maintenance',
               width: 120,
-              render: (asset) => {
-                const schedule = maintenanceSchedules.find((s) => s.assetId === asset.id);
+              render: (row) => {
+                if (isGroupRow(row)) {
+                  return null;
+                }
+                const schedule = maintenanceSchedules.find((s) => s.assetId === row.id);
                 return schedule ? <MaintenanceReminderBadge schedule={schedule} /> : null;
               },
             },
@@ -727,69 +1204,79 @@ export function AssetList({
               accessor: 'actions',
               title: '',
               width: 60,
-              render: (asset) => (
-                <Group gap={0} justify="flex-end">
-                  <Menu position="bottom-end" shadow="md">
-                    <Menu.Target>
-                      <ActionIcon
-                        variant="subtle"
-                        color="gray"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                        }}
-                      >
-                        <IconDots size={16} />
-                      </ActionIcon>
-                    </Menu.Target>
+              render: (row) => {
+                if (!isAssetRow(row)) {
+                  return null;
+                }
 
-                    <Menu.Dropdown>
-                      {onView && (
-                        <Menu.Item
-                          leftSection={<IconEye size={14} />}
+                return (
+                  <Group gap={0} justify="flex-end">
+                    <Menu position="bottom-end" shadow="md">
+                      <Menu.Target>
+                        <ActionIcon
+                          variant="subtle"
+                          color="gray"
                           onClick={(e) => {
                             e.stopPropagation();
-                            onView(asset);
                           }}
                         >
-                          View Details
-                        </Menu.Item>
-                      )}
-                      {onEdit && (
+                          <IconDots size={16} />
+                        </ActionIcon>
+                      </Menu.Target>
+
+                      <Menu.Dropdown>
+                        {onView && (
+                          <Menu.Item
+                            leftSection={<IconEye size={14} />}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onView(row);
+                            }}
+                          >
+                            View Details
+                          </Menu.Item>
+                        )}
+                        {onEdit && (
+                          <Menu.Item
+                            leftSection={<IconEdit size={14} />}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onEdit(row);
+                            }}
+                          >
+                            Edit
+                          </Menu.Item>
+                        )}
                         <Menu.Item
-                          leftSection={<IconEdit size={14} />}
+                          color="red"
+                          leftSection={<IconTrash size={14} />}
                           onClick={(e) => {
                             e.stopPropagation();
-                            onEdit(asset);
+                            void handleDelete(row);
                           }}
+                          disabled={deleteAsset.isPending}
                         >
-                          Edit
+                          Delete
                         </Menu.Item>
-                      )}
-                      <Menu.Item
-                        color="red"
-                        leftSection={<IconTrash size={14} />}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          void handleDelete(asset);
-                        }}
-                        disabled={deleteAsset.isPending}
-                      >
-                        Delete
-                      </Menu.Item>
-                    </Menu.Dropdown>
-                  </Menu>
-                </Group>
-              ),
+                      </Menu.Dropdown>
+                    </Menu>
+                  </Group>
+                );
+              },
             },
           ]}
-          sortStatus={sortStatus}
-          onSortStatusChange={setSortStatus}
+          sortStatus={sortStatus as DataTableSortStatus<AssetListRow>}
+          onSortStatusChange={(status) => {
+            setSortStatus(status as AssetListSortStatus);
+          }}
           fetching={isLoading}
           minHeight={150}
-          noRecordsText={hasActiveFilters ? 'No assets match your filters' : 'No assets found'}
+          noRecordsText={groupViewEnabled
+            ? (hasActiveFilters ? 'No groups match your filters' : 'No groups found')
+            : (hasActiveFilters ? 'No assets match your filters' : 'No assets found')}
         />
       </Card>
-    </Stack>
+    </DataViewLayout>
   );
 }
 

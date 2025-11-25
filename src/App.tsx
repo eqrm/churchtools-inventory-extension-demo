@@ -1,24 +1,11 @@
-import { useState, useEffect, lazy, Suspense } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { useState, useEffect, Suspense, useMemo } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Center, Loader, Stack, Text } from '@mantine/core';
 import { Navigation } from './components/layout/Navigation';
 import { QuickScanModal } from './components/scanner/QuickScanModal';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
-
-// Lazy load page components for code splitting (T215)
-const DashboardPage = lazy(() => import('./pages/DashboardPage').then(m => ({ default: m.DashboardPage })));
-const CategoriesPage = lazy(() => import('./pages/CategoriesPage').then(m => ({ default: m.CategoriesPage })));
-const AssetsPage = lazy(() => import('./pages/AssetsPage').then(m => ({ default: m.AssetsPage })));
-const AssetDetailPage = lazy(() => import('./pages/AssetDetailPage').then(m => ({ default: m.AssetDetailPage })));
-const BookingsPage = lazy(() => import('./pages/BookingsPage').then(m => ({ default: m.BookingsPage })));
-const BookingDetailPage = lazy(() => import('./pages/BookingDetailPage').then(m => ({ default: m.BookingDetailPage })));
-const BookingCalendarPage = lazy(() => import('./pages/BookingCalendarPage').then(m => ({ default: m.BookingCalendarPage })));
-const KitsPage = lazy(() => import('./pages/KitsPage').then(m => ({ default: m.KitsPage })));
-const KitDetailPage = lazy(() => import('./pages/KitDetailPage').then(m => ({ default: m.KitDetailPage })));
-const StockTakePage = lazy(() => import('./pages/StockTakePage').then(m => ({ default: m.StockTakePage })));
-const ReportsPage = lazy(() => import('./pages/ReportsPage').then(m => ({ default: m.ReportsPage })));
-const MaintenancePage = lazy(() => import('./pages/MaintenancePage').then(m => ({ default: m.MaintenancePage })));
-const SettingsPage = lazy(() => import('./pages/SettingsPage').then(m => ({ default: m.SettingsPage })));
+import { appRoutes } from './router';
+import { useFeatureSettingsStore } from './stores';
 
 /**
  * Loading fallback component for lazy-loaded routes
@@ -31,6 +18,44 @@ function PageLoader() {
         <Text c="dimmed">Loading...</Text>
       </Stack>
     </Center>
+  );
+}
+
+/**
+ * AppRoutes component with location-based key to force remounts
+ */
+function AppRoutes() {
+  const location = useLocation();
+  const { bookingsEnabled, kitsEnabled, maintenanceEnabled } = useFeatureSettingsStore((state) => ({
+    bookingsEnabled: state.bookingsEnabled,
+    kitsEnabled: state.kitsEnabled,
+    maintenanceEnabled: state.maintenanceEnabled,
+  }));
+
+  const filteredRoutes = useMemo(() => {
+    return appRoutes.filter(({ path }) => {
+      if (!bookingsEnabled && path.startsWith('/bookings')) {
+        return false;
+      }
+      if (!kitsEnabled && path.startsWith('/kits')) {
+        return false;
+      }
+      if (!maintenanceEnabled && path.startsWith('/maintenance')) {
+        return false;
+      }
+      return true;
+    });
+  }, [bookingsEnabled, kitsEnabled, maintenanceEnabled]);
+  
+  return (
+    <Suspense fallback={<PageLoader />}>
+      <Routes key={location.pathname}>
+        {filteredRoutes.map(({ path, Component }) => (
+          <Route key={path} path={path} element={<Component />} />
+        ))}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </Suspense>
   );
 }
 
@@ -74,25 +99,7 @@ function App() {
             setScanModalOpened(true);
           }}
         >
-          <Suspense fallback={<PageLoader />}>
-            <Routes>
-              <Route path="/" element={<DashboardPage />} />
-              <Route path="/categories" element={<CategoriesPage />} />
-              <Route path="/assets" element={<AssetsPage />} />
-              <Route path="/assets/:id" element={<AssetDetailPage />} />
-              <Route path="/bookings" element={<BookingsPage />} />
-              <Route path="/bookings/:id" element={<BookingDetailPage />} />
-              <Route path="/bookings-calendar" element={<BookingCalendarPage />} />
-              <Route path="/kits" element={<KitsPage />} />
-              <Route path="/kits/:id" element={<KitDetailPage />} />
-              <Route path="/stock-take" element={<StockTakePage />} />
-              <Route path="/reports" element={<ReportsPage />} />
-              <Route path="/reports/:reportId" element={<ReportsPage />} />
-              <Route path="/maintenance" element={<MaintenancePage />} />
-              <Route path="/settings" element={<SettingsPage />} />
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </Suspense>
+          <AppRoutes />
         </Navigation>
 
         {/* Global Quick Scan Modal - Alt+S anywhere to open */}
@@ -102,6 +109,7 @@ function App() {
             setScanModalOpened(false);
           }}
         />
+
       </BrowserRouter>
     </ErrorBoundary>
   );

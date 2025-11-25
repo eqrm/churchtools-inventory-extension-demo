@@ -7,6 +7,7 @@
 
 import type {
   Asset,
+  AssetGroup,
   Booking,
   MaintenanceSchedule,
   StockTakeSession,
@@ -22,10 +23,21 @@ export interface AssetUtilizationData {
   assetId: string;
   assetNumber: string;
   assetName: string;
-  categoryName: string;
+  assetTypeName: string;
   bookingCount: number;
   totalDaysBooked: number;
   utilizationPercentage: number;
+  lastBookedDate?: ISOTimestamp;
+}
+
+export interface AssetGroupUtilizationData {
+  groupId: string;
+  groupNumber: string;
+  groupName: string;
+  memberCount: number;
+  bookingCount: number;
+  totalDaysBooked: number;
+  averageUtilization: number;
   lastBookedDate?: ISOTimestamp;
 }
 
@@ -61,13 +73,94 @@ export function calculateAssetUtilization(
       assetId: asset.id,
       assetNumber: asset.assetNumber,
       assetName: asset.name,
-      categoryName: asset.category?.name || 'Unknown',
+  assetTypeName: asset.assetType?.name || 'Unknown',
       bookingCount: assetBookings.length,
       totalDaysBooked,
       utilizationPercentage: Math.round(utilizationPercentage * 10) / 10,
       lastBookedDate: lastBooking?.startDate,
     };
   });
+}
+
+export function aggregateGroupUtilization(
+  assets: Asset[],
+  utilizationData: AssetUtilizationData[],
+  assetGroups: AssetGroup[],
+  startDate: Date,
+  endDate: Date
+): AssetGroupUtilizationData[] {
+  const periodDays = Math.max(1, differenceInDays(endDate, startDate) + 1);
+  const dataByAssetId = new Map(utilizationData.map((entry) => [entry.assetId, entry]));
+  const groupMetaMap = new Map(assetGroups.map((group) => [group.id, group]));
+  const groupedMembers = new Map<string, { assets: Asset[]; meta: AssetGroup | null }>();
+
+  for (const asset of assets) {
+    const group = asset.assetGroup;
+    if (!group?.id) {
+      continue;
+    }
+
+    if (!groupedMembers.has(group.id)) {
+      const meta = groupMetaMap.get(group.id) ?? null;
+      groupedMembers.set(group.id, { assets: [], meta });
+    }
+
+    groupedMembers.get(group.id)?.assets.push(asset);
+  }
+
+  const groupUtilization: AssetGroupUtilizationData[] = [];
+
+  groupedMembers.forEach(({ assets: memberAssets, meta }, groupId) => {
+    if (memberAssets.length === 0) {
+      return;
+    }
+
+    let bookingCount = 0;
+    let totalDaysBooked = 0;
+    let latestBooking: ISOTimestamp | undefined;
+
+    for (const asset of memberAssets) {
+      const utilization = dataByAssetId.get(asset.id);
+      if (!utilization) {
+        continue;
+      }
+
+      bookingCount += utilization.bookingCount;
+      totalDaysBooked += utilization.totalDaysBooked;
+
+      if (utilization.lastBookedDate) {
+        if (!latestBooking || utilization.lastBookedDate > latestBooking) {
+          latestBooking = utilization.lastBookedDate;
+        }
+      }
+    }
+
+    if (bookingCount === 0 && totalDaysBooked === 0 && !latestBooking) {
+      // Still emit a row so empty groups appear with zero activity
+      latestBooking = undefined;
+    }
+
+    const groupReference = memberAssets[0]?.assetGroup;
+    const groupNumber = meta?.groupNumber ?? groupReference?.groupNumber ?? 'Group';
+    const groupName = meta?.name ?? groupReference?.name ?? 'Asset Group';
+    const memberCount = meta?.memberCount ?? memberAssets.length;
+    const averageUtilization = memberCount > 0
+      ? Math.round(((totalDaysBooked / (periodDays * memberCount)) * 100) * 10) / 10
+      : 0;
+
+    groupUtilization.push({
+      groupId,
+      groupNumber,
+      groupName,
+      memberCount,
+      bookingCount,
+      totalDaysBooked,
+      averageUtilization,
+      lastBookedDate: latestBooking,
+    });
+  });
+
+  return groupUtilization.sort((a, b) => b.averageUtilization - a.averageUtilization);
 }
 
 // ============================================================================
@@ -169,7 +262,7 @@ export interface StockTakeSummaryData {
     assetId: string;
     assetNumber: string;
     assetName: string;
-    categoryName: string;
+    assetTypeName: string;
     lastLocation?: string;
   }>;
 }
@@ -195,7 +288,7 @@ export function calculateStockTakeSummary(
         assetId: asset.id,
         assetNumber: asset.assetNumber,
         assetName: asset.name,
-        categoryName: asset.category?.name || 'Unknown',
+        assetTypeName: asset.assetType?.name || 'Unknown',
         lastLocation: asset.location,
       };
     })

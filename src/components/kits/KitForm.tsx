@@ -37,8 +37,8 @@ export function KitForm({ kit, onSuccess, onCancel }: KitFormProps) {
       poolRequirements: [],
     },
     validate: {
-      name: (value) => (!value ? 'Name erforderlich' : null),
-      type: (value) => (!value ? 'Typ erforderlich' : null),
+      name: (value: string) => (!value ? 'Name erforderlich' : null),
+      type: (value: KitCreate['type']) => (!value ? 'Typ erforderlich' : null),
     },
   });
 

@@ -9,6 +9,7 @@
  */
 
 import { churchtoolsClient } from '@churchtools/churchtools-client';
+import { getExtensionKey } from '../../utils/extensionKey';
 
 /**
  * Error thrown when attempting destructive operations outside of test mode
@@ -27,7 +28,7 @@ export class NotInTestModeError extends Error {
  * Validates that we are in test mode before allowing destructive operations
  * @throws {NotInTestModeError} If not in test mode
  */
-function ensureTestMode(): void {
+function ensureTestMode(): string {
   const isTest = import.meta.env.VITEST === 'true' || import.meta.env.MODE === 'test';
   
   if (!isTest) {
@@ -35,14 +36,19 @@ function ensureTestMode(): void {
   }
 
   // Double check the module key has 'test' prefix
-  const moduleKey = import.meta.env.VITE_KEY ?? 'fkoinventorymanagement';
-  const expectedPrefix = 'test';
-  const actualKey = `${expectedPrefix}${moduleKey}`;
+  const moduleKey = getExtensionKey();
+  if (!moduleKey.startsWith('test')) {
+    throw new Error(
+      `[Test Mode] Expected module key to start with "test" but received "${moduleKey}".`
+    );
+  }
 
   console.warn(
-    `[DESTRUCTIVE OPERATION] Running in test mode with module key: ${actualKey}. ` +
+    `[DESTRUCTIVE OPERATION] Running in test mode with module key: ${moduleKey}. ` +
     `This will delete data from the custom module.`
   );
+
+  return moduleKey;
 }
 
 interface Module {
@@ -65,10 +71,7 @@ interface Module {
  * @returns Promise that resolves when reset is complete
  */
 export async function resetCustomModuleData(): Promise<void> {
-  ensureTestMode();
-
-  const baseKey = import.meta.env.VITE_KEY ?? 'fkoinventorymanagement';
-  const moduleKey = `test${baseKey}`;
+  const moduleKey = ensureTestMode();
 
   try {
     // Get the module ID
@@ -111,10 +114,7 @@ export async function resetCustomModuleData(): Promise<void> {
  * @returns Promise that resolves when reset is complete
  */
 export async function resetCategories(): Promise<void> {
-  ensureTestMode();
-
-  const baseKey = import.meta.env.VITE_KEY ?? 'fkoinventorymanagement';
-  const moduleKey = `test${baseKey}`;
+  const moduleKey = ensureTestMode();
 
   try {
     // Get current data
@@ -146,10 +146,7 @@ export async function resetCategories(): Promise<void> {
  * @returns Promise that resolves when reset is complete
  */
 export async function resetAssets(): Promise<void> {
-  ensureTestMode();
-
-  const baseKey = import.meta.env.VITE_KEY ?? 'fkoinventorymanagement';
-  const moduleKey = `test${baseKey}`;
+  const moduleKey = ensureTestMode();
 
   try {
     // Get current data
@@ -182,10 +179,7 @@ export async function resetAssets(): Promise<void> {
  * @returns Promise that resolves when reset is complete
  */
 export async function resetBookings(): Promise<void> {
-  ensureTestMode();
-
-  const baseKey = import.meta.env.VITE_KEY ?? 'fkoinventorymanagement';
-  const moduleKey = `test${baseKey}`;
+  const moduleKey = ensureTestMode();
 
   try {
     // Get current data
@@ -308,10 +302,7 @@ function createTestCategories() {
  * @returns Promise that resolves when seeding is complete
  */
 export async function seedTestData(): Promise<void> {
-  ensureTestMode();
-
-  const baseKey = import.meta.env.VITE_KEY ?? 'fkoinventorymanagement';
-  const moduleKey = `test${baseKey}`;
+  const moduleKey = ensureTestMode();
 
   try {
     const testData = {

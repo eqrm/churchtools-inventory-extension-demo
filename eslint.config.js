@@ -5,22 +5,28 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 import tseslint from 'typescript-eslint'
 
 export default tseslint.config(
-  { 
+  {
     ignores: [
-      'dist', 
-      '.vite', 
       'node_modules',
-      'coverage',  // Exclude coverage reports from linting
-      'html',      // Exclude test HTML reports
-      'specs/**',  // Exclude specification contracts from linting
-      'src/utils/ct-types.d.ts',  // Third-party ChurchTools type definitions
-      '*.config.ts',  // Config files (vite.config.ts, etc.)
+      'dist',
+      'dist-ssr',
+      '.vite',
+      'build',
+      'coverage', // Exclude coverage reports from linting
+      'html', // Exclude test HTML reports
+      'releases',
+      'specs/**', // Exclude specification contracts from linting
+      'src/utils/ct-types.d.ts', // Third-party ChurchTools type definitions
+      '*.config.ts', // Config files (vite.config.ts, etc.)
       '*.config.js',
-    ] 
+      '*.log',
+      '.env',
+      '.DS_Store',
+    ],
   },
   {
     extends: [js.configs.recommended, ...tseslint.configs.strict],
-    files: ['**/*.{ts,tsx}'],
+  files: ['src/**/*.{ts,tsx}'],
     languageOptions: {
       ecmaVersion: 2022,
       globals: globals.browser,

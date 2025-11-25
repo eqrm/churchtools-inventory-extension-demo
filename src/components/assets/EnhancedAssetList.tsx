@@ -168,7 +168,7 @@ export function EnhancedAssetList({ onView, onEdit, onCreateNew }: EnhancedAsset
     for (const filter of viewFilters) {
       if (filter.field === 'category.name' && filter.operator === 'equals') {
         // Note: This is a simplified conversion - full implementation would need category ID lookup
-        filters.categoryId = String(filter.value);
+        filters.assetTypeId = String(filter.value);
       } else if (filter.field === 'status' && filter.operator === 'equals') {
         filters.status = String(filter.value) as AssetFilters['status'];
       } else if (filter.field === 'location' && filter.operator === 'equals') {

@@ -19,7 +19,7 @@ const PROPAGATABLE_PROPERTIES = [
   { key: 'manufacturer', label: 'Manufacturer' },
   { key: 'model', label: 'Model' },
   { key: 'description', label: 'Description' },
-  { key: 'category', label: 'Category' },
+  { key: 'assetType', label: 'Asset Type' },
   { key: 'customFieldValues', label: 'Custom Fields' },
 ] as const;
 
@@ -39,7 +39,7 @@ async function propagateProperties(
       if (selectedProps.has('manufacturer')) updates['manufacturer'] = parentAsset.manufacturer;
       if (selectedProps.has('model')) updates['model'] = parentAsset.model;
       if (selectedProps.has('description')) updates['description'] = parentAsset.description;
-      if (selectedProps.has('category')) updates['category'] = parentAsset.category;
+  if (selectedProps.has('assetType')) updates['assetType'] = parentAsset.assetType;
       if (selectedProps.has('customFieldValues')) {
         updates['customFieldValues'] = parentAsset.customFieldValues;
       }

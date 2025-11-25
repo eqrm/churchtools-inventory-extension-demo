@@ -5,14 +5,16 @@
  * Provides helpful error messages if configuration is incomplete.
  */
 
+import { getExtensionKey } from './extensionKey';
+
 interface RequiredEnvVars {
   VITE_BASE_URL: string;
-  VITE_USERNAME: string;
-  VITE_PASSWORD: string;
   VITE_KEY: string;
 }
 
 interface OptionalEnvVars {
+  VITE_USERNAME?: string;
+  VITE_PASSWORD?: string;
   VITE_MODULE_ID?: string;
   VITE_ENVIRONMENT?: string;
 }
@@ -26,16 +28,12 @@ export function validateEnvironment(): RequiredEnvVars & OptionalEnvVars {
   const missing: string[] = [];
   
   // Check required variables
-  const VITE_BASE_URL = import.meta.env.VITE_BASE_URL;
-  const VITE_USERNAME = import.meta.env.VITE_USERNAME;
-  const VITE_PASSWORD = import.meta.env.VITE_PASSWORD;
-  const VITE_KEY = import.meta.env.VITE_KEY;
+  const rawBaseUrl = (import.meta.env.VITE_BASE_URL ?? '').trim();
+  const rawKey = (import.meta.env.VITE_KEY ?? '').trim();
   
   // Collect missing variables
-  if (!VITE_BASE_URL) missing.push('VITE_BASE_URL');
-  if (!VITE_USERNAME) missing.push('VITE_USERNAME');
-  if (!VITE_PASSWORD) missing.push('VITE_PASSWORD');
-  if (!VITE_KEY) missing.push('VITE_KEY');
+  if (!rawBaseUrl) missing.push('VITE_BASE_URL');
+  if (!rawKey) missing.push('VITE_KEY');
   
   // Throw if any required variables are missing
   if (missing.length > 0) {
@@ -50,37 +48,43 @@ export function validateEnvironment(): RequiredEnvVars & OptionalEnvVars {
   // At this point TypeScript knows these are strings (not undefined)
   // Validate URL format
   try {
-    new URL(VITE_BASE_URL);
+    new URL(rawBaseUrl);
   } catch {
     throw new Error(
-      `Invalid VITE_BASE_URL: "${VITE_BASE_URL}"\n\n` +
+      `Invalid VITE_BASE_URL: "${rawBaseUrl}"\n\n` +
       `VITE_BASE_URL must be a valid URL (e.g., https://your-church.church.tools)`
     );
   }
   
-  const environment = import.meta.env.VITE_ENVIRONMENT || 'development';
-  if (!['development', 'production'].includes(environment)) {
+  const environmentInput = (import.meta.env.VITE_ENVIRONMENT ?? '').trim().toLowerCase();
+  const environment = environmentInput === 'production' ? 'production' : 'development';
+  if (environmentInput && !['development', 'production'].includes(environmentInput)) {
     console.warn(
-      `[Config] Invalid VITE_ENVIRONMENT: "${environment}" - using "development".\n` +
+      `[Config] Invalid VITE_ENVIRONMENT: "${environmentInput}" - using "${environment}".\n` +
       'Valid values: "development" or "production"'
     );
   }
   
-  // Type guard: we've verified these are strings above
-  if (typeof VITE_BASE_URL !== 'string' || 
-      typeof VITE_USERNAME !== 'string' ||
-      typeof VITE_PASSWORD !== 'string' ||
-      typeof VITE_KEY !== 'string') {
-    throw new Error('Environment validation failed unexpectedly');
+  const VITE_KEY = getExtensionKey();
+  const normalizedKey = rawKey.toLowerCase();
+  if (normalizedKey !== rawKey) {
+    console.warn(
+      `[Config] Normalized VITE_KEY from "${rawKey}" to "${VITE_KEY}".`
+    );
   }
   
+  const VITE_USERNAME = (import.meta.env.VITE_USERNAME ?? '').trim() || undefined;
+  const VITE_PASSWORD = (import.meta.env.VITE_PASSWORD ?? '').trim() || undefined;
+  const VITE_MODULE_ID = (import.meta.env.VITE_MODULE_ID ?? '').trim() || undefined;
+  const VITE_ENVIRONMENT = environment;
+  
   return {
-    VITE_BASE_URL,
+    VITE_BASE_URL: rawBaseUrl,
+    VITE_KEY,
     VITE_USERNAME,
     VITE_PASSWORD,
-    VITE_KEY,
-    VITE_MODULE_ID: import.meta.env.VITE_MODULE_ID,
-    VITE_ENVIRONMENT: environment,
+    VITE_MODULE_ID,
+    VITE_ENVIRONMENT,
   };
 }
 

@@ -8,9 +8,9 @@
  * Updates: Integrated PersonPicker for "booking for" person selection
  */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useForm } from '@mantine/form'
-import { Stack, TextInput, Textarea, Select, Button, Group, Text, SegmentedControl } from '@mantine/core'
+import { Stack, TextInput, Textarea, Select, Button, Group, Text, SegmentedControl, NumberInput, Badge } from '@mantine/core'
 import { TimeInput } from '@mantine/dates'
 // date fields use DateField popovers
 import { notifications } from '@mantine/notifications'
@@ -21,11 +21,12 @@ import { useKits } from '../../hooks/useKits'
 import { useCreateBooking, useUpdateBooking, useBookings } from '../../hooks/useBookings'
 import { useCurrentUser } from '../../hooks/useCurrentUser'
 import { PersonPicker } from '../common/PersonPicker'
-import { PersonDisplay } from '../common/PersonDisplay'
+import { PersonAvatar } from '../common/PersonAvatar'
 import { BookingConflictService } from '../../services/booking/BookingConflictService'
 import { bookingStrings } from '../../i18n/bookingStrings'
 import type { Booking, BookingCreate } from '../../types/entities'
 import type { PersonSearchResult } from '../../services/person/PersonSearchService'
+import { allocateBookingQuantity } from '../../services/bookings/quantityAllocator'
 
 interface BookingFormProps {
   booking?: Booking
@@ -65,6 +66,8 @@ export function BookingForm({ booking, kitId, onSuccess, onCancel }: BookingForm
     initialValues: booking ? {
       asset: booking.asset,
       kit: booking.kit,
+      quantity: booking.quantity ?? 1,
+      allocatedChildAssets: booking.allocatedChildAssets,
       bookedById: booking.bookedById,
       bookedByName: booking.bookedByName,
       bookingForId: booking.bookingForId,
@@ -81,6 +84,7 @@ export function BookingForm({ booking, kitId, onSuccess, onCancel }: BookingForm
       requestedByName: booking.requestedByName,
     } : {
       kit: kitId ? { id: kitId, name: kits?.find(k => k.id === kitId)?.name || '' } : undefined,
+      quantity: 1,
       bookedById: currentUser?.id || '',
       bookedByName: currentUser ? `${currentUser.firstName} ${currentUser.lastName}` : '',
       bookingForId: currentUser?.id || '',
@@ -147,8 +151,56 @@ export function BookingForm({ booking, kitId, onSuccess, onCancel }: BookingForm
         }
         return null
       },
+      quantity: value => {
+        if (value === undefined || value < 1) {
+          return 'Quantity must be at least 1'
+        }
+        return null
+      },
     },
   })
+
+  const selectedAsset = useMemo(() => {
+    if (!form.values.asset?.id) return undefined
+    return assets?.find(asset => asset.id === form.values.asset?.id)
+  }, [assets, form.values.asset?.id])
+
+  const childAssets = useMemo(() => {
+    if (!selectedAsset) return []
+    return (assets ?? []).filter(asset => asset.parentAssetId === selectedAsset.id)
+  }, [assets, selectedAsset])
+
+  const allocationCandidates = useMemo(() => {
+    return childAssets.map(child => ({
+      id: child.id,
+      assetNumber: child.assetNumber,
+      name: child.name,
+      status: child.status,
+      bookable: child.bookable,
+      isAvailable: child.isAvailable,
+      currentBookingId: child.currentBooking ?? null,
+    }))
+  }, [childAssets])
+
+  const availableChildCount = useMemo(() => {
+    return allocationCandidates.filter(child => {
+      const statusOk = child.status === 'available'
+      const availabilityFlag = child.isAvailable ?? true
+      const bookingFree = !child.currentBookingId
+      return child.bookable && statusOk && availabilityFlag && bookingFree
+    }).length
+  }, [allocationCandidates])
+
+  useEffect(() => {
+    if (!selectedAsset?.isParent) {
+      if (form.values.quantity !== 1) {
+        form.setFieldValue('quantity', 1)
+      }
+      if (form.values.allocatedChildAssets) {
+        form.setFieldValue('allocatedChildAssets', undefined)
+      }
+    }
+  }, [selectedAsset?.isParent, form])
 
   // T075-T076: Filter assets by bookable status and date availability
   useEffect(() => {
@@ -254,17 +306,72 @@ export function BookingForm({ booking, kitId, onSuccess, onCancel }: BookingForm
         return
       }
 
+      if (!values.asset?.id && !values.kit?.id) {
+        notifications.show({ title: 'Validation Error', message: 'Please select an asset or kit to reserve.', color: 'red' })
+        return
+      }
+
       const errors = form.validate()
       if (errors.hasErrors) {
         notifications.show({ title: 'Validation Error', message: 'Please fix the errors in the form before submitting.', color: 'red' })
         return
       }
 
-      if (await checkForConflicts(values)) return
+      let submission: BookingCreate = values
+
+      if (selectedAsset?.isParent) {
+        const requestedQuantity = Math.max(1, Math.floor(values.quantity ?? 1))
+        if (requestedQuantity !== (values.quantity ?? 1)) {
+          form.setFieldValue('quantity', requestedQuantity)
+        }
+        const retainedAllocations = values.allocatedChildAssets ?? []
+
+        if (requestedQuantity < retainedAllocations.length) {
+          submission = {
+            ...values,
+            quantity: requestedQuantity,
+            allocatedChildAssets: retainedAllocations.slice(0, requestedQuantity),
+          }
+        } else {
+          const remainingQuantity = requestedQuantity - retainedAllocations.length
+          const allocationResult = allocateBookingQuantity({
+            parentAssetId: selectedAsset.id,
+            quantity: remainingQuantity,
+            children: allocationCandidates,
+            excludeAssetIds: retainedAllocations.map(asset => asset.id),
+          })
+
+          if (allocationResult.status === 'shortage') {
+            form.setFieldValue('allocatedChildAssets', [...retainedAllocations, ...allocationResult.allocated])
+            notifications.show({
+              title: bookingStrings.messages.quantityUnavailableTitle,
+              message: allocationResult.shortage?.message ?? bookingStrings.messages.quantityUnavailableDescription,
+              color: 'red',
+            })
+            return
+          }
+
+          const combinedAllocations = [...retainedAllocations, ...allocationResult.allocated]
+          form.setFieldValue('allocatedChildAssets', combinedAllocations)
+          submission = {
+            ...values,
+            quantity: requestedQuantity,
+            allocatedChildAssets: combinedAllocations,
+          }
+        }
+      } else {
+        submission = {
+          ...values,
+          quantity: 1,
+          allocatedChildAssets: undefined,
+        }
+      }
+
+      if (await checkForConflicts(submission)) return
 
       const action = booking 
-        ? updateBooking.mutateAsync({ id: booking.id, data: values })
-        : createBooking.mutateAsync(values)
+        ? updateBooking.mutateAsync({ id: booking.id, data: submission })
+        : createBooking.mutateAsync(submission)
       await action
       notifications.show({ title: 'Success', message: booking ? 'Booking updated successfully' : 'Booking created successfully', color: 'green' })
       onSuccess?.()
@@ -334,10 +441,10 @@ export function BookingForm({ booking, kitId, onSuccess, onCancel }: BookingForm
         {/* T050: Show who is creating the booking (not changeable) */}
         <Group gap="xs">
           <Text size="sm" fw={500}>{bookingStrings.form.bookedBy}</Text>
-          <PersonDisplay 
-            personId={form.values.bookedById} 
-            personName={form.values.bookedByName} 
-            size="sm" 
+          <PersonAvatar
+            personId={form.values.bookedById}
+            name={form.values.bookedByName}
+            size="sm"
             textSize="sm"
           />
         </Group>
@@ -440,8 +547,12 @@ export function BookingForm({ booking, kitId, onSuccess, onCancel }: BookingForm
               value={form.values.asset?.id}
               onChange={(value) => {
                 const asset = filteredAssets.find(a => a.id === value)
-                if (asset) form.setFieldValue('asset', { id: asset.id, assetNumber: asset.assetNumber, name: asset.name })
-                else form.setFieldValue('asset', undefined)
+                if (asset) {
+                  form.setFieldValue('asset', { id: asset.id, assetNumber: asset.assetNumber, name: asset.name })
+                } else {
+                  form.setFieldValue('asset', undefined)
+                }
+                form.setFieldValue('allocatedChildAssets', undefined)
               }}
               searchable
               clearable
@@ -461,6 +572,38 @@ export function BookingForm({ booking, kitId, onSuccess, onCancel }: BookingForm
               clearable
             />
           </>
+        )}
+
+        {selectedAsset?.isParent && (
+          <Stack gap="xs">
+            <NumberInput
+              label={bookingStrings.form.quantity}
+              min={1}
+              max={Math.max(allocationCandidates.length, 1)}
+              step={1}
+              value={form.values.quantity ?? 1}
+              onChange={(value) => {
+                const numericValue = typeof value === 'number' ? value : Number(value)
+                form.setFieldValue('quantity', Number.isFinite(numericValue) && numericValue > 0 ? Math.floor(numericValue) : 1)
+              }}
+              error={form.errors['quantity']}
+              description={allocationCandidates.length === 0
+                ? bookingStrings.messages.noChildAssetsAvailable
+                : bookingStrings.form.childAvailability
+                    .replace('{available}', availableChildCount.toString())
+                    .replace('{total}', allocationCandidates.length.toString())}
+              disabled={allocationCandidates.length === 0}
+            />
+            {form.values.allocatedChildAssets?.length ? (
+              <Group gap="xs">
+                {form.values.allocatedChildAssets.map(child => (
+                  <Badge key={child.id} variant="light" color="teal">
+                    {child.assetNumber}
+                  </Badge>
+                ))}
+              </Group>
+            ) : null}
+          </Stack>
         )}
 
         <TextInput label={bookingStrings.form.purpose} {...form.getInputProps('purpose')} required />

@@ -111,6 +111,10 @@ export function MasterDataSettingsBase(config: MasterDataSettingsConfig) {
   }, [definition]);
 
   const itemsWithCounts = useMemo(() => {
+    if (!definition.assetField) {
+      return items.map((item) => ({ ...item, assetCount: 0 }));
+    }
+
     const counts = buildAssetCountLookup(assets, definition.assetField);
     return items.map((item) => ({
       ...item,

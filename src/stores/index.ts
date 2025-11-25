@@ -10,4 +10,5 @@
 
 export { useUIStore } from './uiStore';
 export { useScannerStore } from './scannerStore';
+export { useFeatureSettingsStore } from './featureSettingsStore';
 

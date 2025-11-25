@@ -9,10 +9,11 @@ import { useForm } from '@mantine/form';
 import { notifications } from '@mantine/notifications';
 import { IconCheck, IconX } from '@tabler/icons-react';
 import { useCreateMaintenanceSchedule, useUpdateMaintenanceSchedule } from '../../hooks/useMaintenance';
+import { useAssets } from '../../hooks/useAssets';
 import type { MaintenanceSchedule, MaintenanceScheduleCreate, ScheduleType } from '../../types/entities';
 
 interface MaintenanceScheduleFormProps {
-  assetId: string;
+  assetId?: string;
   schedule?: MaintenanceSchedule;
   onSuccess?: () => void;
   onCancel?: () => void;
@@ -31,8 +32,11 @@ const scheduleTypes = [
 export function MaintenanceScheduleForm({ assetId, schedule, onSuccess, onCancel }: MaintenanceScheduleFormProps) {
   const createSchedule = useCreateMaintenanceSchedule();
   const updateSchedule = useUpdateMaintenanceSchedule();
+  const { data: assets = [], isLoading: assetsLoading } = useAssets();
+  const allowAssetSelection = !assetId && !schedule;
 
   const form = useForm<{
+    selectedAssetId: string;
     scheduleType: ScheduleType;
     intervalDays?: number | string;
     intervalMonths?: number | string;
@@ -43,6 +47,7 @@ export function MaintenanceScheduleForm({ assetId, schedule, onSuccess, onCancel
     reminderDaysBefore: number | string;
   }>({
     initialValues: {
+      selectedAssetId: schedule?.assetId || assetId || '',
       scheduleType: schedule?.scheduleType || 'time-based',
       intervalDays: schedule?.intervalDays || '',
       intervalMonths: schedule?.intervalMonths || '',
@@ -55,31 +60,45 @@ export function MaintenanceScheduleForm({ assetId, schedule, onSuccess, onCancel
   });
 
   const handleSubmit = form.onSubmit(async (values) => {
-    const data: MaintenanceScheduleCreate | Partial<MaintenanceSchedule> = {
-      assetId,
+    const selectedAssetId = assetId ?? schedule?.assetId ?? values.selectedAssetId;
+
+    if (!selectedAssetId) {
+      notifications.show({
+        title: 'Fehlende Asset-Auswahl',
+        message: 'Bitte wählen Sie ein Asset für diesen Wartungsplan aus.',
+        color: 'red',
+        icon: <IconX />,
+      });
+      return;
+    }
+
+    const baseData: Partial<MaintenanceScheduleCreate> & Partial<MaintenanceSchedule> = {
       scheduleType: values.scheduleType,
       reminderDaysBefore: Number(values.reminderDaysBefore),
     };
 
     // Add interval fields based on schedule type
     if (values.scheduleType === 'time-based') {
-      if (values.intervalDays) data.intervalDays = Number(values.intervalDays);
-      if (values.intervalMonths) data.intervalMonths = Number(values.intervalMonths);
-      if (values.intervalYears) data.intervalYears = Number(values.intervalYears);
+      if (values.intervalDays) baseData.intervalDays = Number(values.intervalDays);
+      if (values.intervalMonths) baseData.intervalMonths = Number(values.intervalMonths);
+      if (values.intervalYears) baseData.intervalYears = Number(values.intervalYears);
     } else if (values.scheduleType === 'usage-based') {
-      data.intervalHours = Number(values.intervalHours);
+      baseData.intervalHours = Number(values.intervalHours);
     } else if (values.scheduleType === 'event-based') {
-      data.intervalBookings = Number(values.intervalBookings);
+      baseData.intervalBookings = Number(values.intervalBookings);
     } else if (values.scheduleType === 'fixed-date' && values.fixedDate) {
-      data.fixedDate = values.fixedDate.toISOString().split('T')[0];
+      baseData.fixedDate = values.fixedDate.toISOString().split('T')[0];
     }
 
     try {
       if (schedule) {
-        await updateSchedule.mutateAsync({ id: schedule.id, data });
+        await updateSchedule.mutateAsync({ id: schedule.id, data: baseData });
         notifications.show({ title: 'Erfolg', message: 'Wartungsplan aktualisiert', color: 'green', icon: <IconCheck /> });
       } else {
-        await createSchedule.mutateAsync(data as MaintenanceScheduleCreate);
+        await createSchedule.mutateAsync({
+          assetId: selectedAssetId,
+          ...baseData,
+        } as MaintenanceScheduleCreate);
         notifications.show({ title: 'Erfolg', message: 'Wartungsplan erstellt', color: 'green', icon: <IconCheck /> });
       }
       onSuccess?.();
@@ -94,6 +113,21 @@ export function MaintenanceScheduleForm({ assetId, schedule, onSuccess, onCancel
   return (
     <form onSubmit={handleSubmit}>
       <Stack gap="md">
+        {allowAssetSelection && (
+          <Select
+            label="Asset"
+            placeholder="Asset auswählen"
+            data={assets.map((asset) => ({
+              value: asset.id,
+              label: `${asset.assetNumber} · ${asset.name}`,
+            }))}
+            searchable
+            nothingFoundMessage={assetsLoading ? 'Lade Assets...' : 'Kein Asset gefunden'}
+            disabled={assetsLoading}
+            required
+            {...form.getInputProps('selectedAssetId')}
+          />
+        )}
         <Select label="Wartungstyp" data={scheduleTypes} required {...form.getInputProps('scheduleType')} />
         
         {scheduleType === 'time-based' && (

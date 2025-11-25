@@ -1,5 +1,7 @@
 # ✅ Module Key Environment Prefix - FIXED!
 
+> **Update (2025-10-24):** The application no longer auto-generates prefixes. Configure `VITE_KEY` with the exact module shorty you want to target (see `docs/environment-module-keys.md`). The historical notes below describe the previous prefixing approach for reference only.
+
 ## Issue
 The application was trying to access `/api/custommodules/fkoinventorymanagement` but failing with 404 because the custom module in ChurchTools uses an environment-specific prefix (`dev-`, `prod-`, or `test-`).
 

@@ -85,7 +85,11 @@ export function ManageChildAssetsModal({ opened, onClose, parentAsset, currentCh
   const { selectedAssetId, setSelectedAssetId, isAdding, handleAdd } = useAddChildHandler(allAssets, parentAsset, updateAsset);
 
   const availableAssets = allAssets.filter(
-    (a) => !a.isParent && !a.parentAssetId && a.id !== parentAsset.id && a.category.id === parentAsset.category.id
+    (a) =>
+      !a.isParent &&
+      !a.parentAssetId &&
+      a.id !== parentAsset.id &&
+      a.assetType.id === parentAsset.assetType.id
   );
 
   const handleRemove = async (childId: string) => {
@@ -138,7 +142,9 @@ function AddChildSection({ availableAssets, selectedAssetId, setSelectedAssetId,
         <Button onClick={onAdd} disabled={!selectedAssetId || isAdding} loading={isAdding}>Add</Button>
       </Group>
       {availableAssets.length === 0 && (
-        <Text size="xs" c="dimmed" mt="xs">No compatible standalone assets available in this category</Text>
+        <Text size="xs" c="dimmed" mt="xs">
+          No compatible standalone assets available for this asset type
+        </Text>
       )}
     </div>
   );

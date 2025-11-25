@@ -4,16 +4,9 @@ import react from '@vitejs/plugin-react';
 // https://vitejs.dev/config/
 export default ({ mode }: { mode: string }) => {
     process.env = { ...process.env, ...loadEnv(mode, process.cwd()) };
-    const extensionKey = process.env.VITE_KEY;
-
-    if (!extensionKey) {
-        throw new Error('VITE_KEY environment variable is required to build the extension');
-    }
-
-    const basePath = mode === 'production' ? `/ccm/${extensionKey}/` : `/ccm/dev${extensionKey}/`;
 
     return defineConfig({
-        base: basePath,
+        base: `/ccm/${process.env.VITE_KEY}/`,
         plugins: [react()],
         build: {
             // Bundle size optimization

@@ -15,12 +15,14 @@ export const bookingStrings = {
     overdue: 'Overdue',
     cancelled: 'Cancelled',
     declined: 'Declined',
+    'maintenance-hold': 'Maintenance Hold',
   },
 
   // Actions and buttons
   actions: {
     create: 'Create',
     update: 'Update',
+    edit: 'Edit Booking',
     approve: 'Approve',
     decline: 'Decline',
     cancel: 'Cancel',
@@ -41,6 +43,9 @@ export const bookingStrings = {
     noBookingsMatchFilters: 'No bookings match the filter criteria.',
     createFirstBooking: 'Create your first booking to reserve equipment.',
     createFirstBookingButton: 'Create First Booking',
+    quantityUnavailableTitle: 'Quantity unavailable',
+    quantityUnavailableDescription: 'Requested quantity exceeds the available child assets.',
+    noChildAssetsAvailable: 'No child assets available for allocation.',
   },
 
   // UI labels
@@ -50,6 +55,7 @@ export const bookingStrings = {
     equipmentKit: 'Equipment Kit:',
     calendarView: 'Calendar view with {count} bookings',
     calendarComingSoon: '(Full calendar integration coming soon)',
+    bookedBy: 'Booked by:',
   },
 
   // Form labels and placeholders
@@ -58,6 +64,8 @@ export const bookingStrings = {
     bookedBy: 'Booked by:',
     selectAsset: 'Select Asset',
     selectKit: 'Select Kit',
+  quantity: 'Quantity',
+  childAvailability: '{available} of {total} child assets available',
     purpose: 'Purpose',
     notes: 'Notes',
     cancel: 'Cancel',

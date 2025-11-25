@@ -5,9 +5,10 @@ import { IconArrowLeft, IconEdit } from '@tabler/icons-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AssetDetail } from '../components/assets/AssetDetail';
 import { AssetForm } from '../components/assets/AssetForm';
+import { useAsset } from '../hooks/useAssets';
 import { AssetBookingIndicator } from '../components/assets/AssetBookingIndicator';
 import { BookAssetModal } from '../components/bookings/BookAssetModal';
-import { useAsset } from '../hooks/useAssets';
+import { useFeatureSettingsStore } from '../stores';
 
 export function AssetDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -15,6 +16,7 @@ export function AssetDetailPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [bookModalOpened, setBookModalOpened] = useState(false);
   const { data: asset } = useAsset(id || '');
+  const bookingsEnabled = useFeatureSettingsStore((state) => state.bookingsEnabled);
 
   const handleEdit = () => {
     setIsFormOpen(true);
@@ -60,14 +62,16 @@ export function AssetDetailPage() {
           <Grid.Col span={{ base: 12, md: 8 }}>
             <AssetDetail assetId={id} onEdit={handleEdit} />
           </Grid.Col>
-          <Grid.Col span={{ base: 12, md: 4 }}>
-            {asset && (
-              <AssetBookingIndicator
-                assetId={id}
-                onBookAsset={() => setBookModalOpened(true)}
-              />
-            )}
-          </Grid.Col>
+          {bookingsEnabled && (
+            <Grid.Col span={{ base: 12, md: 4 }}>
+              {asset && (
+                <AssetBookingIndicator
+                  assetId={id}
+                  onBookAsset={() => setBookModalOpened(true)}
+                />
+              )}
+            </Grid.Col>
+          )}
         </Grid>
 
         {asset && (
@@ -90,11 +94,13 @@ export function AssetDetailPage() {
               />
             </Modal>
 
-            <BookAssetModal
-              opened={bookModalOpened}
-              onClose={() => setBookModalOpened(false)}
-              asset={asset}
-            />
+            {bookingsEnabled && (
+              <BookAssetModal
+                opened={bookModalOpened}
+                onClose={() => setBookModalOpened(false)}
+                asset={asset}
+              />
+            )}
           </>
         )}
       </Stack>

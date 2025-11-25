@@ -216,7 +216,7 @@ export function AssetLabelPrint({ asset, onClose }: AssetLabelPrintProps) {
               {asset.name}
             </Text>
             <Text size="sm" c="dimmed" ta="center" mt={4}>
-              {asset.category.name}
+              {asset.assetType.name}
             </Text>
           </Box>
 

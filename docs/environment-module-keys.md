@@ -1,122 +1,46 @@
-# Environment-Based Module Key Configuration
+# Module Key Configuration
 
 ## Overview
-The application now automatically constructs the ChurchTools custom module key based on the `VITE_ENVIRONMENT` setting in your `.env` file.
+The inventory extension now expects the exact ChurchTools custom module key through the `VITE_KEY` environment variable. The application no longer derives dev/prod/test prefixes automatically—set the desired module key explicitly for each environment.
 
-## How It Works
-
-### Configuration in .env
+## Configure `.env`
 ```properties
-# Base module key (without prefix)
+# Module key (ChurchTools → Administration → Modules)
 VITE_KEY=fkoinventorymanagement
 
-# Environment setting
-VITE_ENVIRONMENT=development  # or 'production'
+# Optional: document intent for the environment (used only for diagnostics)
+VITE_ENVIRONMENT=development
 ```
 
-### Automatic Prefix Application
+If you maintain separate modules per environment, provide the full shorty for each one:
 
-The system automatically adds the correct prefix:
+| Environment | Example `VITE_KEY` |
+|-------------|--------------------|
+| Local development | `devfkoinventorymanagement` |
+| Automated tests   | `testfkoinventorymanagement` |
+| Production        | `prodfkoinventorymanagement` |
 
-| Environment | VITE_ENVIRONMENT | Resulting Module Key |
-|------------|------------------|---------------------|
-| **Development** | `development` | `dev-fkoinventorymanagement` |
-| **Production** | `production` | `prod-fkoinventorymanagement` |
-| **Testing** | (auto-detected) | `test-fkoinventorymanagement` |
+> ℹ️ The application lowercases and trims the configured key but does **not** add or remove prefixes.
 
-### Code Implementation
+## Creating Modules in ChurchTools
+1. Log in as an administrator.
+2. Navigate to **Settings → Custom Modules**.
+3. Create (or note) the module with the precise shorty you will place in `VITE_KEY`.
+4. Repeat for each environment you want to isolate (e.g., `dev…`, `test…`, `prod…`).
 
-In `src/hooks/useStorageProvider.ts`:
-
-```typescript
-const baseKey = import.meta.env.VITE_KEY ?? 'fkoinventorymanagement';
-const environment = import.meta.env.VITE_ENVIRONMENT ?? 'development';
-const isTest = import.meta.env.VITEST === 'true';
-
-// Construct module key with environment prefix
-let moduleKey: string;
-if (isTest) {
-    moduleKey = `test-${baseKey}`;
-} else if (environment === 'production') {
-    moduleKey = `prod-${baseKey}`;
-} else {
-    moduleKey = `dev-${baseKey}`;
-}
-```
-
-## ChurchTools Setup Required
-
-You need to create separate custom modules in ChurchTools for each environment:
-
-### Development Environment
-1. Go to ChurchTools Admin Panel
-2. Navigate to Custom Modules
-3. Create a new module with key: `dev-fkoinventorymanagement`
-
-### Production Environment
-1. Go to ChurchTools Admin Panel
-2. Navigate to Custom Modules
-3. Create a new module with key: `prod-fkoinventorymanagement`
-
-### Test Environment (Optional)
-1. Create a module with key: `test-fkoinventorymanagement`
-2. This is used automatically when running tests
-
-## Benefits
-
-✅ **Environment Isolation**: Development and production data are completely separate
-✅ **Safe Testing**: Test environment uses dedicated module
-✅ **No Manual Switching**: Environment detected automatically
-✅ **Type-Safe**: Full TypeScript support with proper types
-
-## Migration from Old Setup
-
-If you previously used a single module without prefixes:
-
-**Old (.env):**
-```properties
-VITE_KEY=fkoinventorymanagement
-```
-
-**New (.env):**
-```properties
-VITE_KEY=fkoinventorymanagement
-VITE_ENVIRONMENT=development  # Add this line
-```
-
-The system will now use `dev-fkoinventorymanagement` instead of `fkoinventorymanagement`.
+## Verifying the Active Module Key
+During startup the app prints warnings in the browser console if the key needs normalisation (for example, uppercase letters). When fetching data, the API route will include the exact value from `VITE_KEY`, so a 404 indicates the module shorty does not exist in ChurchTools.
 
 ## Troubleshooting
+- **404 when fetching module** → Confirm the module shorty exists in ChurchTools and matches `VITE_KEY` exactly.
+- **Reset utilities refuse to run** → The destructive test helpers require keys beginning with `test`; update `VITE_KEY` accordingly when running automated tests.
 
-### Error: "Custom module not found"
-
-**Problem:** ChurchTools returns 404 when fetching the module
-
-**Solution:** 
-1. Check your `.env` file has `VITE_ENVIRONMENT` set
-2. Create the custom module in ChurchTools with the correct prefixed key
-3. Example: If `VITE_ENVIRONMENT=development`, create module `dev-fkoinventorymanagement`
-
-### Verify Current Module Key
-
-Check the browser console - the error message will show the exact module key being requested:
-```
-Could not fetch module via API: /custommodules/dev-fkoinventorymanagement
-```
-
-## Files Modified
-
-- `src/hooks/useStorageProvider.ts` - Added automatic prefix logic
-- `src/vite-env.d.ts` - Added VITE_ENVIRONMENT and VITEST to type definitions
-- `src/tests/setup.ts` - Uses `test-` prefix automatically for tests
-
-## Related Documentation
-
-- Phase 2.5 Testing Infrastructure: Environment configuration
-- `.env-example`: Template with all required variables
-- `docs/TESTING.md`: Testing environment setup
+## Related Files
+- `src/utils/extensionKey.ts` — centralises module key sanitisation.
+- `src/utils/envValidation.ts` — validates that `VITE_KEY` is present and well-formed.
+- `src/tests/utils/reset-test-data.ts` — enforces `test` prefix for destructive operations.
 
 ---
 
-**Last Updated**: 2025-10-20
-**Feature**: Automatic Environment-Based Module Key Prefixing
+**Last Updated**: 2025-10-24
+**Feature**: Explicit module key configuration

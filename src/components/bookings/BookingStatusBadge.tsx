@@ -20,6 +20,7 @@ const STATUS_CONFIG: Record<BookingStatus, { label: string; color: string }> = {
   completed: { label: bookingStrings.status.completed, color: 'teal' },
   overdue: { label: bookingStrings.status.overdue, color: 'orange' },
   cancelled: { label: bookingStrings.status.cancelled, color: 'dark' },
+  'maintenance-hold': { label: bookingStrings.status['maintenance-hold'], color: 'grape' },
 }
 
 export function BookingStatusBadge({ status }: BookingStatusBadgeProps) {

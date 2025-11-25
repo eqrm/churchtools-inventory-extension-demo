@@ -14,8 +14,8 @@ import type {
   AssetUpdate,
   AssetFilters,
   AssetCategory,
-  CategoryCreate,
-  CategoryUpdate,
+  AssetTypeCreate,
+  AssetTypeUpdate,
   Booking,
   BookingCreate,
   BookingUpdate,
@@ -41,28 +41,28 @@ import type {
  */
 export interface IStorageProvider {
   // ============================================================================
-  // Asset Categories
+  // Asset Types
   // ============================================================================
   
   /**
-   * Get all asset categories
-   * @returns Array of all categories
+   * Get all asset Types
+   * @returns Array of all Types
    */
-  getCategories(): Promise<AssetCategory[]>
+  getAssetTypes(): Promise<AssetCategory[]>
   
   /**
    * Get a single category by ID
    * @param id - Category ID
    * @returns Category or null if not found
    */
-  getCategory(id: string): Promise<AssetCategory | null>
+  getAssetType(id: string): Promise<AssetCategory | null>
   
   /**
    * Create a new asset category
    * @param category - Category data without ID
    * @returns Created category with generated ID
    */
-  createCategory(category: CategoryCreate): Promise<AssetCategory>
+  createAssetType(category: AssetTypeCreate): Promise<AssetCategory>
   
   /**
    * Update an existing category
@@ -70,14 +70,14 @@ export interface IStorageProvider {
    * @param category - Partial category data to update
    * @returns Updated category
    */
-  updateCategory(id: string, category: CategoryUpdate): Promise<AssetCategory>
+  updateAssetType(id: string, category: AssetTypeUpdate): Promise<AssetCategory>
   
   /**
    * Delete a category
    * Note: Should fail if assets exist in this category
    * @param id - Category ID
    */
-  deleteCategory(id: string): Promise<void>
+  deleteAssetType(id: string): Promise<void>
   
   // ============================================================================
   // Assets

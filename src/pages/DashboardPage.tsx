@@ -3,10 +3,13 @@ import { Container, Stack, Title, Text, Card, Grid, Group } from '@mantine/core'
 import { IconBox, IconCategory, IconHistory, IconTrendingUp } from '@tabler/icons-react';
 import { useAssets } from '../hooks/useAssets';
 import { useCategories } from '../hooks/useCategories';
+import { PrefixWarningCard } from '../components/dashboard/PrefixWarningCard';
+import { useFeatureSettingsStore } from '../stores';
 
 export function DashboardPage() {
   const { data: assets = [] } = useAssets();
   const { data: categories = [] } = useCategories();
+  const maintenanceEnabled = useFeatureSettingsStore((state) => state.maintenanceEnabled);
 
   const availableAssets = assets.filter(a => a.status === 'available').length;
   const inUseAssets = assets.filter(a => a.status === 'in-use').length;
@@ -38,6 +41,8 @@ export function DashboardPage() {
             Welcome to ChurchTools Inventory Management
           </Text>
         </div>
+
+        <PrefixWarningCard />
 
         <Grid>
           <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
@@ -115,7 +120,7 @@ export function DashboardPage() {
           </Stack>
         </Card>
 
-        {brokenAssets > 0 && (
+        {maintenanceEnabled && brokenAssets > 0 && (
           <Card withBorder padding="lg" bg="red.0">
             <Stack gap="xs">
               <Group>

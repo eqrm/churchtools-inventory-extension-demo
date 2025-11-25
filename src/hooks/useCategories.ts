@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useStorageProvider } from './useStorageProvider';
-import type { CategoryCreate, CategoryUpdate } from '../types/entities';
+import type { AssetTypeCreate, AssetTypeUpdate } from '../types/entities';
 
 /**
  * Query key factory for categories
@@ -24,7 +24,7 @@ export function useCategories() {
     queryKey: categoryKeys.lists(),
     queryFn: async () => {
       if (!provider) throw new Error('Storage provider not initialized');
-      const allCategories = await provider.getCategories();
+      const allCategories = await provider.getAssetTypes();
       
       // T266 - E7: Filter out system categories (e.g., __ChangeHistory__, __StockTakeSessions__)
       return allCategories.filter(cat => !cat.name.startsWith('__'));
@@ -45,7 +45,7 @@ export function useCategory(id: string | undefined) {
     queryFn: async () => {
       if (!provider) throw new Error('Storage provider not initialized');
       if (!id) throw new Error('Category ID is required');
-      return await provider.getCategory(id);
+      return await provider.getAssetType(id);
     },
     enabled: !!provider && !!id,
     staleTime: 5 * 60 * 1000,
@@ -60,9 +60,9 @@ export function useCreateCategory() {
   const provider = useStorageProvider();
 
   return useMutation({
-    mutationFn: async (data: CategoryCreate) => {
+    mutationFn: async (data: AssetTypeCreate) => {
       if (!provider) throw new Error('Storage provider not initialized');
-      return await provider.createCategory(data);
+      return await provider.createAssetType(data);
     },
     onSuccess: (newCategory) => {
       // Invalidate category lists to refetch
@@ -82,9 +82,9 @@ export function useUpdateCategory() {
   const provider = useStorageProvider();
 
   return useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: CategoryUpdate }) => {
+    mutationFn: async ({ id, data }: { id: string; data: AssetTypeUpdate }) => {
       if (!provider) throw new Error('Storage provider not initialized');
-      return await provider.updateCategory(id, data);
+      return await provider.updateAssetType(id, data);
     },
     onSuccess: (updatedCategory) => {
       // Invalidate both list and detail queries
@@ -104,7 +104,7 @@ export function useDeleteCategory() {
   return useMutation({
     mutationFn: async (id: string) => {
       if (!provider) throw new Error('Storage provider not initialized');
-      await provider.deleteCategory(id);
+      await provider.deleteAssetType(id);
       return id;
     },
     onSuccess: (deletedId) => {
@@ -123,11 +123,11 @@ export function useDuplicateCategory() {
   const provider = useStorageProvider();
 
   return useMutation({
-    mutationFn: async (sourceCategory: CategoryCreate & { id: string }) => {
+    mutationFn: async (sourceCategory: AssetTypeCreate & { id: string }) => {
       if (!provider) throw new Error('Storage provider not initialized');
       
       // Create new category with " (Copy)" suffix
-      const newCategory: CategoryCreate = {
+      const newCategory: AssetTypeCreate = {
         name: `${sourceCategory.name} (Copy)`,
         icon: sourceCategory.icon,
         customFields: sourceCategory.customFields.map(field => ({
@@ -136,7 +136,7 @@ export function useDuplicateCategory() {
         })),
       };
       
-      return await provider.createCategory(newCategory);
+      return await provider.createAssetType(newCategory);
     },
     onSuccess: (duplicatedCategory) => {
       // Invalidate category lists to refetch

@@ -58,6 +58,7 @@ export function formatBookingStatus(status: BookingStatus): string {
         completed: 'Abgeschlossen',
         overdue: 'Überfällig',
         cancelled: 'Storniert',
+        'maintenance-hold': 'Wartungsblock',
     };
     return statusMap[status];
 }

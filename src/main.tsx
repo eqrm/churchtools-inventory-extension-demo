@@ -7,11 +7,11 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { churchtoolsClient } from '@churchtools/churchtools-client';
 import { theme } from './theme';
 import { validateEnvironment } from './utils/envValidation';
-import { initializeOfflineDb } from './utils/offline-db';
+import { initializeOfflineDb } from './state/offline/db';
 import { runMigrations, registeredMigrations, SchemaVersioningService, BASE_SCHEMA_VERSION, TARGET_SCHEMA_VERSION } from './services/migrations';
-import { createStorageProvider } from './services/storage/StorageProviderFactory';
+import { initializeChurchToolsStorageProvider } from './services/churchTools/storageProvider';
 import { churchToolsAPIClient } from './services/api/ChurchToolsAPIClient';
-import { getModuleId, resolveModuleKey } from './hooks/useStorageProvider';
+import { getModuleId } from './hooks/useStorageProvider';
 import App from './App';
 
 // Import Mantine styles
@@ -39,8 +39,9 @@ if (import.meta.env.MODE === 'development') {
 }
 
 // Validate environment variables before app initialization
+let envConfig: ReturnType<typeof validateEnvironment>;
 try {
-    validateEnvironment();
+    envConfig = validateEnvironment();
 } catch (error) {
     renderFatalStartupError('Configuration Error', error);
 }
@@ -53,15 +54,15 @@ declare const window: Window &
     };
 
 // ChurchTools client setup
-const baseUrl = window.settings?.base_url ?? import.meta.env.VITE_BASE_URL;
+const baseUrl = window.settings?.base_url ?? envConfig.VITE_BASE_URL;
 if (!baseUrl) {
     throw new Error('ChurchTools base URL not configured. Please set VITE_BASE_URL in .env file.');
 }
 churchtoolsClient.setBaseUrl(baseUrl);
 
 // Development authentication
-const username = import.meta.env.VITE_USERNAME;
-const password = import.meta.env.VITE_PASSWORD;
+const username = envConfig.VITE_USERNAME;
+const password = envConfig.VITE_PASSWORD;
 if (import.meta.env.MODE === 'development' && username && password) {
     await churchtoolsClient.post('/login', { username, password });
 }
@@ -71,15 +72,13 @@ await initializeOfflineDb();
 
 try {
     const schemaVersioning = new SchemaVersioningService();
-    const moduleKey = resolveModuleKey();
-    const moduleId = await getModuleId(moduleKey);
-    const storageProvider = createStorageProvider({
-        type: 'churchtools',
-        churchtools: {
-            moduleId,
-            baseUrl,
-            apiClient: churchToolsAPIClient,
-        },
+    const moduleKey = envConfig.VITE_KEY;
+    const moduleId = envConfig.VITE_MODULE_ID ?? await getModuleId(moduleKey);
+    const storageProvider = initializeChurchToolsStorageProvider({
+        moduleId,
+        baseUrl,
+        apiClient: churchToolsAPIClient,
+        debugLabel: 'main:bootstrap',
     });
 
     const migrationResult = await runMigrations({

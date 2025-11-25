@@ -17,7 +17,7 @@ export function AssetCalendarView({ assets }: AssetCalendarViewProps) {
   const theme = useMantineTheme();
   const { data: bookings, isLoading } = useBookings();
 
-  const statusColors = useMemo(
+  const statusColors = useMemo<Record<BookingStatus, { bg: string; text: string }>>(
     () => ({
       pending: { bg: theme.colors.yellow[5], text: theme.black },
       approved: { bg: theme.colors.teal[6], text: theme.white },
@@ -26,6 +26,7 @@ export function AssetCalendarView({ assets }: AssetCalendarViewProps) {
       overdue: { bg: theme.colors.red[7], text: theme.white },
       cancelled: { bg: theme.colors.gray[5], text: theme.white },
       declined: { bg: theme.colors.red[8] ?? theme.colors.red[6], text: theme.white },
+      'maintenance-hold': { bg: theme.colors.orange[4], text: theme.black },
     }),
     [theme]
   );

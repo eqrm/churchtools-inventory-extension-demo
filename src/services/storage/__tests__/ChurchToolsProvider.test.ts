@@ -16,7 +16,7 @@ import type { ChurchToolsAPIClient } from '../../api/ChurchToolsAPIClient';
 const createMockAPIClient = (): ChurchToolsAPIClient => {
   // In-memory storage for mock data
   const categories: Map<string, Record<string, unknown>> = new Map();
-  const dataValues: Map<string, Map<string, Record<string, unknown>>> = new Map(); // categoryId -> { dataValueId -> dataValue }
+  const dataValues: Map<string, Map<string, Record<string, unknown>>> = new Map(); // assetTypeId -> { dataValueId -> dataValue }
   let nextId = 1;
 
   return {
@@ -34,8 +34,8 @@ const createMockAPIClient = (): ChurchToolsAPIClient => {
     getDataCategories: vi.fn().mockImplementation(async (moduleId) => {
       return Array.from(categories.values()).filter(cat => cat.customModuleId === Number(moduleId));
     }),
-    getDataCategory: vi.fn().mockImplementation(async (moduleId, categoryId) => {
-      return categories.get(categoryId) || null;
+    getDataCategory: vi.fn().mockImplementation(async (moduleId, assetTypeId) => {
+      return categories.get(assetTypeId) || null;
     }),
     createDataCategory: vi.fn().mockImplementation(async (moduleId, data) => {
       const id = String(nextId++);
@@ -48,31 +48,31 @@ const createMockAPIClient = (): ChurchToolsAPIClient => {
       dataValues.set(id, new Map()); // Initialize empty data values for this category
       return category;
     }),
-    updateDataCategory: vi.fn().mockImplementation(async (moduleId, categoryId, data) => {
-      const existing = categories.get(categoryId);
+    updateDataCategory: vi.fn().mockImplementation(async (moduleId, assetTypeId, data) => {
+      const existing = categories.get(assetTypeId);
       if (!existing) {
-        throw new Error(`Category ${categoryId} not found`);
+        throw new Error(`Category ${assetTypeId} not found`);
       }
       const updated = { ...existing, ...data };
-      categories.set(categoryId, updated);
+      categories.set(assetTypeId, updated);
       return updated;
     }),
-    deleteDataCategory: vi.fn().mockImplementation(async (moduleId, categoryId) => {
-      if (!categories.has(categoryId)) {
-        throw new Error(`Category ${categoryId} not found`);
+    deleteDataCategory: vi.fn().mockImplementation(async (moduleId, assetTypeId) => {
+      if (!categories.has(assetTypeId)) {
+        throw new Error(`Category ${assetTypeId} not found`);
       }
-      categories.delete(categoryId);
-      dataValues.delete(categoryId);
+      categories.delete(assetTypeId);
+      dataValues.delete(assetTypeId);
     }),
-    getDataValues: vi.fn().mockImplementation(async (moduleId, categoryId) => {
-      const categoryData = dataValues.get(categoryId);
+    getDataValues: vi.fn().mockImplementation(async (moduleId, assetTypeId) => {
+      const categoryData = dataValues.get(assetTypeId);
       if (!categoryData) {
         return [];
       }
       return Array.from(categoryData.values());
     }),
-    getDataValue: vi.fn().mockImplementation(async (moduleId, categoryId, dataValueId) => {
-      const categoryData = dataValues.get(categoryId);
+    getDataValue: vi.fn().mockImplementation(async (moduleId, assetTypeId, dataValueId) => {
+      const categoryData = dataValues.get(assetTypeId);
       if (!categoryData || !categoryData.has(dataValueId)) {
         throw new Error(`Data value ${dataValueId} not found`);
       }
@@ -82,26 +82,26 @@ const createMockAPIClient = (): ChurchToolsAPIClient => {
       }
       return value;
     }),
-    createDataValue: vi.fn().mockImplementation(async (moduleId, categoryId, data) => {
-      if (!categories.has(categoryId)) {
-        throw new Error(`Category ${categoryId} not found`);
+    createDataValue: vi.fn().mockImplementation(async (moduleId, assetTypeId, data) => {
+      if (!categories.has(assetTypeId)) {
+        throw new Error(`Category ${assetTypeId} not found`);
       }
       const id = String(nextId++);
       const dataValue = {
         id,
-        dataCategoryId: Number(categoryId),
+        dataCategoryId: Number(assetTypeId),
         ...data,
       };
-      let categoryData = dataValues.get(categoryId);
+      let categoryData = dataValues.get(assetTypeId);
       if (!categoryData) {
         categoryData = new Map();
-        dataValues.set(categoryId, categoryData);
+        dataValues.set(assetTypeId, categoryData);
       }
       categoryData.set(id, dataValue);
       return dataValue;
     }),
-    updateDataValue: vi.fn().mockImplementation(async (moduleId, categoryId, dataValueId, data) => {
-      const categoryData = dataValues.get(categoryId);
+    updateDataValue: vi.fn().mockImplementation(async (moduleId, assetTypeId, dataValueId, data) => {
+      const categoryData = dataValues.get(assetTypeId);
       if (!categoryData || !categoryData.has(dataValueId)) {
         throw new Error(`Data value ${dataValueId} not found`);
       }
@@ -113,8 +113,8 @@ const createMockAPIClient = (): ChurchToolsAPIClient => {
       categoryData.set(dataValueId, updated);
       return updated;
     }),
-    deleteDataValue: vi.fn().mockImplementation(async (moduleId, categoryId, dataValueId) => {
-      const categoryData = dataValues.get(categoryId);
+    deleteDataValue: vi.fn().mockImplementation(async (moduleId, assetTypeId, dataValueId) => {
+      const categoryData = dataValues.get(assetTypeId);
       if (!categoryData || !categoryData.has(dataValueId)) {
         throw new Error(`Data value ${dataValueId} not found`);
       }
@@ -158,7 +158,7 @@ describe('ChurchToolsStorageProvider Integration Tests', () => {
 
       vi.mocked(mockAPIClient.getDataCategories).mockResolvedValue(mockCategories);
 
-      const categories = await provider.getCategories();
+      const categories = await provider.getAssetTypes();
 
       expect(categories).toHaveLength(1);
       expect(categories[0].name).toBe('Audio Equipment');
@@ -192,7 +192,7 @@ describe('ChurchToolsStorageProvider Integration Tests', () => {
         ],
       };
 
-      const category = await provider.createCategory(categoryData);
+      const category = await provider.createAssetType(categoryData);
 
       expect(category.name).toBe('Video Equipment');
       expect(category.customFields).toHaveLength(1);
@@ -204,7 +204,7 @@ describe('ChurchToolsStorageProvider Integration Tests', () => {
       vi.mocked(mockAPIClient.getDataValues).mockResolvedValue([]);
       vi.mocked(mockAPIClient.deleteDataCategory).mockResolvedValue(undefined);
 
-      await provider.deleteCategory('cat-1');
+      await provider.deleteAssetType('cat-1');
 
       expect(mockAPIClient.deleteDataCategory).toHaveBeenCalledWith(moduleId, 'cat-1');
     });
@@ -214,7 +214,7 @@ describe('ChurchToolsStorageProvider Integration Tests', () => {
         { id: 'asset-1', data: {} },
       ]);
 
-      await expect(provider.deleteCategory('cat-1')).rejects.toThrow(
+      await expect(provider.deleteAssetType('cat-1')).rejects.toThrow(
         'Cannot delete category with existing assets'
       );
     });
@@ -226,7 +226,7 @@ describe('ChurchToolsStorageProvider Integration Tests', () => {
         {
           id: 'asset-1',
           data: JSON.stringify({
-            categoryId: 'cat-1',
+            assetTypeId: 'cat-1',
             name: 'Camera A',
             assetNumber: '00001',
             status: 'available',
@@ -236,7 +236,7 @@ describe('ChurchToolsStorageProvider Integration Tests', () => {
         {
           id: 'asset-2',
           data: JSON.stringify({
-            categoryId: 'cat-1',
+            assetTypeId: 'cat-1',
             name: 'Camera B',
             assetNumber: '00002',
             status: 'in-use',
@@ -247,7 +247,7 @@ describe('ChurchToolsStorageProvider Integration Tests', () => {
 
       vi.mocked(mockAPIClient.getDataValues).mockResolvedValue(mockAssets);
 
-      const assets = await provider.getAssets({ categoryId: 'cat-1' });
+      const assets = await provider.getAssets({ assetTypeId: 'cat-1' });
 
       expect(assets).toHaveLength(2);
       expect(assets[0].name).toBe('Camera A');
@@ -258,7 +258,7 @@ describe('ChurchToolsStorageProvider Integration Tests', () => {
       const mockCreatedAsset = {
         id: 'asset-new',
         data: JSON.stringify({
-          categoryId: 'cat-1',
+          assetTypeId: 'cat-1',
           name: 'New Camera',
           assetNumber: '00003',
           status: 'available',
@@ -270,7 +270,7 @@ describe('ChurchToolsStorageProvider Integration Tests', () => {
       vi.mocked(mockAPIClient.getDataValues).mockResolvedValue([]);
 
       const assetData = {
-        category: { id: 'cat-1', name: 'Test Category' },
+        assetType: { id: 'cat-1', name: 'Test Category' },
         name: 'New Camera',
         description: 'A test camera',
         manufacturer: 'Test Manufacturer',
@@ -293,7 +293,7 @@ describe('ChurchToolsStorageProvider Integration Tests', () => {
       const mockUpdatedAsset = {
         id: 'asset-1',
         data: JSON.stringify({
-          categoryId: 'cat-1',
+          assetTypeId: 'cat-1',
           name: 'Updated Camera',
           assetNumber: '00001',
           status: 'broken',
@@ -509,7 +509,7 @@ describe('ChurchToolsStorageProvider Integration Tests', () => {
         new Error('Network error')
       );
 
-      await expect(provider.getCategories()).rejects.toThrow('Network error');
+      await expect(provider.getAssetTypes()).rejects.toThrow('Network error');
     });
 
     it('should handle not found errors', async () => {

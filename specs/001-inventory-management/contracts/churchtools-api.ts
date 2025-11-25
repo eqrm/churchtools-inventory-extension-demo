@@ -96,78 +96,78 @@ export interface IChurchToolsAPIClient {
   
   /**
    * Update a data category
-   * PUT /custommodules/{moduleId}/customdatacategories/{categoryId}
+   * PUT /custommodules/{moduleId}/customdatacategories/{assetTypeId}
    * @param moduleId - Module ID
-   * @param categoryId - Category ID
+   * @param assetTypeId - Category ID
    * @param category - Updated category data
    */
   updateDataCategory(
     moduleId: string,
-    categoryId: string,
+    assetTypeId: string,
     category: UpdateDataCategoryRequest
   ): Promise<CustomDataCategory>
   
   /**
    * Delete a data category
-   * DELETE /custommodules/{moduleId}/customdatacategories/{categoryId}
+   * DELETE /custommodules/{moduleId}/customdatacategories/{assetTypeId}
    * @param moduleId - Module ID
-   * @param categoryId - Category ID
+   * @param assetTypeId - Category ID
    */
-  deleteDataCategory(moduleId: string, categoryId: string): Promise<void>
+  deleteDataCategory(moduleId: string, assetTypeId: string): Promise<void>
   
   /**
    * Get all data values in a category
-   * GET /custommodules/{moduleId}/customdatacategories/{categoryId}/customdatavalues
+   * GET /custommodules/{moduleId}/customdatacategories/{assetTypeId}/customdatavalues
    * @param moduleId - Module ID
-   * @param categoryId - Category ID
+   * @param assetTypeId - Category ID
    */
-  getDataValues(moduleId: string, categoryId: string): Promise<CustomDataValue[]>
+  getDataValues(moduleId: string, assetTypeId: string): Promise<CustomDataValue[]>
   
   /**
    * Get a specific data value
-   * GET /custommodules/{moduleId}/customdatacategories/{categoryId}/customdatavalues/{valueId}
+   * GET /custommodules/{moduleId}/customdatacategories/{assetTypeId}/customdatavalues/{valueId}
    * @param moduleId - Module ID
-   * @param categoryId - Category ID
+   * @param assetTypeId - Category ID
    * @param valueId - Value ID
    */
-  getDataValue(moduleId: string, categoryId: string, valueId: string): Promise<CustomDataValue>
+  getDataValue(moduleId: string, assetTypeId: string, valueId: string): Promise<CustomDataValue>
   
   /**
    * Create a new data value
-   * POST /custommodules/{moduleId}/customdatacategories/{categoryId}/customdatavalues
+   * POST /custommodules/{moduleId}/customdatacategories/{assetTypeId}/customdatavalues
    * @param moduleId - Module ID
-   * @param categoryId - Category ID
+   * @param assetTypeId - Category ID
    * @param value - Value data
    */
   createDataValue(
     moduleId: string,
-    categoryId: string,
+    assetTypeId: string,
     value: Record<string, any>
   ): Promise<CustomDataValue>
   
   /**
    * Update a data value
-   * PUT /custommodules/{moduleId}/customdatacategories/{categoryId}/customdatavalues/{valueId}
+   * PUT /custommodules/{moduleId}/customdatacategories/{assetTypeId}/customdatavalues/{valueId}
    * @param moduleId - Module ID
-   * @param categoryId - Category ID
+   * @param assetTypeId - Category ID
    * @param valueId - Value ID
    * @param value - Updated value data
    */
   updateDataValue(
     moduleId: string,
-    categoryId: string,
+    assetTypeId: string,
     valueId: string,
     value: Record<string, any>
   ): Promise<CustomDataValue>
   
   /**
    * Delete a data value
-   * DELETE /custommodules/{moduleId}/customdatacategories/{categoryId}/customdatavalues/{valueId}
+   * DELETE /custommodules/{moduleId}/customdatacategories/{assetTypeId}/customdatavalues/{valueId}
    * @param moduleId - Module ID
-   * @param categoryId - Category ID
+   * @param assetTypeId - Category ID
    * @param valueId - Value ID
    */
-  deleteDataValue(moduleId: string, categoryId: string, valueId: string): Promise<void>
+  deleteDataValue(moduleId: string, assetTypeId: string, valueId: string): Promise<void>
 }
 
 // ============================================================================
@@ -295,7 +295,7 @@ export interface IPersonCache {
  */
 export interface BatchCreateDataValuesRequest {
   moduleId: string
-  categoryId: string
+  assetTypeId: string
   values: Record<string, any>[]
 }
 
@@ -304,7 +304,7 @@ export interface BatchCreateDataValuesRequest {
  */
 export interface BatchUpdateDataValuesRequest {
   moduleId: string
-  categoryId: string
+  assetTypeId: string
   updates: Array<{
     valueId: string
     value: Record<string, any>
@@ -316,7 +316,7 @@ export interface BatchUpdateDataValuesRequest {
  */
 export interface BatchDeleteDataValuesRequest {
   moduleId: string
-  categoryId: string
+  assetTypeId: string
   valueIds: string[]
 }
 
@@ -364,7 +364,7 @@ export type WebhookEventType =
 export interface WebhookPayload {
   event: WebhookEventType
   moduleId: string
-  categoryId?: string
+  assetTypeId?: string
   valueId?: string
   timestamp: string
   data: any

@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import { Button, Container, Group, Menu, Modal, Title } from '@mantine/core';
+import { Button, Container, Menu, Modal } from '@mantine/core';
 import { IconChevronDown, IconPlus, IconTemplate } from '@tabler/icons-react';
-import { AssetCategoryList } from '../components/categories/AssetCategoryList';
-import { AssetCategoryForm } from '../components/categories/AssetCategoryForm';
+import { AssetTypeList } from '../components/categories/AssetTypeList';
+import { AssetTypeForm } from '../components/categories/AssetTypeForm';
 import { CategoryTemplates } from '../components/categories/CategoryTemplates';
-import type { AssetCategory, CustomFieldDefinition } from '../types/entities';
+import type { AssetType, CustomFieldDefinition } from '../types/entities';
 
-function NewCategoryMenu({
+function NewAssetTypeMenu({
   onCreateNew,
   onShowTemplates,
 }: {
@@ -20,15 +20,15 @@ function NewCategoryMenu({
           leftSection={<IconPlus size={16} />}
           rightSection={<IconChevronDown size={16} />}
         >
-          New Category
+          Neuer Asset-Typ
         </Button>
       </Menu.Target>
       <Menu.Dropdown>
         <Menu.Item leftSection={<IconPlus size={16} />} onClick={onCreateNew}>
-          Blank Category
+          Leerer Asset-Typ
         </Menu.Item>
         <Menu.Item leftSection={<IconTemplate size={16} />} onClick={onShowTemplates}>
-          From Template
+          Aus Vorlage
         </Menu.Item>
       </Menu.Dropdown>
     </Menu>
@@ -39,14 +39,14 @@ function NewCategoryMenu({
 export function CategoriesPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isTemplateOpen, setIsTemplateOpen] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<AssetCategory | undefined>();
+  const [editingCategory, setEditingCategory] = useState<AssetType | undefined>();
   const [templateData, setTemplateData] = useState<{
     name: string;
     icon?: string;
     customFields: Omit<CustomFieldDefinition, 'id'>[];
   } | undefined>();
 
-  const handleEdit = (category: AssetCategory) => {
+  const handleEdit = (category: AssetType) => {
     setEditingCategory(category);
     setTemplateData(undefined);
     setIsFormOpen(true);
@@ -94,23 +94,20 @@ export function CategoriesPage() {
 
   return (
     <Container size="xl" py="xl">
-      <Group justify="space-between" mb="md">
-        <Title order={1}>Asset Categories</Title>
-        <NewCategoryMenu
-          onCreateNew={handleCreateNew}
-          onShowTemplates={handleShowTemplates}
-        />
-      </Group>
-
-      <AssetCategoryList onEdit={handleEdit} />
+      <AssetTypeList
+        onEdit={handleEdit}
+        headerActions={
+          <NewAssetTypeMenu onCreateNew={handleCreateNew} onShowTemplates={handleShowTemplates} />
+        }
+      />
 
       <Modal
         opened={isFormOpen}
         onClose={handleCancel}
-        title={editingCategory ? 'Edit Category' : 'New Category'}
+        title={editingCategory ? 'Asset-Typ bearbeiten' : 'Neuer Asset-Typ'}
         size="lg"
       >
-        <AssetCategoryForm
+        <AssetTypeForm
           category={editingCategory}
           initialData={templateData}
           onSuccess={handleSuccess}
@@ -121,7 +118,7 @@ export function CategoriesPage() {
       <Modal
         opened={isTemplateOpen}
         onClose={handleCancelTemplates}
-        title="Choose a Template"
+        title="Vorlage auswählen"
         size="xl"
       >
         <CategoryTemplates onSelectTemplate={handleSelectTemplate} />

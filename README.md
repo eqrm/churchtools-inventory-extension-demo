@@ -1,143 +1,92 @@
-# ChurchTools Extension Boilerplate
+# ChurchTools Inventory Extension
 
-This project provides a boilerplate for building your own extension for [ChurchTools](https://www.church.tools).
+A production-ready ChurchTools module that delivers end-to-end inventory management: booking lifecycle timelines, maintenance orchestration, configurable numbering, deterministic demo data, and consistent people context across every view.
+
+## Highlights
+- **Guided demo onboarding** – first-run modal seeds deterministic sample data and developer controls allow safe reseeding/reset.
+- **Booking traceability** – shared history timeline, quantity-aware allocator, and unified participant avatars across list, detail, and form flows.
+- **Maintenance plans** – stage-based planning with calendar holds, completion drawer, and technician summaries per asset.
+- **Numbering transparency** – dashboard warning, prefix defaults with Dexie-backed persistence, and live previews in asset/category forms.
+- **People context** – `PersonAvatar` powers consistent initials/avatars for bookings, assets, and maintenance, backed by cached lookups.
 
 ## Getting Started
-
 ### Prerequisites
-
--   Node.js (version compatible with the project)
--   npm or yarn
+- Node.js 20.x (or the version defined in `.nvmrc`)
+- ChurchTools API access with module key (`VITE_KEY`) and base URL (`VITE_BASE_URL`)
 
 ### Installation
-
-1. Clone the repository
+1. Clone the repository.
 2. Install dependencies:
-    ```bash
-    npm install
-    ```
+   ```bash
+   npm install
+   ```
+3. Copy `.env.example` to `.env` and update the required variables.
+4. Start the development server:
+   ```bash
+   npm run dev
+   ```
+   The app runs on http://localhost:5173. Configure ChurchTools CORS to allow the origin (HTTPS recommended for Safari).
 
-### Optional: Using Dev Container
-
-This project includes a dev container configuration. If you use VS Code with the "Dev Containers" extension, you can:
-
-1. Clone the repository
-2. Open it in VS Code
-3. Click the Remote Indicator in the bottom-left corner of VS Code status bar
-4. Select "Reopen in Container"
-
-The container includes the tools mentioned in the prerequisites pre-installed and also runs `npm install` on startup.
+### Dev Container Support
+The repo ships with a VS Code dev container. Open the project in VS Code, run **Reopen in Container**, and the environment (Node, npm, TypeScript, ESLint) is provisioned automatically with `npm install` on boot.
 
 ## Configuration
+| Variable        | Description                                                   |
+|-----------------|---------------------------------------------------------------|
+| `VITE_KEY`      | Module key provided by ChurchTools (e.g. `inventory`)         |
+| `VITE_BASE_URL` | Base URL for your ChurchTools instance (e.g. `https://demo`) |
 
-Copy `.env-example` to `.env` and fill in your data.
+All other configuration is derived from runtime state (TanStack Query, Dexie stores, environment flags).
 
-In the `.env` file, configure the necessary constants for your project. This file is included in `.gitignore` to prevent sensitive data from being committed to version control.
+## Scripts
+| Command                  | Purpose                                                       |
+|--------------------------|---------------------------------------------------------------|
+| `npm run dev`            | Start Vite dev server with hot reload                         |
+| `npm run build`          | Create production build (TypeScript + Vite)                   |
+| `npm run preview`        | Preview production build locally                              |
+| `npm run lint`           | Run ESLint across `src/` and tests                             |
+| `npm test`               | Execute Vitest unit suites (history, booking, demo seeder, etc.) |
+| `npm run analyze:bundle` | Generate bundle visualization (`dist/bundle-analysis.html`)   |
+| `npm run deploy`         | Build and package the extension into `releases/`              |
 
-## Development and Deployment
+## Feature Overview
+### Booking Lifecycle
+- Overview/history tabs reuse `HistoryTimeline` for instant audit trails.
+- Quantity allocator auto-assigns child assets and surfaces shortages before submission.
+- `BookingParticipants` and list columns render shared `PersonAvatar` entries.
 
-### Development Server
+### Maintenance Orchestration
+- Zustand store tracks plan state (`draft`, `planned`, `completed`) with validation guards.
+- Calendar holds publish via ChurchTools provider helpers and release automatically on completion.
+- `MaintenanceTeamList` summarises technicians and outstanding assets alongside the completion table.
 
-Start a development server with hot-reload:
+### Numbering Transparency
+- Dashboard warning card directs admins to prefix configuration when sequences are missing.
+- Prefix panel persists module + per-person defaults in Dexie/localStorage and surfaces live previews.
+- Asset/category forms read shared helpers to keep generated numbers predictable.
 
+### Demo Onboarding
+- First-run modal offers deterministic seeding (categories, assets, bookings, people) tagged for safe cleanup.
+- Developer settings expose dev-gated reset/reseed actions guarded by confirmation prompts.
+- Unit tests verify tagging, reseeding, and metadata persistence.
+
+## Documentation
+- `docs/implementation-notes.md` – consolidated engineering decisions and module responsibilities.
+- `docs/user-guide.md` – end-user walkthrough of primary flows.
+- `docs/components.md` – component catalog with props and usage patterns.
+- `docs/forum-post-de.md` – German community announcement draft summarising release status and roadmap.
+
+## Quality Gates
+Before committing or releasing, ensure the quality triad passes:
 ```bash
-npm run dev
-```
-
-> **Note:** For local development, make sure to configure CORS in your ChurchTools
-> instance to allow requests from your local development server
-> (typically `http://localhost:5173`).
-> This can be done in the ChurchTools admin settings under:
-> "System Settings" > "Integrations" > "API" > "Cross-Origin Resource Sharing"
->
-> If login works in Chrome but not in Safari, the issue is usually that Safari has stricter cookie handling:
-> - Safari blocks `Secure; SameSite=None` cookies on `http://localhost` (Chrome allows them in dev).
-> - Safari also blocks cookies if the API is on another domain (third‑party cookies).
->
-> **Fix:**
-> 1. Use a Vite proxy so API calls go through your local server (`/api → https://xyz.church.tools`). This makes cookies look first‑party.
-> 2. Run your dev server with **HTTPS**. You can generate a local trusted certificate with [mkcert](https://github.com/FiloSottile/mkcert).
->
-> With proxy + HTTPS, Safari will accept and store cookies just like Chrome.
-
-### Building for Production
-
-To create a production build:
-
-```bash
+npm run lint
+npm test
 npm run build
 ```
+For performance budgeting, run `npm run analyze:bundle` and keep gzip output < 200 KB.
 
-### Preview Production Build
-
-To preview the production build locally:
-
-```bash
-npm run preview
-```
-
-### Deployment
-
-To build and package your extension for deployment:
-
-```bash
-npm run deploy
-```
-
-This command will:
-
-1. Build the project
-2. Package it using the `scripts/package.js` script
-
-You can find the package in the `releases` directory.
-
-## API
-
-Following endpoints are available. Permissions are possible per route. Types are documented in `ct-types.d.ts` (CustomModuleCreate, CustomModuleDataCategoryCreate, CustomModuleDataValueCreate)
-
-GET `/custommodules` get all extensions  
-GET `/custommodules/{extensionkey}` get an extensions by its key  
-GET `/custommodules/{moduleId}` get an extension by its ID
-
-GET `/custommodules/{moduleId}/customdatacategories`  
-POST `/custommodules/{moduleId}/customdatacategories`  
-PUT `/custommodules/{moduleId}/customdatacategories/{dataCategoryId}`  
-DELETE `/custommodules/{moduleId}/customdatacategories/{dataCategoryId}`
-
-GET `/custommodules/{moduleId}/customdatacategories/{dataCategoryId}/customdatavalues`  
-POST `/custommodules/{moduleId}/customdatacategories/{dataCategoryId}/customdatavalues`  
-PUT `/custommodules/{moduleId}/customdatacategories/{dataCategoryId}/customdatavalues/{valueId}`  
-DELETE `/custommodules/{moduleId}/customdatacategories/{dataCategoryId}/customdatavalues/{valueId}`
-
-## Recent Updates
-
-### 🎉 UI Integration Complete (October 2025)
-
-All 172+ components are now fully accessible through the UI! We've completed a comprehensive audit and implementation to ensure every feature is discoverable.
-
-**What's New**:
-- ✨ **Reports Hub** - Access all 4 report types via sidebar (Booking History, Maintenance Compliance, Asset Utilization, Stock Take)
-- ✨ **Maintenance Dashboard** - Full maintenance management with schedules, tracking, and compliance alerts
-- ✨ **Enhanced Asset Views** - 4 view modes (List, Gallery, Kanban, Calendar) with advanced filtering and saved views
-
-**Documentation**:
-- 📖 [Quick Start: MISSION-ACCOMPLISHED.md](MISSION-ACCOMPLISHED.md) - Executive summary
-- 📚 [Documentation Index: README-UI-DOCS.md](README-UI-DOCS.md) - Complete guide index
-- 🎨 [Visual Guide: VISUAL-UI-GUIDE.md](VISUAL-UI-GUIDE.md) - How to access every feature
-- 📊 [Quick Reference: UI-AUDIT-SUMMARY.md](UI-AUDIT-SUMMARY.md) - Metrics and access paths
-
-**Key Metrics**:
-- ✅ 100% of components accessible (172+/172+)
-- ✅ 13 routes configured
-- ✅ 11 navigation links
-- ✅ 4 asset view modes
-- ✅ 4 report types
-- ✅ Full maintenance system
-
-See [README-UI-DOCS.md](README-UI-DOCS.md) for complete documentation index.
-
----
+## Community & Roadmap
+Work is planned and tracked with Speckit artifacts under `specs/003-inventory-upgrade-suite/`. Upcoming iterations target granular permission checks and ChurchTools Files API integration for asset imagery. Feedback is welcome—open an issue or join the conversation in the ChurchTools forum.
 
 ## Support
-
-For questions about the ChurchTools API, visit the [Forum](https://forum.church.tools).
+Questions about the ChurchTools API or extension hosting? Visit the ChurchTools Forum: https://forum.church.tools.

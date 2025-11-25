@@ -1,6 +1,6 @@
 import type { Asset } from '../types/entities';
 
-export type MasterDataEntity = 'locations' | 'manufacturers' | 'models';
+export type MasterDataEntity = 'locations' | 'manufacturers' | 'models' | 'maintenanceCompanies';
 
 export interface MasterDataItem {
   id: string;
@@ -13,7 +13,7 @@ export interface MasterDataDefinition {
   storageKey: string;
   eventName: string;
   idPrefix: string;
-  assetField: 'location' | 'manufacturer' | 'model';
+  assetField?: 'location' | 'manufacturer' | 'model';
 }
 
 export const MASTER_DATA_DEFINITIONS: Record<MasterDataEntity, MasterDataDefinition> = {
@@ -37,6 +37,12 @@ export const MASTER_DATA_DEFINITIONS: Record<MasterDataEntity, MasterDataDefinit
     eventName: 'assetModelsChanged',
     idPrefix: 'mod',
     assetField: 'model',
+  },
+  maintenanceCompanies: {
+    entity: 'maintenanceCompanies',
+    storageKey: 'maintenanceCompanies',
+    eventName: 'maintenanceCompaniesChanged',
+    idPrefix: 'mco',
   },
 };
 
@@ -173,8 +179,12 @@ export function mapMasterDataItemsToNames(items: MasterDataItem[]): string[] {
   return items.map((item) => item.name);
 }
 
-export function buildAssetCountLookup(assets: Asset[], field: MasterDataDefinition['assetField']): Map<string, number> {
+export function buildAssetCountLookup(assets: Asset[], field?: MasterDataDefinition['assetField']): Map<string, number> {
   const counts = new Map<string, number>();
+
+  if (!field) {
+    return counts;
+  }
 
   assets.forEach((asset) => {
     const value = asset[field];

@@ -15,6 +15,7 @@ import type {
   UUID,
   ConditionAssessment,
 } from '../types/entities'
+import { syncBookingHistory } from '../services/bookings/bookingMutations'
 
 // ============================================================================
 // Query Keys
@@ -83,8 +84,9 @@ export function useCreateBooking() {
       if (!storage) throw new Error('Storage provider not initialized')
       return await storage.createBooking(data)
     },
-    onSuccess: () => {
+    onSuccess: (booking: Booking) => {
       queryClient.invalidateQueries({ queryKey: bookingKeys.lists() })
+      void syncBookingHistory(queryClient, booking.id)
     },
   })
 }
@@ -101,8 +103,12 @@ export function useUpdateBooking() {
       if (!storage) throw new Error('Storage provider not initialized')
       return await storage.updateBooking(id, data)
     },
-    onSuccess: (_result: Booking, variables: { id: UUID; data: BookingUpdate }) => {
-      queryClient.invalidateQueries({ queryKey: bookingKeys.detail(variables.id) })
+    onSuccess: (result: Booking, variables: { id: UUID; data: BookingUpdate }) => {
+      const bookingId = result.id ?? variables.id
+      if (bookingId) {
+        queryClient.invalidateQueries({ queryKey: bookingKeys.detail(bookingId) })
+        void syncBookingHistory(queryClient, bookingId)
+      }
       queryClient.invalidateQueries({ queryKey: bookingKeys.lists() })
     },
   })
@@ -120,8 +126,9 @@ export function useCancelBooking() {
       if (!storage) throw new Error('Storage provider not initialized')
       return await storage.cancelBooking(id, reason)
     },
-    onSuccess: () => {
+    onSuccess: (_result, variables: { id: UUID; reason?: string }) => {
       queryClient.invalidateQueries({ queryKey: bookingKeys.lists() })
+      void syncBookingHistory(queryClient, variables.id)
     },
   })
 }
@@ -149,6 +156,7 @@ export function useCheckOut() {
       queryClient.invalidateQueries({ queryKey: bookingKeys.lists() })
       // Also invalidate asset queries since asset status changes
       queryClient.invalidateQueries({ queryKey: ['assets'] })
+      void syncBookingHistory(queryClient, booking.id)
     },
   })
 }
@@ -180,6 +188,7 @@ export function useCheckIn() {
       queryClient.invalidateQueries({ queryKey: bookingKeys.lists() })
       // Also invalidate asset queries since asset status changes
       queryClient.invalidateQueries({ queryKey: ['assets'] })
+      void syncBookingHistory(queryClient, booking.id)
     },
   })
 }
@@ -227,8 +236,12 @@ export function useApproveBooking() {
       if (!storage) throw new Error('Storage provider not initialized')
       return await storage.updateBooking(bookingId, { status: 'approved' })
     },
-    onSuccess: (_result: Booking, bookingId: UUID) => {
-      queryClient.invalidateQueries({ queryKey: bookingKeys.detail(bookingId) })
+    onSuccess: (booking: Booking, bookingId: UUID) => {
+      const id = booking.id ?? bookingId
+      if (id) {
+        queryClient.invalidateQueries({ queryKey: bookingKeys.detail(id) })
+        void syncBookingHistory(queryClient, id)
+      }
       queryClient.invalidateQueries({ queryKey: bookingKeys.lists() })
     },
   })
@@ -246,8 +259,9 @@ export function useRejectBooking() {
       if (!storage) throw new Error('Storage provider not initialized')
       return await storage.cancelBooking(bookingId, reason)
     },
-    onSuccess: () => {
+    onSuccess: (_result, variables: { bookingId: UUID; reason?: string }) => {
       queryClient.invalidateQueries({ queryKey: bookingKeys.lists() })
+      void syncBookingHistory(queryClient, variables.bookingId)
     },
   })
 }

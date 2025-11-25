@@ -58,6 +58,64 @@ export async function compressImageForThumbnail(
 }
 
 /**
+ * Compress an image file and return a base64 data URL capped by a character limit.
+ * Uses iterative compression to ensure the payload stays within storage constraints.
+ */
+export async function compressImageToDataUrl(
+  file: File,
+  options?: Partial<CompressionOptions>,
+  maxLength = 10_000
+): Promise<string> {
+  await validateImageFile(file);
+
+  const format = options?.format ?? 'image/jpeg';
+  const headerLength = `data:${format};base64,`.length;
+  const usableChars = Math.max(256, maxLength - headerLength);
+  const targetBytes = Math.max(2048, Math.floor((usableChars * 3) / 4));
+
+  let maxSizeMB = Math.max(0.004, targetBytes / (1024 * 1024));
+  let quality = options?.quality ?? 0.75;
+  let maxDimension = options?.maxWidth ?? options?.maxHeight ?? 1024;
+  maxDimension = Math.min(Math.max(maxDimension, 200), 1200);
+
+  let currentFile = file;
+
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    const compressed = await imageCompression(currentFile, {
+      maxWidthOrHeight: maxDimension,
+      initialQuality: quality,
+      maxSizeMB,
+      useWebWorker: true,
+      fileType: format,
+    });
+
+    const dataUrl = await imageCompression.getDataUrlFromFile(compressed);
+    if (dataUrl.length <= maxLength) {
+      return dataUrl;
+    }
+
+    quality = Math.max(0.1, quality - 0.15);
+    maxDimension = Math.max(64, Math.floor(maxDimension * 0.7));
+    maxSizeMB = Math.max(0.004, maxSizeMB * 0.5);
+    currentFile = compressed;
+  }
+
+  const lastResort = await imageCompression(currentFile, {
+    maxWidthOrHeight: 48,
+    initialQuality: 0.08,
+    maxSizeMB: 0.004,
+    useWebWorker: true,
+    fileType: format,
+  });
+  const lastResortDataUrl = await imageCompression.getDataUrlFromFile(lastResort);
+  if (lastResortDataUrl.length <= maxLength) {
+    return lastResortDataUrl;
+  }
+
+  throw new Error('Unable to compress image within the 10,000 character limit. Please select a smaller image.');
+}
+
+/**
  * Validate an image file before compression
  * @param file - File to validate
  * @returns Promise that resolves if valid, rejects with error message if invalid
