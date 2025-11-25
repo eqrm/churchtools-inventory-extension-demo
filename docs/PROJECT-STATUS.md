@@ -37,7 +37,7 @@
 - TanStack Query v5 + Zustand v4 installed
 - Barcode/QR libraries integrated
 - ChurchTools client installed
-- Dexie.js for offline support
+- Dexie.js for undo/history persistence (no offline asset sync)
 - TypeScript strict mode configured
 - ESLint with TypeScript rules
 - Environment variables documented
@@ -49,7 +49,7 @@
 - ChurchTools API client with caching
 - Storage provider factory pattern
 - ChurchTools storage provider
-- Offline storage provider (Dexie.js)
+- IndexedDB stores limited to undo + settings retention
 - Date formatting utilities
 - Validation helpers
 - Asset number generator

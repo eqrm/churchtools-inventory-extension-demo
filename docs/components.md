@@ -632,7 +632,6 @@ Active stock take session interface.
 - Real-time progress
 - Scanned assets list
 - Duplicate scan prevention (T241b)
-- Offline support (T241d)
 - Complete session action
 
 **Props**:
@@ -692,25 +691,7 @@ const handleScan = async (assetNumber: string) => {
 };
 ```
 
-**Offline Support** (T241d):
-```typescript
-const offlineQueue = useOfflineQueue();
-
-const handleScanOffline = async (assetNumber: string) => {
-  // Queue for later sync
-  offlineQueue.add({
-    type: 'stock-take-scan',
-    sessionId: session.id,
-    assetNumber,
-    timestamp: new Date()
-  });
-  
-  notifications.show({
-    message: 'Scan queued (offline)',
-    icon: <IconWifi off />
-  });
-};
-```
+> **Note:** Offline queue helpers documented in T241d were removed in FR-007. Stock take scans now require an active network connection.
 
 ---
 
@@ -1325,43 +1306,7 @@ undoStore.clearAction('asset-123');
 
 ---
 
-### useOfflineQueue
-
-Hook for managing offline operation queue (T241d).
-
-**File**: `src/hooks/useOfflineQueue.ts`
-
-**Signature**:
-```typescript
-interface OfflineQueue {
-  queue: OfflineOperation[];
-  add: (operation: OfflineOperation) => void;
-  sync: () => Promise<void>;
-  clear: () => void;
-}
-
-function useOfflineQueue(): OfflineQueue
-```
-
-**Example**:
-```typescript
-const offlineQueue = useOfflineQueue();
-
-// Add operation
-offlineQueue.add({
-  type: 'stock-take-scan',
-  sessionId: 'session-123',
-  assetNumber: 'CAM-001',
-  timestamp: new Date()
-});
-
-// Sync when online
-useEffect(() => {
-  if (navigator.onLine) {
-    offlineQueue.sync();
-  }
-}, [navigator.onLine]);
-```
+> **Retired Hook:** `useOfflineQueue` was deleted alongside the offline sync effort. If queued operations return in the future, reintroduce the hook with the new persistence strategy.
 
 ---
 

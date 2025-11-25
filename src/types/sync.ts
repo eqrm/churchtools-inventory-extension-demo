@@ -1,7 +1,7 @@
 /**
- * Offline sync types
+ * Sync metadata types
  * Feature: 002-bug-fixes-ux-improvements
- * Purpose: Track sync status and handle conflicts for offline-first architecture
+ * Purpose: Track sync status and handle conflicts across persistence layers
  */
 
 import type { UUID, ISOTimestamp } from './entities'
@@ -18,7 +18,7 @@ export type SyncStatus =
 
 /**
  * Sync conflict information
- * Used when offline changes conflict with server changes
+ * Used when local changes conflict with server changes
  */
 export interface SyncConflict<T = unknown> {
   id: UUID

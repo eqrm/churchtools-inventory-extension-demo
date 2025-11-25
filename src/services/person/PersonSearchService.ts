@@ -10,10 +10,13 @@ import { churchtoolsClient } from '@churchtools/churchtools-client'
 
 // ==================== Types ====================
 
+export type ChurchToolsDomainType = 'person' | 'group'
+
 export interface PersonSearchRequest {
   query: string
   limit?: number
   includeAvatars?: boolean
+  domainTypes?: ChurchToolsDomainType[]
 }
 
 export interface PersonSearchResult {
@@ -23,6 +26,8 @@ export interface PersonSearchResult {
   email?: string
   avatarUrl?: string
   displayName: string
+  type: ChurchToolsDomainType
+  groupType?: string
 }
 
 export interface PersonSearchResponse {
@@ -38,9 +43,9 @@ export interface PersonSearchError {
   details?: unknown
 }
 
-interface ChurchToolsPersonRaw {
+interface ChurchToolsSearchRaw {
   title?: string
-  domainType?: 'person'
+  domainType?: ChurchToolsDomainType
   domainIdentifier?: string
   apiUrl?: string
   frontendUrl?: string | null
@@ -51,9 +56,12 @@ interface ChurchToolsPersonRaw {
     guid?: string
     isArchived?: boolean
     dateOfDeath?: string | null
+    name?: string
+    groupType?: string
   }
   firstName?: string
   lastName?: string
+  name?: string
   id?: number | string
   guid?: string
   displayName?: string
@@ -111,7 +119,11 @@ export class PersonSearchService implements IPersonSearchService {
    * T033: ChurchTools API integration
    */
   async search(request: PersonSearchRequest): Promise<PersonSearchResponse> {
-    const { query, limit = 10 } = request
+    const {
+      query,
+      limit = 10,
+      domainTypes = ['person']
+    } = request
 
     // Validate query
     if (!query || query.trim().length < 2) {
@@ -123,33 +135,37 @@ export class PersonSearchService implements IPersonSearchService {
 
     try {
       // T035: Check memory cache first
-      const cacheKey = `search:${query}:${limit}`
-      const cached = this.getFromMemoryCache(cacheKey)
-      if (cached) {
-        return {
-          results: [cached],
-          totalCount: 1,
-          fromCache: true,
-          query
-        }
-      }
-
       // T033: Call ChurchTools API
       // Note: churchtoolsClient automatically adds /api prefix, so use '/search' not '/api/search'
       // Build query string manually - churchtoolsClient.get() doesn't accept separate params object
-      const queryString = new URLSearchParams({
+      const queryParams = new URLSearchParams({
         query,
-        'domain_types[]': 'person',
         limit: limit.toString()
-      }).toString()
+      })
+
+      domainTypes.forEach((domain) => {
+        queryParams.append('domain_types[]', domain)
+      })
+
+      const queryString = queryParams.toString()
       
       // churchtoolsClient.get() automatically unwraps the response, so we get the array directly
-      const responseData = await churchtoolsClient.get<ChurchToolsPersonRaw[]>(
+      const responseData = await churchtoolsClient.get<ChurchToolsSearchRaw[]>(
         `/search?${queryString}`
       )
 
       // T037: Transform results
-      const results = responseData.map((raw) => this.transformPerson(raw))
+      const transformedResults = responseData.map((raw) => this.transformSearchResult(raw))
+
+      const seen = new Set<string>()
+      const results = transformedResults.filter((result) => {
+        const key = `${result.type}:${result.id ?? result.displayName}`
+        if (seen.has(key)) {
+          return false
+        }
+        seen.add(key)
+        return true
+      })
 
       // T035: Cache results in memory
       results.forEach((person) => {
@@ -194,11 +210,11 @@ export class PersonSearchService implements IPersonSearchService {
 
       // Fetch from API
       // Note: churchtoolsClient automatically adds /api prefix
-      const response = await churchtoolsClient.get<ChurchToolsPersonRaw>(
+      const response = await churchtoolsClient.get<ChurchToolsSearchRaw>(
         `/persons/${personId}`
       )
 
-      const person = this.transformPerson(response)
+      const person = this.transformSearchResult(response)
 
       // Cache result
       this.setMemoryCache(personId, person)
@@ -252,25 +268,31 @@ export class PersonSearchService implements IPersonSearchService {
   /**
    * T037: Transform ChurchTools person to our format
    */
-  private transformPerson(raw: ChurchToolsPersonRaw): PersonSearchResult {
+  private transformSearchResult(raw: ChurchToolsSearchRaw): PersonSearchResult {
     const domainAttributes = raw.domainAttributes ?? {}
+    const domainType: ChurchToolsDomainType = raw.domainType === 'group' ? 'group' : 'person'
+
+    if (domainType === 'group') {
+      const groupName = this.resolveGroupName(raw, domainAttributes)
+      const resolvedId = this.resolveId(raw, domainAttributes, groupName)
+      const avatarUrl = raw.imageUrl ?? raw.avatarUrl ?? undefined
+
+      return {
+        id: resolvedId ?? groupName,
+        firstName: groupName,
+        lastName: '',
+        displayName: groupName,
+        avatarUrl,
+        type: 'group',
+        groupType: domainAttributes.groupType ?? undefined
+      }
+    }
 
     const firstName = domainAttributes.firstName ?? raw.firstName ?? ''
     const lastName = domainAttributes.lastName ?? raw.lastName ?? ''
 
     const resolvedId = (() => {
-      if (raw.domainIdentifier) return raw.domainIdentifier
-      if (domainAttributes.guid) return domainAttributes.guid
-      if (raw.guid) return raw.guid
-      if (typeof raw.id !== 'undefined' && raw.id !== null) return String(raw.id)
-      if (raw.apiUrl) {
-        const parts = raw.apiUrl.split('/')
-        const tail = parts[parts.length - 1]
-        if (tail) {
-          return tail
-        }
-      }
-      return undefined
+      return this.resolveId(raw, domainAttributes, firstName, lastName)
     })()
 
     const displayName = (() => {
@@ -292,8 +314,49 @@ export class PersonSearchService implements IPersonSearchService {
       lastName,
       email,
       avatarUrl: avatarUrl ?? undefined,
-      displayName
+      displayName,
+      type: 'person'
     }
+  }
+
+  private resolveId(
+    raw: ChurchToolsSearchRaw,
+    domainAttributes: ChurchToolsSearchRaw['domainAttributes'],
+    firstName?: string,
+    lastName?: string
+  ): string | undefined {
+    if (raw.domainIdentifier) return raw.domainIdentifier
+    if (domainAttributes?.guid) return domainAttributes.guid
+    if (raw.guid) return raw.guid
+    if (typeof raw.id !== 'undefined' && raw.id !== null) return String(raw.id)
+    if (raw.apiUrl) {
+      const parts = raw.apiUrl.split('/')
+      const tail = parts[parts.length - 1]
+      if (tail) {
+        return tail
+      }
+    }
+    const combined = [firstName, lastName].filter(Boolean).join(' ').trim()
+    if (combined) return combined
+    return undefined
+  }
+
+  private resolveGroupName(
+    raw: ChurchToolsSearchRaw,
+    domainAttributes: ChurchToolsSearchRaw['domainAttributes']
+  ): string {
+    const candidates = [
+      raw.title,
+      raw.displayName,
+      domainAttributes?.name,
+      raw.name,
+      domainAttributes?.guid,
+      raw.domainIdentifier,
+      raw.domainAttributes?.firstName,
+    ]
+
+    const resolved = candidates.find((value) => Boolean(value && value.toString().trim()))
+    return resolved ? String(resolved).trim() : 'Unknown Group'
   }
 
   /**

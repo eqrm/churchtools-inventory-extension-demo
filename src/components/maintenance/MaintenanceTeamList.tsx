@@ -1,4 +1,5 @@
 import { Badge, Group, Stack, Text } from '@mantine/core'
+import { useTranslation } from 'react-i18next'
 import { PersonAvatar } from '../common/PersonAvatar'
 import type { MaintenancePlanAssetState } from '../../state/maintenance/planStore'
 import { formatDateTime } from '../../utils/formatters'
@@ -48,8 +49,9 @@ function buildTeamSummary(assets: MaintenancePlanAssetState[]): TeamSummary[] {
 }
 
 export function MaintenanceTeamList({ assets }: MaintenanceTeamListProps) {
+  const { t } = useTranslation('maintenance')
   if (assets.length === 0) {
-    return <Text size="sm" c="dimmed">No assets selected yet.</Text>
+    return <Text size="sm" c="dimmed">{t('team.noAssetsSelected')}</Text>
   }
 
   const team = buildTeamSummary(assets)
@@ -66,16 +68,16 @@ export function MaintenanceTeamList({ assets }: MaintenanceTeamListProps) {
               name={member.name}
               size="sm"
               textSize="sm"
-              description={member.latest ? `Last update ${formatDateTime(member.latest)}` : undefined}
-              fallbackLabel="Unknown technician"
+              description={member.latest ? t('team.lastUpdate', { date: formatDateTime(member.latest) }) : undefined}
+              fallbackLabel={t('team.unknownTechnician')}
             />
             <Badge color="blue" variant="light">
-              {member.count} {member.count === 1 ? 'asset' : 'assets'}
+              {member.count} {t('team.asset', { count: member.count })}
             </Badge>
           </Group>
         ))
       ) : (
-        <Text size="sm" c="dimmed">No technicians recorded yet.</Text>
+        <Text size="sm" c="dimmed">{t('team.noTechnicians')}</Text>
       )}
 
       {pendingCount > 0 ? (

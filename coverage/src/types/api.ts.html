@@ -958,78 +958,78 @@ export interface IChurchToolsAPIClient {
   
   /**
    * Update a data category
-   * PUT /custommodules/{moduleId}/customdatacategories/{categoryId}
+   * PUT /custommodules/{moduleId}/customdatacategories/{assetTypeId}
    * @param moduleId - Module ID
-   * @param categoryId - Category ID
+   * @param assetTypeId - Category ID
    * @param category - Updated category data
    */
   updateDataCategory(
     moduleId: string,
-    categoryId: string,
+    assetTypeId: string,
     category: UpdateDataCategoryRequest
   ): Promise&lt;CustomDataCategory&gt;
   
   /**
    * Delete a data category
-   * DELETE /custommodules/{moduleId}/customdatacategories/{categoryId}
+   * DELETE /custommodules/{moduleId}/customdatacategories/{assetTypeId}
    * @param moduleId - Module ID
-   * @param categoryId - Category ID
+   * @param assetTypeId - Category ID
    */
-  deleteDataCategory(moduleId: string, categoryId: string): Promise&lt;void&gt;
+  deleteDataCategory(moduleId: string, assetTypeId: string): Promise&lt;void&gt;
   
   /**
    * Get all data values in a category
-   * GET /custommodules/{moduleId}/customdatacategories/{categoryId}/customdatavalues
+   * GET /custommodules/{moduleId}/customdatacategories/{assetTypeId}/customdatavalues
    * @param moduleId - Module ID
-   * @param categoryId - Category ID
+   * @param assetTypeId - Category ID
    */
-  getDataValues(moduleId: string, categoryId: string): Promise&lt;CustomDataValue[]&gt;
+  getDataValues(moduleId: string, assetTypeId: string): Promise&lt;CustomDataValue[]&gt;
   
   /**
    * Get a specific data value
-   * GET /custommodules/{moduleId}/customdatacategories/{categoryId}/customdatavalues/{valueId}
+   * GET /custommodules/{moduleId}/customdatacategories/{assetTypeId}/customdatavalues/{valueId}
    * @param moduleId - Module ID
-   * @param categoryId - Category ID
+   * @param assetTypeId - Category ID
    * @param valueId - Value ID
    */
-  getDataValue(moduleId: string, categoryId: string, valueId: string): Promise&lt;CustomDataValue&gt;
+  getDataValue(moduleId: string, assetTypeId: string, valueId: string): Promise&lt;CustomDataValue&gt;
   
   /**
    * Create a new data value
-   * POST /custommodules/{moduleId}/customdatacategories/{categoryId}/customdatavalues
+   * POST /custommodules/{moduleId}/customdatacategories/{assetTypeId}/customdatavalues
    * @param moduleId - Module ID
-   * @param categoryId - Category ID
+   * @param assetTypeId - Category ID
    * @param value - Value data
    */
   createDataValue(
     moduleId: string,
-    categoryId: string,
+    assetTypeId: string,
     value: Record&lt;string, unknown&gt;
   ): Promise&lt;CustomDataValue&gt;
   
   /**
    * Update a data value
-   * PUT /custommodules/{moduleId}/customdatacategories/{categoryId}/customdatavalues/{valueId}
+   * PUT /custommodules/{moduleId}/customdatacategories/{assetTypeId}/customdatavalues/{valueId}
    * @param moduleId - Module ID
-   * @param categoryId - Category ID
+   * @param assetTypeId - Category ID
    * @param valueId - Value ID
    * @param value - Updated value data
    */
   updateDataValue(
     moduleId: string,
-    categoryId: string,
+    assetTypeId: string,
     valueId: string,
     value: Record&lt;string, unknown&gt;
   ): Promise&lt;CustomDataValue&gt;
   
   /**
    * Delete a data value
-   * DELETE /custommodules/{moduleId}/customdatacategories/{categoryId}/customdatavalues/{valueId}
+   * DELETE /custommodules/{moduleId}/customdatacategories/{assetTypeId}/customdatavalues/{valueId}
    * @param moduleId - Module ID
-   * @param categoryId - Category ID
+   * @param assetTypeId - Category ID
    * @param valueId - Value ID
    */
-  deleteDataValue(moduleId: string, categoryId: string, valueId: string): Promise&lt;void&gt;
+  deleteDataValue(moduleId: string, assetTypeId: string, valueId: string): Promise&lt;void&gt;
 }
 &nbsp;
 // ============================================================================
@@ -1145,7 +1145,7 @@ export interface IPersonCache {
  */
 export interface BatchCreateDataValuesRequest {
   moduleId: string
-  categoryId: string
+  assetTypeId: string
   values: Record&lt;string, unknown&gt;[]
 }
 &nbsp;
@@ -1154,7 +1154,7 @@ export interface BatchCreateDataValuesRequest {
  */
 export interface BatchUpdateDataValuesRequest {
   moduleId: string
-  categoryId: string
+  assetTypeId: string
   updates: Array&lt;{
     valueId: string
     value: Record&lt;string, unknown&gt;
@@ -1166,7 +1166,7 @@ export interface BatchUpdateDataValuesRequest {
  */
 export interface BatchDeleteDataValuesRequest {
   moduleId: string
-  categoryId: string
+  assetTypeId: string
   valueIds: string[]
 }
 &nbsp;
@@ -1214,7 +1214,7 @@ export type WebhookEventType =
 export interface WebhookPayload {
   event: WebhookEventType
   moduleId: string
-  categoryId?: string
+  assetTypeId?: string
   valueId?: string
   timestamp: string
   data: unknown
@@ -1267,7 +1267,7 @@ export interface IRateLimiter {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-10-20T10:36:40.172Z
+                at 2025-11-24T20:49:55.914Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

@@ -1,0 +1,37 @@
+{
+  "assignment": {
+    "title": "Asset Assignment",
+    "assignTo": "Assign To",
+    "assignedTo": "Assigned To",
+    "assignedBy": "Assigned By",
+    "assignedAt": "Assigned At",
+    "checkIn": "Check In",
+    "checkInConfirm": "Are you sure you want to check in this asset?",
+    "checkInSuccess": "Asset checked in successfully",
+    "assignSuccess": "Asset assigned successfully",
+    "assignError": "Failed to assign asset",
+    "checkInError": "Failed to check in asset",
+    "searchPerson": "Search for a person or group",
+    "searchPlaceholder": "Type to search...",
+    "noPerson": "No person selected",
+    "noResults": "No results found",
+    "history": {
+      "title": "Assignment History",
+      "empty": "No assignment history",
+      "assignedTo": "Assigned to {{name}}",
+      "checkedIn": "Checked in by {{name}}",
+      "duration": "Duration: {{duration}}"
+    },
+    "status": {
+      "available": "Available",
+      "assigned": "Assigned",
+      "inUse": "In Use"
+    },
+    "confirmStatusChange": {
+      "title": "Change Asset Status",
+      "message": "This asset is currently assigned to {{name}}. Changing the status will check in the asset. Do you want to continue?",
+      "confirm": "Yes, change status",
+      "cancel": "Cancel"
+    }
+  }
+}

@@ -1,12 +1,14 @@
 /**
  * Core Entity Type Definitions
- * 
+ *
  * This file contains all TypeScript type definitions for entities in the
  * inventory management system. These types are used throughout the application
  * for strong type safety.
- * 
+ *
  * @module contracts/entities
  */
+
+import type { InheritedTag } from './tag'
 
 // ============================================================================
 // Base Types
@@ -58,6 +60,11 @@ export interface AssetType {
   assetNameTemplate?: string
   /** Inline base64 image (data URL) used as the primary visual for this asset type */
   mainImage?: string
+  /**
+   * Default value for the bookable field when creating new assets of this type.
+   * If not specified, defaults to true.
+   */
+  defaultBookable?: boolean
   customFields: CustomFieldDefinition[]
   createdBy: string
   createdByName: string
@@ -140,6 +147,12 @@ export interface Asset {
   }
   status: AssetStatus
   location?: string
+  kitId?: UUID
+  modelId?: UUID
+  tagIds?: UUID[]
+  inheritedTagIds?: UUID[]
+  inheritedTags?: InheritedTag[]
+  currentAssignmentId?: UUID
   inUseBy?: {
     personId: string
     personName: string
@@ -147,6 +160,25 @@ export interface Asset {
   }
   // FR-017: Control booking eligibility
   bookable: boolean
+  // Kit integration: mark assets that are kits
+  isKit?: boolean
+  kitType?: KitType
+  kitInheritedProperties?: KitInheritanceProperty[]
+  kitCompletenessStatus?: KitCompletenessStatus
+  kitAssemblyDate?: ISOTimestamp
+  kitDisassemblyDate?: ISOTimestamp | null
+  kitBoundAssets?: {
+    assetId: UUID
+    assetNumber: string
+    name: string
+    inherits?: Partial<Record<KitInheritanceProperty, boolean>>
+  }[]
+  kitPoolRequirements?: {
+    assetTypeId: UUID
+    assetTypeName: string
+    quantity: number
+    filters?: Record<string, unknown>
+  }[]
   // FR-048-051: Asset images
   photos?: Array<{
     id: UUID
@@ -182,6 +214,9 @@ export type AssetStatus =
   | 'available'
   | 'in-use'
   | 'broken'
+  | 'in-maintenance'
+  | 'retired'
+  | 'disposed'
   | 'in-repair'
   | 'installed'
   | 'sold'
@@ -207,8 +242,14 @@ export type AssetCreate = Omit<
   assetNumber?: string  // Optional: will be generated if not provided
   prefix?: string       // Optional: prefix for asset number generation (legacy)
   prefixId?: string     // T272: ID of the AssetPrefix to use for numbering
+  /** Optional barcode to assign at creation. If provided, uniqueness will be validated by provider. */
+  barcode?: string
   fieldSources?: Record<string, AssetGroupFieldSource>
   childAssetIds?: UUID[]
+  kitId?: UUID
+  modelId?: UUID
+  tagIds?: UUID[]
+  inheritedTagIds?: UUID[]
 }
 
 export type AssetUpdate = Partial<
@@ -218,6 +259,10 @@ export type AssetUpdate = Partial<
   fieldSources?: Record<string, AssetGroupFieldSource> | null
   childAssetIds?: UUID[] | null
   mainImage?: string | null
+  kitId?: UUID | null
+  modelId?: UUID | null
+  tagIds?: UUID[] | null
+  inheritedTagIds?: UUID[] | null
 }
 
 export interface AssetFilters {
@@ -409,15 +454,27 @@ export interface BookingFilters {
 // Equipment Kit
 // ============================================================================
 
+export type KitInheritanceProperty = 'location' | 'status' | 'tags'
+
+export type KitCompletenessStatus = 'complete' | 'incomplete'
+
 export interface Kit {
   id: UUID
   name: string
   description?: string
   type: KitType
+  location?: string
+  status?: AssetStatus
+  tags?: UUID[]
+  inheritedProperties?: KitInheritanceProperty[]
+  completenessStatus?: KitCompletenessStatus
+  assemblyDate?: ISOTimestamp
+  disassemblyDate?: ISOTimestamp | null
   boundAssets?: {
     assetId: UUID
     assetNumber: string
     name: string
+    inherits?: Partial<Record<KitInheritanceProperty, boolean>>
   }[]
   poolRequirements?: {
     assetTypeId: UUID
@@ -438,10 +495,24 @@ export type KitType = 'fixed' | 'flexible'
 
 export type KitCreate = Pick<
   Kit,
-  'name' | 'description' | 'type' | 'boundAssets' | 'poolRequirements'
+  | 'name'
+  | 'description'
+  | 'type'
+  | 'boundAssets'
+  | 'poolRequirements'
+  | 'location'
+  | 'status'
+  | 'tags'
+  | 'inheritedProperties'
+  | 'completenessStatus'
+  | 'assemblyDate'
+  | 'disassemblyDate'
 >
 
-export type KitUpdate = Partial<KitCreate>
+export type KitUpdate = Partial<KitCreate> & {
+  disassemblyDate?: ISOTimestamp | null
+  completenessStatus?: KitCompletenessStatus
+}
 
 export interface MaintenanceRecord {
   id: UUID
@@ -468,12 +539,10 @@ export interface MaintenanceRecord {
 
 export type MaintenanceType =
   | 'inspection'
-  | 'cleaning'
-  | 'repair'
-  | 'calibration'
-  | 'testing'
-  | 'compliance'
-  | 'other'
+  | 'maintenance'
+  | 'planned-repair'
+  | 'unplanned-repair'
+  | 'improvement'
 
 export type MaintenanceRecordCreate = Omit<
   MaintenanceRecord,
@@ -566,10 +635,13 @@ export type MaintenancePlanUpdate = Partial<Omit<MaintenancePlan, 'id' | 'create
 export interface MaintenanceCompany {
   id: UUID
   name: string
-  contactName?: string
-  email?: string
-  phone?: string
-  notes?: string
+  contactPerson?: string
+  contactEmail?: string
+  contactPhone?: string
+  address?: string
+  serviceLevelAgreement?: string
+  hourlyRate?: number
+  contractNotes?: string
   createdAt: ISOTimestamp
   createdBy: string
   createdByName: string
@@ -672,7 +744,19 @@ export interface FieldChange {
 
 export interface ChangeHistoryEntry {
   id: UUID
-  entityType: 'asset' | 'asset-group' | 'category' | 'booking' | 'kit' | 'maintenance' | 'stocktake' | 'asset-prefix'
+  entityType: 
+    | 'asset'
+    | 'asset-group'
+    | 'category'
+    | 'booking'
+    | 'kit'
+    | 'maintenance'
+    | 'stocktake'
+    | 'asset-prefix'
+    | 'master-data'
+    | 'damage-report'
+    | 'model'
+    | 'settings'
   entityId: UUID
   entityName?: string
   action: ChangeAction
@@ -708,12 +792,14 @@ export type ChangeAction =
 
 export interface SavedView {
   id: UUID
+  schemaVersion: string
   name: string
   ownerId: string
   ownerName: string
   isPublic: boolean
   viewMode: ViewMode
-  filters: ViewFilter[]
+  filters: ViewFilterGroup
+  quickFilters?: ViewFilterGroup
   sortBy?: string
   sortDirection?: 'asc' | 'desc'
   groupBy?: string
@@ -729,11 +815,36 @@ export type ViewMode =
   | 'kanban'
   | 'list'
 
-export interface ViewFilter {
+export type FilterLogic = 'AND' | 'OR'
+
+export interface ViewFilterCondition {
+  id: string
+  type?: 'condition'
   field: string
   operator: FilterOperator
   value: unknown
-  logic?: 'AND' | 'OR'
+}
+
+export interface ViewFilterGroup {
+  id: string
+  type: 'group'
+  logic: FilterLogic
+  children: ViewFilter[]
+}
+
+export type ViewFilter = ViewFilterCondition | ViewFilterGroup
+
+export interface LegacyViewFilter {
+  field: string
+  operator: FilterOperator
+  value: unknown
+  logic?: FilterLogic
+}
+
+export interface RelativeDateFilterValue {
+  direction: 'last' | 'next'
+  unit: 'days' | 'weeks' | 'months'
+  amount: number
 }
 
 export type FilterOperator =
@@ -749,6 +860,8 @@ export type FilterOperator =
   | 'is-not-empty'
   | 'in'
   | 'not-in'
+  | 'relative-last'
+  | 'relative-next'
 
 export type SavedViewCreate = Omit<
   SavedView,

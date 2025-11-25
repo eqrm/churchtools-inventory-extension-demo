@@ -128,6 +128,6 @@ describe('ChurchToolsStorageProvider - Bookings', () => {
         requestedBy: 'user-1',
         requestedByName: 'Test User',
       }),
-    ).rejects.toThrow('Asset ist für den gewählten Zeitraum nicht verfügbar');
+    ).rejects.toThrow('Asset is not available for the selected timeframe');
   });
 });

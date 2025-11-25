@@ -1,5 +1,5 @@
  
-import { useState, useMemo, memo, useEffect, useCallback } from 'react';
+import { useState, useMemo, memo, useEffect, useCallback, useRef, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ActionIcon,
@@ -20,36 +20,52 @@ import {
   IconDots,
   IconEdit,
   IconEye,
-  IconPlus,
   IconSearch,
   IconTrash,
   IconX,
+  IconPackage,
 } from '@tabler/icons-react';
 import { useAssets, useDeleteAsset, useCreateAsset } from '../../hooks/useAssets';
 import { useCategories } from '../../hooks/useCategories';
 import { useAssetPrefixes } from '../../hooks/useAssetPrefixes';
 import { useAssetGroups } from '../../hooks/useAssetGroups';
-import { useUndoStore } from '../../stores/undoStore';
 import { useMaintenanceSchedules } from '../../hooks/useMaintenance';
 import { notifications } from '@mantine/notifications';
 import { AssetStatusBadge } from './AssetStatusBadge';
 import { CustomFieldFilterInput } from './CustomFieldFilterInput';
 import { IconDisplay } from '../categories/IconDisplay';
 import { MaintenanceReminderBadge } from '../maintenance/MaintenanceReminderBadge';
-import type { Asset, AssetStatus, AssetFilters, AssetGroup } from '../../types/entities';
+import type {
+  Asset,
+  AssetStatus,
+  AssetFilters,
+  AssetGroup,
+  AssetCreate,
+} from '../../types/entities';
 import { ASSET_STATUS_OPTIONS } from '../../constants/assetStatuses';
 import { DataViewLayout } from '../dataView/DataViewLayout';
 import { DataViewTable } from '../dataView/DataViewTable';
 import { useDataViewState } from '../../hooks/useDataViewState';
+import { ViewSelector } from '../views/ViewSelector';
+import { FilterBuilder } from '../views/FilterBuilder';
+import { useUIStore } from '../../stores/uiStore';
+import { applyFilters } from '../../utils/filterEvaluation';
+import { countFilterConditions, createFilterGroup } from '../../utils/viewFilters';
+import { AssetGalleryView } from './AssetGalleryView';
+import { AssetKanbanView } from './AssetKanbanView';
+import { AssetCalendarView } from './AssetCalendarView';
+import { KitMemberBadge } from './KitMemberBadge';
+import { getAssetDetailPath } from '../../utils/assetNavigation';
 
 interface AssetListProps {
   onView?: (asset: Asset) => void;
   onEdit?: (asset: Asset) => void;
-  onCreateNew?: () => void;
   initialFilters?: AssetFilters;
   filtersOpen?: boolean;
   onToggleFilters?: () => void;
   hideFilterButton?: boolean;
+  hideViewSelector?: boolean;
+  hideAdvancedFilters?: boolean;
 }
 
 const ASSET_TYPE_OPTIONS = [
@@ -58,6 +74,44 @@ const ASSET_TYPE_OPTIONS = [
   { value: 'child', label: 'Child Assets Only' },
   { value: 'standalone', label: 'Standalone Assets Only' },
 ];
+
+type LocalUndoEntry = {
+  type: 'delete-asset';
+  assetSnapshot: Asset;
+  createPayload: AssetCreate;
+  label: string;
+};
+
+const generateUndoId = (): string => {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+};
+
+const toAssetCreatePayload = (asset: Asset): AssetCreate => {
+  const {
+    id: _id,
+    assetNumber,
+    barcode: _barcode,
+    qrCode: _qrCode,
+    createdBy: _createdBy,
+    createdByName: _createdByName,
+    createdAt: _createdAt,
+    lastModifiedBy: _lastModifiedBy,
+    lastModifiedByName: _lastModifiedByName,
+    lastModifiedAt: _lastModifiedAt,
+    isAvailable: _isAvailable,
+    currentBooking: _currentBooking,
+    nextMaintenance: _nextMaintenance,
+    ...rest
+  } = asset;
+
+  return {
+    ...rest,
+    assetNumber,
+  };
+};
 
 const GROUP_MEMBERSHIP_OPTIONS = [
   { value: 'all', label: 'All Assets' },
@@ -141,11 +195,12 @@ type AssetListSortStatus = DataTableSortStatus<AssetListRow> & DataTableSortStat
 export function AssetList({
   onView,
   onEdit,
-  onCreateNew,
   initialFilters,
   filtersOpen,
   onToggleFilters,
   hideFilterButton,
+  hideViewSelector = false,
+  hideAdvancedFilters = false,
 }: AssetListProps) {
   const navigate = useNavigate(); // T263 - E4: Router navigation for direct clicks
   const [internalFiltersOpen, setInternalFiltersOpen] = useState(false);
@@ -175,6 +230,14 @@ export function AssetList({
     setInternalFiltersOpen((prev) => !prev);
   };
 
+  const { viewMode, setViewMode, viewFilters, setViewFilters } = useUIStore((state) => ({
+    viewMode: state.viewMode,
+    setViewMode: state.setViewMode,
+    viewFilters: state.viewFilters,
+    setViewFilters: state.setViewFilters,
+  }));
+
+
   const initialFiltersSnapshot = useMemo(
     () => JSON.stringify(initialFilters ?? {}),
     [initialFilters],
@@ -194,8 +257,6 @@ export function AssetList({
   }, [initialFilters]);
 
   const {
-    viewMode,
-    setViewMode,
     filters,
     setFilters,
     resetFilters,
@@ -235,14 +296,35 @@ export function AssetList({
     return next;
   }, [filters]);
 
-  const { data: assets = [], isLoading, error } = useAssets(assetFilters);
+  const advancedFilterCount = countFilterConditions(viewFilters);
+  const hasAdvancedFilters = advancedFilterCount > 0;
+  const combinedFilterCount = activeFilterCount + advancedFilterCount;
+  const combinedHasFilters = hasActiveFilters || hasAdvancedFilters;
+
+  const {
+    data: assets = [],
+    isLoading,
+    error,
+  } = useAssets(assetFilters);
   const { data: maintenanceSchedules = [] } = useMaintenanceSchedules();
   const { data: assetGroups = [], isLoading: loadingAssetGroups } = useAssetGroups();
   const deleteAsset = useDeleteAsset();
   const createAsset = useCreateAsset();
-  const addUndoAction = useUndoStore((state) => state.addAction);
-  const getUndoAction = useUndoStore((state) => state.getAction);
-  const removeUndoAction = useUndoStore((state) => state.removeAction);
+  const undoEntriesRef = useRef<Map<string, LocalUndoEntry>>(new Map());
+
+  const addUndoAction = useCallback((entry: LocalUndoEntry) => {
+    const id = generateUndoId();
+    undoEntriesRef.current.set(id, entry);
+    return id;
+  }, []);
+
+  const getUndoAction = useCallback((id: string) => {
+    return undoEntriesRef.current.get(id);
+  }, []);
+
+  const removeUndoAction = useCallback((id: string) => {
+    undoEntriesRef.current.delete(id);
+  }, []);
 
   const groupMetadataById = useMemo(() => {
     const map = new Map<string, AssetGroup>();
@@ -298,12 +380,14 @@ export function AssetList({
     }
 
     const asset = record;
+    const detailPath = getAssetDetailPath(asset);
 
     if (onView) {
       onView(asset);
-    } else {
-      navigate(`/assets/${asset.id}`);
+      return;
     }
+
+    navigate(detailPath);
   };
 
   // Filter assets by type (parent/child/standalone) - T099
@@ -339,9 +423,16 @@ export function AssetList({
     });
   }, [assets, filters.assetType, filters.prefixId, filters.hasAssetGroup, filters.assetGroupId, prefixes]);
 
+  const viewFilteredAssets = useMemo(() => {
+    if (!hasAdvancedFilters) {
+      return filteredAssets;
+    }
+    return applyFilters(filteredAssets, viewFilters);
+  }, [filteredAssets, hasAdvancedFilters, viewFilters]);
+
   // Sort assets (memoized to avoid re-sorting on every render) - T217
   const sortedAssets = useMemo(() => {
-    return [...filteredAssets].sort((a, b) => {
+    return [...viewFilteredAssets].sort((a, b) => {
       const { columnAccessor, direction } = sortStatus;
       
       let aValue: string | number = '';
@@ -369,7 +460,7 @@ export function AssetList({
       }
       return aValue < bValue ? 1 : -1;
     });
-  }, [filteredAssets, sortStatus]);
+  }, [viewFilteredAssets, sortStatus]);
 
   const groupedMembers = useMemo(() => {
     const map = new Map<string, Asset[]>();
@@ -608,13 +699,15 @@ export function AssetList({
     try {
       // T225: Store asset for undo before deletion
       const deletedAsset = { ...asset };
-      
+      const createPayload = toAssetCreatePayload(deletedAsset);
+
       await deleteAsset.mutateAsync(asset.id);
       
       // T225: Add undo action to queue
       const undoId = addUndoAction({
         type: 'delete-asset',
-        data: deletedAsset,
+        assetSnapshot: deletedAsset,
+        createPayload,
         label: `${deletedAsset.name} (${deletedAsset.assetNumber})`,
       });
       
@@ -635,7 +728,7 @@ export function AssetList({
           
           try {
             // Restore the asset
-            await createAsset.mutateAsync(action.data as Asset);
+            await createAsset.mutateAsync(action.createPayload);
             
             // Remove from undo queue
             removeUndoAction(undoId);
@@ -646,7 +739,7 @@ export function AssetList({
             // Show success
             notifications.show({
               title: 'Asset Restored',
-              message: `"${deletedAsset.name}" has been restored`,
+              message: `"${action.assetSnapshot.name}" has been restored`,
               color: 'blue',
             });
           } catch (err) {
@@ -669,6 +762,9 @@ export function AssetList({
 
   const clearFilters = () => {
     resetFilters();
+    if (hasAdvancedFilters) {
+      setViewFilters(createFilterGroup('AND'));
+    }
   };
 
   const filterContent = (
@@ -863,10 +959,34 @@ export function AssetList({
         }
         return null;
       })()}
+
+      {!hideAdvancedFilters && (
+        <Stack gap="sm">
+          <Group justify="space-between" align="center">
+            <Text size="sm" fw={600}>
+              Advanced Filters
+            </Text>
+            {hasAdvancedFilters && (
+              <Button
+                variant="subtle"
+                size="xs"
+                color="gray"
+                leftSection={<IconX size={14} />}
+                onClick={() => setViewFilters(createFilterGroup('AND'))}
+              >
+                Clear advanced filters
+              </Button>
+            )}
+          </Group>
+          <FilterBuilder value={viewFilters} onChange={setViewFilters} />
+        </Stack>
+      )}
     </Stack>
   );
 
-  const groupViewActions = (
+  const isTableLikeView = viewMode === 'table' || viewMode === 'list';
+
+  const groupViewToggle = (
     <Group gap="xs" align="center">
       <Text size="sm" c="dimmed">
         View
@@ -888,6 +1008,19 @@ export function AssetList({
     </Group>
   );
 
+  const showGroupToggle = isTableLikeView && (groupEntries.length > 0 || groupViewEnabled);
+
+  const headerActions = (!hideViewSelector || showGroupToggle)
+    ? (
+        <Group gap="sm" align="center">
+          {!hideViewSelector && (
+            <ViewSelector value={viewMode} onChange={(mode) => setViewMode(mode)} />
+          )}
+          {showGroupToggle && groupViewToggle}
+        </Group>
+      )
+    : undefined;
+
   if (error) {
     return (
       <Card withBorder>
@@ -896,48 +1029,26 @@ export function AssetList({
     );
   }
 
-  const primaryAction = onCreateNew
-    ? {
-        label: 'New Asset',
-        icon: <IconPlus size={16} />,
-        onClick: onCreateNew,
-      }
-    : undefined;
-
-  return (
-    <DataViewLayout
-      title="Assets"
-      mode={viewMode}
-      availableModes={['table']}
-      onModeChange={setViewMode}
-      filtersOpen={filtersPanelOpen}
-      onToggleFilters={toggleFilters}
-      hasActiveFilters={hasActiveFilters}
-      activeFilterCount={activeFilterCount}
-      primaryAction={primaryAction}
-      showFilterButton={hideFilterButton !== true}
-      filterContent={filterContent}
-      actions={groupViewActions}
-    >
-      <Card withBorder>
-        <DataViewTable<AssetListRow>
-          records={displayRecords}
-          onRowClick={handleRowClick}
-          rowStyle={() => ({ cursor: 'pointer' })}
-          totalRecords={totalRecordCount}
-          recordsPerPage={pageSize}
-          recordsPerPageOptions={pageSizeOptions}
-          page={page}
-          onPageChange={setPage}
-          onRecordsPerPageChange={(size: number) => {
-            setPageSize(size);
-            setPage(1);
-          }}
-          paginationText={({ from, to, totalRecords }: { from: number; to: number; totalRecords: number }) => {
-            const label = groupViewEnabled ? 'groups' : 'assets';
-            return `Showing ${from} to ${to} of ${totalRecords} ${label}`;
-          }}
-          columns={[
+  const tableViewContent = (
+    <Card withBorder>
+      <DataViewTable<AssetListRow>
+        records={displayRecords}
+        onRowClick={handleRowClick}
+        rowStyle={() => ({ cursor: 'pointer' })}
+        totalRecords={totalRecordCount}
+        recordsPerPage={pageSize}
+        recordsPerPageOptions={pageSizeOptions}
+        page={page}
+        onPageChange={setPage}
+        onRecordsPerPageChange={(size: number) => {
+          setPageSize(size);
+          setPage(1);
+        }}
+        paginationText={({ from, to, totalRecords }: { from: number; to: number; totalRecords: number }) => {
+          const label = groupViewEnabled ? 'groups' : 'assets';
+          return `Showing ${from} to ${to} of ${totalRecords} ${label}`;
+        }}
+        columns={[
             {
               accessor: '__expander',
               title: '',
@@ -1072,9 +1183,25 @@ export function AssetList({
                   );
                 }
 
+                const kitMembers = row.kitBoundAssets ?? [];
                 return (
                   <Box style={{ marginLeft: `${row.__depth * 16}px` }}>
-                    <Text fw={500}>{row.name}</Text>
+                    <Group gap="xs" wrap="wrap">
+                      <Text fw={500}>{row.name}</Text>
+                      {row.isKit && (
+                        <Group gap={4} wrap="nowrap">
+                          <Badge
+                            size="xs"
+                            variant="light"
+                            color="violet"
+                            leftSection={<IconPackage size={10} />}
+                          >
+                            Kit
+                          </Badge>
+                          <KitMemberBadge members={kitMembers} />
+                        </Group>
+                      )}
+                    </Group>
                     {row.description && (
                       <Text size="xs" c="dimmed" lineClamp={1}>
                         {row.description}
@@ -1265,17 +1392,50 @@ export function AssetList({
               },
             },
           ]}
-          sortStatus={sortStatus as DataTableSortStatus<AssetListRow>}
-          onSortStatusChange={(status) => {
-            setSortStatus(status as AssetListSortStatus);
-          }}
-          fetching={isLoading}
-          minHeight={150}
-          noRecordsText={groupViewEnabled
-            ? (hasActiveFilters ? 'No groups match your filters' : 'No groups found')
-            : (hasActiveFilters ? 'No assets match your filters' : 'No assets found')}
-        />
-      </Card>
+        sortStatus={sortStatus as DataTableSortStatus<AssetListRow>}
+        onSortStatusChange={(status) => {
+          setSortStatus(status as AssetListSortStatus);
+        }}
+        fetching={isLoading}
+        minHeight={150}
+        noRecordsText={groupViewEnabled
+          ? (combinedHasFilters ? 'No groups match your filters' : 'No groups found')
+          : (combinedHasFilters ? 'No assets match your filters' : 'No assets found')}
+      />
+    </Card>
+  );
+
+  let currentViewContent: ReactNode;
+  switch (viewMode) {
+    case 'gallery':
+      currentViewContent = <AssetGalleryView assets={sortedAssets} />;
+      break;
+    case 'kanban':
+      currentViewContent = <AssetKanbanView assets={sortedAssets} />;
+      break;
+    case 'calendar':
+      currentViewContent = <AssetCalendarView assets={sortedAssets} />;
+      break;
+    case 'list':
+    case 'table':
+    default:
+      currentViewContent = tableViewContent;
+  }
+
+  return (
+    <DataViewLayout
+      title="Assets"
+      mode="table"
+      availableModes={['table']}
+      filtersOpen={filtersPanelOpen}
+      onToggleFilters={toggleFilters}
+      hasActiveFilters={combinedHasFilters}
+      activeFilterCount={combinedFilterCount}
+      showFilterButton={hideFilterButton !== true}
+      filterContent={filterContent}
+      actions={headerActions}
+    >
+      {currentViewContent}
     </DataViewLayout>
   );
 }

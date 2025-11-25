@@ -1,7 +1,7 @@
 /**
  * Sample Test
  * 
- * This file demonstrates how to write tests with the configured testing infrastructure.
+ * This file shows how to write tests with the configured testing infrastructure.
  * It serves as both a test and documentation example.
  */
 

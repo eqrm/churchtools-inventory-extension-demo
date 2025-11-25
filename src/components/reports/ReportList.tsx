@@ -26,29 +26,29 @@ interface Report {
 const AVAILABLE_REPORTS: Report[] = [
   {
     id: 'utilization',
-    name: 'Inventar-Auslastung',
-    description: 'Buchungshäufigkeit, Nutzungsstunden und Leerlaufzeiten pro Inventargegenstand',
+    name: 'Inventory utilization',
+    description: 'Booking frequency, usage hours, and idle time per asset',
     icon: <IconChartLine size={24} />,
     path: '/reports/utilization',
   },
   {
     id: 'maintenance',
-    name: 'Wartungs-Compliance',
-    description: 'Überfällige vs. konforme Inventargegenstände und anstehende Wartungen',
+    name: 'Maintenance compliance',
+    description: 'Overdue vs. compliant assets and upcoming maintenance',
     icon: <IconCalendarCheck size={24} />,
     path: '/reports/maintenance',
   },
   {
     id: 'stocktake',
-    name: 'Inventur-Zusammenfassung',
-    description: 'Gefundene vs. fehlende Inventargegenstände und Abweichungen',
+    name: 'Stocktake summary',
+    description: 'Found vs. missing assets and discrepancies',
     icon: <IconClipboardList size={24} />,
     path: '/reports/stocktake',
   },
   {
     id: 'bookings',
-    name: 'Buchungsverlauf',
-    description: 'Buchungstrends über die Zeit und beliebte Inventargegenstände',
+    name: 'Booking history',
+    description: 'Booking trends over time and high-demand assets',
     icon: <IconHistory size={24} />,
     path: '/reports/bookings',
   },
@@ -79,7 +79,7 @@ export function ReportList() {
   return (
     <div>
       <Title order={2} mb="lg">
-        Berichte
+        Reports
       </Title>
 
       <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} spacing="md">

@@ -12,7 +12,7 @@
 	// "forwardPorts": [],
 
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "npm install",
+	"postCreateCommand": "apt-get update && apt-get install -y ripgrep && npm install",
 
 	// Configure tool-specific properties.
 	// Uncomment to install VS Code extensions for vue, tailwind and prettier.

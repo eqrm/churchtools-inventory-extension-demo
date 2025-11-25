@@ -35,27 +35,27 @@ function StockTakeStats({ data }: { data: ReturnType<typeof calculateStockTakeSu
             }
           />
         </Center>
-        <Text ta="center" mt="xs" fw={500}>Erfassungsrate</Text>
+        <Text ta="center" mt="xs" fw={500}>Capture rate</Text>
       </Paper>
 
       <Paper p="md" withBorder>
         <Text size="xl" fw={700} ta="center">{data.expectedCount}</Text>
-        <Text ta="center" c="dimmed" size="sm">Erwartet</Text>
+        <Text ta="center" c="dimmed" size="sm">Expected</Text>
       </Paper>
 
       <Paper p="md" withBorder>
         <Text size="xl" fw={700} ta="center" c="green">{data.scannedCount}</Text>
-        <Text ta="center" c="dimmed" size="sm">Gescannt</Text>
+        <Text ta="center" c="dimmed" size="sm">Scanned</Text>
       </Paper>
 
       <Paper p="md" withBorder>
         <Text size="xl" fw={700} ta="center" c="red">{data.missingCount}</Text>
-        <Text ta="center" c="dimmed" size="sm">Fehlend</Text>
+        <Text ta="center" c="dimmed" size="sm">Missing</Text>
       </Paper>
 
       <Paper p="md" withBorder>
         <Text size="xl" fw={700} ta="center" c="orange">{data.unexpectedCount}</Text>
-        <Text ta="center" c="dimmed" size="sm">Unerwartet</Text>
+        <Text ta="center" c="dimmed" size="sm">Unexpected</Text>
       </Paper>
     </SimpleGrid>
   );
@@ -71,10 +71,10 @@ export function StockTakeSummaryReport() {
   const { data: sessions, isLoading: sessionsLoading, error: sessionsError } = useStockTakeSessions();
 
   if (assetsLoading || sessionsLoading) return <Loader />;
-  if (assetsError) return <Text c="red">Fehler beim Laden der Inventargegenstände</Text>;
-  if (sessionsError) return <Text c="red">Fehler beim Laden der Inventur-Sitzungen</Text>;
+  if (assetsError) return <Text c="red">Failed to load assets</Text>;
+  if (sessionsError) return <Text c="red">Failed to load stock take sessions</Text>;
   if (!assets || !sessions || sessions.length === 0) {
-    return <Text>Keine Inventur-Sitzungen gefunden</Text>;
+    return <Text>No stock take sessions found</Text>;
   }
 
   // Select first session by default
@@ -88,18 +88,18 @@ export function StockTakeSummaryReport() {
   return (
     <Stack gap="md">
       <Group justify="space-between">
-        <Title order={2}>Inventur-Zusammenfassung</Title>
+        <Title order={2}>Stock take summary</Title>
         <Button
           leftSection={<IconDownload size={16} />}
           onClick={() => exportStockTakeSummaryToCSV(summaryData)}
         >
-          Exportieren
+          Export
         </Button>
       </Group>
 
       <Paper p="md" withBorder>
         <Group>
-          <Text fw={500}>Sitzung:</Text>
+          <Text fw={500}>Session:</Text>
           <Select
             data={sessions.map((s) => ({
               value: String(s.id),
@@ -114,7 +114,7 @@ export function StockTakeSummaryReport() {
 
       <StockTakeStats data={summaryData} />
 
-      <Title order={3} mt="md">Fehlende Inventargegenstände</Title>
+      <Title order={3} mt="md">Missing assets</Title>
 
       <DataTable
         withTableBorder
@@ -126,7 +126,7 @@ export function StockTakeSummaryReport() {
         columns={[
           {
             accessor: 'assetNumber',
-            title: 'Inventarnummer',
+            title: 'Asset number',
             width: 150,
           },
           {
@@ -136,12 +136,12 @@ export function StockTakeSummaryReport() {
           },
           {
             accessor: 'categoryName',
-            title: 'Kategorie',
+            title: 'Asset Type',
             width: 150,
           },
           {
             accessor: 'lastLocation',
-            title: 'Letzter Standort',
+            title: 'Last location',
             width: 180,
             render: (row) => row.lastLocation || '-',
           },
@@ -151,7 +151,7 @@ export function StockTakeSummaryReport() {
             width: 120,
             render: () => (
               <Badge color="red" variant="filled">
-                Fehlend
+                Missing
               </Badge>
             ),
           },

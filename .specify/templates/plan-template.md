@@ -31,19 +31,13 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-- [ ] **Type Safety**: TypeScript strict mode enabled, no `any` types without justification
-- [ ] **UX Consistency**: Design follows ChurchTools patterns (document alignment in research.md)
-- [ ] **Code Quality**: ESLint configured, formatting standards defined, modularity planned
-- [ ] **Performance Budget**: Bundle size projected < 200 KB, load time < 1s analyzed
-- [ ] **Testing Strategy**: Manual testing plan documented, automated testing scope defined if needed
-- [ ] **TDD Workflow**: For features requiring automated tests, RED-GREEN-REFACTOR cycle planned
-- [ ] **Environment Config**: Sensitive data handling via .env planned, no hardcoded secrets
+[Gates determined based on constitution file]
 
 ## Project Structure
 
 ### Documentation (this feature)
 
-```
+```text
 specs/[###-feature]/
 ├── plan.md              # This file (/speckit.plan command output)
 ├── research.md          # Phase 0 output (/speckit.plan command)
@@ -61,7 +55,7 @@ specs/[###-feature]/
   not include Option labels.
 -->
 
-```
+```text
 # [REMOVE IF UNUSED] Option 1: Single project (DEFAULT)
 src/
 ├── models/
@@ -102,10 +96,9 @@ directories captured above]
 
 ## Complexity Tracking
 
-*Fill ONLY if Constitution Check has violations that must be justified*
+> **Fill ONLY if Constitution Check has violations that must be justified**
 
 | Violation | Why Needed | Simpler Alternative Rejected Because |
 |-----------|------------|-------------------------------------|
 | [e.g., 4th project] | [current need] | [why 3 projects insufficient] |
 | [e.g., Repository pattern] | [specific problem] | [why direct DB access insufficient] |
-

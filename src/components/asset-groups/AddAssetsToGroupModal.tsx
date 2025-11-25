@@ -153,8 +153,8 @@ export function AddAssetsToGroupModal({ opened, onClose, group, onAdded }: AddAs
               form.setFieldValue('location', value);
             }}
             nothingFound="No locations"
-            onCreateOption={(name) => {
-              const created = addLocation(name);
+            onCreateOption={async (name) => {
+              const created = await addLocation(name);
               return created?.name ?? normalizeMasterDataName(name);
             }}
           />

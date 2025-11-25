@@ -207,32 +207,32 @@ export function formatScheduleDescription(schedule: MaintenanceSchedule): string
     switch (schedule.scheduleType) {
         case 'time-based':
             if (schedule.intervalDays) {
-                return `Alle ${schedule.intervalDays} Tag${schedule.intervalDays > 1 ? 'e' : ''}`;
+                return `Every ${schedule.intervalDays} day${schedule.intervalDays > 1 ? 's' : ''}`;
             }
             if (schedule.intervalMonths) {
-                return `Alle ${schedule.intervalMonths} Monat${schedule.intervalMonths > 1 ? 'e' : ''}`;
+                return `Every ${schedule.intervalMonths} month${schedule.intervalMonths > 1 ? 's' : ''}`;
             }
             if (schedule.intervalYears) {
-                return `Alle ${schedule.intervalYears} Jahr${schedule.intervalYears > 1 ? 'e' : ''}`;
+                return `Every ${schedule.intervalYears} year${schedule.intervalYears > 1 ? 's' : ''}`;
             }
-            return 'Zeitbasiert';
+            return 'Time-based';
         
         case 'usage-based':
             return schedule.intervalHours
-                ? `Alle ${schedule.intervalHours} Betriebsstunden`
-                : 'Nutzungsbasiert';
+                ? `Every ${schedule.intervalHours} operating hour${schedule.intervalHours > 1 ? 's' : ''}`
+                : 'Usage-based';
         
         case 'event-based':
             return schedule.intervalBookings
-                ? `Alle ${schedule.intervalBookings} Buchungen`
-                : 'Ereignisbasiert';
+                ? `Every ${schedule.intervalBookings} booking${schedule.intervalBookings > 1 ? 's' : ''}`
+                : 'Event-based';
         
         case 'fixed-date':
             return schedule.fixedDate
-                ? `Jährlich am ${schedule.fixedDate}`
-                : 'Festes Datum';
+                ? `Annually on ${schedule.fixedDate}`
+                : 'Fixed date';
         
         default:
-            return 'Unbekannt';
+            return 'Unknown';
     }
 }

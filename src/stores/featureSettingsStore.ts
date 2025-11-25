@@ -12,7 +12,7 @@ interface FeatureSettingsState {
 
 const DEFAULT_STATE = {
   bookingsEnabled: false,
-  kitsEnabled: false,
+  kitsEnabled: true,
   maintenanceEnabled: false,
 } satisfies Omit<FeatureSettingsState, 'setModuleEnabled'>;
 

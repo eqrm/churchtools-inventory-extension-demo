@@ -2,9 +2,13 @@ import type { ChurchToolsAPIClient } from '../../api/ChurchToolsAPIClient';
 import type {
   AssetType,
   ChangeHistoryEntry,
+  LegacyViewFilter,
   SavedView,
   SavedViewCreate,
+  ViewFilterGroup,
 } from '../../../types/entities';
+import { convertLegacyFiltersToGroup, normalizeFilterGroup } from '../../../utils/viewFilters';
+import { LEGACY_SAVED_VIEW_SCHEMA_VERSION, SAVED_VIEW_SCHEMA_VERSION } from '../../../constants/schemaVersions';
 
 export interface SavedViewDependencies {
   moduleId: string;
@@ -32,9 +36,14 @@ export async function createSavedView(
   const category = await getSavedViewsCategory(deps);
 
   const now = new Date().toISOString();
+  const normalizedFilters = normalizeFiltersInput(data.filters);
+  const normalizedQuickFilters = normalizeOptionalFiltersInput(data.quickFilters);
   const payload: SavedView = {
     id: '',
     ...data,
+    schemaVersion: data.schemaVersion ?? SAVED_VIEW_SCHEMA_VERSION,
+    filters: normalizedFilters,
+    quickFilters: normalizedQuickFilters,
     createdAt: now,
     lastModifiedAt: now,
   };
@@ -71,10 +80,23 @@ export async function updateSavedView(
     throw new Error('Only the view owner can update this view');
   }
 
+  const nextFilters =
+    'filters' in updates && updates.filters
+      ? normalizeFiltersInput(updates.filters)
+      : current.filters;
+
+  const nextQuickFilters =
+    'quickFilters' in updates
+      ? normalizeOptionalFiltersInput(updates.quickFilters)
+      : current.quickFilters;
+
   const updated: SavedView = {
     ...current,
     ...updates,
     id,
+    schemaVersion: updates.schemaVersion ?? current.schemaVersion ?? SAVED_VIEW_SCHEMA_VERSION,
+    filters: nextFilters,
+    quickFilters: nextQuickFilters,
     lastModifiedAt: new Date().toISOString(),
   };
 
@@ -142,9 +164,12 @@ async function getSavedViewsCategory(deps: SavedViewDependencies): Promise<Asset
 
 function mapToSavedView(value: unknown): SavedView {
   const record = value as { id: string; value: string };
-  const parsed = JSON.parse(record.value) as SavedView;
+  const parsed = JSON.parse(record.value) as SavedView & { filters?: unknown };
   return {
     ...parsed,
+    schemaVersion: parsed.schemaVersion ?? LEGACY_SAVED_VIEW_SCHEMA_VERSION,
+    filters: normalizeFiltersInput(parsed.filters as ViewFilterGroup | LegacyViewFilter[] | undefined),
+    quickFilters: normalizeOptionalFiltersInput(parsed.quickFilters as ViewFilterGroup | LegacyViewFilter[] | undefined),
     id: record.id,
   };
 }
@@ -160,4 +185,24 @@ async function loadSavedView(
     throw new Error(`Saved view with ID ${id} not found`);
   }
   return mapToSavedView(current);
+}
+
+function normalizeFiltersInput(filters: ViewFilterGroup | LegacyViewFilter[] | undefined): ViewFilterGroup {
+  if (Array.isArray(filters)) {
+    return convertLegacyFiltersToGroup(filters);
+  }
+  return normalizeFilterGroup(filters);
+}
+
+function normalizeOptionalFiltersInput(
+  filters: ViewFilterGroup | LegacyViewFilter[] | undefined,
+): ViewFilterGroup | undefined {
+  if (!filters) {
+    return undefined;
+  }
+  if (Array.isArray(filters)) {
+    return convertLegacyFiltersToGroup(filters);
+  }
+  const normalized = normalizeFilterGroup(filters);
+  return normalized.children.length > 0 ? normalized : undefined;
 }

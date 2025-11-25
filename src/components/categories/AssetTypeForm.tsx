@@ -10,6 +10,7 @@ import {
   Divider,
   Tooltip,
   Badge,
+  Switch,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { IconPlus, IconTrash, IconInfoCircle } from '@tabler/icons-react';
@@ -36,16 +37,11 @@ import {
 
 interface AssetTypeFormProps {
   category?: AssetType;
-  initialData?: {
-    name: string;
-    icon?: string;
-    customFields: Omit<CustomFieldDefinition, 'id'>[];
-  };
   onSuccess?: (assetType: AssetType) => void;
   onCancel?: () => void;
 }
 
-export function AssetTypeForm({ category, initialData, onSuccess, onCancel }: AssetTypeFormProps) {
+export function AssetTypeForm({ category, onSuccess, onCancel }: AssetTypeFormProps) {
   const isEditing = !!category;
   const createAssetType = useCreateCategory();
   const updateAssetType = useUpdateCategory();
@@ -58,30 +54,28 @@ export function AssetTypeForm({ category, initialData, onSuccess, onCancel }: As
     name: string;
     icon?: string;
     assetNameTemplate?: string;
+    defaultBookable: boolean;
     customFields: CustomFieldDefinition[];
   }>({
     initialValues: {
-      name: category?.name ?? initialData?.name ?? '',
-      icon: category?.icon ?? initialData?.icon ?? '',
+      name: category?.name ?? '',
+      icon: category?.icon ?? '',
       assetNameTemplate: category?.assetNameTemplate ?? '%Manufacturer% %Model% %Asset Number%',
+      defaultBookable: category?.defaultBookable ?? true,
       customFields:
         category?.customFields ??
-        initialData?.customFields.map((field, index) => ({
-          ...field,
-          id: `field-${Date.now().toString()}-${index.toString()}`,
-        })) ??
         [],
     },
     validate: {
       name: (value) => {
-        if (!value.trim()) return 'Asset-Typ-Name ist erforderlich';
-        if (value.length < 2) return 'Asset-Typ-Name muss mindestens 2 Zeichen lang sein';
-        if (value.length > 100) return 'Asset-Typ-Name darf 100 Zeichen nicht überschreiten';
+        if (!value.trim()) return 'Asset type name is required';
+        if (value.length < 2) return 'Asset type name must be at least 2 characters';
+        if (value.length > 100) return 'Asset type name cannot exceed 100 characters';
         return null;
       },
       customFields: {
         name: (value) => {
-          if (!value || !value.trim()) return 'Feldname ist erforderlich';
+          if (!value || !value.trim()) return 'Field name is required';
           return null;
         },
       },
@@ -94,6 +88,7 @@ export function AssetTypeForm({ category, initialData, onSuccess, onCancel }: As
         name: category.name,
         icon: category.icon ?? '',
         assetNameTemplate: category.assetNameTemplate ?? '%Manufacturer% %Model% %Asset Number%',
+        defaultBookable: category.defaultBookable ?? true,
         customFields: category.customFields,
       });
     }
@@ -107,6 +102,7 @@ export function AssetTypeForm({ category, initialData, onSuccess, onCancel }: As
           name: values.name,
           icon: values.icon || undefined,
           assetNameTemplate: values.assetNameTemplate || undefined,
+          defaultBookable: values.defaultBookable,
           customFields: values.customFields,
         };
 
@@ -116,8 +112,8 @@ export function AssetTypeForm({ category, initialData, onSuccess, onCancel }: As
         });
 
         notifications.show({
-          title: 'Erfolgreich',
-          message: `Asset-Typ "${updated.name}" wurde aktualisiert`,
+          title: 'Success',
+          message: `Asset type "${updated.name}" updated`,
           color: 'green',
         });
         onSuccess?.(updated);
@@ -126,13 +122,14 @@ export function AssetTypeForm({ category, initialData, onSuccess, onCancel }: As
           name: values.name,
           icon: values.icon || undefined,
           assetNameTemplate: values.assetNameTemplate || undefined,
+          defaultBookable: values.defaultBookable,
           customFields: values.customFields,
         };
 
         const created = await createAssetType.mutateAsync(payload);
         notifications.show({
-          title: 'Erfolgreich',
-          message: `Asset-Typ "${created.name}" wurde erstellt`,
+          title: 'Success',
+          message: `Asset type "${created.name}" created`,
           color: 'green',
         });
         form.reset();
@@ -140,8 +137,8 @@ export function AssetTypeForm({ category, initialData, onSuccess, onCancel }: As
       }
     } catch (err) {
       notifications.show({
-        title: 'Fehler',
-        message: err instanceof Error ? err.message : 'Asset-Typ konnte nicht gespeichert werden',
+        title: 'Error',
+        message: err instanceof Error ? err.message : 'Unable to save asset type',
         color: 'red',
       });
     }
@@ -204,8 +201,8 @@ export function AssetTypeForm({ category, initialData, onSuccess, onCancel }: As
     <form onSubmit={form.onSubmit(handleSubmit)}>
       <Stack gap="md">
         <TextInput
-          label="Asset-Typ-Name"
-          placeholder="z. B. Audio, Kameras, Mikrofone"
+          label="Asset type name"
+          placeholder="e.g., Audio, Cameras, Microphones"
           required
           {...form.getInputProps('name')}
           disabled={isPending}
@@ -223,26 +220,26 @@ export function AssetTypeForm({ category, initialData, onSuccess, onCancel }: As
             disabled={isPending}
           />
           <Text size="xs" c="dimmed">
-            Optionales Icon zur besseren Identifikation des Asset-Typs
+            Optional icon to help identify this asset type
           </Text>
         </Stack>
 
-        <Divider label="Asset-Namen" labelPosition="left" mt="md" />
+        <Divider label="Asset names" labelPosition="left" mt="md" />
 
         <Text size="sm" c="dimmed">
-          Lege fest, wie Asset-Namen für diesen Asset-Typ generiert werden. Verfügbare Variablen sind
-          %Manufacturer%, %Model%, %Asset Number%, %Serial Number% sowie eigene Feldnamen (z. B.
-          %Color%). Beispiel: <code>%Manufacturer% %Model% %Asset Number%</code>
+          Configure how asset names are generated for this type. Available variables are
+          %Manufacturer%, %Model%, %Asset Number%, %Serial Number%, and custom field names (e.g.,
+          %Color%). Example: <code>%Manufacturer% %Model% %Asset Number%</code>
         </Text>
 
         {prefixesLoading ? (
           <Text size="xs" c="dimmed">
-            Lade Standardpräfixe …
+            Loading default prefixes…
           </Text>
         ) : autoNumberPreview?.nextAssetNumber ? (
           <Group gap="xs">
             <Text size="xs" c="dimmed">
-              Vorschau automatische Inventarnummer:
+              Auto-number preview:
             </Text>
             <Badge color={autoNumberPreview.prefix?.color ?? 'blue'} variant="light" size="sm">
               {autoNumberPreview.nextAssetNumber}
@@ -255,13 +252,13 @@ export function AssetTypeForm({ category, initialData, onSuccess, onCancel }: As
           </Group>
         ) : (
           <Text size="xs" c="red">
-            Füge unter Einstellungen ein Prefix hinzu, um automatische Nummerierung zu aktivieren.
+            Add a prefix under Settings to enable automatic numbering.
           </Text>
         )}
 
         <Group align="flex-start">
           <TextInput
-            label="Template für Asset-Namen"
+            label="Asset name template"
             placeholder="%Manufacturer% %Model% %Asset Number%"
             {...form.getInputProps('assetNameTemplate')}
             style={{ flex: 1 }}
@@ -270,13 +267,13 @@ export function AssetTypeForm({ category, initialData, onSuccess, onCancel }: As
             label={
               <div>
                 <div>
-                  <strong>Verfügbare Variablen</strong>
+                  <strong>Available variables</strong>
                 </div>
                 <div>%Manufacturer%</div>
                 <div>%Model%</div>
                 <div>%Asset Number%</div>
                 <div>%Serial Number%</div>
-                <div>Eigene Feldnamen, z. B. %Color%</div>
+                <div>Custom field names, e.g., %Color%</div>
               </div>
             }
             withArrow
@@ -287,10 +284,19 @@ export function AssetTypeForm({ category, initialData, onSuccess, onCancel }: As
           </Tooltip>
         </Group>
 
-        <Divider label="Eigene Felder" labelPosition="left" mt="xl" />
+        <Divider label="Default settings" labelPosition="left" mt="xl" />
+
+        <Switch
+          label="Assets of this type are bookable by default"
+          description="New assets will have bookable enabled. Can be changed per asset."
+          {...form.getInputProps('defaultBookable', { type: 'checkbox' })}
+          disabled={isPending}
+        />
+
+        <Divider label="Custom fields" labelPosition="left" mt="xl" />
 
         <Text size="sm" c="dimmed">
-          Definiere zusätzliche Felder, die für alle Assets dieses Asset-Typs verfügbar sind.
+          Define additional fields that every asset of this type should expose.
         </Text>
 
         <Stack gap="md">
@@ -327,13 +333,13 @@ export function AssetTypeForm({ category, initialData, onSuccess, onCancel }: As
             onClick={addCustomField}
             disabled={isPending}
           >
-            Eigenes Feld hinzufügen
+            Add custom field
           </Button>
         </Stack>
 
         {form.values.customFields.length > 0 && (
           <>
-            <Divider label="Vorschau" labelPosition="left" mt="xl" />
+            <Divider label="Preview" labelPosition="left" mt="xl" />
             <CustomFieldPreview fields={form.values.customFields} />
           </>
         )}
@@ -341,11 +347,11 @@ export function AssetTypeForm({ category, initialData, onSuccess, onCancel }: As
         <Group justify="flex-end" mt="xl">
           {onCancel && (
             <Button variant="default" onClick={onCancel} disabled={isPending}>
-              Abbrechen
+              Cancel
             </Button>
           )}
           <Button type="submit" loading={isPending}>
-            {isEditing ? 'Asset-Typ aktualisieren' : 'Asset-Typ erstellen'}
+            {isEditing ? 'Update asset type' : 'Create asset type'}
           </Button>
         </Group>
       </Stack>
@@ -356,14 +362,14 @@ export function AssetTypeForm({ category, initialData, onSuccess, onCancel }: As
 function describeAutoNumberingSource(source: AutoNumberingSource): string {
   switch (source) {
     case 'person-default':
-      return 'Basierend auf deinem gespeicherten Präfix.';
+      return 'Based on your saved prefix.';
     case 'module-default':
-      return 'Verwendet das Modul-Standardpräfix.';
+      return 'Uses the module default prefix.';
     case 'collection-first':
-      return 'Verwendet das erste verfügbare Präfix.';
+      return 'Uses the first available prefix.';
     case 'explicit':
-      return 'Verwendet das ausgewählte Präfix.';
+      return 'Uses the selected prefix.';
     default:
-      return 'Noch kein Präfix konfiguriert.';
+      return 'No prefix configured yet.';
   }
 }

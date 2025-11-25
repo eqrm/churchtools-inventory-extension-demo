@@ -1,5 +1,6 @@
 import { Alert, Button, Stack, Text } from '@mantine/core';
 import { IconAlertCircle, IconRefresh } from '@tabler/icons-react';
+import { useTranslation } from 'react-i18next';
 
 interface ErrorStateProps {
     title?: string;
@@ -12,15 +13,17 @@ interface ErrorStateProps {
  * Shows an error message with optional retry button
  */
 export function ErrorState({ 
-    title = 'Fehler',
+    title,
     message,
     onRetry,
 }: ErrorStateProps) {
+    const { t } = useTranslation('common');
+    const resolvedTitle = title ?? t('app.error');
     return (
         <Stack gap="md" p="md">
             <Alert
                 icon={<IconAlertCircle size={16} />}
-                title={title}
+                title={resolvedTitle}
                 color="red"
                 variant="light"
             >
@@ -32,7 +35,7 @@ export function ErrorState({
                     onClick={onRetry}
                     variant="light"
                 >
-                    Erneut versuchen
+                    {t('actions.retry')}
                 </Button>
             )}
         </Stack>

@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Box, Button, Group, Stack, Text } from '@mantine/core';
 import { IconCamera, IconKeyboard, IconSettings, IconX } from '@tabler/icons-react';
-import { Html5Qrcode } from 'html5-qrcode';
 import { ScannerSetupModal } from './ScannerSetupModal';
 import type { ScannerModel } from '../../types/entities';
+import type { Html5Qrcode } from 'html5-qrcode';
+import { loadHtml5Qrcode } from '../../utils/scannerLoader';
+import { loadScannerModelsAsync } from '../../services/settings/scannerModels';
 
 interface BarcodeScannerProps {
   onScan: (value: string) => void;
@@ -43,28 +45,25 @@ export function BarcodeScanner({
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [setupModalOpen, setSetupModalOpen] = useState(false);
   const [selectedModel, setSelectedModel] = useState<ScannerModel | null>(null);
+  const [internalModels, setInternalModels] = useState<ScannerModel[]>([]);
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const bufferRef = useRef<string>('');
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastScanRef = useRef<{ value: string; timestamp: number } | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
 
-  // Load scanner models from localStorage
-  const loadScannerModels = (): ScannerModel[] => {
-    try {
-      const stored = localStorage.getItem('scannerModels')
-      return stored ? (JSON.parse(stored) as ScannerModel[]) : []
-    } catch {
-      return []
+  useEffect(() => {
+    if (!scannerModels) {
+      loadScannerModelsAsync().then(setInternalModels);
     }
-  }
+  }, [scannerModels]);
 
   const availableModels = useMemo<ScannerModel[]>(() => {
     if (scannerModels && scannerModels.length > 0) {
       return scannerModels
     }
-    return loadScannerModels()
-  }, [scannerModels])
+    return internalModels
+  }, [scannerModels, internalModels])
 
   useEffect(() => {
     if (availableModels.length === 0) {
@@ -216,7 +215,8 @@ export function BarcodeScanner({
     }
 
     try {
-      const html5QrCode = new Html5Qrcode('barcode-reader');
+      const Html5QrcodeCtor = await loadHtml5Qrcode();
+      const html5QrCode = new Html5QrcodeCtor('barcode-reader');
       scannerRef.current = html5QrCode;
 
       await html5QrCode.start(

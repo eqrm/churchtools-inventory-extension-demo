@@ -1,12 +1,7 @@
 import type { Asset } from '../types/entities';
+import type { MasterDataEntity, MasterDataItem } from '../types/masterData';
 
-export type MasterDataEntity = 'locations' | 'manufacturers' | 'models' | 'maintenanceCompanies';
-
-export interface MasterDataItem {
-  id: string;
-  name: string;
-  assetCount?: number;
-}
+export type { MasterDataEntity, MasterDataItem } from '../types/masterData';
 
 export interface MasterDataDefinition {
   entity: MasterDataEntity;

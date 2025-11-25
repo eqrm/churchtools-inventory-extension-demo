@@ -6,16 +6,21 @@ import type {
   MaintenanceSchedule,
   MaintenanceScheduleCreate,
 } from '../../../types/entities'
+import type { MaintenanceRule } from '../../../types/maintenance'
 import type { MaintenanceDependencies } from './maintenance'
 import {
   createMaintenanceHold as createMaintenanceHoldHandler,
   createMaintenanceRecord as createMaintenanceRecordHandler,
+  createMaintenanceRule as createMaintenanceRuleHandler,
   createMaintenanceSchedule as createMaintenanceScheduleHandler,
   deleteMaintenanceRecord as deleteMaintenanceRecordHandler,
+  deleteMaintenanceRule as deleteMaintenanceRuleHandler,
   deleteMaintenanceSchedule as deleteMaintenanceScheduleHandler,
   getMaintenanceHolds as getMaintenanceHoldsHandler,
   getMaintenanceRecord as getMaintenanceRecordHandler,
   getMaintenanceRecords as getMaintenanceRecordsHandler,
+  getMaintenanceRule as getMaintenanceRuleHandler,
+  getMaintenanceRules as getMaintenanceRulesHandler,
   getMaintenanceSchedule as getMaintenanceScheduleHandler,
   getMaintenanceSchedules as getMaintenanceSchedulesHandler,
   getOverdueMaintenance as getOverdueMaintenanceHandler,
@@ -23,6 +28,7 @@ import {
   getUpcomingMaintenance as getUpcomingMaintenanceHandler,
   releaseMaintenanceHold as releaseMaintenanceHoldHandler,
   updateMaintenanceRecord as updateMaintenanceRecordHandler,
+  updateMaintenanceRule as updateMaintenanceRuleHandler,
   updateMaintenanceSchedule as updateMaintenanceScheduleHandler,
 } from './maintenance'
 import { ChurchToolsStorageProvider } from './core'
@@ -34,6 +40,11 @@ declare module './core' {
     createMaintenanceRecord(record: MaintenanceRecordCreate): Promise<MaintenanceRecord>
     updateMaintenanceRecord(id: string, updates: Partial<MaintenanceRecord>): Promise<MaintenanceRecord>
     deleteMaintenanceRecord(id: string): Promise<void>
+    getMaintenanceRules(): Promise<MaintenanceRule[]>
+    getMaintenanceRule(id: string): Promise<MaintenanceRule | null>
+    createMaintenanceRule(rule: MaintenanceRule): Promise<MaintenanceRule>
+    updateMaintenanceRule(id: string, updates: MaintenanceRule): Promise<MaintenanceRule>
+    deleteMaintenanceRule(id: string): Promise<void>
     getMaintenanceSchedules(assetId?: string): Promise<MaintenanceSchedule[]>
     getMaintenanceSchedule(assetId: string): Promise<MaintenanceSchedule | null>
     createMaintenanceSchedule(schedule: MaintenanceScheduleCreate): Promise<MaintenanceSchedule>
@@ -110,6 +121,41 @@ ChurchToolsStorageProvider.prototype.deleteMaintenanceRecord = async function de
   id: string,
 ): Promise<void> {
   await deleteMaintenanceRecordHandler(getMaintenanceDependencies(this), id)
+}
+
+ChurchToolsStorageProvider.prototype.getMaintenanceRules = async function getMaintenanceRules(
+  this: ProviderWithMaintenanceSupport,
+): Promise<MaintenanceRule[]> {
+  return getMaintenanceRulesHandler(getMaintenanceDependencies(this))
+}
+
+ChurchToolsStorageProvider.prototype.getMaintenanceRule = async function getMaintenanceRule(
+  this: ProviderWithMaintenanceSupport,
+  id: string,
+): Promise<MaintenanceRule | null> {
+  return getMaintenanceRuleHandler(getMaintenanceDependencies(this), id)
+}
+
+ChurchToolsStorageProvider.prototype.createMaintenanceRule = async function createMaintenanceRule(
+  this: ProviderWithMaintenanceSupport,
+  ruleData: MaintenanceRule,
+): Promise<MaintenanceRule> {
+  return createMaintenanceRuleHandler(getMaintenanceDependencies(this), ruleData)
+}
+
+ChurchToolsStorageProvider.prototype.updateMaintenanceRule = async function updateMaintenanceRule(
+  this: ProviderWithMaintenanceSupport,
+  id: string,
+  updates: MaintenanceRule,
+): Promise<MaintenanceRule> {
+  return updateMaintenanceRuleHandler(getMaintenanceDependencies(this), id, updates)
+}
+
+ChurchToolsStorageProvider.prototype.deleteMaintenanceRule = async function deleteMaintenanceRule(
+  this: ProviderWithMaintenanceSupport,
+  id: string,
+): Promise<void> {
+  await deleteMaintenanceRuleHandler(getMaintenanceDependencies(this), id)
 }
 
 ChurchToolsStorageProvider.prototype.getMaintenanceSchedules = async function getMaintenanceSchedules(

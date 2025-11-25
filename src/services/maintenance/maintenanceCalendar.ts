@@ -90,7 +90,7 @@ async function releaseHold(
     });
 }
 
-export async function synchronizeMaintenancePlanHolds(
+export async function syncMaintenancePlanHolds(
     plan: MaintenancePlanInternalState,
 ): Promise<MaintenanceHoldSyncResult> {
     if (!plan.planId) {

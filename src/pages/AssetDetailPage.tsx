@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { Button, Container, Group, Modal, Stack, Title, Grid } from '@mantine/core';
 import { IconArrowLeft, IconEdit } from '@tabler/icons-react';
+import { notifications } from '@mantine/notifications';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AssetDetail } from '../components/assets/AssetDetail';
 import { AssetForm } from '../components/assets/AssetForm';
@@ -14,6 +15,7 @@ export function AssetDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [createModalOpened, setCreateModalOpened] = useState(false);
   const [bookModalOpened, setBookModalOpened] = useState(false);
   const { data: asset } = useAsset(id || '');
   const bookingsEnabled = useFeatureSettingsStore((state) => state.bookingsEnabled);
@@ -48,7 +50,7 @@ export function AssetDetailPage() {
   return (
     <Container size="xl">
       <Stack gap="md">
-        <Group>
+          <Group>
           <Button
             variant="subtle"
             leftSection={<IconArrowLeft size={16} />}
@@ -60,7 +62,7 @@ export function AssetDetailPage() {
 
         <Grid>
           <Grid.Col span={{ base: 12, md: 8 }}>
-            <AssetDetail assetId={id} onEdit={handleEdit} />
+            <AssetDetail assetId={id} onEdit={handleEdit} onDuplicate={() => setCreateModalOpened(true)} />
           </Grid.Col>
           {bookingsEnabled && (
             <Grid.Col span={{ base: 12, md: 4 }}>
@@ -76,6 +78,17 @@ export function AssetDetailPage() {
 
         {asset && (
           <>
+            <Modal opened={createModalOpened} onClose={() => setCreateModalOpened(false)} title={<span>Duplicate Asset</span>} size="xl">
+              <AssetForm
+                initialData={asset}
+                onSuccess={(created) => {
+                  notifications.show({ title: 'Asset duplicated', message: `Created ${created.assetNumber}`, color: 'green' });
+                  setCreateModalOpened(false);
+                  navigate(`/assets/${created.id}`);
+                }}
+                onCancel={() => setCreateModalOpened(false)}
+              />
+            </Modal>
             <Modal
               opened={isFormOpen}
               onClose={handleCancel}

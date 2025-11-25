@@ -1,6 +1,56 @@
+import { useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { useStorageProvider } from './useStorageProvider';
 import type { Asset, AssetCreate, AssetUpdate, AssetFilters } from '../types/entities';
+import { useKitAssets } from './useKitAssets';
+import { useKitServiceInstance } from './useKits';
+import { resolveAssetById } from '../utils/assetResolution';
+import { isKitAssetId } from '../utils/kitAssets';
+import { useUndoStore } from '../state/undoStore';
+
+function normalizeAssetUpdate(update: AssetUpdate): Partial<Asset> {
+  const {
+    mainImage,
+    assetGroup,
+    fieldSources,
+    childAssetIds,
+    kitId,
+    modelId,
+    tagIds,
+    inheritedTagIds,
+    ...rest
+  } = update;
+
+  const normalized: Partial<Asset> = { ...(rest as Partial<Asset>) };
+
+  if (Object.prototype.hasOwnProperty.call(update, 'mainImage')) {
+    normalized.mainImage = mainImage ?? undefined;
+  }
+  if (Object.prototype.hasOwnProperty.call(update, 'assetGroup')) {
+    normalized.assetGroup = assetGroup ?? undefined;
+  }
+  if (Object.prototype.hasOwnProperty.call(update, 'fieldSources')) {
+    normalized.fieldSources = fieldSources ?? undefined;
+  }
+  if (Object.prototype.hasOwnProperty.call(update, 'childAssetIds')) {
+    normalized.childAssetIds = childAssetIds ?? undefined;
+  }
+  if (Object.prototype.hasOwnProperty.call(update, 'kitId')) {
+    normalized.kitId = kitId ?? undefined;
+  }
+  if (Object.prototype.hasOwnProperty.call(update, 'modelId')) {
+    normalized.modelId = modelId ?? undefined;
+  }
+  if (Object.prototype.hasOwnProperty.call(update, 'tagIds')) {
+    normalized.tagIds = tagIds ?? undefined;
+  }
+  if (Object.prototype.hasOwnProperty.call(update, 'inheritedTagIds')) {
+    normalized.inheritedTagIds = inheritedTagIds ?? undefined;
+  }
+
+  return normalized;
+}
 
 /**
  * Query key factory for assets
@@ -14,13 +64,34 @@ export const assetKeys = {
   byNumber: (assetNumber: string) => [...assetKeys.all, 'byNumber', assetNumber] as const,
 };
 
+export function combineAssetsWithKitAssets(
+  baseAssets: Asset[] | undefined,
+  kitAssets: Asset[],
+): Asset[] | undefined {
+  if (!kitAssets.length) {
+    return baseAssets;
+  }
+
+  if (!baseAssets || baseAssets.length === 0) {
+    return [...kitAssets];
+  }
+
+  return [...baseAssets, ...kitAssets];
+}
+
 /**
  * Hook to fetch assets with optional filtering
  */
 export function useAssets(filters?: AssetFilters) {
   const provider = useStorageProvider();
+  const {
+    kitAssets,
+    isLoading: kitLoading,
+    isFetching: kitFetching,
+    error: kitError,
+  } = useKitAssets(filters, { force: true });
 
-  return useQuery({
+  const queryResult = useQuery({
     queryKey: assetKeys.list(filters),
     queryFn: async () => {
       if (!provider) throw new Error('Storage provider not initialized');
@@ -29,6 +100,18 @@ export function useAssets(filters?: AssetFilters) {
     enabled: !!provider,
     staleTime: 2 * 60 * 1000, // 2 minutes (assets change more frequently than categories)
   });
+
+  const combinedData = useMemo<Asset[] | undefined>(() => {
+    return combineAssetsWithKitAssets(queryResult.data, kitAssets);
+  }, [queryResult.data, kitAssets]);
+
+  return {
+    ...queryResult,
+    data: combinedData,
+    isLoading: queryResult.isLoading || kitLoading,
+    isFetching: queryResult.isFetching || kitFetching,
+    error: queryResult.error ?? kitError ?? undefined,
+  };
 }
 
 /**
@@ -36,15 +119,19 @@ export function useAssets(filters?: AssetFilters) {
  */
 export function useAsset(id: string | undefined) {
   const provider = useStorageProvider();
+  const kitService = useKitServiceInstance();
+  const isKitId = id ? isKitAssetId(id) : false;
 
   return useQuery({
     queryKey: assetKeys.detail(id ?? ''),
     queryFn: async () => {
-      if (!provider) throw new Error('Storage provider not initialized');
       if (!id) throw new Error('Asset ID is required');
-      return await provider.getAsset(id);
+      return await resolveAssetById(id, {
+        storageProvider: provider,
+        kitService,
+      });
     },
-    enabled: !!provider && !!id,
+    enabled: Boolean(id && (isKitId ? kitService : provider)),
     staleTime: 2 * 60 * 1000,
   });
 }
@@ -73,6 +160,7 @@ export function useAssetByNumber(assetNumber: string | undefined) {
 export function useCreateAsset() {
   const queryClient = useQueryClient();
   const provider = useStorageProvider();
+  const { t } = useTranslation();
 
   return useMutation({
     mutationFn: async (data: AssetCreate) => {
@@ -111,7 +199,7 @@ export function useCreateAsset() {
         queryClient.setQueryData(assetKeys.lists(), context.previousAssets);
       }
     },
-    onSuccess: (newAsset) => {
+    onSuccess: (newAsset, variables) => {
       // Invalidate all asset lists
       void queryClient.invalidateQueries({ queryKey: assetKeys.lists() });
       
@@ -121,6 +209,24 @@ export function useCreateAsset() {
       
       // Invalidate change history for new asset (T262 - E3)
       void queryClient.invalidateQueries({ queryKey: ['changeHistory', 'asset', newAsset.id] });
+
+      // Undo support
+      let currentId = newAsset.id;
+      useUndoStore.getState().push({
+        label: t('undo.createAsset', { name: newAsset.name }),
+        undo: async () => {
+          if (!provider) return;
+          await provider.deleteAsset(currentId);
+          queryClient.removeQueries({ queryKey: assetKeys.detail(currentId) });
+          void queryClient.invalidateQueries({ queryKey: assetKeys.lists() });
+        },
+        redo: async () => {
+          if (!provider) return;
+          const reCreatedAsset = await provider.createAsset(variables);
+          currentId = reCreatedAsset.id;
+          void queryClient.invalidateQueries({ queryKey: assetKeys.lists() });
+        }
+      });
     },
   });
 }
@@ -156,6 +262,7 @@ export function useCreateMultiAsset() {
 export function useUpdateAsset() {
   const queryClient = useQueryClient();
   const provider = useStorageProvider();
+  const { t } = useTranslation();
 
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: AssetUpdate }) => {
@@ -171,9 +278,10 @@ export function useUpdateAsset() {
 
       // Optimistically update
       if (previousAsset) {
+        const normalizedData = normalizeAssetUpdate(data);
         queryClient.setQueryData<Asset>(assetKeys.detail(id), {
           ...previousAsset,
-          ...data,
+          ...normalizedData,
           lastModifiedAt: new Date().toISOString(),
         });
       }
@@ -186,7 +294,7 @@ export function useUpdateAsset() {
         queryClient.setQueryData(assetKeys.detail(id), context.previousAsset);
       }
     },
-    onSuccess: (updatedAsset) => {
+    onSuccess: (updatedAsset, variables, context) => {
       // Update caches with setQueryData to avoid refetches
       queryClient.setQueryData(assetKeys.detail(updatedAsset.id), updatedAsset);
       queryClient.setQueryData(assetKeys.byNumber(updatedAsset.assetNumber), updatedAsset);
@@ -207,6 +315,27 @@ export function useUpdateAsset() {
       setTimeout(() => {
         void queryClient.invalidateQueries({ queryKey: ['changeHistory', 'asset', updatedAsset.id] });
       }, 100);
+
+      // Undo support
+      if (context?.previousAsset) {
+        const previousAsset = context.previousAsset;
+        useUndoStore.getState().push({
+          label: t('undo.updateAsset', { name: updatedAsset.name }),
+          undo: async () => {
+            if (!provider) return;
+            // Best effort restore using updateAsset
+            await provider.updateAsset(updatedAsset.id, previousAsset as unknown as AssetUpdate);
+            queryClient.setQueryData(assetKeys.detail(updatedAsset.id), previousAsset);
+            void queryClient.invalidateQueries({ queryKey: assetKeys.lists() });
+          },
+          redo: async () => {
+            if (!provider) return;
+            await provider.updateAsset(updatedAsset.id, variables.data);
+            queryClient.setQueryData(assetKeys.detail(updatedAsset.id), updatedAsset);
+            void queryClient.invalidateQueries({ queryKey: assetKeys.lists() });
+          }
+        });
+      }
     },
   });
 }
@@ -217,6 +346,7 @@ export function useUpdateAsset() {
 export function useDeleteAsset() {
   const queryClient = useQueryClient();
   const provider = useStorageProvider();
+  const { t } = useTranslation();
 
   return useMutation({
     mutationFn: async (id: string) => {
@@ -224,10 +354,41 @@ export function useDeleteAsset() {
       await provider.deleteAsset(id);
       return id;
     },
-    onSuccess: (deletedId) => {
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: assetKeys.detail(id) });
+      const previousAsset = queryClient.getQueryData<Asset>(assetKeys.detail(id));
+      return { previousAsset };
+    },
+    onSuccess: (deletedId, _variables, context) => {
       // Remove from all caches
       queryClient.removeQueries({ queryKey: assetKeys.detail(deletedId) });
       void queryClient.invalidateQueries({ queryKey: assetKeys.lists() });
+
+      // Undo support
+      if (context?.previousAsset) {
+        const previousAsset = context.previousAsset;
+        let restoredId: string | null = null;
+
+        useUndoStore.getState().push({
+          label: t('undo.deleteAsset', { name: previousAsset.name }),
+          undo: async () => {
+            if (!provider) return;
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const { id, ...assetData } = previousAsset;
+            const newAsset = await provider.createAsset(assetData as unknown as AssetCreate);
+            restoredId = newAsset.id;
+            void queryClient.invalidateQueries({ queryKey: assetKeys.lists() });
+          },
+          redo: async () => {
+            if (!provider) return;
+            if (restoredId) {
+              await provider.deleteAsset(restoredId);
+              restoredId = null;
+            }
+            void queryClient.invalidateQueries({ queryKey: assetKeys.lists() });
+          }
+        });
+      }
     },
   });
 }

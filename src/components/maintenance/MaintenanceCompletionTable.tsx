@@ -8,6 +8,7 @@ import {
     IconRotateClockwise,
 } from '@tabler/icons-react';
 import { useCurrentUser } from '../../hooks/useCurrentUser';
+import { useTranslation } from 'react-i18next';
 import { useMaintenancePlanStore } from '../../state/maintenance/planStore';
 import { formatDateTime } from '../../utils/formatters';
 import { MaintenanceCompletionDrawer } from './MaintenanceCompletionDrawer';
@@ -22,6 +23,7 @@ const statusMeta = {
 } as const;
 
 export function MaintenanceCompletionTable() {
+    const { t } = useTranslation('maintenance');
     const { state, markAssetCompleted, markAssetPending, markAssetSkipped } = useMaintenancePlanStore();
     const { data: currentUser } = useCurrentUser();
 
@@ -75,9 +77,9 @@ export function MaintenanceCompletionTable() {
         return (
             <Card withBorder>
                 <Stack gap="sm">
-                    <Text fw={600}>Asset completion tracking</Text>
+                    <Text fw={600}>{t('completion.title')}</Text>
                     <Text size="sm" c="dimmed">
-                        Select one or more assets in the plan to unlock completion tracking.
+                        {t('completion.emptyMessage')}
                     </Text>
                 </Stack>
             </Card>
@@ -91,23 +93,23 @@ export function MaintenanceCompletionTable() {
             <Card withBorder>
                 <Stack gap="md">
                     <Stack gap={4}>
-                        <Text fw={600}>Asset completion tracking</Text>
+                        <Text fw={600}>{t('completion.title')}</Text>
                         <Text size="sm" c="dimmed">
-                            Update each asset as work progresses. Completed assets automatically release their holds once the plan is finalized.
+                            {t('completion.description')}
                         </Text>
                     </Stack>
 
                     <MaintenanceTeamList assets={assets} />
 
                     <Table striped highlightOnHover withTableBorder>
-                        <Table.Thead>
+                            <Table.Thead>
                             <Table.Tr>
-                                <Table.Th style={{ width: '22%' }}>Asset number</Table.Th>
-                                <Table.Th style={{ width: '28%' }}>Asset name</Table.Th>
-                                <Table.Th style={{ width: '15%' }}>Status</Table.Th>
-                                <Table.Th style={{ width: '15%' }}>Completed by</Table.Th>
-                                <Table.Th style={{ width: '15%' }}>Timestamp</Table.Th>
-                                <Table.Th>Notes</Table.Th>
+                                    <Table.Th style={{ width: '22%' }}>{t('completion.columns.assetNumber')}</Table.Th>
+                                    <Table.Th style={{ width: '28%' }}>{t('completion.columns.assetName')}</Table.Th>
+                                    <Table.Th style={{ width: '15%' }}>{t('completion.columns.status')}</Table.Th>
+                                    <Table.Th style={{ width: '15%' }}>{t('completion.columns.completedBy')}</Table.Th>
+                                    <Table.Th style={{ width: '15%' }}>{t('completion.columns.timestamp')}</Table.Th>
+                                    <Table.Th>{t('completion.columns.notes')}</Table.Th>
                                 <Table.Th style={{ width: 48 }} aria-label="Actions" />
                             </Table.Tr>
                         </Table.Thead>
@@ -139,24 +141,24 @@ export function MaintenanceCompletionTable() {
                                                     </ActionIcon>
                                                 </Menu.Target>
                                                 <Menu.Dropdown>
-                                                    <Menu.Item
+                                                        <Menu.Item
                                                         leftSection={<IconCheck size={16} />}
                                                         onClick={() => setDrawerState({ assetId: asset.assetId, mode: 'complete' })}
                                                     >
-                                                        Log completion
+                                                        {t('completion.actions.logCompletion')}
                                                     </Menu.Item>
                                                     <Menu.Item
                                                         leftSection={<IconRotateClockwise size={16} />}
                                                         onClick={() => setDrawerState({ assetId: asset.assetId, mode: 'pending' })}
                                                     >
-                                                        Mark pending
+                                                        {t('completion.actions.markPending')}
                                                     </Menu.Item>
                                                     <Menu.Item
                                                         color="red"
                                                         leftSection={<IconBan size={16} />}
                                                         onClick={() => setDrawerState({ assetId: asset.assetId, mode: 'skip' })}
                                                     >
-                                                        Skip asset
+                                                        {t('completion.actions.skipAsset')}
                                                     </Menu.Item>
                                                 </Menu.Dropdown>
                                             </Menu>

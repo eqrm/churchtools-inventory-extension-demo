@@ -1,4 +1,5 @@
 ---
+
 description: "Task list template for feature implementation"
 ---
 
@@ -12,11 +13,13 @@ description: "Task list template for feature implementation"
 **Organization**: Tasks are grouped by user story to enable independent implementation and testing of each story.
 
 ## Format: `[ID] [P?] [Story] Description`
+
 - **[P]**: Can run in parallel (different files, no dependencies)
 - **[Story]**: Which user story this task belongs to (e.g., US1, US2, US3)
 - Include exact file paths in descriptions
 
 ## Path Conventions
+
 - **Single project**: `src/`, `tests/` at repository root
 - **Web app**: `backend/src/`, `frontend/src/`
 - **Mobile**: `api/src/`, `ios/src/` or `android/src/`
@@ -66,13 +69,6 @@ Examples of foundational tasks (adjust based on your project):
 - [ ] T008 Configure error handling and logging infrastructure
 - [ ] T009 Setup environment configuration management
 
-**Constitution Compliance Gates** (verify before proceeding):
-- [ ] TypeScript strict mode enabled in tsconfig.json
-- [ ] ESLint configuration added and passing
-- [ ] Code formatting tool configured (Prettier/ESLint autofix)
-- [ ] .env.example file created with documented variables
-- [ ] Bundle size baseline measured and documented
-
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
 ---
@@ -85,7 +81,7 @@ Examples of foundational tasks (adjust based on your project):
 
 ### Tests for User Story 1 (OPTIONAL - only if tests requested) ⚠️
 
-**NOTE: Write these tests FIRST, ensure they FAIL before implementation**
+> **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
 - [ ] T010 [P] [US1] Contract test for [endpoint] in tests/contract/test_[name].py
 - [ ] T011 [P] [US1] Integration test for [user journey] in tests/integration/test_[name].py
@@ -160,18 +156,6 @@ Examples of foundational tasks (adjust based on your project):
 - [ ] TXXX [P] Additional unit tests (if requested) in tests/unit/
 - [ ] TXXX Security hardening
 - [ ] TXXX Run quickstart.md validation
-
-**Pre-Deployment Quality Gates**:
-- [ ] TypeScript compilation passes with no errors
-- [ ] All ESLint rules passing with no warnings
-- [ ] Bundle size verified < 200 KB (minified + gzipped)
-- [ ] Manual testing completed in both dev and production modes
-- [ ] Cross-browser testing (Chrome, Safari, Firefox)
-- [ ] No console.log or debug statements in production code
-- [ ] API error handling verified
-- [ ] Performance budget met (< 1s initial load, < 100ms interactions)
-- [ ] Version number updated in package.json
-- [ ] Changelog/release notes prepared
 
 ---
 
@@ -265,6 +249,3 @@ With multiple developers:
 - Commit after each task or logical group
 - Stop at any checkpoint to validate story independently
 - Avoid: vague tasks, same file conflicts, cross-story dependencies that break independence
-
-
-

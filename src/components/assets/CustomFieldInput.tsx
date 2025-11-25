@@ -200,6 +200,7 @@ export function CustomFieldInput({
             displayName: 'Loading...',
             email: '',
             avatarUrl: undefined,
+            type: 'person',
           } : personData}
           onChange={(person) => {
             if (person) {

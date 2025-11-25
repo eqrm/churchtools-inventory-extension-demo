@@ -1,18 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
-import {
-  Button,
-  Card,
-  Grid,
-  Group,
-  Modal,
-  Select,
-  Stack,
-  Text,
-  Textarea,
-  TextInput,
-  Title,
-} from '@mantine/core';
-import { IconBookmarkPlus, IconDeviceFloppy, IconTrash, IconX } from '@tabler/icons-react';
+import { useEffect, useMemo } from 'react';
+import { Button, Card, Grid, Group, Select, Stack, Textarea, TextInput, Title } from '@mantine/core';
+import { IconDeviceFloppy, IconX } from '@tabler/icons-react';
 import { useForm } from '@mantine/form';
 import { notifications } from '@mantine/notifications';
 import type {
@@ -31,7 +19,6 @@ import {
 } from '../../hooks/useAssetGroups';
 import { InheritanceRuleEditor } from './InheritanceRuleEditor';
 import { CustomFieldInput } from '../assets/CustomFieldInput';
-import { useAssetGroupTemplates } from '../../hooks/useAssetGroupTemplates';
 import { MainImageUpload } from '../common/MainImageUpload';
 
 interface AssetGroupFormProps {
@@ -58,23 +45,17 @@ function normalizeSharedCustomFields(
   values: Record<string, CustomFieldValue>,
   fields: CustomFieldDefinition[],
 ): Record<string, CustomFieldValue> {
-  const allowed = new Set(fields.map(field => field.id));
+  if (fields.length === 0) {
+    return {};
+  }
+
+  const allowed = new Set(fields.map((field) => field.id));
   const result: Record<string, CustomFieldValue> = {};
 
   for (const [fieldId, value] of Object.entries(values)) {
-    if (!allowed.has(fieldId)) {
-      continue;
+    if (allowed.has(fieldId)) {
+      result[fieldId] = value;
     }
-
-    if (Array.isArray(value) && value.length === 0) {
-      continue;
-    }
-
-    if (value === '') {
-      continue;
-    }
-
-    result[fieldId] = value;
   }
 
   return result;
@@ -83,20 +64,29 @@ function normalizeSharedCustomFields(
 function mergeDefaults(
   rules: Record<string, AssetGroupInheritanceRule>,
 ): Record<string, AssetGroupInheritanceRule> {
-  return {
-    ...DEFAULT_ASSET_GROUP_INHERITANCE_RULES,
-    ...rules,
-  };
+  const merged: Record<string, AssetGroupInheritanceRule> = {};
+
+  for (const [key, defaultRule] of Object.entries(DEFAULT_ASSET_GROUP_INHERITANCE_RULES)) {
+    merged[key] = {
+      inherited: defaultRule.inherited,
+      overridable: defaultRule.overridable,
+    };
+  }
+
+  for (const [key, rule] of Object.entries(rules)) {
+    merged[key] = {
+      inherited: rule.inherited,
+      overridable: rule.overridable,
+    };
+  }
+
+  return merged;
 }
 
 export function AssetGroupForm({ group, onSuccess, onCancel }: AssetGroupFormProps) {
   const { data: assetTypes = [] } = useCategories();
   const createGroup = useCreateAssetGroup();
   const updateGroup = useUpdateAssetGroup();
-  const { templates, addTemplate, removeTemplate } = useAssetGroupTemplates();
-  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
-  const [templateModalOpen, setTemplateModalOpen] = useState(false);
-  const [templateName, setTemplateName] = useState('');
 
   const initialValues = useMemo<AssetGroupFormValues>(() => ({
     name: group?.name ?? '',
@@ -124,13 +114,9 @@ export function AssetGroupForm({ group, onSuccess, onCancel }: AssetGroupFormPro
         }
         return null;
       },
-  assetTypeId: (value) => (!value ? 'Asset type is required' : null),
+      assetTypeId: (value) => (!value ? 'Asset type is required' : null),
     },
   });
-
-  useEffect(() => {
-    setSelectedTemplateId(null);
-  }, [group?.id]);
 
   const assetTypeOptions = useMemo(() => {
     const options = assetTypes.map((assetType) => ({
@@ -155,100 +141,6 @@ export function AssetGroupForm({ group, onSuccess, onCancel }: AssetGroupFormPro
     }
     return assetTypes.find((assetType) => assetType.id === form.values.assetTypeId);
   }, [assetTypes, form.values.assetTypeId]);
-
-  const templateOptions = useMemo(() => (
-    templates
-      .map(template => ({ value: template.id, label: template.name }))
-      .sort((a, b) => a.label.localeCompare(b.label))
-  ), [templates]);
-
-  const applyTemplate = (templateId: string) => {
-    const template = templates.find(item => item.id === templateId);
-    if (!template) {
-      return;
-    }
-
-    setSelectedTemplateId(templateId);
-    form.setFieldValue('assetTypeId', template.assetTypeId);
-    form.setFieldValue('manufacturer', template.data.manufacturer ?? '');
-    form.setFieldValue('model', template.data.model ?? '');
-    form.setFieldValue('description', template.data.description ?? '');
-    form.setFieldValue('inheritanceRules', mergeDefaults(template.data.inheritanceRules));
-    form.setFieldValue('customFieldRules', { ...template.data.customFieldRules });
-    form.setFieldValue('sharedCustomFields', { ...template.data.sharedCustomFields });
-
-    notifications.show({
-      title: 'Template applied',
-      message: `"${template.name}" configuration applied.`,
-      color: 'blue',
-    });
-  };
-
-  const handleTemplateDelete = () => {
-    if (!selectedTemplateId) {
-      return;
-    }
-    const template = templates.find(item => item.id === selectedTemplateId);
-    if (!template) {
-      return;
-    }
-
-    const confirmed = window.confirm(`Delete template "${template.name}"?`);
-    if (!confirmed) {
-      return;
-    }
-
-    removeTemplate(selectedTemplateId);
-    setSelectedTemplateId(null);
-    notifications.show({
-      title: 'Template deleted',
-      message: `Template "${template.name}" removed.`,
-      color: 'orange',
-    });
-  };
-
-  const handleTemplateSave = () => {
-    const trimmedName = templateName.trim();
-    if (!trimmedName) {
-      notifications.show({
-        title: 'Template name required',
-        message: 'Enter a name before saving.',
-        color: 'red',
-      });
-      return;
-    }
-
-    if (!form.values.assetTypeId) {
-      notifications.show({
-        title: 'Asset type required',
-        message: 'Select an asset type before saving as a template.',
-        color: 'red',
-      });
-      return;
-    }
-
-    addTemplate({
-      name: trimmedName,
-      assetTypeId: form.values.assetTypeId,
-      data: {
-        manufacturer: form.values.manufacturer || undefined,
-        model: form.values.model || undefined,
-        description: form.values.description || undefined,
-        inheritanceRules: { ...form.values.inheritanceRules },
-        customFieldRules: { ...form.values.customFieldRules },
-        sharedCustomFields: { ...form.values.sharedCustomFields },
-      },
-    });
-
-    notifications.show({
-      title: 'Template saved',
-      message: `Template "${trimmedName}" is ready to reuse.`,
-      color: 'green',
-    });
-
-    setTemplateModalOpen(false);
-    setTemplateName('');
-  };
 
   useEffect(() => {
     // Ensure inheritance defaults always include required keys
@@ -385,43 +277,6 @@ export function AssetGroupForm({ group, onSuccess, onCancel }: AssetGroupFormPro
             </Group>
           </Group>
 
-          <Stack gap="xs">
-            <Select
-              label="Apply Template"
-              placeholder={templateOptions.length === 0 ? 'No templates saved yet' : 'Select template'}
-              data={templateOptions}
-              value={selectedTemplateId}
-              onChange={(value) => {
-                setSelectedTemplateId(value);
-                if (value) {
-                  applyTemplate(value);
-                }
-              }}
-              clearable
-              disabled={templateOptions.length === 0}
-            />
-            <Group justify="flex-end" gap="xs">
-              <Button
-                variant="default"
-                leftSection={<IconBookmarkPlus size={16} />}
-                onClick={() => setTemplateModalOpen(true)}
-              >
-                Save as Template
-              </Button>
-              {templateOptions.length > 0 && (
-                <Button
-                  variant="subtle"
-                  color="red"
-                  leftSection={<IconTrash size={16} />}
-                  disabled={!selectedTemplateId}
-                  onClick={handleTemplateDelete}
-                >
-                  Delete Template
-                </Button>
-              )}
-            </Group>
-          </Stack>
-
           <Grid>
             <Grid.Col span={{ base: 12, md: 6 }}>
               <Stack gap="sm">
@@ -515,46 +370,6 @@ export function AssetGroupForm({ group, onSuccess, onCancel }: AssetGroupFormPro
           )}
         </Stack>
       </form>
-      <Modal
-        opened={templateModalOpen}
-        onClose={() => {
-          setTemplateModalOpen(false);
-          setTemplateName('');
-        }}
-        title="Save Template"
-        centered
-        size="md"
-      >
-        <Stack gap="md">
-          <Text size="sm" c="dimmed">
-            Templates capture inheritance and shared field settings so you can quickly spin up consistent groups.
-          </Text>
-          <TextInput
-            label="Template Name"
-            placeholder="Shared microphone settings"
-            value={templateName}
-            onChange={(event) => setTemplateName(event.currentTarget.value)}
-            data-autofocus
-          />
-          <Group justify="flex-end" gap="xs">
-            <Button
-              variant="subtle"
-              onClick={() => {
-                setTemplateModalOpen(false);
-                setTemplateName('');
-              }}
-            >
-              Cancel
-            </Button>
-            <Button
-              leftSection={<IconDeviceFloppy size={16} />}
-              onClick={handleTemplateSave}
-            >
-              Save Template
-            </Button>
-          </Group>
-        </Stack>
-      </Modal>
     </Card>
   );
 }

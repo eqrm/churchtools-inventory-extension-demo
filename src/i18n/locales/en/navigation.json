@@ -1,0 +1,20 @@
+{
+  "title": "Inventory Manager",
+  "items": {
+    "dashboard": "Dashboard",
+    "categories": "Asset Types",
+    "assets": "Assets",
+    "assetModels": "Asset Models",
+    "bookings": "Bookings",
+    "kits": "Kits",
+    "stockTake": "Stock Take",
+    "reports": "Reports",
+    "maintenance": "Maintenance",
+    "settings": "Settings",
+    "quickScan": "Quick Scan"
+  },
+  "sections": {
+    "savedViews": "Saved views"
+  },
+  "quickScanDescription": "Use {{shortcut}} to open"
+}

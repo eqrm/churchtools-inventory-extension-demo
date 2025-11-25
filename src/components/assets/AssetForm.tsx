@@ -16,14 +16,17 @@ import {
   Title,
   Badge,
   Text,
+  Modal,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
+import { useDisclosure } from '@mantine/hooks';
 import { notifications } from '@mantine/notifications';
 import { IconDeviceFloppy, IconUsersGroup, IconX } from '@tabler/icons-react';
 import { useCategories, useCategory } from '../../hooks/useCategories';
 import { useCreateAsset, useCreateMultiAsset, useUpdateAsset } from '../../hooks/useAssets';
 import { useAssetPrefixes } from '../../hooks/useAssetPrefixes';
 import { useCurrentUser } from '../../hooks/useCurrentUser';
+import { useAssetModels } from '../../hooks/useAssetModels';
 import {
   getStoredModuleDefaultPrefixId,
   getStoredPersonDefaultPrefixId,
@@ -33,9 +36,11 @@ import {
 import { useMasterData } from '../../hooks/useMasterDataNames';
 import { generateAssetNameFromTemplate, DEFAULT_ASSET_NAME_TEMPLATE } from '../../utils/assetNameTemplate';
 import { MASTER_DATA_DEFINITIONS, normalizeMasterDataName } from '../../utils/masterData';
+import { bindSelectField } from '../../utils/selectControl';
 import { CustomFieldInput } from './CustomFieldInput';
 import { MasterDataSelectInput } from '../common/MasterDataSelectInput';
 import { MainImageUpload } from '../common/MainImageUpload';
+import { ModelTemplateSelector } from '../models/ModelTemplateSelector';
 import type { Asset, AssetCreate, AssetGroupFieldSource, AssetStatus, CustomFieldValue } from '../../types/entities';
 import { validateCustomFieldValue } from '../../utils/validators';
 import { ASSET_STATUS_OPTIONS } from '../../constants/assetStatuses';
@@ -45,8 +50,9 @@ import { CUSTOM_FIELD_SOURCE_PREFIX } from '../../services/asset-groups/constant
 
 interface AssetFormProps {
   asset?: Asset;
-  onSuccess?: (asset: Asset) => void;
+  onSuccess?: (created: Asset) => void;
   onCancel?: () => void;
+  initialData?: Partial<Asset>;
 }
 
 interface AssetFormValues {
@@ -57,6 +63,7 @@ interface AssetFormValues {
   mainImage: string | null;
   assetTypeId: string;
   prefixId?: string; // T272: Asset prefix selection
+  barcode?: string;
   status: AssetStatus;
   location?: string;
   parentAssetId?: string;
@@ -67,10 +74,12 @@ interface AssetFormValues {
 }
 
 
-export function AssetForm({ asset, onSuccess, onCancel }: AssetFormProps) {
+export function AssetForm({ asset, onSuccess, onCancel, initialData }: AssetFormProps) {
   const isEditing = Boolean(asset);
+  
   const { data: categories = [] } = useCategories();
   const { data: prefixes = [] } = useAssetPrefixes();
+  const { models } = useAssetModels();
   const { names: locationNames, addItem: addLocation } = useMasterData(MASTER_DATA_DEFINITIONS.locations);
   const { names: manufacturerNames, addItem: addManufacturer } = useMasterData(
     MASTER_DATA_DEFINITIONS.manufacturers
@@ -82,24 +91,32 @@ export function AssetForm({ asset, onSuccess, onCancel }: AssetFormProps) {
   const { data: currentUser } = useCurrentUser();
   const assetGroup = asset?.assetGroup;
   const { data: assetGroupDetail } = useAssetGroup(assetGroup?.id);
+  
+  // T064: Confirmation dialog for status changes on assigned assets
+  const [confirmOpened, { open: openConfirm, close: closeConfirm }] = useDisclosure(false);
+  const [pendingStatus, setPendingStatus] = useState<AssetStatus | null>(null);
+
+  // T118: Model template selection
+  const [selectedModelId, setSelectedModelId] = useState<string | null>(null);
 
 
   const form = useForm<AssetFormValues>({
     initialValues: {
-      name: asset?.name || '',
-      manufacturer: asset?.manufacturer || '',
-      model: asset?.model || '',
-      description: asset?.description || '',
-      mainImage: asset?.mainImage ?? null,
-      assetTypeId: asset?.assetType.id || '',
-      prefixId: '', // Default to first prefix or empty
-      status: asset?.status || 'available',
-      location: asset?.location || '',
-      parentAssetId: asset?.parentAssetId || '',
-      isParent: asset?.isParent || false,
+      name: asset?.name || (initialData?.name ?? ''),
+      manufacturer: asset?.manufacturer || (initialData?.manufacturer ?? ''),
+      model: asset?.model || (initialData?.model ?? ''),
+      description: asset?.description || (initialData?.description ?? ''),
+      mainImage: asset?.mainImage ?? (initialData?.mainImage ?? null),
+      assetTypeId: asset?.assetType.id || (initialData?.assetType?.id ?? ''),
+      prefixId: initialData?.assetNumber ? '' : '', // Default remains empty; user can select
+      barcode: asset?.barcode || (initialData?.barcode ?? ''),
+      status: asset?.status || (initialData?.status ?? 'available'),
+      location: asset?.location || (initialData?.location ?? ''),
+      parentAssetId: asset?.parentAssetId || (initialData?.parentAssetId ?? ''),
+      isParent: asset?.isParent || (initialData?.isParent ?? false),
       quantity: 1,
-      bookable: asset?.bookable ?? true, // T070: Default to bookable
-      customFieldValues: asset?.customFieldValues || {},
+      bookable: asset?.bookable ?? (initialData?.bookable ?? true), // T070: Default to bookable
+      customFieldValues: asset?.customFieldValues || (initialData?.customFieldValues ?? {}),
     },
     validate: {
       name: (value) => {
@@ -157,6 +174,18 @@ export function AssetForm({ asset, onSuccess, onCancel }: AssetFormProps) {
     : 'Choose a prefix for this asset\'s numbering sequence';
 
   useEffect(() => {
+    // If initialData contains an assetNumber like "PREFIX-001", try to pre-select a matching prefix
+    if (!isEditing && initialData?.assetNumber && prefixes.length > 0) {
+      const matches = initialData.assetNumber.match(/^([A-Za-z0-9-_]+)-/);
+      if (matches) {
+        const prefixText = matches[1];
+        const found = prefixes.find((p) => p.prefix === prefixText);
+        if (found) {
+          form.setFieldValue('prefixId', found.id);
+        }
+      }
+    }
+
     if (isEditing) {
       return;
     }
@@ -191,7 +220,7 @@ export function AssetForm({ asset, onSuccess, onCancel }: AssetFormProps) {
     return () => {
       cancelled = true;
     };
-  }, [isEditing, prefixes, selectedPrefixId, currentUserId, form]);
+  }, [isEditing, prefixes, selectedPrefixId, currentUserId, form, initialData?.assetNumber]);
 
   // Track whether the user has manually edited the name field. If not, we auto-fill
   // the name with a generated value based on other fields so the user sees a preview.
@@ -224,18 +253,6 @@ export function AssetForm({ asset, onSuccess, onCancel }: AssetFormProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [generatedName]);
 
-  // When editing an existing asset, ensure its manufacturer/model are present in
-  // the localStorage-backed lists so the CreatableSelect shows them consistently
-  useEffect(() => {
-    if (asset) {
-      if (asset.location) addLocation(asset.location);
-      if (asset.manufacturer) addManufacturer(asset.manufacturer);
-      if (asset.model) addModel(asset.model);
-    }
-    // only run when asset changes
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [asset?.id]);
-
   // Get selected category details
   const { data: selectedCategory } = useCategory(form.values.assetTypeId || '');
 
@@ -256,6 +273,11 @@ export function AssetForm({ asset, onSuccess, onCancel }: AssetFormProps) {
         }
       });
       form.setFieldValue('customFieldValues', initialCustomFields);
+      
+      // Apply defaultBookable from asset type if no model is selected
+      if (!selectedModelId && selectedCategory.defaultBookable !== undefined) {
+        form.setFieldValue('bookable', selectedCategory.defaultBookable);
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCategory?.id, isEditing]);
@@ -345,17 +367,100 @@ export function AssetForm({ asset, onSuccess, onCancel }: AssetFormProps) {
     });
   };
 
+  // T064: Handler for status changes with confirmation for assigned assets
+  const handleStatusChange = (newStatus: string | null) => {
+    if (!newStatus) return;
+    
+    const typedStatus = newStatus as AssetStatus;
+    
+    // If asset is currently assigned and status is being changed, show confirmation
+    if (asset?.currentAssignmentId && typedStatus !== form.values.status) {
+      setPendingStatus(typedStatus);
+      openConfirm();
+    } else {
+      // No assignment or no change, update directly
+      form.setFieldValue('status', typedStatus);
+    }
+  };
+
+  const confirmStatusChange = () => {
+    if (pendingStatus) {
+      form.setFieldValue('status', pendingStatus);
+      setPendingStatus(null);
+    }
+    closeConfirm();
+  };
+
+  const cancelStatusChange = () => {
+    setPendingStatus(null);
+    closeConfirm();
+  };
+
+  // T118: Handle model template selection
+  const handleModelSelect = useCallback((modelId: string | null) => {
+    setSelectedModelId(modelId);
+    
+    if (!modelId) {
+      return;
+    }
+
+    const selectedModel = models.find((m) => m.id === modelId);
+    if (!selectedModel) {
+      return;
+    }
+
+    // Pre-fill form fields from model defaults
+    if (selectedModel.manufacturer) {
+      form.setFieldValue('manufacturer', selectedModel.manufacturer);
+    }
+    if (selectedModel.modelNumber) {
+      form.setFieldValue('model', selectedModel.modelNumber);
+    }
+    
+    // Apply defaultBookable from model
+    if (selectedModel.defaultBookable !== undefined) {
+      form.setFieldValue('bookable', selectedModel.defaultBookable);
+    }
+
+    // Apply default values from model
+    if (selectedModel.defaultValues) {
+      const { purchasePrice: _purchasePrice, location, notes, ...customDefaults } = selectedModel.defaultValues as {
+        purchasePrice?: number;
+        location?: string;
+        notes?: string;
+        [key: string]: unknown;
+      };
+
+      if (location) {
+        form.setFieldValue('location', location);
+      }
+      if (notes) {
+        form.setFieldValue('description', notes);
+      }
+
+      // Apply custom field defaults
+      Object.entries(customDefaults).forEach(([key, value]) => {
+        if (value !== undefined) {
+          form.setFieldValue('customFieldValues', {
+            ...form.values.customFieldValues,
+            [key]: value,
+          });
+        }
+      });
+    }
+  }, [models, form]);
+
   const handleSubmit = async (values: AssetFormValues) => {
     try {
       // Ensure manufacturer/model values are persisted to localStorage-backed lists
       if (values.location) {
-        addLocation(values.location);
+        await addLocation(values.location);
       }
       if (values.manufacturer) {
-        addManufacturer(values.manufacturer);
+        await addManufacturer(values.manufacturer);
       }
       if (values.model) {
-        addModel(values.model);
+        await addModel(values.model);
       }
 
       // Validate custom fields
@@ -437,6 +542,7 @@ export function AssetForm({ asset, onSuccess, onCancel }: AssetFormProps) {
           bookable: values.bookable, // T070: Include bookable status
           customFieldValues: values.customFieldValues,
           prefixId: values.prefixId || undefined, // T272: Pass selected prefix
+          barcode: values.barcode || undefined,
           fieldSources: assetGroup ? fieldSources : undefined,
         };
 
@@ -558,9 +664,22 @@ export function AssetForm({ asset, onSuccess, onCancel }: AssetFormProps) {
                   value: cat.id,
                   label: `${cat.icon || ''} ${cat.name}`.trim(),
                 }))}
-                {...form.getInputProps('assetTypeId')}
+                {...bindSelectField(form, 'assetTypeId', { emptyValue: '' })}
               />
             </Grid.Col>
+
+            {/* T118: Model Template Selector - only show when creating new assets */}
+            {!isEditing && models.length > 0 && (
+              <Grid.Col span={{ base: 12, md: 6 }}>
+                <ModelTemplateSelector
+                  models={models}
+                  selectedModelId={selectedModelId}
+                  onSelect={handleModelSelect}
+                  assetTypeId={form.values.assetTypeId || undefined}
+                  disabled={!form.values.assetTypeId}
+                />
+              </Grid.Col>
+            )}
 
             {/* T272: Asset Prefix Selector */}
             {!isEditing && prefixes.length > 0 && (
@@ -589,7 +708,18 @@ export function AssetForm({ asset, onSuccess, onCancel }: AssetFormProps) {
                 placeholder="Select status"
                 required
                 data={[...ASSET_STATUS_OPTIONS]}
-                {...form.getInputProps('status')}
+                value={form.values.status}
+                onChange={handleStatusChange}
+                error={form.errors['status']}
+              />
+            </Grid.Col>
+
+            <Grid.Col span={{ base: 12, md: 6 }}>
+              <TextInput
+                label="Barcode"
+                placeholder="Optional: set a barcode"
+                {...form.getInputProps('barcode')}
+                description="If provided, barcode uniqueness will be validated on save. Leave empty to auto-generate."
               />
             </Grid.Col>
 
@@ -613,8 +743,8 @@ export function AssetForm({ asset, onSuccess, onCancel }: AssetFormProps) {
                 onChange={(next) => form.setFieldValue('location', next)}
                 nothingFound="No locations"
                 error={form.errors['location']}
-                onCreateOption={(name) => {
-                  const created = addLocation(name);
+                onCreateOption={async (name) => {
+                  const created = await addLocation(name);
                   return created?.name ?? normalizeMasterDataName(name);
                 }}
               />
@@ -631,8 +761,8 @@ export function AssetForm({ asset, onSuccess, onCancel }: AssetFormProps) {
                 nothingFound="No manufacturers"
                 error={form.errors['manufacturer'] as string | undefined}
                 disabled={isEditing && assetGroup ? isFieldInherited('manufacturer') && !isFieldOverridden('manufacturer') : false}
-                onCreateOption={(name) => {
-                  const created = addManufacturer(name);
+                onCreateOption={async (name) => {
+                  const created = await addManufacturer(name);
                   return created?.name ?? normalizeMasterDataName(name);
                 }}
               />
@@ -654,8 +784,8 @@ export function AssetForm({ asset, onSuccess, onCancel }: AssetFormProps) {
                 nothingFound="No models"
                 error={form.errors['model'] as string | undefined}
                 disabled={isEditing && assetGroup ? isFieldInherited('model') && !isFieldOverridden('model') : false}
-                onCreateOption={(name) => {
-                  const created = addModel(name);
+                onCreateOption={async (name) => {
+                  const created = await addModel(name);
                   return created?.name ?? normalizeMasterDataName(name);
                 }}
               />
@@ -820,6 +950,29 @@ export function AssetForm({ asset, onSuccess, onCancel }: AssetFormProps) {
           </Group>
         </Stack>
       </form>
+
+      {/* T064: Confirmation modal for status changes on assigned assets */}
+      <Modal
+        opened={confirmOpened}
+        onClose={cancelStatusChange}
+        title="Confirm Status Change"
+        centered
+      >
+        <Stack gap="md">
+          <Text>
+            This asset is currently assigned. Changing the status may affect the assignment.
+            Are you sure you want to continue?
+          </Text>
+          <Group justify="flex-end">
+            <Button variant="subtle" onClick={cancelStatusChange}>
+              Cancel
+            </Button>
+            <Button onClick={confirmStatusChange}>
+              Confirm Change
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
     </Card>
   );
 }

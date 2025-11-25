@@ -1,0 +1,34 @@
+{
+  "list": {
+    "title": "Inventory",
+    "actions": {
+      "views": "Views",
+      "menuLabel": "Saved views",
+      "showAll": "Show all views…",
+      "filters": "Filters",
+      "filtersWithCount": "Filters ({{count}})",
+      "saveView": "Save view",
+      "new": "New"
+    },
+    "drawerTitle": "Saved views",
+    "modalTitle": "Save view",
+    "notifications": {
+      "viewLoaded": "View \"{{name}}\" applied"
+    }
+  },
+  "detail": {
+    "labelPrintCardTitle": "Print shelf label",
+    "labelPrintCardDescription": "Generate a printable label with barcode and QR code.",
+    "labelPrintButton": "Open label preview",
+    "convertToParent": "Convert to parent",
+    "assignmentSectionTitle": "People",
+    "assignmentSummaryTitle": "Assignment summary",
+    "assignmentInUseLabel": "Currently in use",
+    "assignmentInUseEmpty": "Not currently assigned",
+    "assignmentCreatedLabel": "Created by",
+    "assignmentUpdatedLabel": "Last modified by",
+    "assignmentSinceDescription": "Since {{date}}",
+    "assignmentCreatedDescription": "Created {{date}}",
+    "assignmentUpdatedDescription": "Updated {{date}}"
+  }
+}

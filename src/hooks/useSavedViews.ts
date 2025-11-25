@@ -6,6 +6,7 @@ import { useStorageProvider } from './useStorageProvider';
 import { useCurrentUser } from './useCurrentUser';
 import type { SavedView, SavedViewCreate } from '../types/entities';
 import { notifications } from '@mantine/notifications';
+import { useTranslation } from 'react-i18next';
 
 // Query keys factory
 export const savedViewKeys = {
@@ -60,6 +61,7 @@ export function useCreateSavedView() {
   const storage = useStorageProvider();
   const { data: currentUser } = useCurrentUser();
   const queryClient = useQueryClient();
+  const { t } = useTranslation('views');
   
   return useMutation({
     mutationFn: (data: SavedViewCreate) => {
@@ -71,15 +73,15 @@ export function useCreateSavedView() {
         queryClient.invalidateQueries({ queryKey: savedViewKeys.list(currentUser.id) });
       }
       notifications.show({
-        title: 'Ansicht gespeichert',
-        message: 'Die Ansicht wurde erfolgreich gespeichert',
+        title: t('notifications.createSuccessTitle'),
+        message: t('notifications.createSuccessMessage'),
         color: 'green',
       });
     },
     onError: (error: Error) => {
       notifications.show({
-        title: 'Fehler beim Speichern',
-        message: error.message,
+        title: t('notifications.createErrorTitle'),
+        message: t('notifications.createErrorMessage', { message: error.message }),
         color: 'red',
       });
     },
@@ -93,6 +95,7 @@ export function useUpdateSavedView() {
   const storage = useStorageProvider();
   const { data: currentUser } = useCurrentUser();
   const queryClient = useQueryClient();
+  const { t } = useTranslation('views');
   
   return useMutation({
     mutationFn: ({ id, updates }: { id: string; updates: Partial<SavedView> }) => {
@@ -105,15 +108,15 @@ export function useUpdateSavedView() {
       }
       queryClient.invalidateQueries({ queryKey: savedViewKeys.detail(id) });
       notifications.show({
-        title: 'Ansicht aktualisiert',
-        message: 'Die Ansicht wurde erfolgreich aktualisiert',
+        title: t('notifications.updateSuccessTitle'),
+        message: t('notifications.updateSuccessMessage'),
         color: 'green',
       });
     },
     onError: (error: Error) => {
       notifications.show({
-        title: 'Fehler beim Aktualisieren',
-        message: error.message,
+        title: t('notifications.updateErrorTitle'),
+        message: t('notifications.updateErrorMessage', { message: error.message }),
         color: 'red',
       });
     },
@@ -127,6 +130,7 @@ export function useDeleteSavedView() {
   const storage = useStorageProvider();
   const { data: currentUser } = useCurrentUser();
   const queryClient = useQueryClient();
+  const { t } = useTranslation('views');
   
   return useMutation({
     mutationFn: (id: string) => {
@@ -138,15 +142,15 @@ export function useDeleteSavedView() {
         queryClient.invalidateQueries({ queryKey: savedViewKeys.list(currentUser.id) });
       }
       notifications.show({
-        title: 'Ansicht gelöscht',
-        message: 'Die Ansicht wurde erfolgreich gelöscht',
+        title: t('notifications.deleteSuccessTitle'),
+        message: t('notifications.deleteSuccessMessage'),
         color: 'green',
       });
     },
     onError: (error: Error) => {
       notifications.show({
-        title: 'Fehler beim Löschen',
-        message: error.message,
+        title: t('notifications.deleteErrorTitle'),
+        message: t('notifications.deleteErrorMessage', { message: error.message }),
         color: 'red',
       });
     },

@@ -2,8 +2,8 @@
  * Storage Provider Interface
  * 
  * This is the core abstraction layer for all data operations in the inventory system.
- * Implementations can target ChurchTools Custom Modules API, offline IndexedDB, or
- * future backend systems.
+ * Implementations currently target the ChurchTools Custom Modules API and can be
+ * adapted for future backend systems.
  * 
  * @module contracts/storage-provider
  */
@@ -39,8 +39,22 @@ import type {
   SavedView,
   SavedViewCreate,
   PersonInfo,
-  UUID
+  UUID,
+  ScannerModel
 } from './entities'
+import type { AssetModel, AssetModelCreate, AssetModelUpdate } from './model'
+import type {
+  AssignmentCreateInput,
+  AssignmentRecord,
+  AssignmentTargetType,
+  AssignmentUpdateInput,
+} from './assignment'
+import type {
+  DamageReportCreateInput,
+  DamageRepairInput,
+  DamageReportRecord,
+} from './damage'
+import type { MasterDataEntity, MasterDataItem } from './masterData'
 
 export interface GroupBookingCreate {
   groupId: UUID
@@ -167,7 +181,7 @@ export interface IStorageProvider {
   regenerateAssetBarcode(id: string, reason?: string, customBarcode?: string): Promise<Asset>
   
   /**
-   * Search assets by name, manufacturer, model, or asset number
+   * Search assets with query
    * @param query - Search query string
    * @returns Array of matching assets
    */
@@ -255,6 +269,42 @@ export interface IStorageProvider {
   ): Promise<{ value: unknown; source: 'group' | 'local' | 'override' }>
 
   // ============================================================================
+  // Master Data
+  // ============================================================================
+
+  /**
+   * Retrieve master data items for a given entity (locations, manufacturers, models, maintenance companies)
+   */
+  getMasterDataItems(entity: MasterDataEntity): Promise<MasterDataItem[]>
+
+  /**
+   * Create a new master data entry with the provided name
+   */
+  createMasterDataItem(entity: MasterDataEntity, name: string): Promise<MasterDataItem>
+
+  /**
+   * Update the name of a master data item
+   */
+  updateMasterDataItem(entity: MasterDataEntity, id: string, name: string): Promise<MasterDataItem>
+
+  /**
+   * Delete a master data entry
+   */
+  deleteMasterDataItem(entity: MasterDataEntity, id: string): Promise<void>
+
+  /**
+   * Manage module-level default prefix preference
+   */
+  setModuleDefaultPrefixId(prefixId: string | null): Promise<void>
+  getModuleDefaultPrefixId(): Promise<string | null>
+
+  /**
+   * Manage personal default prefix preference for a given ChurchTools person
+   */
+  getPersonDefaultPrefixId(personId: string): Promise<string | null>
+  setPersonDefaultPrefixId(personId: string, prefixId: string | null): Promise<void>
+
+  // ============================================================================
   // Bookings
   // ============================================================================
   
@@ -319,7 +369,7 @@ export interface IStorageProvider {
   cancelBooking(id: string, reason?: string): Promise<void>
 
   /**
-   * Delete a booking record entirely (demo/reset tooling)
+   * Delete a booking record entirely
    * @param id - Booking ID
    */
   deleteBooking(id: string): Promise<void>
@@ -394,7 +444,36 @@ export interface IStorageProvider {
     unavailableAssets?: string[]  // Asset IDs that are booked
     reason?: string
   }>
-  
+
+  // ============================================================================
+  // Asset Models
+  // ============================================================================
+
+  /**
+   * Get all asset model templates
+   */
+  getAssetModels(): Promise<AssetModel[]>
+
+  /**
+   * Get a single asset model by ID
+   */
+  getAssetModel(id: string): Promise<AssetModel | null>
+
+  /**
+   * Create a new asset model template
+   */
+  createAssetModel(data: AssetModelCreate): Promise<AssetModel>
+
+  /**
+   * Update an existing asset model
+   */
+  updateAssetModel(id: string, data: AssetModelUpdate): Promise<AssetModel>
+
+  /**
+   * Delete an asset model template
+   */
+  deleteAssetModel(id: string): Promise<void>
+
   // ============================================================================
   // Maintenance
   // ============================================================================
@@ -513,6 +592,78 @@ export interface IStorageProvider {
     updates?: Partial<Omit<MaintenanceCalendarHold, 'id' | 'planId' | 'assetId' | 'startDate' | 'endDate' | 'createdAt'>>
   ): Promise<MaintenanceCalendarHold>
   
+  // ============================================================================
+  // Damage Reports
+  // ============================================================================
+
+  /**
+   * Get damage reports for a specific asset ordered by reportedAt descending
+   */
+  getDamageReports(assetId: UUID): Promise<DamageReportRecord[]>
+
+  /**
+   * Get a single damage report by its identifier
+   */
+  getDamageReport(reportId: UUID): Promise<DamageReportRecord | null>
+
+  /**
+   * Create a damage report record for an asset
+   */
+  createDamageReport(assetId: UUID, data: DamageReportCreateInput): Promise<DamageReportRecord>
+
+  /**
+   * Mark an existing damage report as repaired with notes and metadata
+   */
+  markDamageReportAsRepaired(reportId: UUID, repair: DamageRepairInput): Promise<DamageReportRecord>
+
+  /**
+   * Update damage report fields (internal use for undo/maintenance)
+   */
+  updateDamageReport(reportId: UUID, updates: Partial<DamageReportRecord>): Promise<DamageReportRecord>
+
+  /**
+   * Delete a damage report (reserved for undo scenarios)
+   */
+  deleteDamageReport(reportId: UUID): Promise<void>
+
+  // ============================================================================
+  // Assignments
+  // ============================================================================
+
+  /**
+   * Get all assignments for an asset ordered by assignedAt descending
+   */
+  getAssignments(assetId: UUID): Promise<AssignmentRecord[]>
+
+  /**
+   * Get a single assignment by ID
+   */
+  getAssignment(assignmentId: UUID): Promise<AssignmentRecord | null>
+
+  /**
+   * Create assignment entry for an asset
+   */
+  createAssignment(assetId: UUID, data: AssignmentCreateInput): Promise<AssignmentRecord>
+
+  /**
+   * Update existing assignment entry
+   */
+  updateAssignment(assignmentId: UUID, updates: AssignmentUpdateInput): Promise<AssignmentRecord>
+
+  /**
+   * Delete assignment record (undo tooling)
+   */
+  deleteAssignment(assignmentId: UUID): Promise<void>
+
+  /**
+   * Get assignments for a target (person or group)
+   */
+  getAssignmentsForTarget(
+    targetId: UUID,
+    targetType: AssignmentTargetType,
+    options?: { includeReturned?: boolean }
+  ): Promise<AssignmentRecord[]>
+
   // ============================================================================
   // Stock Take
   // ============================================================================
@@ -708,6 +859,115 @@ export interface IStorageProvider {
    * @returns New sequence number
    */
   incrementPrefixSequence(prefixId: string): Promise<number>
+
+  // ============================================================================
+  // Maintenance Companies, Rules, and Work Orders (T142)
+  // ============================================================================
+
+  /**
+   * Get all maintenance companies
+   */
+  getMaintenanceCompanies(): Promise<import('./maintenance').MaintenanceCompany[]>
+
+  /**
+   * Get a single maintenance company by ID
+   */
+  getMaintenanceCompany(id: UUID): Promise<import('./maintenance').MaintenanceCompany | null>
+
+  /**
+   * Create a new maintenance company
+   */
+  createMaintenanceCompany(data: import('./maintenance').MaintenanceCompany): Promise<import('./maintenance').MaintenanceCompany>
+
+  /**
+   * Update an existing maintenance company
+   */
+  updateMaintenanceCompany(id: UUID, data: import('./maintenance').MaintenanceCompany): Promise<import('./maintenance').MaintenanceCompany>
+
+  /**
+   * Delete a maintenance company
+   */
+  deleteMaintenanceCompany(id: UUID): Promise<void>
+
+  /**
+   * Get all maintenance rules
+   */
+  getMaintenanceRules(): Promise<import('./maintenance').MaintenanceRule[]>
+
+  /**
+   * Get a single maintenance rule by ID
+   */
+  getMaintenanceRule(id: UUID): Promise<import('./maintenance').MaintenanceRule | null>
+
+  /**
+   * Create a new maintenance rule
+   */
+  createMaintenanceRule(data: import('./maintenance').MaintenanceRule): Promise<import('./maintenance').MaintenanceRule>
+
+  /**
+   * Update an existing maintenance rule
+   */
+  updateMaintenanceRule(id: UUID, data: import('./maintenance').MaintenanceRule): Promise<import('./maintenance').MaintenanceRule>
+
+  /**
+   * Delete a maintenance rule
+   */
+  deleteMaintenanceRule(id: UUID): Promise<void>
+
+  /**
+   * Get all work orders
+   */
+  getWorkOrders(): Promise<import('./maintenance').WorkOrder[]>
+
+  /**
+   * Get a single work order by ID
+   */
+  getWorkOrder(id: UUID): Promise<import('./maintenance').WorkOrder | null>
+
+  /**
+   * Create a new work order
+   */
+  createWorkOrder(data: import('./maintenance').WorkOrder): Promise<import('./maintenance').WorkOrder>
+
+  /**
+   * Update an existing work order
+   */
+  updateWorkOrder(id: UUID, data: import('./maintenance').WorkOrder): Promise<import('./maintenance').WorkOrder>
+
+  /**
+   * Delete a work order
+   */
+  deleteWorkOrder(id: UUID): Promise<void>
+
+  // ============================================================================
+  // Global Settings & Scanner Models
+  // ============================================================================
+
+  /**
+   * Get a global setting value
+   * @param key - Setting key
+   * @returns Setting value or null if not found
+   */
+  getGlobalSetting(key: string): Promise<unknown>
+
+  /**
+   * Set a global setting value
+   * @param key - Setting key
+   * @param value - Setting value
+   */
+  setGlobalSetting(key: string, value: unknown): Promise<void>
+
+  /**
+   * Get all scanner models
+   * @returns Array of scanner models
+   */
+  getScannerModels(): Promise<ScannerModel[]>
+
+  /**
+   * Save all scanner models
+   * @param models - Array of scanner models to save
+   */
+  saveScannerModels(models: ScannerModel[]): Promise<void>
 }
 
 /**
@@ -730,7 +990,7 @@ export interface StorageProviderConfig {
   /**
    * Provider type
    */
-  type: 'churchtools' | 'offline' | 'mock'
+  type: 'churchtools' | 'mock'
   
   /**
    * ChurchTools-specific config
@@ -739,14 +999,6 @@ export interface StorageProviderConfig {
     moduleId: string              // Custom module ID
     baseUrl: string               // ChurchTools base URL
     apiClient: unknown            // ChurchTools API client instance
-  }
-  
-  /**
-   * Offline-specific config
-   */
-  offline?: {
-    dbName: string                // IndexedDB database name
-    version: number               // Schema version
   }
   
   /**

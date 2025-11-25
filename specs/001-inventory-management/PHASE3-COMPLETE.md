@@ -32,7 +32,7 @@
 **Components Created**:
 1. `src/hooks/useCategories.ts` - 5 TanStack Query hooks
 2. `src/components/categories/AssetCategoryList.tsx` - DataTable with sorting/filtering
-3. `src/components/categories/AssetCategoryForm.tsx` - Create/edit form with validation
+3. `src/components/categories/AssetTypeForm.tsx` - Create/edit form with validation
 4. `src/components/categories/CustomFieldDefinitionInput.tsx` - 9 field types with validation
 5. `src/services/storage/ChurchToolsProvider.ts` - Category CRUD methods
 
@@ -168,7 +168,7 @@ src/
 │   │
 │   ├── categories/
 │   │   ├── AssetCategoryList.tsx   # T043 (223 lines)
-│   │   ├── AssetCategoryForm.tsx   # T044 (185 lines)
+│   │   ├── AssetTypeForm.tsx   # T044 (185 lines)
 │   │   ├── CustomFieldDefinitionInput.tsx  # T045 (244 lines)
 │   │   └── index.ts                # Barrel exports
 │   │
@@ -488,7 +488,7 @@ $ npm run lint
 ### Asset Category Management
 - [x] T042 [P] [US1] Create TanStack Query hooks in src/hooks/useCategories.ts
 - [x] T043 [P] [US1] Create AssetCategoryList component
-- [x] T044 [P] [US1] Create AssetCategoryForm component
+- [x] T044 [P] [US1] Create AssetTypeForm component
 - [x] T045 [P] [US1] Create CustomFieldDefinitionInput component
 - [x] T046 [US1] Implement category CRUD methods in ChurchToolsStorageProvider
 

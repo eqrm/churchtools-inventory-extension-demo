@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ComponentType } from 'react';
+import { useMemo, useState, type ComponentType } from 'react';
 import {
   ActionIcon,
   Alert,
@@ -15,6 +15,7 @@ import {
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { notifications } from '@mantine/notifications';
+import { useNavigate } from 'react-router-dom';
 import {
   IconAlertCircle,
   IconCheck,
@@ -26,16 +27,15 @@ import {
 } from '@tabler/icons-react';
 import { useAssets } from '../../hooks/useAssets';
 import {
-  areMasterDataItemsEqual,
   buildAssetCountLookup,
   canonicalMasterDataName,
-  createMasterDataItem,
-  loadMasterData,
   normalizeMasterDataName,
-  persistMasterData,
   sortMasterDataItems,
 } from '../../utils/masterData';
 import type { MasterDataDefinition, MasterDataItem } from '../../utils/masterData';
+import { useMasterData } from '../../hooks/useMasterDataNames';
+import { serializeFiltersToUrl } from '../../utils/urlFilters';
+import { createFilterCondition, createFilterGroup } from '../../utils/viewFilters';
 
 type IconComponent = ComponentType<{ size?: number | string }>;
 
@@ -84,43 +84,40 @@ export function MasterDataSettingsBase(config: MasterDataSettingsConfig) {
   const addLabel = addButtonLabel ?? `Add ${entityLabel}`;
 
   const { data: assets = [] } = useAssets();
-  const [items, setItems] = useState<MasterDataItem[]>(() => loadMasterData(definition));
+  const { items, isLoading, addItem, updateItem, deleteItem } = useMasterData(definition);
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    const syncFromStorage = () => {
-      const next = loadMasterData(definition);
-      setItems((prev) => (areMasterDataItemsEqual(prev, next) ? prev : next));
-    };
-
-    const handleStorage = (event: StorageEvent) => {
-      if (event.key && event.key !== definition.storageKey) {
-        return;
-      }
-      syncFromStorage();
-    };
-
-    window.addEventListener(definition.eventName, syncFromStorage);
-    window.addEventListener('storage', handleStorage);
-
-    return () => {
-      window.removeEventListener(definition.eventName, syncFromStorage);
-      window.removeEventListener('storage', handleStorage);
-    };
-  }, [definition]);
+  const sortedItems = useMemo(() => sortMasterDataItems(items), [items]);
 
   const itemsWithCounts = useMemo(() => {
     if (!definition.assetField) {
-      return items.map((item) => ({ ...item, assetCount: 0 }));
+      return sortedItems.map((item) => ({ ...item, assetCount: 0 }));
     }
 
     const counts = buildAssetCountLookup(assets, definition.assetField);
-    return items.map((item) => ({
+    return sortedItems.map((item) => ({
       ...item,
       assetCount: counts.get(canonicalMasterDataName(item.name)) ?? 0,
     }));
-  }, [assets, definition.assetField, items]);
+  }, [assets, definition.assetField, sortedItems]);
+
+  const handleBadgeClick = (item: MasterDataItem) => {
+    if (!definition.assetField || (item.assetCount ?? 0) === 0) return;
+
+    const condition = createFilterCondition({
+      field: definition.assetField,
+      operator: 'equals',
+      value: item.name,
+    });
+    const filterGroup = createFilterGroup('AND', [condition]);
+    const serialized = serializeFiltersToUrl(filterGroup);
+
+    navigate(`/assets?filters=${serialized}`);
+  };
 
   const form = useForm<FormValues>({
     initialValues: { name: '' },
@@ -134,7 +131,7 @@ export function MasterDataSettingsBase(config: MasterDataSettingsConfig) {
           return `${entityLabel} name must be ${DEFAULT_MAX_LENGTH} characters or less`;
         }
         const canonical = canonicalMasterDataName(normalized);
-        const isDuplicate = items.some(
+        const isDuplicate = sortedItems.some(
           (item) => canonicalMasterDataName(item.name) === canonical && item.id !== editingId
         );
         if (isDuplicate) {
@@ -145,28 +142,43 @@ export function MasterDataSettingsBase(config: MasterDataSettingsConfig) {
     },
   });
 
-  const commitItems = (nextItems: MasterDataItem[], notification: { title: string; message: string }) => {
-    const sorted = sortMasterDataItems(nextItems);
-    setItems(sorted);
-    persistMasterData(definition, sorted);
-
+  const showSuccess = (title: string, message: string) => {
     notifications.show({
-      title: notification.title,
-      message: notification.message,
+      title,
+      message,
       color: 'green',
       icon: <IconCheck size={16} />,
     });
   };
 
-  const handleAdd = (values: FormValues) => {
-    const newItem = createMasterDataItem(values.name, definition);
-    commitItems([...items, newItem], {
-      title: 'Success',
-      message: `${entityLabel} "${newItem.name}" added`,
+  const showError = (title: string, message: string) => {
+    notifications.show({
+      title,
+      message,
+      color: 'red',
+      icon: <IconAlertCircle size={16} />,
     });
-    form.reset();
-    setIsAdding(false);
-    setEditingId(null);
+  };
+
+  const handleAdd = async (values: FormValues) => {
+    setIsSaving(true);
+    try {
+      const created = await addItem(values.name);
+      if (!created) {
+        showError('Unable to add', `${entityLabel} already exists or name is invalid.`);
+        return;
+      }
+
+      showSuccess('Success', `${entityLabel} "${created.name}" added`);
+      form.reset();
+      setIsAdding(false);
+      setEditingId(null);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : `Unable to add ${entityLabelLower}.`;
+      showError('Failed to add', message);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleEdit = (item: MasterDataItem) => {
@@ -175,25 +187,25 @@ export function MasterDataSettingsBase(config: MasterDataSettingsConfig) {
     setIsAdding(true);
   };
 
-  const handleUpdate = (values: FormValues) => {
+  const handleUpdate = async (values: FormValues) => {
     if (!editingId) return;
-
-    const normalized = normalizeMasterDataName(values.name);
-    const updated = items.map((item) =>
-      item.id === editingId ? { ...item, name: normalized } : item
-    );
-
-    commitItems(updated, {
-      title: 'Success',
-      message: `${entityLabel} updated`,
-    });
-
-    form.reset();
-    setIsAdding(false);
-    setEditingId(null);
+    setIsSaving(true);
+    try {
+      const normalized = normalizeMasterDataName(values.name);
+      await updateItem(editingId, normalized);
+      showSuccess('Success', `${entityLabel} updated`);
+      form.reset();
+      setIsAdding(false);
+      setEditingId(null);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : `Unable to update ${entityLabelLower}.`;
+      showError('Failed to update', message);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const handleDelete = (item: MasterDataItem) => {
+  const handleDelete = async (item: MasterDataItem) => {
     const target = itemsWithCounts.find((it) => it.id === item.id);
     if (target && (target.assetCount ?? 0) > 0) {
       notifications.show({
@@ -209,11 +221,16 @@ export function MasterDataSettingsBase(config: MasterDataSettingsConfig) {
       return;
     }
 
-    const filtered = items.filter((it) => it.id !== item.id);
-    commitItems(filtered, {
-      title: 'Success',
-      message: `${entityLabel} "${item.name}" deleted`,
-    });
+    setDeletingId(item.id);
+    try {
+      await deleteItem(item.id);
+      showSuccess('Success', `${entityLabel} "${item.name}" deleted`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : `Unable to delete ${entityLabelLower}.`;
+      showError('Failed to delete', message);
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   const handleCancel = () => {
@@ -232,14 +249,22 @@ export function MasterDataSettingsBase(config: MasterDataSettingsConfig) {
       </div>
 
       {!isAdding && (
-        <Button leftSection={<IconPlus size={16} />} onClick={() => setIsAdding(true)}>
+        <Button leftSection={<IconPlus size={16} />} onClick={() => setIsAdding(true)} disabled={isLoading}>
           {addLabel}
         </Button>
       )}
 
       {isAdding && (
         <Card withBorder>
-          <form onSubmit={form.onSubmit(editingId ? handleUpdate : handleAdd)}>
+          <form
+            onSubmit={form.onSubmit((values) => {
+              if (editingId) {
+                void handleUpdate(values);
+              } else {
+                void handleAdd(values);
+              }
+            })}
+          >
             <Stack gap="md">
               <TextInput
                 label={editingId ? `Edit ${entityLabel}` : `New ${entityLabel}`}
@@ -250,13 +275,19 @@ export function MasterDataSettingsBase(config: MasterDataSettingsConfig) {
               />
 
               <Group justify="flex-end">
-                <Button variant="default" leftSection={<IconX size={16} />} onClick={handleCancel}>
+                <Button
+                  variant="default"
+                  leftSection={<IconX size={16} />}
+                  onClick={handleCancel}
+                  disabled={isSaving}
+                >
                   Cancel
                 </Button>
                 <Button
                   type="submit"
                   leftSection={editingId ? <IconCheck size={16} /> : <IconPlus size={16} />}
-                  disabled={!form.isValid()}
+                  disabled={!form.isValid() || isSaving}
+                  loading={isSaving}
                 >
                   {editingId ? 'Update' : 'Add'}
                 </Button>
@@ -267,9 +298,15 @@ export function MasterDataSettingsBase(config: MasterDataSettingsConfig) {
       )}
 
       {itemsWithCounts.length === 0 ? (
-        <Alert color="blue" icon={<EmptyStateIcon size={16} />}>
-          <Text size="sm">{emptyStateMessage}</Text>
-        </Alert>
+        isLoading ? (
+          <Card withBorder>
+            <Text size="sm">Loading {entityLabelLower}…</Text>
+          </Card>
+        ) : (
+          <Alert color="blue" icon={<EmptyStateIcon size={16} />}>
+            <Text size="sm">{emptyStateMessage}</Text>
+          </Alert>
+        )
       ) : (
         <Card withBorder>
           <Table>
@@ -290,7 +327,13 @@ export function MasterDataSettingsBase(config: MasterDataSettingsConfig) {
                     </Group>
                   </Table.Td>
                   <Table.Td>
-                    <Badge color={(item.assetCount ?? 0) > 0 ? 'blue' : 'gray'}>
+                    <Badge
+                      color={(item.assetCount ?? 0) > 0 ? 'blue' : 'gray'}
+                      style={{
+                        cursor: definition.assetField && (item.assetCount ?? 0) > 0 ? 'pointer' : 'default',
+                      }}
+                      onClick={() => handleBadgeClick(item)}
+                    >
                       {item.assetCount ?? 0}
                     </Badge>
                   </Table.Td>
@@ -308,8 +351,10 @@ export function MasterDataSettingsBase(config: MasterDataSettingsConfig) {
                         <Menu.Item
                           color="red"
                           leftSection={<IconTrash size={14} />}
-                          onClick={() => handleDelete(item)}
-                          disabled={(item.assetCount ?? 0) > 0}
+                          onClick={() => {
+                            void handleDelete(item);
+                          }}
+                          disabled={(item.assetCount ?? 0) > 0 || deletingId === item.id}
                         >
                           Delete
                         </Menu.Item>

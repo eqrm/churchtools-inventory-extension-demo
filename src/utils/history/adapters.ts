@@ -5,7 +5,7 @@ const ENTITY_LABELS: Record<string, string> = {
     asset: 'Asset',
     booking: 'Booking',
     maintenance: 'Maintenance',
-    category: 'Category',
+    category: 'Asset type',
     kit: 'Kit',
     stocktake: 'Stock take',
     'asset-prefix': 'Asset prefix',

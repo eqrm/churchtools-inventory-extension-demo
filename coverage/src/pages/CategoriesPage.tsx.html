@@ -25,7 +25,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/47</span>
+                <span class='fraction'>0/45</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/47</span>
+                <span class='fraction'>0/45</span>
             </div>
         
             
@@ -120,9 +120,7 @@
 <a name='L55'></a><a href='#L55'>55</a>
 <a name='L56'></a><a href='#L56'>56</a>
 <a name='L57'></a><a href='#L57'>57</a>
-<a name='L58'></a><a href='#L58'>58</a>
-<a name='L59'></a><a href='#L59'>59</a>
-<a name='L60'></a><a href='#L60'>60</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<a name='L58'></a><a href='#L58'>58</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -161,7 +159,6 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -171,7 +168,6 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -182,17 +178,17 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js"><span class="cstat-no" title="statement not covered" >import { useState } from 'react';<span class="fstat-no" title="function not covered" ><span class="branch-0 cbranch-no" title="branch not covered" ></span></span></span>
-<span class="cstat-no" title="statement not covered" >import { Button, Container, Group, Modal, Stack, Title } from '@mantine/core';</span>
+<span class="cstat-no" title="statement not covered" >import { Button, Container, Modal } from '@mantine/core';</span>
 <span class="cstat-no" title="statement not covered" >import { IconPlus } from '@tabler/icons-react';</span>
-<span class="cstat-no" title="statement not covered" >import { AssetCategoryList } from '../components/categories/AssetCategoryList';</span>
-<span class="cstat-no" title="statement not covered" >import { AssetCategoryForm } from '../components/categories/AssetCategoryForm';</span>
-import type { AssetCategory } from '../types/entities';
+<span class="cstat-no" title="statement not covered" >import { AssetTypeList } from '../components/categories/AssetTypeList';</span>
+<span class="cstat-no" title="statement not covered" >import { AssetTypeForm } from '../components/categories/AssetTypeForm';</span>
+import type { AssetType } from '../types/entities';
 &nbsp;
 <span class="cstat-no" title="statement not covered" >export function CategoriesPage() {</span>
 <span class="cstat-no" title="statement not covered" >  const [isFormOpen, setIsFormOpen] = useState(false);</span>
-<span class="cstat-no" title="statement not covered" >  const [editingCategory, setEditingCategory] = useState&lt;AssetCategory | undefined&gt;();</span>
+<span class="cstat-no" title="statement not covered" >  const [editingCategory, setEditingCategory] = useState&lt;AssetType | undefined&gt;();</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  const handleEdit = (category: AssetCategory) =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >  const handleEdit = (category: AssetType) =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    setEditingCategory(category);</span>
 <span class="cstat-no" title="statement not covered" >    setIsFormOpen(true);</span>
 <span class="cstat-no" title="statement not covered" >  };</span>
@@ -213,30 +209,28 @@ import type { AssetCategory } from '../types/entities';
 <span class="cstat-no" title="statement not covered" >  };</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  return (</span>
-<span class="cstat-no" title="statement not covered" >    &lt;Container size="xl"&gt;</span>
-<span class="cstat-no" title="statement not covered" >      &lt;Stack gap="md"&gt;</span>
-<span class="cstat-no" title="statement not covered" >        &lt;Group justify="space-between"&gt;</span>
-<span class="cstat-no" title="statement not covered" >          &lt;Title order={1}&gt;Asset Categories&lt;/Title&gt;</span>
+<span class="cstat-no" title="statement not covered" >    &lt;Container size="xl" py="xl"&gt;</span>
+<span class="cstat-no" title="statement not covered" >      &lt;AssetTypeList</span>
+<span class="cstat-no" title="statement not covered" >        onEdit={handleEdit}</span>
+<span class="cstat-no" title="statement not covered" >        headerActions={</span>
 <span class="cstat-no" title="statement not covered" >          &lt;Button leftSection={&lt;IconPlus size={16} /&gt;} onClick={handleCreateNew}&gt;</span>
-            New Category
+            New asset type
 <span class="cstat-no" title="statement not covered" >          &lt;/Button&gt;</span>
-<span class="cstat-no" title="statement not covered" >        &lt;/Group&gt;</span>
+        }
+<span class="cstat-no" title="statement not covered" >      /&gt;</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >        &lt;AssetCategoryList onEdit={handleEdit} /&gt;</span>
-&nbsp;
-<span class="cstat-no" title="statement not covered" >        &lt;Modal</span>
-<span class="cstat-no" title="statement not covered" >          opened={isFormOpen}</span>
-<span class="cstat-no" title="statement not covered" >          onClose={handleCancel}</span>
-<span class="cstat-no" title="statement not covered" >          title={editingCategory ? 'Edit Category' : 'Create New Category'}</span>
-<span class="cstat-no" title="statement not covered" >          size="lg"</span>
-        &gt;
-<span class="cstat-no" title="statement not covered" >          &lt;AssetCategoryForm</span>
-<span class="cstat-no" title="statement not covered" >            category={editingCategory}</span>
-<span class="cstat-no" title="statement not covered" >            onSuccess={handleSuccess}</span>
-<span class="cstat-no" title="statement not covered" >            onCancel={handleCancel}</span>
-<span class="cstat-no" title="statement not covered" >          /&gt;</span>
-<span class="cstat-no" title="statement not covered" >        &lt;/Modal&gt;</span>
-<span class="cstat-no" title="statement not covered" >      &lt;/Stack&gt;</span>
+<span class="cstat-no" title="statement not covered" >      &lt;Modal</span>
+<span class="cstat-no" title="statement not covered" >        opened={isFormOpen}</span>
+<span class="cstat-no" title="statement not covered" >        onClose={handleCancel}</span>
+<span class="cstat-no" title="statement not covered" >        title={editingCategory ? 'Edit asset type' : 'New asset type'}</span>
+<span class="cstat-no" title="statement not covered" >        size="lg"</span>
+      &gt;
+<span class="cstat-no" title="statement not covered" >        &lt;AssetTypeForm</span>
+<span class="cstat-no" title="statement not covered" >          category={editingCategory}</span>
+<span class="cstat-no" title="statement not covered" >          onSuccess={handleSuccess}</span>
+<span class="cstat-no" title="statement not covered" >          onCancel={handleCancel}</span>
+<span class="cstat-no" title="statement not covered" >        /&gt;</span>
+<span class="cstat-no" title="statement not covered" >      &lt;/Modal&gt;</span>
 <span class="cstat-no" title="statement not covered" >    &lt;/Container&gt;</span>
   );
 <span class="cstat-no" title="statement not covered" >}</span>
@@ -247,7 +241,7 @@ import type { AssetCategory } from '../types/entities';
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-10-20T10:36:40.172Z
+                at 2025-11-24T20:49:55.914Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

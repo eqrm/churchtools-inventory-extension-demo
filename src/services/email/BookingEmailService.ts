@@ -27,7 +27,7 @@ export class BookingEmailService {
   async sendDueReminder(booking: Booking): Promise<void> {
     if (!this.config.enabled || !booking.asset) return
 
-    const subject = `Erinnerung: Equipment-Rückgabe - ${booking.asset.name}`
+    const subject = `Reminder: Equipment return - ${booking.asset.name}`
     const body = this.formatDueReminderEmail(booking)
 
     await this.sendEmail(booking.requestedBy, subject, body)
@@ -39,7 +39,7 @@ export class BookingEmailService {
   async sendOverdueNotification(booking: Booking): Promise<void> {
     if (!this.config.enabled || !booking.asset) return
 
-    const subject = `Überfällig: Equipment-Rückgabe - ${booking.asset.name}`
+    const subject = `Overdue: Equipment return - ${booking.asset.name}`
     const body = this.formatOverdueEmail(booking)
 
     await this.sendEmail(booking.requestedBy, subject, body)
@@ -51,7 +51,7 @@ export class BookingEmailService {
   async sendApprovalNotification(booking: Booking): Promise<void> {
     if (!this.config.enabled || !booking.asset) return
 
-    const subject = `Buchung genehmigt: ${booking.asset.name}`
+    const subject = `Booking approved: ${booking.asset.name}`
     const body = this.formatApprovalEmail(booking)
 
     await this.sendEmail(booking.requestedBy, subject, body)
@@ -81,18 +81,18 @@ export class BookingEmailService {
     if (!booking.asset) return ''
     
     return `
-Hallo ${booking.requestedByName},
+  Hello ${booking.requestedByName},
 
-dies ist eine Erinnerung, dass die Rückgabe folgenden Equipments bald fällig ist:
+  this is a reminder that the following equipment is due soon:
 
-Asset: ${booking.asset.name} (${booking.asset.assetNumber})
-Zweck: ${booking.purpose}
-Rückgabedatum: ${new Date(booking.endDate).toLocaleDateString('de-DE')}
+  Asset: ${booking.asset.name} (${booking.asset.assetNumber})
+  Purpose: ${booking.purpose}
+  Due date: ${new Date(booking.endDate).toLocaleDateString('en-US')}
 
-Bitte geben Sie das Equipment rechtzeitig zurück.
+  Please return the equipment on time.
 
-Viele Grüße
-Ihr Equipment-Management Team
+  Best regards,
+  Your equipment team
     `.trim()
   }
 
@@ -100,18 +100,18 @@ Ihr Equipment-Management Team
     if (!booking.asset) return ''
     
     return `
-Hallo ${booking.requestedByName},
+  Hello ${booking.requestedByName},
 
-die Rückgabe folgenden Equipments ist überfällig:
+  the return for the following equipment is overdue:
 
-Asset: ${booking.asset.name} (${booking.asset.assetNumber})
-Zweck: ${booking.purpose}
-Fällig seit: ${new Date(booking.endDate).toLocaleDateString('de-DE')}
+  Asset: ${booking.asset.name} (${booking.asset.assetNumber})
+  Purpose: ${booking.purpose}
+  Overdue since: ${new Date(booking.endDate).toLocaleDateString('en-US')}
 
-Bitte geben Sie das Equipment umgehend zurück.
+  Please return the equipment immediately.
 
-Viele Grüße
-Ihr Equipment-Management Team
+  Best regards,
+  Your equipment team
     `.trim()
   }
 
@@ -119,18 +119,18 @@ Ihr Equipment-Management Team
     if (!booking.asset) return ''
     
     return `
-Hallo ${booking.requestedByName},
+  Hello ${booking.requestedByName},
 
-Ihre Buchung wurde genehmigt:
+  your booking has been approved:
 
-Asset: ${booking.asset.name} (${booking.asset.assetNumber})
-Zeitraum: ${new Date(booking.startDate).toLocaleDateString('de-DE')} - ${new Date(booking.endDate).toLocaleDateString('de-DE')}
-Zweck: ${booking.purpose}
+  Asset: ${booking.asset.name} (${booking.asset.assetNumber})
+  Date range: ${new Date(booking.startDate).toLocaleDateString('en-US')} - ${new Date(booking.endDate).toLocaleDateString('en-US')}
+  Purpose: ${booking.purpose}
 
-Sie können das Equipment ab dem Startdatum abholen.
+  You can pick up the equipment starting on the booking start date.
 
-Viele Grüße
-Ihr Equipment-Management Team
+  Best regards,
+  Your equipment team
     `.trim()
   }
 

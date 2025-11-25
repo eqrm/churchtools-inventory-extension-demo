@@ -1,0 +1,57 @@
+{
+  "form": {
+    "descriptionLabel": "Damage Description",
+    "descriptionPlaceholder": "Describe the damage in detail...",
+    "validation": {
+      "required": "Please describe the damage",
+      "minLength": "Description must be at least 10 characters"
+    },
+    "submit": "Report Damage"
+  },
+  "photoUpload": {
+    "error": {
+      "maxPhotos": "Maximum {{count}} photos allowed",
+      "fileTooLarge": "File \"{{name}}\" exceeds {{limit}} limit",
+      "processFailed": "Failed to process \"{{name}}\"",
+      "rejected": "Upload rejected: {{reason}}"
+    },
+    "compressing": "Compressing {{filename}}...",
+    "dropzone": {
+      "title": "Drag photos here or click to select",
+      "subtitle": "Max {{count}} photos, up to {{limit}} each",
+      "count": "{{current}}/{{max}} uploaded",
+      "imageAlt": "Uploaded damage photo {{index}}"
+    },
+    "maxReached": "Maximum number of photos ({{count}}) reached"
+  },
+  "timeline": {
+    "empty": "No damage reports on record",
+    "reported": "Damage Reported",
+    "repaired": "Repaired",
+    "reportedBy": "Reported by {{name}} on {{date}}",
+    "unknownUser": "Unknown",
+    "description": "Description",
+    "photos": "Photos",
+    "repairNotes": "Repair Notes",
+    "repairedBy": "Repaired by {{name}}",
+    "repairedByWithDate": "Repaired by {{name}} on {{date}}",
+    "markAsRepaired": "Mark as Repaired",
+    "markAsRepairedTitle": "Mark as Repaired",
+    "markAsRepairedHint": "Add notes about the repair work performed",
+    "markAsRepairedSubmit": "Mark as Repaired",
+    "notesPlaceholder": "Describe the repair work..."
+  },
+  "status": {
+    "broken": "Broken",
+    "repaired": "Repaired"
+  },
+  "modal": {
+    "title": "Report Damage"
+  },
+  "notifications": {
+    "reportSuccessTitle": "Damage Reported",
+    "reportSuccessMessage": "The damage has been reported and asset status changed to broken.",
+    "reportErrorTitle": "Error",
+    "reportErrorMessage": "Failed to report damage"
+  }
+}

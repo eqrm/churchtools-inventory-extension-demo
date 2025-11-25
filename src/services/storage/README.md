@@ -4,7 +4,7 @@ This document describes the storage abstraction layer for the ChurchTools Invent
 
 ## Overview
 
-The storage layer provides a consistent interface for data persistence, supporting both ChurchTools Custom Modules API and offline IndexedDB storage. The design allows for future migration from base64-encoded photos to ChurchTools Files module without breaking existing data.
+The storage layer provides a consistent interface for data persistence powered by the ChurchTools Custom Modules API. The design allows for future migration from base64-encoded photos to the ChurchTools Files module without breaking existing data.
 
 ---
 
@@ -23,16 +23,6 @@ Primary storage provider using ChurchTools Custom Modules API.
 - Kit CRUD: `getKits()`, `createKit()`, `updateKit()`, `deleteKit()`
 - Stock Take: `getStockTakeSessions()`, `createStockTakeSession()`, `addStockTakeScan()`
 - Maintenance: `getMaintenanceSchedules()`, `createMaintenanceRecord()`
-
-### OfflineStorageProvider
-
-Fallback storage using IndexedDB for offline functionality.
-
-**Location**: `src/services/storage/OfflineStorageProvider.ts`
-
-**Usage**: Stock take sessions for offline scanning, then sync when online.
-
----
 
 ## Photo Storage Abstraction
 
@@ -448,7 +438,7 @@ describe('ChurchToolsPhotoStorage', () => {
 
 2. **Caching Strategy**
    - Cache file URLs in IndexedDB
-   - Prefetch photos for offline viewing
+  - Prefetch photos for low-connectivity viewing
    - Progressive image loading
 
 3. **Batch Operations**
@@ -463,5 +453,5 @@ describe('ChurchToolsPhotoStorage', () => {
 
 ---
 
-**Last Updated**: October 21, 2025  
+**Last Updated**: November 16, 2025  
 **Status**: Base64 implementation complete, Files module migration planned for future

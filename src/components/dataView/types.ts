@@ -29,4 +29,24 @@ export interface ViewRecord<TSource = unknown> {
     avatarUrl?: string;
     thumbnailUrl?: string;
     source: TSource;
+    undo?: ViewRecordUndoMetadata<TSource>;
+}
+
+export interface ViewRecordUndoMetadata<TSource = unknown> {
+    entityId?: string;
+    entityType?: string;
+    field?: string;
+    metadata?: Record<string, unknown>;
+    beforeState?: Record<string, unknown>;
+    buildStates?: (context: {
+        record: ViewRecord<TSource>;
+        fromKey: string;
+        toKey: string;
+    }) => {
+        before: Record<string, unknown>;
+        after: Record<string, unknown>;
+        metadata?: Record<string, unknown>;
+        entityId?: string;
+        entityType?: string;
+    } | null | undefined;
 }

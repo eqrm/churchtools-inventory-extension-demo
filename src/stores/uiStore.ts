@@ -1,6 +1,27 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import type { AssetFilters, ViewMode, ViewFilter } from '../types/entities';
+import { persist, createJSONStorage, type StateStorage } from 'zustand/middleware';
+import type { AssetFilters, ViewMode, ViewFilterGroup } from '../types/entities';
+import { createFilterGroup, normalizeFilterGroup } from '../utils/viewFilters';
+
+const inMemoryStorage: StateStorage = (() => {
+    const store = new Map<string, string>();
+    return {
+        getItem: (name) => store.get(name) ?? null,
+        setItem: (name, value) => {
+            store.set(name, value);
+        },
+        removeItem: (name) => {
+            store.delete(name);
+        },
+    };
+})();
+
+const uiStateStorage = createJSONStorage(() => {
+    if (typeof window !== 'undefined' && window.localStorage) {
+        return window.localStorage;
+    }
+    return inMemoryStorage;
+});
 
 /**
  * UI State Store (T213 - Enhanced with view preferences)
@@ -36,9 +57,13 @@ interface UIState {
     viewMode: ViewMode;
     setViewMode: (mode: ViewMode) => void;
     
-    viewFilters: ViewFilter[];
-    setViewFilters: (filters: ViewFilter[]) => void;
+    viewFilters: ViewFilterGroup;
+    setViewFilters: (filters: ViewFilterGroup) => void;
     clearViewFilters: () => void;
+
+    quickFilters: ViewFilterGroup;
+    setQuickFilters: (filters: ViewFilterGroup) => void;
+    clearQuickFilters: () => void;
     
     sortBy: string | null;
     setSortBy: (field: string | null) => void;
@@ -111,12 +136,20 @@ export const useUIStore = create<UIState>()(
                 set({ viewMode: mode });
             },
             
-            viewFilters: [],
+            viewFilters: createFilterGroup('AND'),
             setViewFilters: (filters) => {
-                set({ viewFilters: filters });
+                set({ viewFilters: normalizeFilterGroup(filters) });
             },
             clearViewFilters: () => {
-                set({ viewFilters: [] });
+                set({ viewFilters: createFilterGroup('AND') });
+            },
+
+            quickFilters: createFilterGroup('AND'),
+            setQuickFilters: (filters) => {
+                set({ quickFilters: normalizeFilterGroup(filters) });
+            },
+            clearQuickFilters: () => {
+                set({ quickFilters: createFilterGroup('AND') });
             },
             
             sortBy: null,
@@ -147,6 +180,26 @@ export const useUIStore = create<UIState>()(
         }),
         {
             name: 'churchtools-inventory-ui',
+            version: 2,
+            storage: uiStateStorage,
+            merge: (persistedState, currentState) => {
+                if (!persistedState || typeof persistedState !== 'object') {
+                    return currentState;
+                }
+                const nextState = {
+                    ...currentState,
+                    ...(persistedState as Partial<UIState>),
+                };
+                if (nextState.viewFilters) {
+                    nextState.viewFilters = normalizeFilterGroup(nextState.viewFilters);
+                }
+                if (nextState.quickFilters) {
+                    nextState.quickFilters = normalizeFilterGroup(nextState.quickFilters);
+                } else {
+                    nextState.quickFilters = createFilterGroup('AND');
+                }
+                return nextState;
+            },
             partialize: (state) => ({
                 sidebarCollapsed: state.sidebarCollapsed,
                 colorScheme: state.colorScheme,
@@ -155,6 +208,7 @@ export const useUIStore = create<UIState>()(
                 // T213: Persist view preferences
                 viewMode: state.viewMode,
                 viewFilters: state.viewFilters,
+                quickFilters: state.quickFilters,
                 sortBy: state.sortBy,
                 sortDirection: state.sortDirection,
                 groupBy: state.groupBy,

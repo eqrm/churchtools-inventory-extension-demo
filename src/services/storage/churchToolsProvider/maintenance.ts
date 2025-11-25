@@ -9,6 +9,7 @@ import type {
   MaintenanceSchedule,
   MaintenanceScheduleCreate,
 } from '../../../types/entities';
+import type { MaintenanceRule } from '../../../types/maintenance';
 import { CURRENT_SCHEMA_VERSION } from '../../migrations/constants';
 
 export interface MaintenanceDependencies {
@@ -160,6 +161,171 @@ export async function deleteMaintenanceRecord(
     entityType: 'maintenance',
     entityId: id,
     action: 'deleted',
+    changedBy: user.id,
+    changedByName: `${user.firstName} ${user.lastName}`,
+  });
+}
+
+// ============================================================================
+// Maintenance Rules CRUD
+// ============================================================================
+
+async function getMaintenanceRulesCategory(deps: MaintenanceDependencies): Promise<AssetType> {
+  const categories = await deps.getAllCategoriesIncludingHistory();
+  let category = categories.find((cat) => cat.name === '__MaintenanceRules__');
+
+  if (!category) {
+    const shorty = `maint_rules_${Date.now().toString().slice(-4)}`;
+    const payload = {
+      customModuleId: Number(deps.moduleId),
+      name: '__MaintenanceRules__',
+      shorty,
+      description: 'Maintenance rules for automated scheduling',
+      data: null,
+    };
+    const created = await deps.apiClient.createDataCategory(deps.moduleId, payload);
+    category = deps.mapToAssetType(created);
+  }
+
+  return category;
+}
+
+export async function getMaintenanceRules(
+  deps: MaintenanceDependencies,
+): Promise<MaintenanceRule[]> {
+  const category = await getMaintenanceRulesCategory(deps);
+  const values = await deps.apiClient.getDataValues(deps.moduleId, category.id);
+  return values.map((val: unknown) => mapToMaintenanceRule(val));
+}
+
+export async function getMaintenanceRule(
+  deps: MaintenanceDependencies,
+  id: string,
+): Promise<MaintenanceRule | null> {
+  const rules = await getMaintenanceRules(deps);
+  return rules.find((rule) => rule.id === id) ?? null;
+}
+
+export async function createMaintenanceRule(
+  deps: MaintenanceDependencies,
+  ruleData: MaintenanceRule,
+): Promise<MaintenanceRule> {
+  try {
+    const category = await getMaintenanceRulesCategory(deps);
+    const user = await deps.apiClient.getCurrentUser();
+
+    const payload = {
+      ...ruleData,
+      createdAt: ruleData.createdAt || new Date().toISOString(),
+      updatedAt: ruleData.updatedAt || new Date().toISOString(),
+    };
+
+    const valueData = {
+      dataCategoryId: Number(category.id),
+      value: JSON.stringify(payload),
+    };
+
+    const created = await deps.apiClient.createDataValue(
+      deps.moduleId,
+      category.id,
+      valueData,
+    );
+
+    const rule = mapToMaintenanceRule(created);
+
+    await deps.recordChange({
+      entityType: 'maintenance',
+      entityId: rule.id,
+      action: 'created',
+      newValue: `Rule: ${rule.name}`,
+      changedBy: user.id,
+      changedByName: `${user.firstName} ${user.lastName}`,
+    });
+
+    return rule;
+  } catch (error) {
+    console.error('[Maintenance] Failed to create maintenance rule:', error);
+    if (error instanceof Error) {
+      throw new Error(`Could not create maintenance rule: ${error.message}`);
+    }
+    throw new Error('Could not create maintenance rule: Unknown error occurred');
+  }
+}
+
+export async function updateMaintenanceRule(
+  deps: MaintenanceDependencies,
+  id: string,
+  updates: MaintenanceRule,
+): Promise<MaintenanceRule> {
+  const existing = await getMaintenanceRule(deps, id);
+  if (!existing) {
+    throw new Error(`Maintenance rule ${id} not found`);
+  }
+
+  const category = await getMaintenanceRulesCategory(deps);
+  const user = await deps.apiClient.getCurrentUser();
+
+  const updated = {
+    ...existing,
+    ...updates,
+    id: existing.id,
+    createdAt: existing.createdAt,
+    createdBy: existing.createdBy,
+    updatedAt: new Date().toISOString(),
+  };
+
+  const payload = {
+    id: Number(id),
+    dataCategoryId: Number(category.id),
+    value: JSON.stringify(updated),
+  };
+
+  const result = await deps.apiClient.updateDataValue(
+    deps.moduleId,
+    category.id,
+    id,
+    payload,
+  );
+
+  const updatedRule = mapToMaintenanceRule(result);
+
+  await deps.recordChange({
+    entityType: 'maintenance',
+    entityId: id,
+    action: 'updated',
+    oldValue: `Rule: ${existing.name}`,
+    newValue: `Rule: ${updatedRule.name}`,
+    changedBy: user.id,
+    changedByName: `${user.firstName} ${user.lastName}`,
+  });
+
+  return updatedRule;
+}
+
+export async function deleteMaintenanceRule(
+  deps: MaintenanceDependencies,
+  id: string,
+): Promise<void> {
+  const existing = await getMaintenanceRule(deps, id);
+  if (!existing) {
+    return;
+  }
+
+  const category = await getMaintenanceRulesCategory(deps);
+  const user = await deps.apiClient.getCurrentUser();
+
+  try {
+    await deps.apiClient.deleteDataValue(deps.moduleId, category.id, id);
+  } catch (error) {
+    console.error('[Maintenance] Failed to delete maintenance rule:', error);
+    throw error;
+  }
+
+  await deps.recordChange({
+    entityType: 'maintenance',
+    entityId: id,
+    action: 'deleted',
+    oldValue: `Rule: ${existing.name}`,
     changedBy: user.id,
     changedByName: `${user.firstName} ${user.lastName}`,
   });
@@ -675,5 +841,45 @@ function mapToMaintenanceHold(val: unknown): MaintenanceCalendarHold {
     status,
     createdAt,
     releasedAt: data['releasedAt'] ? String(data['releasedAt']) : undefined,
+  };
+}
+
+function mapToMaintenanceRule(val: unknown): MaintenanceRule {
+  const raw = val as Record<string, unknown>;
+  const dataStr = (raw['value'] || raw['data']) as string | null;
+  const parsed = dataStr ? (JSON.parse(dataStr) as Record<string, unknown>) : raw;
+
+  // Calculate nextDueDate if missing
+  let nextDueDate = parsed['nextDueDate'] ? String(parsed['nextDueDate']) : '';
+  if (!nextDueDate && parsed['startDate']) {
+    const startDate = new Date(String(parsed['startDate']));
+    const intervalType = parsed['intervalType'] as string;
+    const intervalValue = Number(parsed['intervalValue'] ?? 0);
+    
+    if (intervalType === 'months') {
+      const dueDate = new Date(startDate);
+      dueDate.setMonth(dueDate.getMonth() + intervalValue);
+      nextDueDate = dueDate.toISOString().split('T')[0] as string;
+    } else {
+      nextDueDate = String(parsed['startDate']);
+    }
+  }
+
+  return {
+    id: String(raw['id'] ?? parsed['id']),
+    name: String(parsed['name']),
+    workType: String(parsed['workType']),
+    isInternal: Boolean(parsed['isInternal']),
+    serviceProviderId: parsed['serviceProviderId'] ? String(parsed['serviceProviderId']) : undefined,
+    targets: (parsed['targets'] as MaintenanceRule['targets']) ?? [],
+    intervalType: (parsed['intervalType'] as MaintenanceRule['intervalType']) ?? 'months',
+    intervalValue: Number(parsed['intervalValue'] ?? 0),
+    startDate: String(parsed['startDate']),
+    nextDueDate,
+    leadTimeDays: Number(parsed['leadTimeDays'] ?? 0),
+    createdBy: String(parsed['createdBy']),
+    createdByName: parsed['createdByName'] ? String(parsed['createdByName']) : undefined,
+    createdAt: String(parsed['createdAt'] ?? new Date().toISOString()),
+    updatedAt: String(parsed['updatedAt'] ?? new Date().toISOString()),
   };
 }

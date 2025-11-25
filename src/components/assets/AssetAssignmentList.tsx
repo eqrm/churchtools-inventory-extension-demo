@@ -1,64 +1,73 @@
-import { Card, Divider, Group, Stack, Text } from '@mantine/core'
-import type { Asset } from '../../types/entities'
-import { PersonAvatar } from '../common/PersonAvatar'
-import { formatDateTime } from '../../utils/formatters'
+import { Card, Divider, Group, Stack, Text } from '@mantine/core';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
+import type { Asset } from '../../types/entities';
+import { PersonAvatar } from '../common/PersonAvatar';
+import { formatDateTime } from '../../utils/formatters';
 
-const LABEL_WIDTH = 150
+const LABEL_WIDTH = 150;
 
 interface AssetAssignmentListProps {
-  asset: Asset
+  asset: Asset;
 }
 
 interface AssignmentRow {
-  key: string
-  label: string
-  personId?: string
-  name?: string
-  description?: string
-  emptyLabel?: string
+  key: string;
+  label: string;
+  personId?: string;
+  name?: string;
+  description?: string;
+  emptyLabel?: string;
 }
 
-function buildRows(asset: Asset): AssignmentRow[] {
-  const sinceDescription = asset.inUseBy?.since ? `Since ${formatDateTime(asset.inUseBy.since)}` : undefined
-  const createdDescription = asset.createdAt ? `Created ${formatDateTime(asset.createdAt)}` : undefined
-  const updatedDescription = asset.lastModifiedAt ? `Updated ${formatDateTime(asset.lastModifiedAt)}` : undefined
+function buildRows(asset: Asset, t: TFunction<'assets'>): AssignmentRow[] {
+  const sinceDescription = asset.inUseBy?.since
+    ? t('detail.assignmentSinceDescription', { date: formatDateTime(asset.inUseBy.since) })
+    : undefined;
+  const createdDescription = asset.createdAt
+    ? t('detail.assignmentCreatedDescription', { date: formatDateTime(asset.createdAt) })
+    : undefined;
+  const updatedDescription = asset.lastModifiedAt
+    ? t('detail.assignmentUpdatedDescription', { date: formatDateTime(asset.lastModifiedAt) })
+    : undefined;
 
   return [
     {
       key: 'inUseBy',
-      label: 'Currently in use',
+      label: t('detail.assignmentInUseLabel'),
       personId: asset.inUseBy?.personId,
       name: asset.inUseBy?.personName,
       description: sinceDescription,
-      emptyLabel: 'Not currently assigned',
+      emptyLabel: t('detail.assignmentInUseEmpty'),
     },
     {
       key: 'createdBy',
-      label: 'Created by',
+      label: t('detail.assignmentCreatedLabel'),
       personId: asset.createdBy,
       name: asset.createdByName,
       description: createdDescription,
     },
     {
       key: 'lastModifiedBy',
-      label: 'Last modified by',
+      label: t('detail.assignmentUpdatedLabel'),
       personId: asset.lastModifiedBy,
       name: asset.lastModifiedByName,
       description: updatedDescription,
     },
-  ]
+  ];
 }
 
 export function AssetAssignmentList({ asset }: AssetAssignmentListProps) {
-  const rows = buildRows(asset)
+  const { t } = useTranslation('assets');
+  const rows = buildRows(asset, t);
 
   return (
     <Card withBorder>
       <Stack gap="md">
-        <Text fw={600}>People</Text>
+        <Text fw={600}>{t('detail.assignmentSummaryTitle')}</Text>
         <Divider />
         {rows.map((row) => {
-          const hasPerson = Boolean(row.personId || row.name)
+          const hasPerson = Boolean(row.personId || row.name);
 
           return (
             <Group key={row.key} gap="md" align="flex-start" wrap="nowrap">
@@ -80,9 +89,9 @@ export function AssetAssignmentList({ asset }: AssetAssignmentListProps) {
                 </Text>
               )}
             </Group>
-          )
+          );
         })}
       </Stack>
     </Card>
-  )
+  );
 }

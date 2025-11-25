@@ -8,26 +8,32 @@ import { useState, useMemo, useEffect } from 'react';
 import {
   Button,
   Card,
+  Collapse,
+  Drawer,
   Group,
   Menu,
   Modal,
   Stack,
+  Text,
   Title,
-  Drawer,
-  Collapse,
 } from '@mantine/core';
 import {
-  IconFilter,
-  IconPlus,
-  IconDeviceFloppy,
   IconBookmark,
+  IconChevronDown,
+  IconDeviceFloppy,
+  IconFilter,
+  IconPackage,
+  IconPlus,
+  IconX,
 } from '@tabler/icons-react';
 import { notifications } from '@mantine/notifications';
-import type { Asset, AssetFilters, SavedView } from '../../types/entities';
+import { useTranslation } from 'react-i18next';
+import type { Asset, AssetFilters, SavedView, ViewFilterGroup } from '../../types/entities';
 import { useAssets } from '../../hooks/useAssets';
 import { useUIStore } from '../../stores/uiStore';
-import { ViewModeSelector } from '../reports/ViewModeSelector';
-import { FilterBuilder } from '../reports/FilterBuilder';
+import { useFeatureSettingsStore } from '../../stores';
+import { ViewSelector } from '../views/ViewSelector';
+import { FilterBuilder } from '../views/FilterBuilder';
 import { SavedViewForm } from '../reports/SavedViewForm';
 import { SavedViewsList } from '../reports/SavedViewsList';
 import { AssetGalleryView } from './AssetGalleryView';
@@ -35,6 +41,7 @@ import { AssetKanbanView } from './AssetKanbanView';
 import { AssetCalendarView } from './AssetCalendarView';
 import { applyFilters, sortAssets } from '../../utils/filterEvaluation';
 import { readFiltersFromUrl, updateUrlWithFilters } from '../../utils/urlFilters';
+import { countFilterConditions, createFilterGroup, flattenFilterConditions, hasActiveFilters } from '../../utils/viewFilters';
 
 // Import the original AssetList as AssetTableView
 import { AssetList as AssetTableView } from './AssetList';
@@ -43,18 +50,26 @@ interface EnhancedAssetListProps {
   onView?: (asset: Asset) => void;
   onEdit?: (asset: Asset) => void;
   onCreateNew?: () => void;
+  onCreateKit?: () => void;
 }
 
 /**
  * Enhanced AssetList with view modes, filters, and saved views
  */
-export function EnhancedAssetList({ onView, onEdit, onCreateNew }: EnhancedAssetListProps) {
+export function EnhancedAssetList({ onView, onEdit, onCreateNew, onCreateKit }: EnhancedAssetListProps) {
+  const { t: tAssets } = useTranslation('assets');
+  const { t: tViews } = useTranslation('views');
+  const kitsEnabled = useFeatureSettingsStore((state) => state.kitsEnabled);
   // T213: Use UI store for view preferences
   const {
     viewMode,
     setViewMode,
+    quickFilters,
+    setQuickFilters,
+    clearQuickFilters,
     viewFilters,
     setViewFilters,
+    clearViewFilters,
     sortBy,
     setSortBy,
     sortDirection,
@@ -76,6 +91,7 @@ export function EnhancedAssetList({ onView, onEdit, onCreateNew }: EnhancedAsset
 
   // T211: Save view modal
   const [showSaveView, setShowSaveView] = useState(false);
+  const [editingViewId, setEditingViewId] = useState<string | null>(null);
 
   // T212: Saved views menu with localStorage persistence
   const [showSavedViews, setShowSavedViews] = useState(() => {
@@ -97,12 +113,46 @@ export function EnhancedAssetList({ onView, onEdit, onCreateNew }: EnhancedAsset
   }, [showSavedViews]);
 
   const { data: assets = [] } = useAssets();
+  const quickFilterCount = useMemo(() => countFilterConditions(quickFilters), [quickFilters]);
+  const advancedFilterCount = useMemo(() => countFilterConditions(viewFilters), [viewFilters]);
+  const activeFilterCount = quickFilterCount + advancedFilterCount;
+  const hasQuickFilterConditions = quickFilterCount > 0;
+  const hasAdvancedFilterConditions = advancedFilterCount > 0;
+
+  const filtersToApply = useMemo(() => {
+    const activeGroups: ViewFilterGroup[] = [];
+    if (hasActiveFilters(quickFilters)) {
+      activeGroups.push(quickFilters);
+    }
+    if (hasActiveFilters(viewFilters)) {
+      activeGroups.push(viewFilters);
+    }
+
+    if (activeGroups.length === 0) {
+      return createFilterGroup('AND');
+    }
+
+    if (activeGroups.length === 1) {
+      return activeGroups[0];
+    }
+
+    return createFilterGroup('AND', activeGroups);
+  }, [quickFilters, viewFilters]);
+
+  const shouldApplyFilters = hasActiveFilters(filtersToApply);
+
+  const handleCreateKit = () => {
+    onCreateKit?.();
+  };
 
   // T200: Read filters from URL on mount
   useEffect(() => {
     const urlState = readFiltersFromUrl();
-    if (urlState.filters.length > 0) {
+    if (urlState.filters) {
       setViewFilters(urlState.filters);
+    }
+    if (urlState.quickFilters) {
+      setQuickFilters(urlState.quickFilters);
     }
     if (urlState.viewMode) {
       setViewMode(urlState.viewMode);
@@ -126,15 +176,18 @@ export function EnhancedAssetList({ onView, onEdit, onCreateNew }: EnhancedAsset
       viewMode,
       sortBy || undefined,
       sortDirection,
-      groupBy || undefined
+      groupBy || undefined,
+      quickFilters,
     );
-  }, [viewFilters, viewMode, sortBy, sortDirection, groupBy]);
+  }, [viewFilters, viewMode, sortBy, sortDirection, groupBy, quickFilters]);
 
   // T197: Apply advanced filters
   const filteredAssets = useMemo(() => {
-    if (viewFilters.length === 0) return assets;
-    return applyFilters(assets, viewFilters);
-  }, [assets, viewFilters]);
+    if (!shouldApplyFilters) {
+      return assets;
+    }
+    return applyFilters(assets, filtersToApply);
+  }, [assets, filtersToApply, shouldApplyFilters]);
 
   // T201: Apply sorting
   const sortedAssets = useMemo(() => {
@@ -144,20 +197,31 @@ export function EnhancedAssetList({ onView, onEdit, onCreateNew }: EnhancedAsset
 
   // T211: Handle save current view
   const handleSaveCurrentView = () => {
+    setEditingViewId(null);
     setShowSaveView(true);
+  };
+
+  const closeSaveViewModal = () => {
+    setShowSaveView(false);
+    setEditingViewId(null);
   };
 
     // T212: Handle load saved view
   const handleLoadSavedView = (view: SavedView) => {
     setViewMode(view.viewMode);
     setViewFilters(view.filters);
+    if (view.quickFilters) {
+      setQuickFilters(view.quickFilters);
+    } else {
+      clearQuickFilters();
+    }
     if (view.sortBy) setSortBy(view.sortBy);
     if (view.sortDirection) setSortDirection(view.sortDirection);
     if (view.groupBy) setGroupBy(view.groupBy);
     setShowSavedViews(false);
     notifications.show({
-      title: 'Ansicht geladen',
-      message: `Ansicht "${view.name}" wurde angewendet`,
+      title: tAssets('list.notifications.viewLoaded', { name: view.name }),
+      message: tAssets('list.notifications.viewLoaded', { name: view.name }),
       color: 'blue',
     });
   };
@@ -165,7 +229,8 @@ export function EnhancedAssetList({ onView, onEdit, onCreateNew }: EnhancedAsset
   // Convert ViewFilters to AssetFilters for table view compatibility
   const legacyFilters: AssetFilters = useMemo(() => {
     const filters: AssetFilters = {};
-    for (const filter of viewFilters) {
+    const conditions = flattenFilterConditions(filtersToApply);
+    for (const filter of conditions) {
       if (filter.field === 'category.name' && filter.operator === 'equals') {
         // Note: This is a simplified conversion - full implementation would need category ID lookup
         filters.assetTypeId = String(filter.value);
@@ -178,7 +243,7 @@ export function EnhancedAssetList({ onView, onEdit, onCreateNew }: EnhancedAsset
       }
     }
     return filters;
-  }, [viewFilters]);
+  }, [filtersToApply]);
 
   // Render view based on current mode
   const renderView = () => {
@@ -188,10 +253,11 @@ export function EnhancedAssetList({ onView, onEdit, onCreateNew }: EnhancedAsset
           <AssetTableView
             onView={onView}
             onEdit={onEdit}
-            onCreateNew={undefined}
             initialFilters={legacyFilters}
             hideFilterButton
             filtersOpen={filtersPanelOpen}
+            hideViewSelector
+            hideAdvancedFilters
           />
         );
       case 'gallery':
@@ -206,10 +272,11 @@ export function EnhancedAssetList({ onView, onEdit, onCreateNew }: EnhancedAsset
           <AssetTableView
             onView={onView}
             onEdit={onEdit}
-            onCreateNew={undefined}
             initialFilters={legacyFilters}
             hideFilterButton
             filtersOpen={filtersPanelOpen}
+            hideViewSelector
+            hideAdvancedFilters
           />
         );
       default:
@@ -217,10 +284,11 @@ export function EnhancedAssetList({ onView, onEdit, onCreateNew }: EnhancedAsset
           <AssetTableView
             onView={onView}
             onEdit={onEdit}
-            onCreateNew={undefined}
             initialFilters={legacyFilters}
             hideFilterButton
             filtersOpen={filtersPanelOpen}
+            hideViewSelector
+            hideAdvancedFilters
           />
         );
     }
@@ -230,23 +298,23 @@ export function EnhancedAssetList({ onView, onEdit, onCreateNew }: EnhancedAsset
     <Stack gap="md">
       {/* Header with ViewModeSelector and actions */}
       <Group justify="space-between">
-        <Title order={2}>Inventar</Title>
+        <Title order={2}>{tAssets('list.title')}</Title>
 
         <Group>
-          {/* T209: ViewModeSelector integration */}
-          <ViewModeSelector value={viewMode} onChange={setViewMode} />
+          {/* T209: ViewSelector integration */}
+          <ViewSelector value={viewMode} onChange={setViewMode} />
 
           {/* T212: Saved views quick access */}
           <Menu position="bottom-end" shadow="md">
             <Menu.Target>
               <Button variant="default" leftSection={<IconBookmark size={16} />}>
-                Ansichten
+                {tAssets('list.actions.views')}
               </Button>
             </Menu.Target>
             <Menu.Dropdown>
-              <Menu.Label>Gespeicherte Ansichten</Menu.Label>
+              <Menu.Label>{tAssets('list.actions.menuLabel')}</Menu.Label>
               <Menu.Item onClick={() => setShowSavedViews(true)}>
-                Alle Ansichten anzeigen...
+                {tAssets('list.actions.showAll')}
               </Menu.Item>
             </Menu.Dropdown>
           </Menu>
@@ -257,7 +325,9 @@ export function EnhancedAssetList({ onView, onEdit, onCreateNew }: EnhancedAsset
             leftSection={<IconFilter size={16} />}
             onClick={() => setFiltersPanelOpen((prev) => !prev)}
           >
-            Filter {viewFilters.length > 0 && `(${viewFilters.length})`}
+            {activeFilterCount > 0
+              ? tAssets('list.actions.filtersWithCount', { count: activeFilterCount })
+              : tAssets('list.actions.filters')}
           </Button>
 
           {/* T211: Save current view button */}
@@ -265,24 +335,80 @@ export function EnhancedAssetList({ onView, onEdit, onCreateNew }: EnhancedAsset
             variant="default"
             leftSection={<IconDeviceFloppy size={16} />}
             onClick={handleSaveCurrentView}
-            disabled={viewFilters.length === 0}
+            disabled={activeFilterCount === 0}
           >
-            Ansicht speichern
+            {tAssets('list.actions.saveView')}
           </Button>
 
           {onCreateNew && (
-            <Button leftSection={<IconPlus size={16} />} onClick={onCreateNew}>
-              Neu
-            </Button>
+            <Menu position="bottom-end" shadow="md">
+              <Menu.Target>
+                <Button leftSection={<IconPlus size={16} />} rightSection={<IconChevronDown size={16} />}>
+                  {tAssets('list.actions.new')}
+                </Button>
+              </Menu.Target>
+              <Menu.Dropdown>
+                <Menu.Item leftSection={<IconPlus size={16} />} onClick={onCreateNew}>
+                  New Asset
+                </Menu.Item>
+                {kitsEnabled && onCreateKit && (
+                  <Menu.Item leftSection={<IconPackage size={16} />} onClick={handleCreateKit}>
+                    Create Kit
+                  </Menu.Item>
+                )}
+              </Menu.Dropdown>
+            </Menu>
           )}
         </Group>
       </Group>
 
       {/* T210: Filter builder panel with smooth collapse animation */}
       <Collapse in={filtersPanelOpen}>
-        <Card withBorder>
-          <FilterBuilder filters={viewFilters} onChange={setViewFilters} />
-        </Card>
+        <Stack gap="md">
+          <Card withBorder>
+            <Stack gap="sm">
+              <Group justify="space-between" align="center">
+                <Text size="sm" fw={600}>
+                  Quick filters
+                </Text>
+                {hasQuickFilterConditions && (
+                  <Button
+                    variant="subtle"
+                    size="xs"
+                    color="gray"
+                    leftSection={<IconX size={14} />}
+                    onClick={clearQuickFilters}
+                  >
+                    Clear quick filters
+                  </Button>
+                )}
+              </Group>
+              <FilterBuilder mode="quick" value={quickFilters} onChange={setQuickFilters} />
+            </Stack>
+          </Card>
+
+          <Card withBorder>
+            <Stack gap="sm">
+              <Group justify="space-between" align="center">
+                <Text size="sm" fw={600}>
+                  Advanced filters
+                </Text>
+                {hasAdvancedFilterConditions && (
+                  <Button
+                    variant="subtle"
+                    size="xs"
+                    color="gray"
+                    leftSection={<IconX size={14} />}
+                    onClick={clearViewFilters}
+                  >
+                    Clear advanced filters
+                  </Button>
+                )}
+              </Group>
+              <FilterBuilder mode="advanced" value={viewFilters} onChange={setViewFilters} />
+            </Stack>
+          </Card>
+        </Stack>
       </Collapse>
 
       {/* Render current view mode */}
@@ -291,25 +417,27 @@ export function EnhancedAssetList({ onView, onEdit, onCreateNew }: EnhancedAsset
       {/* T211: Save view modal */}
       <Modal
         opened={showSaveView}
-        onClose={() => setShowSaveView(false)}
-        title="Ansicht speichern"
+        onClose={closeSaveViewModal}
+        title={tViews('form.title')}
         size="md"
       >
         <SavedViewForm
           viewMode={viewMode}
           filters={viewFilters}
+          quickFilters={hasQuickFilterConditions ? quickFilters : undefined}
           sortBy={sortBy || undefined}
           sortDirection={sortDirection}
           groupBy={groupBy || undefined}
+          existingViewId={editingViewId ?? undefined}
           onSuccess={() => {
-            setShowSaveView(false);
+            closeSaveViewModal();
             notifications.show({
-              title: 'Erfolg',
-              message: 'Ansicht wurde gespeichert',
+              title: tViews('notifications.createSuccessTitle'),
+              message: tViews('notifications.createSuccessMessage'),
               color: 'green',
             });
           }}
-          onCancel={() => setShowSaveView(false)}
+          onCancel={closeSaveViewModal}
         />
       </Modal>
 
@@ -317,7 +445,7 @@ export function EnhancedAssetList({ onView, onEdit, onCreateNew }: EnhancedAsset
       <Drawer
         opened={showSavedViews}
         onClose={() => setShowSavedViews(false)}
-        title="Gespeicherte Ansichten"
+        title={tViews('drawer.title')}
         position="right"
         size="md"
       >
@@ -326,6 +454,7 @@ export function EnhancedAssetList({ onView, onEdit, onCreateNew }: EnhancedAsset
           onEditView={(view) => {
             // Load view for editing
             handleLoadSavedView(view);
+            setEditingViewId(view.id);
             setShowSaveView(true);
           }}
         />

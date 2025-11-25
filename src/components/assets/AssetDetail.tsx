@@ -15,12 +15,12 @@ import {
   Textarea,
   Title,
   Tooltip,
-  AspectRatio,
   Image,
-  Avatar,
   ActionIcon,
   Collapse,
   useMantineTheme,
+  Menu,
+  HoverCard,
 } from '@mantine/core';
 import {
   IconCalendar,
@@ -28,7 +28,6 @@ import {
   IconChevronUp,
   IconDownload,
   IconEdit,
-  IconHash,
   IconHistory,
   IconInfoCircle,
   IconLocation,
@@ -42,15 +41,18 @@ import {
   IconUsersPlus,
   IconUsers,
   IconTags,
+  IconDots,
+  IconCopy,
 } from '@tabler/icons-react';
 import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { notifications } from '@mantine/notifications';
 import { useAsset, useAssets, useRegenerateBarcode } from '../../hooks/useAssets';
 import { useChangeHistory } from '../../hooks/useChangeHistory';
-import { useMaintenanceRecords, useMaintenanceSchedule } from '../../hooks/useMaintenance';
 import { useCategories } from '../../hooks/useCategories';
-import { AssetStatusBadge } from './AssetStatusBadge';
+import { useAssignments } from '../../hooks/useAssignments';
+import { AssetStatusMenu } from './AssetStatusMenu';
 import { personSearchService } from '../../services/person/PersonSearchService';
 import type { PersonSearchResult } from '../../services/person/PersonSearchService';
 import { BarcodeDisplay } from '../scanner/BarcodeDisplay';
@@ -59,51 +61,85 @@ import { ChangeHistoryList } from './ChangeHistoryList';
 import { ParentAssetLink } from './ParentAssetLink';
 import { ChildAssetsList } from './ChildAssetsList';
 import { ParentSummaryStatistics } from './ParentSummaryStatistics';
-import { ConvertToParentModal } from './ConvertToParentModal';
 import { AssetMaintenanceHistory } from './AssetMaintenanceHistory';
-import { MaintenanceRecordList } from '../maintenance/MaintenanceRecordList';
-import { MaintenanceRecordForm } from '../maintenance/MaintenanceRecordForm';
-import { MaintenanceReminderBadge } from '../maintenance/MaintenanceReminderBadge';
-import { formatScheduleDescription } from '../../utils/maintenanceCalculations';
-import type { Asset, AssetGroupFieldSource } from '../../types/entities';
-import { AssetAssignmentList } from './AssetAssignmentList';
-import { AssetGroupBadge } from '../asset-groups/AssetGroupBadge';
+import type { Asset, AssetGroupFieldSource, AssetStatus } from '../../types/entities';
+import type { Tag, InheritedTag } from '../../types/tag';
 import { AssetGroupDetail } from '../asset-groups/AssetGroupDetail';
 import { ConvertAssetToGroupModal } from '../asset-groups/ConvertAssetToGroupModal';
 import { JoinAssetGroupModal } from '../asset-groups/JoinAssetGroupModal';
 import { useAssetGroup, useRemoveAssetFromGroup } from '../../hooks/useAssetGroups';
 import { useFeatureSettingsStore } from '../../stores';
+import { RepairHistoryTab } from '../damage/RepairHistoryTab';
+import { DamageReportForm, type DamageReportFormData } from '../damage/DamageReportForm';
+import { useDamageReports } from '../../hooks/useDamageReports';
+import { AssignmentField } from '../assignment/AssignmentField';
+import type { PersonResult } from '../assignment/PersonSearch';
+import type { AssignmentTarget } from '../../types/assignment';
+import { useUpdateAsset } from '../../hooks/useAssets';
+import { PropertyInheritanceIndicator } from '../kits/PropertyInheritanceIndicator';
+import { TagInput } from '../tags/TagInput';
+import { TagListWithInheritance } from '../tags/InheritedTagBadge';
+import { useTags, useEntityTags } from '../../hooks/useTags';
+import { AssetLabelPrint } from './AssetLabelPrint';
+import { KitInformationSection } from './KitInformationSection';
+import { KitSummaryPanel } from './KitSummaryPanel';
 
 interface AssetDetailProps {
   assetId: string;
   onEdit?: () => void;
   onClose?: () => void;
+  onDuplicate?: () => void;
 }
 
-export function AssetDetail({ assetId, onEdit, onClose }: AssetDetailProps) {
+export function AssetDetail({ assetId, onEdit, onClose, onDuplicate }: AssetDetailProps) {
   const { data: asset, isLoading, error } = useAsset(assetId);
   const { data: history = [] } = useChangeHistory(assetId, 10);
   const { data: allAssets = [] } = useAssets();
   const { data: categories = [] } = useCategories();
-  const { data: maintenanceRecords = [] } = useMaintenanceRecords(assetId);
-  const { data: maintenanceSchedule } = useMaintenanceSchedule(assetId);
   const [barcodeHistoryExpanded, setBarcodeHistoryExpanded] = useState(() => {
     const saved = localStorage.getItem(`churchtools-inventory-barcode-history-expanded-${assetId}`);
     return saved ? JSON.parse(saved) : false;
   });
-  const [convertToParentOpened, setConvertToParentOpened] = useState(false);
-  const [maintenanceFormOpened, setMaintenanceFormOpened] = useState(false);
   const [groupDetailOpened, setGroupDetailOpened] = useState(false);
   const [convertGroupOpened, setConvertGroupOpened] = useState(false);
   const [joinGroupOpened, setJoinGroupOpened] = useState(false);
-  const maintenanceHistoryCount = history.filter(entry => entry.action === 'maintenance-performed').length;
+  const [damageModalOpened, setDamageModalOpened] = useState(false);
   const removeAssetFromGroup = useRemoveAssetFromGroup();
   const { data: assetGroupDetail } = useAssetGroup(asset?.assetGroup?.id);
   const maintenanceEnabled = useFeatureSettingsStore((state) => state.maintenanceEnabled);
+  const { markReportAsRepaired, createDamageReport, isCreatingReport, isRepairing } = useDamageReports(assetId);
+  const { t: tDamage } = useTranslation('damage');
   const [searchParams, setSearchParams] = useSearchParams();
   const routeGroupId = searchParams.get('groupId');
   const routeShowGroup = searchParams.get('showGroup');
   const assetGroupId = asset?.assetGroup?.id ?? null;
+
+  // Assignment hooks
+  const { currentAssignment, assignToTarget, checkIn, isAssigning, isCheckingIn } = useAssignments(assetId);
+  const updateAsset = useUpdateAsset();
+  const assignmentFieldRef = useRef<HTMLDivElement>(null);
+
+  // Tags hooks
+  const { tags: availableTags = [], isLoading: tagsLoading } = useTags();
+  const {
+    tags: entityTags,
+    applyTag,
+    removeTag,
+    isApplying,
+    isRemoving,
+  } = useEntityTags('asset', assetId);
+  const { t: tTags } = useTranslation('tags');
+
+  const directTags = entityTags ?? [];
+  const inheritedTagEntries = (asset?.inheritedTags ?? [])
+    .map((inherited) => {
+      const tag = availableTags.find((t) => t.id === inherited.tagId);
+      if (!tag) {
+        return null;
+      }
+      return { tag, inheritedFrom: inherited };
+    })
+    .filter((entry): entry is { tag: Tag; inheritedFrom: InheritedTag } => entry !== null);
 
   useEffect(() => {
     if (!assetGroupId) {
@@ -249,55 +285,8 @@ export function AssetDetail({ assetId, onEdit, onClose }: AssetDetailProps) {
     });
   };
 
-  const InfoRow = ({ icon, label, value, fieldKey }: { icon: React.ReactNode; label: string; value: React.ReactNode; fieldKey?: string }) => (
-    <Group gap="xs" wrap="nowrap">
-      <Box c="dimmed" style={{ display: 'flex', alignItems: 'center' }}>
-        {icon}
-      </Box>
-      <Box style={{ flex: 1 }}>
-        <Group gap={4} align="center">
-          <Text size="xs" c="dimmed" tt="uppercase" fw={700}>
-            {label}
-          </Text>
-          {fieldKey ? renderFieldSourceIndicator(fieldKey) : null}
-        </Group>
-        <Box>
-          {value ? (
-            typeof value === 'string' ? (
-              <Text size="sm">{value}</Text>
-            ) : (
-              value
-            )
-          ) : (
-            <Text size="sm" c="dimmed">—</Text>
-          )}
-        </Box>
-      </Box>
-    </Group>
-  );
-
   return (
     <>
-      <ConvertToParentModal
-        opened={convertToParentOpened}
-        onClose={() => setConvertToParentOpened(false)}
-        asset={asset}
-      />
-      {maintenanceEnabled && (
-        <Modal
-          opened={maintenanceFormOpened}
-          onClose={() => setMaintenanceFormOpened(false)}
-          title="Record Maintenance"
-          size="lg"
-        >
-          <MaintenanceRecordForm
-            assetId={assetId}
-            assetNumber={asset.assetNumber}
-            assetName={asset.name}
-            onSuccess={() => setMaintenanceFormOpened(false)}
-          />
-        </Modal>
-      )}
       {asset.assetGroup && (
         <Modal
           opened={groupDetailOpened}
@@ -320,43 +309,128 @@ export function AssetDetail({ assetId, onEdit, onClose }: AssetDetailProps) {
         onClose={() => setJoinGroupOpened(false)}
         onJoined={handleGroupJoined}
       />
-      <Stack gap="md">
-        <Group justify="space-between">
-          <Group>
-            <Group align="center">
-              <Title order={2}>{asset.name}</Title>
-              <Tooltip label="This asset name is autogenerated using the category template but can be edited here." withArrow>
-                <ActionIcon variant="subtle">
-                  <IconInfoCircle size={16} />
+      <Modal
+        opened={damageModalOpened}
+        onClose={() => setDamageModalOpened(false)}
+        title={tDamage('modal.title')}
+        size="md"
+      >
+        <DamageReportForm
+          assetId={assetId}
+          onSubmit={async (data: DamageReportFormData) => {
+            try {
+              await createDamageReport(data);
+              await updateAsset.mutateAsync({
+                id: asset.id,
+                data: { status: 'broken' },
+              });
+              setDamageModalOpened(false);
+              notifications.show({
+                title: tDamage('notifications.reportSuccessTitle'),
+                message: tDamage('notifications.reportSuccessMessage'),
+                color: 'green',
+              });
+            } catch (error) {
+              const fallbackMessage = tDamage('notifications.reportErrorMessage');
+              const message = error instanceof Error && error.message ? error.message : fallbackMessage;
+              notifications.show({
+                title: tDamage('notifications.reportErrorTitle'),
+                message,
+                color: 'red',
+              });
+            }
+          }}
+          onCancel={() => setDamageModalOpened(false)}
+          loading={isCreatingReport}
+        />
+      </Modal>
+      
+      <Stack gap="lg">
+        {/* Compact Header */}
+        <Group justify="space-between" wrap="nowrap">
+          <Group gap="md">
+            <Title order={2} style={{ fontWeight: 600 }}>{asset.name}</Title>
+            <Badge size="lg" variant="light" color="gray">
+              {asset.assetNumber}
+            </Badge>
+            <AssetStatusMenu
+              asset={asset}
+              size="md"
+              onStatusChange={async (newStatus: AssetStatus) => {
+                try {
+                  await updateAsset.mutateAsync({
+                    id: asset.id,
+                    data: { status: newStatus },
+                  });
+                  notifications.show({
+                    title: 'Status Updated',
+                    message: `Asset status changed to ${newStatus}`,
+                    color: 'green',
+                  });
+                } catch (error) {
+                  notifications.show({
+                    title: 'Error',
+                    message: error instanceof Error ? error.message : 'Failed to update status',
+                    color: 'red',
+                  });
+                }
+              }}
+              onAssignClick={() => {
+                assignmentFieldRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              }}
+              onBrokenClick={() => {
+                setDamageModalOpened(true);
+              }}
+            />
+          </Group>
+          
+          <Group gap="xs">
+            {onEdit && (
+              <Tooltip label="Edit asset">
+                <ActionIcon variant="default" size="lg" onClick={onEdit}>
+                  <IconEdit size={18} />
                 </ActionIcon>
               </Tooltip>
-            </Group>
-            <AssetStatusBadge status={asset.status} size="md" />
-          </Group>
-          <Group>
-            {!asset.isParent && !asset.parentAssetId && (
-              <Button
-                variant="light"
-                size="sm"
-                onClick={() => setConvertToParentOpened(true)}
-              >
-                Convert to Parent
-              </Button>
             )}
-            {onEdit && (
-              <Button
-                variant="default"
-                leftSection={<IconEdit size={16} />}
-                onClick={onEdit}
-              >
-                Edit
-              </Button>
-            )}
-            {onClose && (
-              <Button variant="subtle" onClick={onClose}>
-                Close
-              </Button>
-            )}
+            <Menu shadow="md" width={220} position="bottom-end" withinPortal>
+              <Menu.Target>
+                <ActionIcon variant="default" size="lg">
+                  <IconDots size={18} />
+                </ActionIcon>
+              </Menu.Target>
+              <Menu.Dropdown>
+                {onDuplicate && (
+                  <>
+                    <Menu.Item leftSection={<IconCopy size={16} />} onClick={onDuplicate}>
+                      Duplicate Asset
+                    </Menu.Item>
+                    <Menu.Divider />
+                  </>
+                )}
+                {!asset.assetGroup && (
+                  <>
+                    <Menu.Item
+                      leftSection={<IconUsersPlus size={16} />}
+                      onClick={() => setConvertGroupOpened(true)}
+                    >
+                      Create Asset Model
+                    </Menu.Item>
+                    <Menu.Item
+                      leftSection={<IconUsersGroup size={16} />}
+                      onClick={() => setJoinGroupOpened(true)}
+                    >
+                      Join Existing Model
+                    </Menu.Item>
+                  </>
+                )}
+                {onClose && (
+                  <>
+                    <Menu.Divider />
+                    <Menu.Item onClick={onClose}>Close</Menu.Item>
+                  </>
+                )}
+              </Menu.Dropdown>
+            </Menu>
           </Group>
         </Group>
 
@@ -366,253 +440,310 @@ export function AssetDetail({ assetId, onEdit, onClose }: AssetDetailProps) {
           <Tabs.Tab value="overview" leftSection={<IconInfoCircle size={16} />}>
             Overview
           </Tabs.Tab>
-          {maintenanceEnabled && (
-            <Tabs.Tab value="maintenance" leftSection={<IconTools size={16} />}>
-              Maintenance History
-              {maintenanceHistoryCount > 0 && (
-                <Badge size="sm" circle ml="xs">
-                  {maintenanceHistoryCount}
-                </Badge>
-              )}
-            </Tabs.Tab>
-          )}
+          <Tabs.Tab value="maintenance-damage" leftSection={<IconTools size={16} />}>
+            {maintenanceEnabled ? 'Maintenance & Damage' : 'Damage & Repairs'}
+          </Tabs.Tab>
           <Tabs.Tab value="history" leftSection={<IconHistory size={16} />}>
-            History
-            {history.length > 0 && (
-              <Badge size="sm" circle ml="xs">
-                {history.length}
-              </Badge>
-            )}
+            History {history.length > 0 && <Badge size="xs" circle ml={4}>{history.length}</Badge>}
           </Tabs.Tab>
         </Tabs.List>
 
         <Tabs.Panel value="overview" pt="md">
           <Grid>
-            <Grid.Col span={{ base: 12, md: 8 }}>
+            {/* Main Content - 2/3 width */}
+            <Grid.Col span={{ base: 12, lg: 8 }}>
               <Stack gap="md">
-                {/* Parent Asset Link - Show on child assets */}
-                {asset.parentAssetId && (
-                  <ParentAssetLink parentAssetId={asset.parentAssetId} />
-                )}
-
-                {/* Parent Summary Statistics - Show on parent assets */}
-                {asset.isParent && (
-                  <ParentSummaryStatistics 
-                    childAssets={allAssets.filter(a => a.parentAssetId === asset.id)} 
+                {asset.isKit && (
+                  <KitSummaryPanel
+                    asset={asset}
+                    directTags={directTags}
+                    inheritedTags={inheritedTagEntries}
                   />
                 )}
 
-                {/* Child Assets List - Show on parent assets */}
-                {asset.isParent && <ChildAssetsList parentAsset={asset} />}
+                {/* Parent/Child Relationships */}
+                {asset.parentAssetId && <ParentAssetLink parentAssetId={asset.parentAssetId} />}
+                {asset.isParent && (
+                  <>
+                    <ParentSummaryStatistics childAssets={allAssets.filter(a => a.parentAssetId === asset.id)} />
+                    <ChildAssetsList parentAsset={asset} />
+                  </>
+                )}
 
-                {asset.assetGroup ? (
-                  <Card withBorder>
-                    <Stack gap="md">
-                      <Group justify="space-between" align="flex-start">
-                        <Group gap="xs" align="center">
-                          <IconUsers size={18} />
-                          <Text fw={600}>Asset Model</Text>
-                        </Group>
-                        <Group gap="xs">
-                          <Button
-                            variant="light"
-                            size="sm"
-                            leftSection={<IconUsersGroup size={16} />}
-                            onClick={openGroupDetail}
-                          >
-                            View Model
-                          </Button>
-                          <Button
-                            variant="subtle"
-                            color="red"
-                            size="sm"
-                            leftSection={<IconUsers size={16} />}
-                            loading={removeAssetFromGroup.isPending}
-                            onClick={() => {
-                              void handleLeaveGroup();
-                            }}
-                          >
-                            Leave Model
-                          </Button>
-                        </Group>
-                      </Group>
+                {/* Kit Information */}
+                {asset.isKit && <KitInformationSection asset={asset} />}
 
-                      <Group gap="xs" wrap="wrap">
-                        <AssetGroupBadge group={asset.assetGroup} withName />
-                        {assetGroupDetail && (
-                          <>
-                            <Badge variant="light" color="gray" leftSection={<IconUsers size={14} />}
-                            >
-                              {assetGroupDetail.memberCount} members
-                            </Badge>
-                            <Badge variant="light" color="grape">
-                              {inheritedFieldCount} inherited fields
-                            </Badge>
-                          </>
-                        )}
+                {/* Asset Model Card - Compact */}
+                {asset.assetGroup && (
+                  <Card withBorder p="md">
+                    <Group justify="space-between" wrap="nowrap">
+                      <Group gap="sm">
+                        <IconUsers size={20} style={{ flexShrink: 0 }} />
+                        <div>
+                          <Text size="sm" fw={600}>{asset.assetGroup.name}</Text>
+                          {assetGroupDetail && (
+                            <Text size="xs" c="dimmed">
+                              {assetGroupDetail.memberCount} members · {inheritedFieldCount} inherited
+                            </Text>
+                          )}
+                        </div>
                       </Group>
-
-                      <Text size="sm" c="dimmed">
-                        {assetGroupDetail
-                          ? 'This asset inherits shared fields from the model. Updates to the model will cascade to its members.'
-                          : 'Loading model details...'}
-                      </Text>
-                    </Stack>
-                  </Card>
-                ) : (
-                  <Card withBorder>
-                    <Stack gap="sm">
-                      <Group gap="xs" align="center">
-                        <IconUsersGroup size={18} />
-                        <Text fw={600}>Asset Model</Text>
-                      </Group>
-                      <Text size="sm" c="dimmed">
-                        This asset is not part of an asset model. Create a model to share fields across similar assets or join an existing model.
-                      </Text>
                       <Group gap="xs">
-                        <Button
-                          leftSection={<IconUsersPlus size={16} />}
-                          onClick={() => setConvertGroupOpened(true)}
-                        >
-                          Create Asset Model
-                        </Button>
-                        <Button
-                          variant="light"
-                          leftSection={<IconUsersGroup size={16} />}
-                          onClick={() => setJoinGroupOpened(true)}
-                        >
-                          Join Existing Model
-                        </Button>
+                        <Tooltip label="View model">
+                          <ActionIcon variant="light" onClick={openGroupDetail}>
+                            <IconUsersGroup size={16} />
+                          </ActionIcon>
+                        </Tooltip>
+                        <Tooltip label="Leave model">
+                          <ActionIcon 
+                            variant="subtle" 
+                            color="red" 
+                            loading={removeAssetFromGroup.isPending}
+                            onClick={() => void handleLeaveGroup()}
+                          >
+                            <IconUsers size={16} />
+                          </ActionIcon>
+                        </Tooltip>
                       </Group>
-                    </Stack>
+                    </Group>
                   </Card>
                 )}
 
-                {/* Basic Information */}
-                <Card withBorder>
-                  {asset.mainImage && (
-                    <Card.Section>
-                      <AspectRatio ratio={16 / 9}>
-                        <Image
-                          src={asset.mainImage}
-                          alt={`${asset.name} main image`}
-                          fit="cover"
+                {/* Photo */}
+                {asset.mainImage && asset.mainImage.trim() !== '' && (
+                  <HoverCard position="right" shadow="md" withinPortal openDelay={200} closeDelay={100}>
+                    <HoverCard.Target>
+                      <Card
+                        withBorder
+                        p="sm"
+                        radius="md"
+                        style={{ overflow: 'hidden', cursor: 'zoom-in', display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 120 }}
+                      >
+                        <Image 
+                          src={asset.mainImage} 
+                          alt={asset.name} 
+                          fit="contain"
+                          h={100}
+                          w="auto"
                         />
-                      </AspectRatio>
-                    </Card.Section>
-                  )}
-                  <Card.Section inheritPadding>
-                    <Stack gap="md">
-                      <Title order={4}>Basic Information</Title>
-                      <Divider />
-                      
-                      <Grid>
-                        <Grid.Col span={6}>
-                          <InfoRow
-                            icon={<IconHash size={16} />}
-                            label="Asset Number"
-                            value={<Text fw={600}>{asset.assetNumber}</Text>}
-                          />
-                        </Grid.Col>
-                        <Grid.Col span={6}>
-                          <InfoRow
-                            icon={<IconTag size={16} />}
-                            label="Type"
-                            value={<Badge variant="light">{asset.assetType.name}</Badge>}
-                            fieldKey="category"
-                          />
-                        </Grid.Col>
-                        <Grid.Col span={6}>
-                          <InfoRow
-                            icon={<IconLocation size={16} />}
-                            label="Location"
-                            value={asset.location}
-                          />
-                        </Grid.Col>
-                        {asset.barcode && (
-                          <Grid.Col span={6}>
-                            <InfoRow
-                              icon={<IconPackage size={16} />}
-                              label="Barcode"
-                              value={asset.barcode}
-                            />
-                          </Grid.Col>
-                        )}
-                      </Grid>
+                      </Card>
+                    </HoverCard.Target>
+                    <HoverCard.Dropdown p={0} style={{ border: 'none', background: 'transparent' }}>
+                      <Card withBorder p="sm" radius="md" style={{ overflow: 'hidden', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                        <Image 
+                          src={asset.mainImage} 
+                          alt={asset.name} 
+                          fit="contain"
+                          h={400}
+                          w="auto"
+                        />
+                      </Card>
+                    </HoverCard.Dropdown>
+                  </HoverCard>
+                )}
 
-                      {asset.description && (
+                {/* Core Info - Compact Grid */}
+                <Card withBorder p="md">
+                  <Stack gap="md">
+                    <Grid gutter="md">
+                      <Grid.Col span={6}>
+                        <Group gap="xs" wrap="nowrap">
+                          <IconTag size={18} style={{ color: 'var(--mantine-color-dimmed)' }} />
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <Text size="xs" c="dimmed" mb={2}>Type</Text>
+                            <Group gap={4}>
+                              <Badge variant="light" style={{ justifyContent: 'flex-start' }}>
+                                {asset.assetType.name}
+                              </Badge>
+                              {asset.isKit && (
+                                <Badge variant="light" color="violet">
+                                  KIT
+                                </Badge>
+                              )}
+                            </Group>
+                          </div>
+                        </Group>
+                      </Grid.Col>
+                      <Grid.Col span={6}>
+                        <Group gap="xs" wrap="nowrap">
+                          <IconLocation size={18} style={{ color: 'var(--mantine-color-dimmed)' }} />
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <Group gap={4} mb={2}>
+                              <Text size="xs" c="dimmed">Location</Text>
+                              {asset.kitId && <PropertyInheritanceIndicator assetId={asset.id} property="location" />}
+                            </Group>
+                            <Text size="sm" truncate>{asset.location || '—'}</Text>
+                          </div>
+                        </Group>
+                      </Grid.Col>
+                      {(asset.manufacturer || asset.model) && (
+                        <>
+                          <Grid.Col span={6}>
+                            <Group gap="xs" wrap="nowrap">
+                              <IconPackage size={18} style={{ color: 'var(--mantine-color-dimmed)' }} />
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <Text size="xs" c="dimmed" mb={2}>Manufacturer</Text>
+                                <Text size="sm" truncate>{asset.manufacturer || '—'}</Text>
+                              </div>
+                            </Group>
+                          </Grid.Col>
+                          <Grid.Col span={6}>
+                            <Group gap="xs" wrap="nowrap">
+                              <IconPackage size={18} style={{ color: 'var(--mantine-color-dimmed)' }} />
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <Text size="xs" c="dimmed" mb={2}>Model</Text>
+                                <Text size="sm" truncate>{asset.model || '—'}</Text>
+                              </div>
+                            </Group>
+                          </Grid.Col>
+                        </>
+                      )}
+                    </Grid>
+
+                    {asset.description && (
+                      <>
+                        <Divider />
                         <Box>
-                          <Group gap={4} align="center" mb="xs">
-                            <Text size="xs" c="dimmed" tt="uppercase" fw={700}>
-                              Description
-                            </Text>
+                          <Group gap={4} mb={4}>
+                            <Text size="xs" c="dimmed" tt="uppercase" fw={600}>Description</Text>
                             {renderFieldSourceIndicator('description')}
                           </Group>
-                          <Text size="sm">{asset.description}</Text>
+                          <Text size="sm" style={{ whiteSpace: 'pre-wrap' }}>{asset.description}</Text>
                         </Box>
-                      )}
-                    </Stack>
-                  </Card.Section>
+                      </>
+                    )}
+                  </Stack>
                 </Card>
 
-                <AssetAssignmentList asset={asset} />
+                {/* Assignment - Compact */}
+                <Card withBorder p="md" ref={assignmentFieldRef}>
+                  <Stack gap="sm">
+                    <Group gap="xs">
+                      <IconUser size={18} />
+                      <Text size="sm" fw={600}>Assignment</Text>
+                    </Group>
+                    <AssignmentField
+                      currentAssignment={currentAssignment}
+                      onSearchPerson={async (query: string): Promise<PersonResult[]> => {
+                        const response = await personSearchService.search({ query, limit: 10, domainTypes: ['person'] });
+                        return response.results.map((r: PersonSearchResult) => ({
+                          id: r.id,
+                          firstName: r.firstName,
+                          lastName: r.lastName,
+                          email: r.email,
+                          avatarUrl: r.avatarUrl,
+                        }));
+                      }}
+                      onAssign={async (personId: string, personName: string) => {
+                        try {
+                          const target: AssignmentTarget = { type: 'person', id: personId, name: personName };
+                          await assignToTarget(target);
+                          notifications.show({
+                            title: 'Asset Assigned',
+                            message: `Assigned to ${personName}`,
+                            color: 'green',
+                          });
+                        } catch (error) {
+                          notifications.show({
+                            title: 'Assignment Failed',
+                            message: error instanceof Error ? error.message : 'Unknown error',
+                            color: 'red',
+                          });
+                        }
+                      }}
+                      onCheckIn={async () => {
+                        try {
+                          await checkIn();
+                          notifications.show({
+                            title: 'Checked In',
+                            message: 'Asset returned successfully',
+                            color: 'green',
+                          });
+                        } catch (error) {
+                          notifications.show({
+                            title: 'Check-in Failed',
+                            message: error instanceof Error ? error.message : 'Unknown error',
+                            color: 'red',
+                          });
+                        }
+                      }}
+                      loading={isAssigning || isCheckingIn}
+                    />
+                  </Stack>
+                </Card>
 
-                {/* Product Information */}
-                {(asset.manufacturer || asset.model) && (
-                  <Card withBorder>
-                    <Stack gap="md">
-                      <Title order={4}>Product Information</Title>
-                      <Divider />
-                      
-                      <Grid>
-                        {asset.manufacturer && (
-                          <Grid.Col span={6}>
-                            <InfoRow
-                              icon={<IconPackage size={16} />}
-                              label="Manufacturer"
-                              value={asset.manufacturer}
-                              fieldKey="manufacturer"
-                            />
-                          </Grid.Col>
-                        )}
-                        {asset.model && (
-                          <Grid.Col span={6}>
-                            <InfoRow
-                              icon={<IconPackage size={16} />}
-                              label="Model"
-                              value={asset.model}
-                              fieldKey="model"
-                            />
-                          </Grid.Col>
-                        )}
-                      </Grid>
-                    </Stack>
-                  </Card>
-                )}
+                {/* Tags - Compact */}
+                <Card withBorder p="md">
+                  <Stack gap="sm">
+                    <Group gap="xs">
+                      <IconTags size={18} />
+                      <Text size="sm" fw={600}>Tags</Text>
+                      {asset.kitId && <PropertyInheritanceIndicator assetId={asset.id} property="tags" />}
+                    </Group>
+                    {(directTags.length > 0 || inheritedTagEntries.length > 0) ? (
+                      <TagListWithInheritance
+                        directTags={directTags}
+                        inheritedTags={inheritedTagEntries}
+                        onRemoveDirectTag={async (tagId) => {
+                          try {
+                            await removeTag(tagId);
+                            notifications.show({
+                              title: tTags('notifications.removedTitle'),
+                              message: tTags('notifications.removedMessage'),
+                              color: 'green',
+                            });
+                          } catch (error) {
+                            notifications.show({
+                              title: tTags('notifications.removeErrorTitle'),
+                              message: error instanceof Error ? error.message : tTags('notifications.removeErrorMessage'),
+                              color: 'red',
+                            });
+                          }
+                        }}
+                        disabled={isRemoving}
+                        size="sm"
+                        showLabels
+                      />
+                    ) : (
+                      <Text size="sm" c="dimmed">
+                        {tTags('emptyState.description')}
+                      </Text>
+                    )}
+                    <TagInput
+                      tags={availableTags}
+                      selectedTagIds={directTags.map((t) => t.id)}
+                      onChange={async (tagIds) => {
+                        const currentIds = directTags.map((t) => t.id);
+                        const toAdd = tagIds.filter(id => !currentIds.includes(id));
+                        const toRemove = currentIds.filter(id => !tagIds.includes(id));
+                        
+                        for (const tagId of toAdd) {
+                          await applyTag(tagId);
+                        }
+                        for (const tagId of toRemove) {
+                          await removeTag(tagId);
+                        }
+                      }}
+                      disabled={isApplying || isRemoving}
+                      isLoading={tagsLoading}
+                      placeholder={tTags('selectOrCreate')}
+                    />
+                  </Stack>
+                </Card>
 
-                {/* Custom Fields */}
-                {Object.keys(asset.customFieldValues).length > 0 && (
-                  <Card withBorder>
-                    <Stack gap="md">
-                      <Title order={4}>Custom Fields</Title>
-                      <Divider />
-                      
-                      <Grid>
-                        {Object.entries(asset.customFieldValues).map(([fieldKey, value]) => {
-                          const fieldDef = categoryDefinition?.customFields.find((f) => f.id === fieldKey || f.name === fieldKey);
-                          const fieldId = fieldDef?.id ?? fieldKey;
-                          const sourceKey = `customFieldValues.${fieldId}`;
-                          const displayLabel = fieldDef?.name ?? fieldKey;
+                {/* Custom Fields - Only if exists */}
+                {categoryDefinition?.dataFields && categoryDefinition.dataFields.length > 0 && (
+                  <Card withBorder p="md">
+                    <Stack gap="sm">
+                      <Text size="sm" fw={600}>Custom Fields</Text>
+                      <Grid gutter="xs">
+                        {categoryDefinition.dataFields.map((field) => {
+                          const value = asset.customFields?.[field.key];
+                          if (!value) return null;
                           return (
-                            <Grid.Col key={fieldKey} span={6}>
-                              <CustomFieldDisplay
-                                icon={<IconTag size={16} />}
-                                label={displayLabel}
-                                value={value}
-                                fieldType={fieldDef?.type}
-                                fieldSource={fieldSources[sourceKey]}
-                                groupName={groupName}
-                              />
+                            <Grid.Col span={6} key={field.key}>
+                              <Text size="xs" c="dimmed" mb={2}>{field.name}</Text>
+                              <Text size="sm">{String(value)}</Text>
                             </Grid.Col>
                           );
                         })}
@@ -620,74 +751,50 @@ export function AssetDetail({ assetId, onEdit, onClose }: AssetDetailProps) {
                     </Stack>
                   </Card>
                 )}
-
-                {maintenanceEnabled && (
-                  <Card withBorder>
-                    <Stack gap="md">
-                      <Group justify="space-between">
-                        <Group gap="xs">
-                          <Title order={4}>Maintenance</Title>
-                          {maintenanceSchedule && (
-                            <MaintenanceReminderBadge schedule={maintenanceSchedule} />
-                          )}
-                        </Group>
-                        <Button
-                          size="sm"
-                          variant="light"
-                          onClick={() => setMaintenanceFormOpened(true)}
-                        >
-                          Record Maintenance
-                        </Button>
-                      </Group>
-                      <Divider />
-
-                      {maintenanceSchedule && (
-                        <Box>
-                          <Text size="xs" c="dimmed" tt="uppercase" fw={700} mb="xs">
-                            Schedule
-                          </Text>
-                          <Text size="sm">{formatScheduleDescription(maintenanceSchedule)}</Text>
-                          {maintenanceSchedule.nextDue && (
-                            <Text size="xs" c="dimmed" mt="xs">
-                              Next due: {new Date(maintenanceSchedule.nextDue).toLocaleDateString()}
-                            </Text>
-                          )}
-                        </Box>
-                      )}
-
-                      {maintenanceRecords.length > 0 ? (
-                        <Box>
-                          <Text size="xs" c="dimmed" tt="uppercase" fw={700} mb="xs">
-                            Recent Maintenance
-                          </Text>
-                          <MaintenanceRecordList records={maintenanceRecords.slice(0, 5)} />
-                          {maintenanceRecords.length > 5 && (
-                            <Text size="xs" c="dimmed" mt="xs">
-                              Showing 5 of {maintenanceRecords.length} records
-                            </Text>
-                          )}
-                        </Box>
-                      ) : (
-                        <Text size="sm" c="dimmed">No maintenance records yet</Text>
-                      )}
-                    </Stack>
-                  </Card>
-                )}
               </Stack>
             </Grid.Col>
 
-            {/* Sidebar */}
-            <Grid.Col span={{ base: 12, md: 4 }}>
-              <AssetDetailSidebar asset={asset} allAssets={allAssets} formatDate={formatDate} InfoRow={InfoRow} />
+            {/* Sidebar - Compact */}
+            <Grid.Col span={{ base: 12, lg: 4 }}>
+              <AssetDetailSidebar asset={asset} allAssets={allAssets} formatDate={formatDate} />
             </Grid.Col>
           </Grid>
         </Tabs.Panel>
 
-        {maintenanceEnabled && (
-          <Tabs.Panel value="maintenance" pt="md">
-            <AssetMaintenanceHistory assetId={assetId} assetName={asset.name} />
-          </Tabs.Panel>
-        )}
+        <Tabs.Panel value="maintenance-damage" pt="md">
+          <Stack gap="lg">
+            {/* Maintenance History Section */}
+            {maintenanceEnabled && (
+              <Card withBorder>
+                <Stack gap="md">
+                  <Title order={4}>Maintenance History</Title>
+                  <Divider />
+                  <AssetMaintenanceHistory assetId={assetId} assetName={asset.name} />
+                </Stack>
+              </Card>
+            )}
+
+            {/* Damage & Repairs Section */}
+            <Card withBorder>
+              <Stack gap="md">
+                <Title order={4}>Damage & Repairs</Title>
+                <Divider />
+                <RepairHistoryTab
+                  assetId={assetId}
+                  onMarkRepaired={async (reportId, repairNotes) => {
+                    await markReportAsRepaired(reportId, { repairNotes });
+                    notifications.show({
+                      title: 'Asset Repaired',
+                      message: 'The damage report has been marked as repaired.',
+                      color: 'green',
+                    });
+                  }}
+                  loading={isRepairing}
+                />
+              </Stack>
+            </Card>
+          </Stack>
+        </Tabs.Panel>
 
         <Tabs.Panel value="history" pt="md">
           <Stack gap="lg">
@@ -765,12 +872,10 @@ function AssetDetailSidebar({
   asset,
   allAssets,
   formatDate,
-  InfoRow,
 }: {
   asset: Asset;
   allAssets: Asset[];
   formatDate: (date: string) => string;
-  InfoRow: ({ icon, label, value, fieldKey }: { icon: React.ReactNode; label: string; value: React.ReactNode; fieldKey?: string }) => JSX.Element;
 }) {
   // T284, T285 - E2: Barcode regeneration modal state
   const [regenerateModalOpen, setRegenerateModalOpen] = useState(false);
@@ -780,6 +885,8 @@ function AssetDetailSidebar({
   const [duplicateAsset, setDuplicateAsset] = useState<Asset | null>(null);
   const regenerateBarcode = useRegenerateBarcode();
   const barcodeInputRef = useRef<HTMLInputElement>(null);
+  const { t: tAssets } = useTranslation('assets');
+  const [labelPreviewOpen, setLabelPreviewOpen] = useState(false);
   
   // Focus the barcode input when modal opens
   useEffect(() => {
@@ -841,68 +948,149 @@ function AssetDetailSidebar({
   };
   
   return (
-    <Stack gap="md">
-      {/* Barcode */}
-      <Card withBorder>
-        <Stack gap="md" align="center">
-          <Title order={5}>Barcode</Title>
-          <Box style={{ border: '1px solid #e9ecef', padding: '12px', borderRadius: '8px', backgroundColor: '#fff' }}>
-            <BarcodeDisplay 
-              value={asset.barcode}
-              alt={`Barcode for ${asset.barcode}`}
-              width={200}
+    <Stack gap="sm">
+      {/* Barcode - Compact */}
+      <Card withBorder p="md">
+        <Stack gap="sm" align="center">
+          <Box style={{ padding: '8px', backgroundColor: '#fff', borderRadius: '4px' }}>
+            <BarcodeDisplay value={asset.barcode} alt={asset.barcode} width={180} />
+          </Box>
+          <Text size="xs" c="dimmed">{asset.barcode}</Text>
+          <Group gap={4} wrap="wrap" justify="center">
+            <Tooltip label="Download barcode">
+              <ActionIcon
+                size="sm"
+                variant="light"
+                onClick={() => {
+                  void import('../../services/barcode/BarcodeService').then(m => {
+                    const url = m.generateBarcode(asset.barcode);
+                    m.downloadImage(url, `barcode-${asset.assetNumber}.png`);
+                  });
+                }}
+              >
+                <IconDownload size={14} />
+              </ActionIcon>
+            </Tooltip>
+            <Tooltip label="Print barcode">
+              <ActionIcon
+                size="sm"
+                variant="light"
+                onClick={() => {
+                  void import('../../services/barcode/BarcodeService').then(m => {
+                    const url = m.generateBarcode(asset.barcode);
+                    m.printImage(url, `Barcode - ${asset.name}`);
+                  });
+                }}
+              >
+                <IconPrinter size={14} />
+              </ActionIcon>
+            </Tooltip>
+            <Tooltip label="Reassign barcode">
+              <ActionIcon
+                size="sm"
+                variant="light"
+                color="orange"
+                onClick={() => setRegenerateModalOpen(true)}
+              >
+                <IconRefresh size={14} />
+              </ActionIcon>
+            </Tooltip>
+          </Group>
+        </Stack>
+      </Card>
+
+      {/* QR Code - Compact */}
+      <Card withBorder p="md">
+        <Stack gap="sm" align="center">
+          <Box style={{ padding: '8px', backgroundColor: '#fff', borderRadius: '4px' }}>
+            <QRCodeDisplay
+              value={`${window.location.origin}${window.location.pathname}#/assets/${asset.id}`}
+              size={140}
+              alt={`QR for ${asset.assetNumber}`}
             />
           </Box>
-          <Text size="xs" c="dimmed" ta="center">
-            Barcode: {asset.barcode}
-          </Text>
-          <Text size="xs" c="dimmed" ta="center">
-            Asset Number: {asset.assetNumber}
-          </Text>
-          <Group gap="xs" wrap="wrap" justify="center">
-            <Button
-              size="xs"
-              variant="light"
-              leftSection={<IconDownload size={14} />}
-              onClick={() => {
-                const promise = import('../../services/barcode/BarcodeService').then(m => {
-                  const barcodeUrl = m.generateBarcode(asset.barcode);
-                  m.downloadImage(barcodeUrl, `barcode-${asset.assetNumber}.png`);
-                }).catch((err: unknown) => {
-                  console.error('Failed to download barcode:', err);
-                });
-                void promise;
-              }}
-            >
-              Download
-            </Button>
-            <Button
-              size="xs"
-              variant="light"
-              leftSection={<IconPrinter size={14} />}
-              onClick={() => {
-                const promise = import('../../services/barcode/BarcodeService').then(m => {
-                  const barcodeUrl = m.generateBarcode(asset.barcode);
-                  m.printImage(barcodeUrl, `Barcode - ${asset.name}`);
-                }).catch((err: unknown) => {
-                  console.error('Failed to print barcode:', err);
-                });
-                void promise;
-              }}
-            >
-              Print
-            </Button>
-            {/* T284 - E2: Reassign Barcode Button */}
-            <Button
-              size="xs"
-              variant="light"
-              color="orange"
-              leftSection={<IconRefresh size={14} />}
-              onClick={() => setRegenerateModalOpen(true)}
-            >
-              Reassign Barcode
-            </Button>
+          <Text size="xs" c="dimmed" ta="center">Scan to view details</Text>
+          <Group gap={4}>
+            <Tooltip label="Download QR">
+              <ActionIcon
+                size="sm"
+                variant="light"
+                onClick={() => {
+                  void import('../../services/barcode/BarcodeService').then(async m => {
+                    const qrUrl = await m.generateQRCode(`${window.location.origin}${window.location.pathname}#/assets/${asset.id}`);
+                    m.downloadImage(qrUrl, `qr-${asset.assetNumber}.png`);
+                  });
+                }}
+              >
+                <IconDownload size={14} />
+              </ActionIcon>
+            </Tooltip>
+            <Tooltip label="Print QR">
+              <ActionIcon
+                size="sm"
+                variant="light"
+                onClick={() => {
+                  void import('../../services/barcode/BarcodeService').then(async m => {
+                    const qrUrl = await m.generateQRCode(`${window.location.origin}${window.location.pathname}#/assets/${asset.id}`);
+                    m.printImage(qrUrl, `QR - ${asset.name}`);
+                  });
+                }}
+              >
+                <IconPrinter size={14} />
+              </ActionIcon>
+            </Tooltip>
           </Group>
+        </Stack>
+      </Card>
+
+      {/* Print Label */}
+      <Card withBorder p="md">
+        <Button 
+          fullWidth 
+          leftSection={<IconPrinter size={16} />} 
+          onClick={() => setLabelPreviewOpen(true)}
+          size="sm"
+        >
+          Print Label
+        </Button>
+      </Card>
+
+      {/* Metadata - Compact */}
+      <Card withBorder p="md">
+        <Stack gap="xs">
+          <Group gap="xs" wrap="nowrap">
+            <IconCalendar size={16} style={{ color: 'var(--mantine-color-dimmed)', flexShrink: 0 }} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <Text size="xs" c="dimmed">Created</Text>
+              <Text size="xs" truncate>{formatDate(asset.createdAt)}</Text>
+            </div>
+          </Group>
+          <Group gap="xs" wrap="nowrap">
+            <IconUser size={16} style={{ color: 'var(--mantine-color-dimmed)', flexShrink: 0 }} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <Text size="xs" c="dimmed">By</Text>
+              <Text size="xs" truncate>{asset.createdByName || '—'}</Text>
+            </div>
+          </Group>
+          {asset.lastModifiedAt && (
+            <>
+              <Divider />
+              <Group gap="xs" wrap="nowrap">
+                <IconCalendar size={16} style={{ color: 'var(--mantine-color-dimmed)', flexShrink: 0 }} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <Text size="xs" c="dimmed">Updated</Text>
+                  <Text size="xs" truncate>{formatDate(asset.lastModifiedAt)}</Text>
+                </div>
+              </Group>
+              <Group gap="xs" wrap="nowrap">
+                <IconUser size={16} style={{ color: 'var(--mantine-color-dimmed)', flexShrink: 0 }} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <Text size="xs" c="dimmed">By</Text>
+                  <Text size="xs" truncate>{asset.lastModifiedByName || '—'}</Text>
+                </div>
+              </Group>
+            </>
+          )}
         </Stack>
       </Card>
 
@@ -1020,85 +1208,9 @@ function AssetDetailSidebar({
         </Stack>
       </Modal>
 
-      {/* QR Code */}
-      <Card withBorder>
-        <Stack gap="md" align="center">
-          <Title order={5}>QR Code</Title>
-          <Tooltip label="Scan to view this asset in ChurchTools">
-            <Box style={{ border: '1px solid #e9ecef', padding: '12px', borderRadius: '8px', backgroundColor: '#fff' }}>
-              <QRCodeDisplay
-                value={`${window.location.origin}${window.location.pathname}#/assets/${asset.id}`}
-                alt={`QR Code for ${asset.assetNumber}`}
-                size={180}
-              />
-            </Box>
-          </Tooltip>
-          <Text size="xs" c="dimmed" ta="center">
-            Scan to view asset details
-          </Text>
-          <Group gap="xs">
-            <Button
-              size="xs"
-              variant="light"
-              leftSection={<IconDownload size={14} />}
-              onClick={() => {
-                const promise = import('../../services/barcode/BarcodeService').then(async m => {
-                  const qrUrl = await m.generateQRCode(`${window.location.origin}${window.location.pathname}#/assets/${asset.id}`);
-                  m.downloadImage(qrUrl, `qrcode-${asset.assetNumber}.png`);
-                }).catch((err: unknown) => {
-                  console.error('Failed to download QR code:', err);
-                });
-                void promise;
-              }}
-            >
-              Download
-            </Button>
-            <Button
-              size="xs"
-              variant="light"
-              leftSection={<IconPrinter size={14} />}
-              onClick={() => {
-                const promise = import('../../services/barcode/BarcodeService').then(async m => {
-                  const qrUrl = await m.generateQRCode(`${window.location.origin}${window.location.pathname}#/assets/${asset.id}`);
-                  m.printImage(qrUrl, `QR Code - ${asset.name}`);
-                }).catch((err: unknown) => {
-                  console.error('Failed to print QR code:', err);
-                });
-                void promise;
-              }}
-            >
-              Print
-            </Button>
-          </Group>
-        </Stack>
-      </Card>
-
-      {/* Images - Coming in Phase 5 */}
-      {/* Images functionality will be added in Phase 5: Media Management */}
-
-      {/* Metadata */}
-      <Card withBorder>
-        <Stack gap="md">
-          <Title order={5}>Metadata</Title>
-          <Divider />
-          
-          <InfoRow
-            icon={<IconCalendar size={16} />}
-            label="Created"
-            value={formatDate(asset.createdAt)}
-          />
-          <InfoRow
-            icon={<IconCalendar size={16} />}
-            label="Last Updated"
-            value={formatDate(asset.lastModifiedAt)}
-          />
-          <InfoRow
-            icon={<IconUser size={16} />}
-            label="Created By"
-            value={asset.createdByName}
-          />
-        </Stack>
-      </Card>
+      <Modal opened={labelPreviewOpen} onClose={() => setLabelPreviewOpen(false)} title={tAssets('detail.labelPrintCardTitle')} size="lg">
+        <AssetLabelPrint asset={asset} onClose={() => setLabelPreviewOpen(false)} />
+      </Modal>
     </Stack>
   );
 }
@@ -1126,84 +1238,5 @@ function FieldSourceIndicator({
     <Tooltip label={tooltip} withArrow>
       <IconTags size={14} style={{ color }} aria-hidden="true" />
     </Tooltip>
-  );
-}
-
-// Custom Field Display Component (handles person-reference fields)
-function CustomFieldDisplay({
-  icon,
-  label,
-  value,
-  fieldType,
-  fieldSource,
-  groupName,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: unknown;
-  fieldType?: string;
-  fieldSource?: AssetGroupFieldSource;
-  groupName?: string;
-}) {
-  const [personData, setPersonData] = useState<PersonSearchResult | null>(null);
-  const [loadingPerson, setLoadingPerson] = useState(false);
-
-  // Fetch person data if this is a person-reference field
-  useEffect(() => {
-    if (fieldType === 'person-reference' && value && typeof value === 'string') {
-      setLoadingPerson(true);
-      personSearchService
-        .getPersonById(value)
-        .then(person => setPersonData(person))
-        .catch(err => console.error('Failed to load person data:', err))
-        .finally(() => setLoadingPerson(false));
-    }
-  }, [fieldType, value]);
-
-  const renderValue = () => {
-    // Handle person-reference fields
-    if (fieldType === 'person-reference') {
-      if (loadingPerson) {
-        return <Text size="sm">Loading...</Text>;
-      }
-      if (personData) {
-        return (
-          <Group gap="xs">
-            <Avatar src={personData.avatarUrl} size="sm" radius="xl" />
-            <Text size="sm">{personData.displayName}</Text>
-          </Group>
-        );
-      }
-      return <Text size="sm" c="dimmed">—</Text>;
-    }
-
-    // Handle other field types
-    if (!value) {
-      return <Text size="sm" c="dimmed">—</Text>;
-    }
-    if (Array.isArray(value)) {
-      return <Text size="sm">{value.join(', ')}</Text>;
-    }
-    if (typeof value === 'boolean') {
-      return <Text size="sm">{value ? 'Yes' : 'No'}</Text>;
-    }
-    return <Text size="sm">{String(value)}</Text>;
-  };
-
-  return (
-    <Group gap="xs" wrap="nowrap">
-      <Box c="dimmed" style={{ display: 'flex', alignItems: 'center' }}>
-        {icon}
-      </Box>
-      <Box style={{ flex: 1 }}>
-        <Group gap={4} align="center">
-          <Text size="xs" c="dimmed" tt="uppercase" fw={700}>
-            {label}
-          </Text>
-          <FieldSourceIndicator source={fieldSource} groupName={groupName} />
-        </Group>
-        <Box>{renderValue()}</Box>
-      </Box>
-    </Group>
   );
 }

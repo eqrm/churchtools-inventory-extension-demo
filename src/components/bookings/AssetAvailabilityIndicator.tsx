@@ -11,12 +11,12 @@ interface AssetAvailabilityIndicatorProps {
 
 export function AssetAvailabilityIndicator({ isAvailable, nextAvailableDate }: AssetAvailabilityIndicatorProps) {
   if (isAvailable) {
-    return <Badge color="green">Verfügbar</Badge>
+    return <Badge color="green">Available</Badge>
   }
 
   return (
     <Badge color="red">
-      Gebucht{nextAvailableDate ? ` bis ${new Date(nextAvailableDate).toLocaleDateString('de-DE')}` : ''}
+      Booked{nextAvailableDate ? ` until ${new Date(nextAvailableDate).toLocaleDateString('en-US')}` : ''}
     </Badge>
   )
 }

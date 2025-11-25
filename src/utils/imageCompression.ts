@@ -127,10 +127,10 @@ export async function validateImageFile(file: File): Promise<void> {
     throw new Error(`Unsupported file type: ${file.type}. Only JPEG, PNG, and WebP are allowed.`);
   }
 
-  // Check file size (max 5MB)
-  const maxSizeBytes = 5 * 1024 * 1024; // 5MB
+  // Check file size (max 15MB before compression to stay within storage limits)
+  const maxSizeBytes = 15 * 1024 * 1024; // 15MB
   if (file.size > maxSizeBytes) {
-    throw new Error(`File too large: ${(file.size / (1024 * 1024)).toFixed(1)}MB. Maximum size is 5MB.`);
+    throw new Error(`File too large: ${(file.size / (1024 * 1024)).toFixed(1)}MB. Maximum size is 15MB before compression.`);
   }
 
   // Additional validation: try to load as image to ensure it's valid

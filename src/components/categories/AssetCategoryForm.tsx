@@ -70,9 +70,9 @@ export function AssetTypeForm({ category, initialData, onSuccess, onCancel }: As
     },
     validate: {
       name: (value) => {
-        if (!value.trim()) return 'Category name is required';
-        if (value.length < 2) return 'Category name must be at least 2 characters';
-        if (value.length > 100) return 'Category name must not exceed 100 characters';
+        if (!value.trim()) return 'Asset type name is required';
+        if (value.length < 2) return 'Asset type name must be at least 2 characters';
+        if (value.length > 100) return 'Asset type name must not exceed 100 characters';
         return null;
       },
       customFields: {
@@ -115,7 +115,7 @@ export function AssetTypeForm({ category, initialData, onSuccess, onCancel }: As
         });
         notifications.show({
           title: 'Success',
-          message: `Category "${updated.name}" has been updated`,
+          message: `Asset type "${updated.name}" has been updated`,
           color: 'green',
         });
         onSuccess?.(updated);
@@ -130,7 +130,7 @@ export function AssetTypeForm({ category, initialData, onSuccess, onCancel }: As
         const created = await createAssetType.mutateAsync(categoryData);
         notifications.show({
           title: 'Success',
-          message: `Category "${created.name}" has been created`,
+          message: `Asset type "${created.name}" has been created`,
           color: 'green',
         });
         form.reset();
@@ -139,7 +139,7 @@ export function AssetTypeForm({ category, initialData, onSuccess, onCancel }: As
     } catch (err) {
       notifications.show({
         title: 'Error',
-        message: err instanceof Error ? err.message : 'Failed to save category',
+        message: err instanceof Error ? err.message : 'Failed to save asset type',
         color: 'red',
       });
     }
@@ -198,7 +198,7 @@ export function AssetTypeForm({ category, initialData, onSuccess, onCancel }: As
     <form onSubmit={form.onSubmit(handleSubmit)}>
       <Stack gap="md">
         <TextInput
-          label="Category Name"
+          label="Asset type name"
           placeholder="e.g., Sound Equipment, Cameras, Microphones"
           required
           {...form.getInputProps('name')}
@@ -217,13 +217,13 @@ export function AssetTypeForm({ category, initialData, onSuccess, onCancel }: As
             disabled={isPending}
           />
           <Text size="xs" c="dimmed">
-            Optional icon to represent this category
+            Optional icon to represent this asset type
           </Text>
         </Stack>
 
         <MainImageUpload
           label="Main image"
-          description="Displayed in category cards and asset suggestions."
+          description="Displayed in asset type cards and asset suggestions."
           value={form.values.mainImage}
           onChange={(next) => {
             form.setFieldValue('mainImage', next);
@@ -236,7 +236,7 @@ export function AssetTypeForm({ category, initialData, onSuccess, onCancel }: As
         <Divider label="Asset Name Template" labelPosition="left" mt="xl" />
 
         <Text size="sm" c="dimmed">
-          Define how asset names are generated for this category. Use variables like %Manufacturer%, %Model%, %Asset Number% and any custom field names wrapped in %%. Example: <code>%Manufacturer% %Model% %Asset Number%</code>
+          Define how asset names are generated for this asset type. Use variables like %Manufacturer%, %Model%, %Asset Number% and any custom field names wrapped in %%. Example: <code>%Manufacturer% %Model% %Asset Number%</code>
         </Text>
 
         {prefixesLoading ? (
@@ -282,7 +282,7 @@ export function AssetTypeForm({ category, initialData, onSuccess, onCancel }: As
         </Group>
 
         <Text size="sm" c="dimmed">
-          Define custom fields that will be available for all assets in this category.
+          Define custom fields that will be available for all assets in this asset type.
         </Text>
 
         <Stack gap="md">
@@ -337,7 +337,7 @@ export function AssetTypeForm({ category, initialData, onSuccess, onCancel }: As
             </Button>
           )}
           <Button type="submit" loading={isPending}>
-            {isEditing ? 'Update Category' : 'Create Category'}
+            {isEditing ? 'Update asset type' : 'Create asset type'}
           </Button>
         </Group>
       </Stack>

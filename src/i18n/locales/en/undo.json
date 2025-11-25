@@ -1,0 +1,28 @@
+{
+  "modalTitle": "Undo History",
+  "openHistoryTooltip": "Undo history ({{shortcut}})",
+  "openHistoryAria": "Open undo history",
+  "emptyState": {
+    "title": "No recent actions to undo"
+  },
+  "readOnlyHint": "Undo history is read-only for traceability. Showing up to {{limit}} actions. Use {{shortcut}} to revert your latest change.",
+  "actionLabel": "{{actionType}} {{entityType}}",
+  "actions": {
+    "undo": "Undo"
+  },
+  "labels": {
+    "undone": "Undo applied",
+    "expired": "Expired (cannot undo)",
+    "available": "Undo via {{shortcut}}",
+    "pending": "Undo available"
+  },
+  "shortcuts": {
+    "hint": "Use {{shortcut}} to quickly undo the most recent change.",
+    "generic": "your undo shortcut",
+    "undoInFlight": "Undo is already running…",
+    "undoUnavailable": "No undoable actions available right now.",
+    "undoSuccess": "Last change undone.",
+    "genericError": "Unexpected error",
+    "undoError": "Unable to undo: {{message}}"
+  }
+}

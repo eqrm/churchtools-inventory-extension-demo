@@ -22,8 +22,8 @@ export function ConfirmDialog({
     onConfirm,
     title,
     message,
-    confirmLabel = 'Bestätigen',
-    cancelLabel = 'Abbrechen',
+    confirmLabel = 'Confirm',
+    cancelLabel = 'Cancel',
     confirmColor = 'blue',
     loading = false,
 }: ConfirmDialogProps) {

@@ -1,89 +1,74 @@
 import { create } from 'zustand';
-import type { Asset, Booking } from '../types/entities';
+import type { UndoAction } from '../types/undo';
+import { MAX_UNDO_HISTORY } from '../constants/undo';
 
-/**
- * Undo action types
- */
-export type UndoAction = {
-  id: string;
-  type: 'delete-asset' | 'delete-booking';
-  timestamp: number;
-  data: Asset | Booking;
-  label: string;
-};
-
-interface UndoState {
+interface UndoStoreState {
   actions: UndoAction[];
-  addAction: (action: Omit<UndoAction, 'id' | 'timestamp'>) => string;
-  removeAction: (id: string) => void;
-  getAction: (id: string) => UndoAction | undefined;
-  clearAction: (id: string) => void;
-  clearExpired: () => void;
+  isLoading: boolean;
+  undoingActionId?: string;
+  error?: string;
+  setActions: (actions: UndoAction[]) => void;
+  upsertAction: (action: UndoAction) => void;
+  markReverted: (actionId: string) => void;
+  removeAction: (actionId: string) => void;
+  clear: () => void;
+  setLoading: (value: boolean) => void;
+  setUndoing: (actionId?: string) => void;
+  setError: (message?: string) => void;
 }
 
-/**
- * Undo store - maintains queue of undoable actions
- * Actions are automatically cleared after 10 seconds
- */
-export const useUndoStore = create<UndoState>((set, get) => ({
+const sortByCreatedAtDesc = (lhs: UndoAction, rhs: UndoAction): number => {
+  return new Date(rhs.createdAt).getTime() - new Date(lhs.createdAt).getTime();
+};
+
+export const useUndoStore = create<UndoStoreState>((set) => ({
   actions: [],
+  isLoading: false,
+  undoingActionId: undefined,
+  error: undefined,
 
-  /**
-   * Add an undoable action to the queue
-   * Returns the action ID for notification reference
-   */
-  addAction: (action) => {
-    const id = `undo-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    const timestamp = Date.now();
+  setActions: (actions) => {
+    set({ actions: [...actions].sort(sortByCreatedAtDesc).slice(0, MAX_UNDO_HISTORY) });
+  },
 
-    const newAction: UndoAction = {
-      id,
-      timestamp,
-      ...action,
-    };
+  upsertAction: (action) => {
+    set((state) => {
+      const next = [...state.actions];
+      const index = next.findIndex((item) => item.actionId === action.actionId);
 
+      if (index >= 0) {
+        next[index] = action;
+      } else {
+        next.push(action);
+      }
+
+      next.sort(sortByCreatedAtDesc);
+
+      return {
+        actions: next.slice(0, MAX_UNDO_HISTORY),
+      };
+    });
+  },
+
+  markReverted: (actionId) => {
     set((state) => ({
-      actions: [...state.actions, newAction],
-    }));
-
-    // Auto-clear after 10 seconds
-    setTimeout(() => {
-      get().clearAction(id);
-    }, 10000);
-
-    return id;
-  },
-
-  /**
-   * Remove an action from the queue (when undone)
-   */
-  removeAction: (id) => {
-    set((state) => ({
-      actions: state.actions.filter((a) => a.id !== id),
-    }));
-  },
-
-  /**
-   * Get an action by ID
-   */
-  getAction: (id) => {
-    return get().actions.find((a) => a.id === id);
-  },
-
-  /**
-   * Clear an action (when timer expires)
-   */
-  clearAction: (id) => {
-    get().removeAction(id);
-  },
-
-  /**
-   * Clear all expired actions (older than 10 seconds)
-   */
-  clearExpired: () => {
-    const now = Date.now();
-    set((state) => ({
-      actions: state.actions.filter((a) => now - a.timestamp < 10000),
+      actions: state.actions.map((action) =>
+        action.actionId === actionId ? { ...action, undoStatus: 'reverted' } : action,
+      ),
     }));
   },
+
+  removeAction: (actionId) => {
+    set((state) => ({
+      actions: state.actions.filter((action) => action.actionId !== actionId),
+    }));
+  },
+
+  clear: () => set({ actions: [] }),
+
+  setLoading: (value) => set({ isLoading: value }),
+
+  setUndoing: (actionId) => set({ undoingActionId: actionId }),
+
+  setError: (message) => set({ error: message }),
 }));

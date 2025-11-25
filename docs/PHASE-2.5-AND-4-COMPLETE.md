@@ -87,7 +87,7 @@ Created comprehensive destructive testing utility in `src/tests/utils/reset-test
 
 #### T068: Custom Field Preview ⏳
 - **Goal**: Show preview of how custom fields will look in AssetForm
-- **Location**: `src/components/categories/AssetCategoryForm.tsx`
+- **Location**: `src/components/categories/AssetTypeForm.tsx`
 - **Status**: Not blocking - nice-to-have feature for better UX
 
 #### T070: Custom Field Filtering ⏳
@@ -102,7 +102,7 @@ Created comprehensive destructive testing utility in `src/tests/utils/reset-test
 
 #### T072: Category Icon Picker ⏳
 - **Goal**: Tabler icons picker instead of emoji input
-- **Location**: `src/components/categories/AssetCategoryForm.tsx`
+- **Location**: `src/components/categories/AssetTypeForm.tsx`
 - **Status**: UX enhancement - current emoji input works
 
 #### T073: Category Templates ⏳
@@ -112,7 +112,7 @@ Created comprehensive destructive testing utility in `src/tests/utils/reset-test
 
 #### T075: Category Duplication ⏳
 - **Goal**: Copy category with all custom fields
-- **Location**: `src/components/categories/AssetCategoryForm.tsx`
+- **Location**: `src/components/categories/AssetTypeForm.tsx`
 - **Status**: Convenience feature - not critical for MVP
 
 ---

@@ -1,0 +1,123 @@
+{
+  "modes": {
+    "table": "Table",
+    "gallery": "Gallery",
+    "kanban": "Kanban",
+    "calendar": "Calendar"
+  },
+  "header": {
+    "filter": "Filter",
+    "savedViewsPlaceholder": "Saved views",
+    "noSavedViewsPlaceholder": "No saved views",
+    "createSavedView": "Save view",
+    "manageSavedView": "Manage saved view",
+    "renameSavedView": "Rename",
+    "deleteSavedView": "Delete",
+    "savedViewsOpen": "Show all saved views",
+    "nothingFound": "No results"
+  },
+  "form": {
+    "title": "Save view",
+    "nameLabel": "View name",
+    "namePlaceholder": "e.g., Available audio gear",
+    "nameRequired": "Name is required",
+    "nameTooLong": "Name must be 100 characters or fewer",
+    "publicLabel": "Public view",
+    "publicDescription": "Other users can see and reuse this view",
+    "errorTitle": "Unable to load view",
+    "errorFallback": "An unexpected error occurred while loading the view.",
+    "cancel": "Cancel",
+    "save": "Save",
+    "update": "Update"
+  },
+  "drawer": {
+    "title": "Saved views",
+    "empty": "No saved views yet",
+    "loading": "Loading views…",
+    "error": "Failed to load views",
+    "deleteConfirm": "Delete view \"{{name}}\"?",
+    "publicLabel": "Public",
+    "privateLabel": "Private",
+    "filtersCount": "{{count}} filters",
+    "owner": "Created by {{name}}",
+    "viewMode": "{{mode}}"
+  },
+  "filterPanel": {
+    "title": "Filters",
+    "badgeLabel": "{{count}}",
+    "reset": "Reset",
+    "add": "Add filter",
+  "remove": "Remove filter",
+    "empty": "No filters are active.",
+    "apply": "Apply",
+    "fieldPlaceholder": "Select field",
+    "operatorPlaceholder": "Operator",
+    "unsupported": "This field does not support this filter type.",
+    "unsupportedNumber": "This field does not support a numeric filter.",
+    "unsupportedDate": "This field does not support a date filter.",
+    "unsupportedTag": "This field does not support a tag filter.",
+    "unsupportedBoolean": "This field does not support a boolean filter.",
+    "textPlaceholder": "Enter value",
+    "numberMinPlaceholder": "Min",
+    "numberMaxPlaceholder": "Max",
+    "dateAbsolute": "Absolute",
+    "dateRelative": "Relative",
+    "dateLast": "Last",
+    "dateNext": "Next",
+    "dateUnitDays": "Days",
+    "dateUnitWeeks": "Weeks",
+    "dateUnitMonths": "Months",
+    "booleanTrue": "Yes",
+    "booleanFalse": "No",
+    "noAdditionalValue": "No additional value required.",
+    "noOptions": "No options available."
+  },
+  "grouping": {
+    "title": "Grouping",
+    "clear": "Remove grouping",
+    "fieldPlaceholder": "Select field",
+    "orderLabel": "Order",
+    "emptyLabel": "Empty label",
+    "groupsTitle": "Groups",
+    "resetCollapsed": "Expand all groups",
+    "expandGroup": "Expand group",
+    "collapseGroup": "Collapse group",
+    "ascending": "Ascending",
+    "descending": "Descending",
+    "groupLabel": "{{label}}",
+    "emptyGroup": "Empty group"
+  },
+  "pagination": {
+    "label": "Results",
+    "none": "none",
+    "summary": "{{start}}-{{end}} of {{total}}",
+    "currentCount": "current {{count}}",
+    "perPage": "{{count}} / page"
+  },
+  "gallery": {
+    "empty": "No records available",
+    "summary": "Showing {{start}}-{{end}} of {{total}}"
+  },
+  "kanban": {
+    "empty": "No records available",
+    "columnEmpty": "No items",
+    "loadMore": "Load more"
+  },
+  "table": {
+    "summary": "Showing {{start}}-{{end}} of {{total}}"
+  },
+  "notifications": {
+    "createSuccessTitle": "View saved",
+    "createSuccessMessage": "The view was saved successfully",
+    "createErrorTitle": "Failed to save view",
+    "createErrorMessage": "{{message}}",
+    "updateSuccessTitle": "View updated",
+    "updateSuccessMessage": "The view was updated successfully",
+    "updateErrorTitle": "Failed to update view",
+    "updateErrorMessage": "{{message}}",
+    "deleteSuccessTitle": "View deleted",
+    "deleteSuccessMessage": "The view was deleted successfully",
+    "deleteErrorTitle": "Failed to delete view",
+    "deleteErrorMessage": "{{message}}"
+  }
+}

@@ -1,5 +1,5 @@
 import { Container, Stack, Tabs, Title } from '@mantine/core';
-import { IconBarcode, IconHash, IconMapPin, IconBuilding, IconTag, IconTerminal2, IconToggleLeft } from '@tabler/icons-react';
+import { IconBarcode, IconHash, IconMapPin, IconBuilding, IconTag, IconToggleLeft, IconHistory } from '@tabler/icons-react';
 import { useState } from 'react';
 import { PrefixSettingsPanel } from '../components/settings/PrefixSettingsPanel';
 import { LocationSettings } from '../components/settings/LocationSettings';
@@ -8,25 +8,27 @@ import { ModelSettings } from '../components/settings/ModelSettings';
 import { ScannerModelList } from '../components/settings/ScannerModelList';
 import { ScannerModelForm } from '../components/settings/ScannerModelForm';
 import type { ScannerModel, ScannerModelCreate } from '../types/entities';
-import { DeveloperToolsCard } from '../components/settings/DeveloperToolsCard';
-import { isDemoToolsEnabled } from '../utils/environment/flags';
 import { FeatureToggleSettings } from '../components/settings/FeatureToggleSettings';
+import { loadScannerModels, saveScannerModels, upsertScannerModel } from '../services/settings/scannerModels';
+import { SettingsVersionHistory } from '../components/settings/SettingsVersionHistory';
+import { SettingsExportImport } from '../components/settings/SettingsExportImport';
 
 /**
  * Settings page for organization-wide configuration (T227a, T290)
  * Provides tabs for different settings sections including scanner configuration
  */
 export function SettingsPage() {
-  const [scannerModels, setScannerModels] = useState<ScannerModel[]>(loadScannerModels());
+  const [scannerModels, setScannerModels] = useState<ScannerModel[]>(() => loadScannerModels());
   const [formOpen, setFormOpen] = useState(false);
-  const [editingModel, setEditingModel] = useState<ScannerModel | undefined>(undefined);
+  const [editingModel, setEditingModel] = useState<ScannerModel | undefined>();
 
-  const {
-    handleAddModel,
-    handleEditModel,
-    handleDeleteModel,
-    handleSubmitModel,
-  } = useScannerModelHandlers(scannerModels, setScannerModels, setFormOpen, setEditingModel, editingModel);
+  const { handleAddModel, handleEditModel, handleDeleteModel, handleSubmitModel } = useScannerModelHandlers(
+    scannerModels,
+    setScannerModels,
+    setFormOpen,
+    setEditingModel,
+    editingModel,
+  );
 
   return (
     <Container size="lg" py="xl">
@@ -53,26 +55,17 @@ export function SettingsPage() {
   );
 }
 
-function loadScannerModels(): ScannerModel[] {
-  try {
-    const stored = localStorage.getItem('scannerModels');
-    return stored ? (JSON.parse(stored) as ScannerModel[]) : [];
-  } catch {
-    return [];
-  }
-}
-
 function useScannerModelHandlers(
   scannerModels: ScannerModel[],
   setScannerModels: (models: ScannerModel[]) => void,
   setFormOpen: (open: boolean) => void,
   setEditingModel: (model: ScannerModel | undefined) => void,
-  editingModel: ScannerModel | undefined
+  editingModel?: ScannerModel,
 ) {
-  function saveScannerModels(models: ScannerModel[]) {
-    localStorage.setItem('scannerModels', JSON.stringify(models));
+  const persist = (models: ScannerModel[]) => {
+    saveScannerModels(models);
     setScannerModels(models);
-  }
+  };
 
   const handleAddModel = () => {
     setEditingModel(undefined);
@@ -86,28 +79,14 @@ function useScannerModelHandlers(
 
   const handleDeleteModel = (id: string) => {
     const updated = scannerModels.filter((m) => m.id !== id);
-    saveScannerModels(updated);
+    persist(updated);
   };
 
   const handleSubmitModel = (modelData: ScannerModelCreate) => {
-    const now = new Date().toISOString();
-    
-    if (editingModel) {
-      const updated = scannerModels.map((m) =>
-        m.id === editingModel.id
-          ? { ...modelData, id: editingModel.id, createdAt: editingModel.createdAt, lastModifiedAt: now }
-          : m
-      );
-      saveScannerModels(updated);
-    } else {
-      const newModel: ScannerModel = {
-        ...modelData,
-        id: crypto.randomUUID(),
-        createdAt: now,
-        lastModifiedAt: now,
-      };
-      saveScannerModels([...scannerModels, newModel]);
-    }
+    const updated = upsertScannerModel(scannerModels, modelData, editingModel);
+    persist(updated);
+    setFormOpen(false);
+    setEditingModel(undefined);
   };
 
   return { handleAddModel, handleEditModel, handleDeleteModel, handleSubmitModel };
@@ -121,7 +100,6 @@ interface SettingsTabsProps {
 }
 
 function SettingsTabs({ scannerModels, onAddModel, onEditModel, onDeleteModel }: SettingsTabsProps) {
-  const showDeveloperTab = isDemoToolsEnabled();
   return (
     <>
       <Tabs.List>
@@ -143,15 +121,12 @@ function SettingsTabs({ scannerModels, onAddModel, onEditModel, onDeleteModel }:
         <Tabs.Tab value="scanners" leftSection={<IconBarcode size={16} />}>
           Scanners
         </Tabs.Tab>
-        {showDeveloperTab && (
-          <Tabs.Tab value="developer" leftSection={<IconTerminal2 size={16} />}>
-            Developer
-          </Tabs.Tab>
-        )}
+        <Tabs.Tab value="history" leftSection={<IconHistory size={16} />}>
+          History
+        </Tabs.Tab>
       </Tabs.List>
 
-      <Tabs.Panel value="prefixes" pt="md">
-        <PrefixSettingsPanel />
+      <Tabs.Panel value="prefixes" pt="md">\n        <PrefixSettingsPanel />
       </Tabs.Panel>
       <Tabs.Panel value="manufacturers" pt="md">
         <ManufacturerSettings />
@@ -176,11 +151,12 @@ function SettingsTabs({ scannerModels, onAddModel, onEditModel, onDeleteModel }:
           onDelete={onDeleteModel}
         />
       </Tabs.Panel>
-      {showDeveloperTab && (
-        <Tabs.Panel value="developer" pt="md">
-          <DeveloperToolsCard />
-        </Tabs.Panel>
-      )}
+      <Tabs.Panel value="history" pt="md">
+        <Stack gap="md">
+          <SettingsExportImport />
+          <SettingsVersionHistory />
+        </Stack>
+      </Tabs.Panel>
     </>
   );
 }

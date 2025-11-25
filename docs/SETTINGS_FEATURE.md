@@ -334,7 +334,7 @@ await api.post('/custom-module/settings', {
 
 5. **Advanced Tab**:
    - API rate limiting
-   - Offline sync settings
+  - Offline sync settings *(removed in FR-007; retained here for historical context)*
    - Data retention policies
 
 ### Migration to ChurchTools Storage

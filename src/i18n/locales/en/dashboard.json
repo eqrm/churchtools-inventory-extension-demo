@@ -1,0 +1,36 @@
+{
+  "title": "Dashboard",
+  "widgets": {
+    "viewAll": "View All",
+    "myAssignedAssets": {
+      "title": "My Assigned Assets",
+      "comingSoon": "This widget will show your currently assigned assets",
+      "description": "Track assets currently in your possession"
+    },
+    "assetsNeedingAttention": {
+      "title": "Assets Needing Attention",
+      "comingSoon": "This widget will show broken assets or those requiring maintenance",
+      "description": "Monitor assets with damage reports or overdue maintenance"
+    },
+    "upcomingMaintenance": {
+      "title": "Upcoming Maintenance",
+      "comingSoon": "This widget will show maintenance due in the next 30 days",
+      "description": "Stay ahead of scheduled maintenance tasks"
+    },
+    "recentActivity": {
+      "title": "Recent Activity",
+      "comingSoon": "This widget will show a timeline of recent actions",
+      "description": "View assignments, damage reports, and work order updates"
+    },
+    "utilizationStats": {
+      "title": "Utilization Stats",
+      "comingSoon": "This widget will show asset utilization percentages",
+      "description": "Understand how often assets are in use vs. available"
+    },
+    "overdueWorkOrders": {
+      "title": "Overdue Work Orders",
+      "comingSoon": "This widget will show work orders past their scheduled date",
+      "description": "Identify maintenance tasks requiring immediate attention"
+    }
+  }
+}

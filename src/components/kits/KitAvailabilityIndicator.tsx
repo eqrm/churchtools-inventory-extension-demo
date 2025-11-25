@@ -4,6 +4,7 @@
  */
 
 import { Badge } from '@mantine/core';
+import { useTranslation } from 'react-i18next';
 
 interface KitAvailabilityIndicatorProps {
   available: boolean;
@@ -11,9 +12,10 @@ interface KitAvailabilityIndicatorProps {
 }
 
 export function KitAvailabilityIndicator({ available, reason }: KitAvailabilityIndicatorProps) {
+  const { t } = useTranslation('kits');
   return (
     <Badge color={available ? 'green' : 'red'} title={reason}>
-      {available ? 'Verfügbar' : 'Nicht verfügbar'}
+      {available ? t('availability.available') : t('availability.unavailable')}
     </Badge>
   );
 }

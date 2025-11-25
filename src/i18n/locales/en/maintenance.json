@@ -1,0 +1,699 @@
+{
+  "title": "Maintenance Management",
+  "page": {
+    "title": "Maintenance workspace",
+    "description": "Track and manage asset maintenance schedules and compliance.",
+    "sections": {
+      "dashboard": "Review compliance, overdue work, and upcoming assignments.",
+      "companies": "Manage service providers, contracts, and contacts.",
+      "rules": "Define recurring maintenance rules and ownership.",
+      "workOrders": "Track execution progress across internal and external work orders."
+    },
+    "tabs": {
+      "dashboard": "Overview",
+      "plans": "Plans",
+      "schedules": "Schedules",
+      "records": "Records"
+    },
+    "actions": {
+      "createPlan": "Create maintenance plan",
+      "logMaintenance": "Log maintenance",
+      "resetDraft": "Reset draft"
+    },
+    "plans": {
+      "title": "Maintenance plans",
+      "description": "Draft a plan, schedule maintenance windows, and track completion per asset."
+    },
+    "links": {
+      "dashboard": "Overview dashboard",
+      "companies": "Companies",
+      "rules": "Rules",
+      "workOrders": "Work orders"
+    },
+    "overviewCard": {
+      "title": "Maintenance snapshot",
+      "description": "Monitor overdue work, asset readiness, and upcoming maintenance windows."
+    },
+    "quickLinks": {
+      "title": "Jump to a workspace",
+      "description": "Open the focused maintenance views for companies, rules, and work orders.",
+      "openLabel": "Open {{label}}"
+    },
+    "scheduleModal": {
+      "createTitle": "Create maintenance plan",
+      "editTitle": "Edit maintenance plan"
+    },
+    "records": {
+      "modalTitle": "Log maintenance",
+      "assetSelectLabel": "Select asset",
+      "assetSelectPlaceholder": "Select asset",
+      "loadingAssets": "Loading assets…",
+      "nothingFound": "No assets found",
+      "scheduledMaintenance": "Scheduled maintenance: {{description}}",
+      "selectAssetPrompt": "Select an asset to log maintenance."
+    }
+  },
+  "plan": {
+    "placeholders": {
+      "name": "Enter maintenance plan name",
+      "description": "Describe the maintenance scope",
+      "loadingAssets": "Loading assets…",
+      "selectAssets": "Select one or more assets",
+      "selectAssetsPrompt": "Select at least one asset to prepare the plan.",
+      "selectCompany": "Select maintenance company",
+      "startDate": "Select start date",
+      "endDate": "Select end date",
+      "holdColor": "#1c7ed6",
+      "intervalRuleExample": "e.g. Quarterly",
+      "internalNotes": "Add optional notes for technicians"
+    },
+    "actions": {
+      "moveToPlanned": "Move to planned",
+      "resetToDraft": "Reset to draft",
+      "complete": "Complete plan"
+    },
+    "stages": {
+      "draft": "Draft",
+      "planned": "Planned",
+      "completed": "Completed"
+    },
+    "requirements": {
+      "title": "Plan requirements"
+    },
+    "labels": {
+      "name": "Plan name",
+      "description": "Description",
+      "assets": "Assets",
+      "company": "Maintenance company",
+      "preferredCompany": "Preferred company",
+      "selectedCompany": "Selected company: {{company}}",
+      "startDate": "Start date",
+      "endDate": "End date",
+      "holdColor": "Hold color",
+      "intervalRule": "Interval rule",
+      "internalNotes": "Internal notes",
+      "scheduleWindow": "Schedule window",
+      "selectedCount": "{{count}} asset",
+      "selectedCount_plural": "{{count}} assets included in this plan."
+    },
+    "messages": {
+      "holdsUpdatedTitle": "Maintenance holds updated"
+    },
+    "errors": {
+      "holdsUpdateFailed": "Unable to update maintenance holds"
+    }
+  },
+  "dashboardPage": {
+    "title": "Maintenance overview",
+    "description": "Review workload, overdue tasks, and company assignments in one place.",
+    "openWorkspace": "Open maintenance workspace"
+    ,"loading":"Loading maintenance data...",
+    "assetLabel":"Asset {{id}}",
+    "overdueTitle":"Overdue maintenance",
+    "upcomingTitle":"Upcoming (30 days)",
+    "overdue":"Overdue",
+    "upcoming":"Upcoming",
+    "scheduled":"Scheduled"
+  },
+  "reminder": {
+    "overdue": "{{count}}d overdue",
+    "overdueTooltip": "Maintenance is {{count}} day(s) overdue",
+    "daysShort": "{{count}}d",
+    "dueIn": "Maintenance due in {{count}} day",
+    "dueIn_plural": "Maintenance due in {{count}} days",
+    "nextIn": "Next maintenance in {{count}} day",
+    "nextIn_plural": "Next maintenance in {{count}} days"
+  },
+  "companies": {
+    "title": "Maintenance Companies",
+    "addNew": "Add Company",
+    "editCompany": "Edit Company",
+    "deleteCompany": "Delete Company",
+    "noCompanies": "No maintenance companies yet",
+    "deleteConfirm": "Are you sure you want to delete this company? This cannot be undone.",
+    "actionsColumn": "Actions",
+    "unknownContact": "No contact assigned",
+    "noEmail": "No email provided",
+    "noPhone": "No phone provided"
+  },
+  "rules": {
+    "title": "Maintenance Rules",
+    "addNew": "Add Rule",
+    "editRule": "Edit Rule",
+    "deleteRule": "Delete Rule",
+    "noRules": "No maintenance rules yet",
+    "deleteConfirm": "Are you sure you want to delete this rule?",
+    "conflicts": "Rule Conflicts",
+    "conflictWarning": "This rule conflicts with existing rules",
+    "viewConflicts": "View Conflicts",
+    "testRuleButton": "Test rule",
+    "testRuleHelper": "Preview the upcoming schedule before saving the rule.",
+    "testRuleModalTitle": "Test maintenance rule",
+    "testRuleDescription": "Run a dry-run forecast to verify interval and lead time settings.",
+    "previewOccurrencesLabel": "Occurrences",
+    "previewAnchorLabel": "Assume today's date",
+    "previewStartOverrideLabel": "Override next due date",
+    "previewStartOverrideHelp": "Optional: choose a different date to start the preview.",
+    "previewEmptyState": "No preview could be generated with the current settings.",
+    "previewLeadTimeLabel": "Lead time window begins {{date}}",
+    "previewPastBadge": "Past",
+    "previewUpcomingBadge": "Upcoming",
+    "testRuleFallbackName": "Untitled rule"
+  },
+  "workOrders": {
+    "title": "Work Orders",
+    "addNew": "Create Work Order",
+    "editWorkOrder": "Edit Work Order",
+    "deleteWorkOrder": "Delete Work Order",
+    "noWorkOrders": "No work orders yet",
+    "deleteConfirm": "Are you sure you want to delete this work order?",
+    "completionStatus": "{{completed}} completed, {{inProgress}} in progress, {{total}} total ({{percentage}}%)",
+    "viewMode": {
+      "table": "Table",
+      "kanban": "Kanban",
+      "timeline": "Timeline"
+    },
+    "filterByState": "Filter by State",
+    "filterByType": "Filter by Type",
+    "showAll": "Show All"
+  },
+  "scheduleList": {
+    "types": {
+      "all": "All types",
+      "timeBased": "Time-based",
+      "usageBased": "Usage-based",
+      "eventBased": "Event-based",
+      "fixedDate": "Fixed date"
+    },
+    "statuses": {
+      "all": "All statuses",
+      "overdue": "Overdue",
+      "dueSoon": "Due soon",
+      "scheduled": "Scheduled",
+      "unscheduled": "No due date"
+    },
+    "columns": {
+      "asset": "Asset",
+      "interval": "Interval",
+      "nextDue": "Next due"
+    },
+    "unknownAsset": "Unknown asset",
+    "unknownAssetId": "ID: {{id}}",
+    "assetCategory": "Asset type: {{category}}",
+    "lastPerformed": "Last performed: {{date}}",
+    "reminderBefore": "Reminder {{count}} days before",
+    "search": {
+      "label": "Search",
+      "placeholder": "Asset or interval"
+    },
+    "filters": {
+      "asset": "Asset",
+      "assetAll": "All assets",
+      "type": "Type",
+      "status": "Status"
+    },
+    "empty": {
+      "title": "No maintenance plans",
+      "filterMessage": "No maintenance plans match the current filters.",
+      "newMessage": "Create the first maintenance plan for your assets.",
+      "action": "Create maintenance plan"
+    },
+    "delete": {
+      "title": "Delete maintenance plan",
+      "confirm": "Are you sure you want to delete this maintenance plan?"
+    },
+    "actions": {
+      "edit": "Edit",
+      "delete": "Delete"
+    }
+  },
+  "records": {
+    "title": "Maintenance records",
+    "search": {
+      "label": "Search",
+      "placeholder": "Description or asset"
+    },
+    "filters": {
+      "asset": "Asset",
+      "assetAll": "All assets",
+      "type": "Type",
+      "typeAll": "All types",
+      "clear": "Clear all filters"
+    },
+    "types": {
+      "inspection": "Inspection",
+      "maintenance": "Maintenance",
+      "planned-repair": "Planned repair",
+      "unplanned-repair": "Unplanned repair",
+      "improvement": "Improvement"
+    },
+    "placeholders": {
+      "descriptionExample": "e.g., Annual safety inspection",
+      "notes": "Additional notes..."
+    },
+    "labels": {
+      "notes": "Notes"
+    },
+    "columns": {
+      "date": "Date",
+      "asset": "Asset",
+      "type": "Type",
+      "description": "Description",
+      "performedBy": "Performed by",
+      "cost": "Cost",
+      "nextMaintenance": "Next maintenance"
+    },
+    "empty": {
+      "title": "No maintenance records",
+      "filterMessage": "No maintenance records match the current filters.",
+      "newMessage": "Log the first maintenance entry to start the history.",
+      "noRecords": "No maintenance records found."
+    },
+    "errors": {
+      "loadFailed": "Failed to load maintenance records."
+    },
+    "pagination": "Showing {{from}} to {{to}} of {{total}} maintenance records"
+  },
+  "team": {
+    "noAssetsSelected": "No assets selected yet.",
+    "noTechnicians": "No technicians recorded yet.",
+    "lastUpdate": "Last update {{date}}",
+    "unknownTechnician": "Unknown technician",
+    "asset": "asset",
+    "asset_plural": "assets",
+    "pending": "{{count}} asset still pending completion.",
+    "pending_plural": "{{count}} assets still pending completion.",
+    "skipped": "{{count}} asset skipped during maintenance.",
+    "skipped_plural": "{{count}} assets skipped during maintenance."
+  },
+  "tabs": {
+    "schedule": "Asset Schedule"
+  },
+  "selected": "selected",
+  "completed": "completed",
+  "noAssets": "No assets in this work order",
+  "noHistory": "No state changes recorded yet",
+  "current": "Current",
+  "changedBy": "Changed by",
+  "duration": {
+    "label": "Duration",
+    "days": "{{count}} day",
+    "days_plural": "{{count}} days",
+    "hours": "{{count}} hour",
+    "hours_plural": "{{count}} hours",
+    "lessThanHour": "< 1 hour"
+  },
+  "fields": {
+    "name": "Name",
+    "companyName": "Company Name",
+    "contactPerson": "Contact Person",
+    "contactEmail": "Contact Email",
+    "contactPhone": "Contact Phone",
+    "address": "Address",
+    "serviceLevelAgreement": "Service Level Agreement",
+    "hourlyRate": "Hourly Rate",
+    "contractNotes": "Contract Notes",
+    "ruleName": "Rule Name",
+    "workType": "Work Type",
+    "customWorkType": "Custom work type",
+    "isInternal": "Internal Work",
+    "serviceProvider": "Service Provider",
+    "appliesTo": "Applies To",
+    "targetType": "Applies To",
+    "targets": "Target Items",
+    "intervalType": "Interval Type",
+    "intervalValue": "Interval Value",
+    "startDate": "Start Date",
+    "leadTimeDays": "Lead Time (Days)",
+    "rescheduleMode": "Reschedule mode",
+    "orderType": "Order type",
+    "type": "Type",
+    "state": "State",
+    "currentState": "Current State",
+    "rule": "Maintenance Rule",
+    "maintenanceRule": "Maintenance Rule",
+    "company": "Company",
+    "assignedTo": "Assigned To",
+    "approvalResponsible": "Approval Responsible",
+    "scheduledStart": "Scheduled Start",
+    "scheduledEnd": "Scheduled End",
+    "actualStart": "Actual Start",
+    "actualEnd": "Actual End",
+    "lineItems": "Assets",
+    "workOrderNumber": "Work Order #",
+    "createdBy": "Created By",
+    "createdAt": "Created At",
+    "updatedAt": "Updated At",
+    "assets": "Assets"
+  },
+  "labels": {
+    "name": "Company Name",
+    "contactPerson": "Contact Person",
+    "contactEmail": "Contact Email",
+    "contactPhone": "Contact Phone",
+    "address": "Address",
+    "serviceLevelAgreement": "Service Level Agreement (SLA)",
+    "hourlyRate": "Hourly Rate (€)",
+    "contractNotes": "Contract Notes",
+    "workType": "Work Type",
+    "internalWork": "Internal Work",
+    "externalWork": "External Work",
+    "serviceProvider": "Service Provider",
+    "targetType": "Applies To",
+    "targets": "Select Targets",
+    "intervalType": "Interval Type",
+    "intervalValue": "Interval Value",
+    "startDate": "Start Date",
+    "leadTimeDays": "Lead Time (Days)",
+    "selectAssets": "Select Assets",
+    "selectedAssets": "Selected Assets"
+  },
+  "placeholders": {
+    "name": "Enter company name",
+    "companyName": "Enter company name",
+    "contactPerson": "Enter contact person name",
+    "contactPersonOptional": "Enter contact person name (optional)",
+    "contactEmail": "Enter contact email",
+    "contactPhone": "Enter contact phone number",
+    "address": "Enter company address",
+    "serviceLevelAgreement": "Describe service level agreement details",
+    "hourlyRate": "Enter hourly rate",
+    "contractNotes": "Additional contract notes (optional)",
+    "ruleName": "Enter rule name (e.g., Quarterly inspection)",
+    "workType": "Select work type",
+    "customWorkType": "Describe the work type",
+    "serviceProvider": "Select service provider",
+    "targets": "Select assets, kits, models, or tags",
+    "selectTargets": "Select one or more targets",
+    "intervalValue": "Enter interval value",
+    "startDate": "Select start date",
+    "leadTimeDays": "Enter lead time in days",
+    "assignedTo": "Enter assigned person",
+    "companyId": "Enter company ID",
+    "scheduledStart": "Select scheduled start date",
+    "actualEnd": "Select actual end date",
+    "maintenanceRule": "Select maintenance rule (optional)",
+    "scheduledEnd": "Select scheduled end date",
+    "approvalResponsible": "Select person responsible for approval",
+    "scanBarcode": "Scan barcode or asset number"
+  },
+  "scheduleForm": {
+    "types": {
+      "timeBased": "Time-based (days/months/years)",
+      "usageBased": "Usage-based (operating hours)",
+      "eventBased": "Event-based (number of bookings)",
+      "fixedDate": "Fixed date (annual)"
+    },
+    "labels": {
+      "asset": "Asset",
+      "type": "Maintenance type",
+      "days": "Days",
+      "months": "Months",
+      "years": "Years",
+      "operatingHours": "Operating hours",
+      "bookingCount": "Booking count",
+      "date": "Date",
+      "remindDaysBefore": "Remind (days before)"
+    },
+    "placeholders": {
+      "asset": "Select asset",
+      "loadingAssets": "Loading assets…",
+      "noAssets": "No assets found",
+      "daysExample": "e.g., 30",
+      "monthsExample": "e.g., 6",
+      "yearsExample": "e.g., 1",
+      "hoursExample": "e.g., 100",
+      "bookingsExample": "e.g., 50",
+      "annualDate": "Occurs annually"
+    },
+    "errors": {
+      "assetRequiredTitle": "Asset required",
+      "assetRequiredMessage": "Select an asset for this maintenance plan."
+    }
+  },
+  "completion": {
+    "title": "Asset completion tracking",
+    "emptyMessage": "Select one or more assets in the plan to unlock completion tracking.",
+    "description": "Update each asset as work progresses. Completed assets automatically release their holds once the plan is finalized.",
+    "columns": {
+      "assetNumber": "Asset number",
+      "assetName": "Asset name",
+      "status": "Status",
+      "completedBy": "Completed by",
+      "timestamp": "Timestamp",
+      "notes": "Notes"
+    },
+
+    "drawer": {
+      "title": "Log maintenance outcome"
+    },
+    "placeholders": {
+      "selectAssetLabel": "Select an asset to log maintenance",
+      "timestamp": "Select timestamp",
+      "selectFiles": "Select files",
+      "uploadDescription": "We’re working on secure maintenance file uploads. Until then, include relevant details in the notes field."
+    },
+    "labels": {
+      "asset": "Asset",
+      "occurredAt": "Occurred at",
+      "notes": "Notes",
+      "upload": "Upload documentation",
+      "soon": "Soon"
+    },
+    "actions": {
+      "logCompletion": "Log completion",
+      "markPending": "Mark pending",
+      "skipAsset": "Skip asset",
+      "saveOutcome": "Save outcome"
+    }
+  },
+  "descriptions": {
+    "serviceLevelAgreement": "Define expected response times and service guarantees",
+    "hourlyRate": "Optional: Rate per hour in euros (e.g., 75.50)",
+    "contractNotes": "Additional notes about the service contract",
+    "workType": "Type of maintenance work to be performed",
+    "isInternal": "Toggle between internal staff work and external company work",
+    "targetType": "Choose whether this rule applies to specific assets, kits, models, or tags",
+    "intervalType": "Maintenance interval based on months elapsed or usage count",
+    "intervalValue": "How often maintenance should occur",
+    "startDate": "When this maintenance rule becomes active",
+    "leadTimeDays": "How many days in advance to create work orders",
+    "rescheduleMode": "Choose how the next recurrence should be calculated after completion",
+    "orderType": "Flag how this work order entered the system",
+    "lineItems": "Select which assets are included in this work order",
+    "maintenanceRule": "Optional: Link this work order to a maintenance rule"
+  },
+  "targetTypes": {
+    "asset": "Assets",
+    "kit": "Kits",
+    "model": "Models",
+    "tag": "Tags"
+  },
+  "workTypes": {
+    "inspection": "Inspection",
+    "maintenance": "Maintenance",
+    "planned-repair": "Planned repair",
+    "unplanned-repair": "Unplanned repair",
+    "improvement": "Improvement",
+    "custom": "Custom"
+  },
+  "rescheduleModes": {
+    "actualCompletion": "Anchor to completion",
+    "replanOnce": "Replan once"
+  },
+  "orderTypes": {
+    "planned": "Planned",
+    "unplanned": "Unplanned",
+    "follow-up": "Follow-up"
+  },
+  "intervalTypes": {
+    "months": "Months",
+    "uses": "Uses"
+  },
+  "types": {
+    "internal": "Internal",
+    "external": "External"
+  },
+  "states": {
+    "backlog": "Backlog",
+    "assigned": "Assigned",
+    "planned": "Planned",
+    "offer-requested": "Offer Requested",
+    "offer-received": "Offer Received",
+    "in-progress": "In Progress",
+    "completed": "Completed",
+    "done": "Done",
+    "aborted": "Aborted",
+    "obsolete": "Obsolete"
+  },
+  "completionStatus": {
+    "pending": "Pending",
+    "in-progress": "In Progress",
+    "completed": "Completed"
+  },
+  "transitions": {
+    "assign": "Assign",
+    "plan": "Plan",
+    "start": "Start Work",
+    "complete": "Mark Complete",
+    "approve": "Approve",
+    "abort": "Abort",
+    "markObsolete": "Mark Obsolete",
+    "reopen": "Reopen",
+    "requestOffer": "Request Offer",
+    "requestMoreOffers": "Request More Offers"
+  },
+  "offers": {
+    "title": "Offers",
+    "requestMore": "Request More Offers",
+    "noOffersYet": "No offers received yet",
+    "accepted": "Accepted",
+    "pending": "Pending",
+    "acceptTooltip": "Accept this offer",
+    "columns": {
+      "company": "Company",
+      "amount": "Amount",
+      "receivedAt": "Received",
+      "notes": "Notes",
+      "status": "Status",
+      "assetNumber": "Asset Number",
+      "assetName": "Asset Name",
+      "scheduledDate": "Scheduled Date",
+      "completedAt": "Completed At"
+    }
+  },
+  "columns": {
+    "workOrderNumber": "Work Order #",
+    "type": "Type",
+    "state": "State",
+    "scheduledStart": "Scheduled Start",
+    "assignedTo": "Assigned To",
+    "actions": "Actions",
+    "assetNumber": "Asset #",
+    "assetName": "Asset Name",
+    "scheduledDate": "Scheduled Date",
+    "status": "Status",
+    "completedAt": "Completed At"
+  },
+  "warnings": {
+    "notAllAssetsCompleted": "Not all assets have been marked as completed",
+    "noApprovalResponsible": "No approval responsible assigned - cannot approve"
+  },
+  "info": {
+    "workOrderInTerminalState": "Work order is in a terminal state (no further transitions available)",
+    "approvalWorkflowInfo": "Assign an approval responsible to enable approval workflow when work is completed",
+    "waitingForApproval": "Waiting for approval from {{approver}}"
+  },
+  "validation": {
+    "nameRequired": "Company name is required",
+    "nameTooLong": "Name must be 200 characters or less",
+    "companyNameRequired": "Company name is required",
+    "companyNameMaxLength": "Company name must be 200 characters or less",
+    "contactPersonRequired": "Contact person is required",
+    "contactPersonTooLong": "Contact person must be 200 characters or less",
+    "contactPersonMaxLength": "Contact person must be 200 characters or less",
+    "contactEmailInvalid": "Provide a valid contact email",
+    "contactPhoneInvalid": "Provide a valid phone number (4-20 digits)",
+    "addressRequired": "Address is required",
+    "addressTooLong": "Address must be 500 characters or less",
+    "slaRequired": "Service level agreement is required",
+    "slaTooLong": "SLA must be 1000 characters or less",
+    "slaMaxLength": "Service level agreement must be 1000 characters or less",
+    "hourlyRateNegative": "Hourly rate must be 0 or greater",
+    "hourlyRatePositive": "Hourly rate must be 0 or greater",
+    "ruleNameRequired": "Rule name is required",
+    "ruleNameMaxLength": "Rule name must be 200 characters or less",
+    "workTypeRequired": "Work type is required",
+    "workTypeMaxLength": "Work type must be 200 characters or less",
+    "customWorkTypeRequired": "Enter a custom work type name",
+    "serviceProviderRequired": "Service provider is required for external work",
+    "targetsRequired": "At least one target must be selected",
+    "intervalValueRequired": "Interval value is required",
+    "intervalValuePositive": "Interval value must be greater than 0",
+    "startDateRequired": "Start date is required",
+    "leadTimeDaysNonNegative": "Lead time must be 0 or greater",
+    "rescheduleModeRequired": "Choose how to reschedule after completion",
+    "orderTypeRequired": "Select an order type",
+    "leadTimeDaysNegative": "Lead time must be 0 or greater",
+    "lineItemsRequired": "At least one asset must be selected",
+    "companyIdRequired": "Company is required for external work orders"
+  },
+  "targetPicker": {
+    "noneAvailable": "No {{label}} available yet",
+    "noMatches": "No matches found",
+    "help": "Create {{label}} first to target them."
+  },
+  "actions": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "createFromRule": "Create from Rule",
+    "viewDetails": "View Details",
+    "markComplete": "Mark Complete",
+    "markAsComplete": "Mark as Complete",
+    "addAsset": "Add Asset",
+    "removeAsset": "Remove Asset",
+    "approve": "Approve Work Order"
+  },
+  "unknown": "Unknown",
+  "invoicing": {
+    "title": "Invoicing",
+    "comingSoon": "Invoicing functionality is coming soon!",
+    "futureFeatures": "Planned features",
+    "uploadInvoice": "Upload Invoice",
+    "trackCosts": "Track maintenance costs",
+    "generateReports": "Generate cost reports",
+    "exportData": "Export to accounting software",
+    "plannedRelease": "Planned for future release"
+  },
+  "messages": {
+    "companyCreated": "Company created successfully",
+    "companyUpdated": "Company updated successfully",
+    "companyDeleted": "Company deleted successfully",
+    "ruleCreated": "Maintenance rule created successfully",
+    "ruleUpdated": "Maintenance rule updated successfully",
+    "ruleDeleted": "Maintenance rule deleted successfully",
+    "workOrderCreated": "Work order created successfully",
+    "workOrderUpdated": "Work order updated successfully",
+    "workOrderDeleted": "Work order deleted successfully",
+    "scheduleCreated": "Maintenance plan created successfully",
+    "scheduleCreatedDescription": "Maintenance plan has been created.",
+    "scheduleUpdated": "Maintenance plan updated successfully",
+    "scheduleUpdatedDescription": "Maintenance plan has been updated.",
+    "scheduleDeleted": "Maintenance plan deleted",
+    "scheduleDeletedDescription": "The maintenance plan was removed.",
+    "assetMarkedComplete": "Asset marked as complete",
+    "stateTransitioned": "Work order state updated successfully",
+    "offerRequested": "Offer requested successfully",
+    "offerAccepted": "Offer accepted successfully",
+    "recordCreated": "Maintenance recorded successfully",
+    "recordCreatedDescription": "The maintenance record was saved.",
+    "assetAlreadySelected": "{{name}} is already selected",
+    "assetAdded": "Added {{name}}",
+    "assetNotFound": "No asset found for \"{{value}}\""
+  },
+  "errors": {
+    "companyCreateFailed": "Failed to create company",
+    "companyUpdateFailed": "Failed to update company",
+    "companyDeleteFailed": "Failed to delete company",
+    "ruleCreateFailed": "Failed to create maintenance rule",
+    "ruleUpdateFailed": "Failed to update maintenance rule",
+    "ruleDeleteFailed": "Failed to delete maintenance rule",
+    "workOrderCreateFailed": "Failed to create work order",
+    "workOrderUpdateFailed": "Failed to update work order",
+    "workOrderDeleteFailed": "Failed to delete work order",
+    "transitionFailed": "Failed to transition work order state",
+    "offerRequestFailed": "Failed to request offer",
+    "offerAcceptFailed": "Failed to accept offer",
+    "loadCompaniesFailed": "Failed to load companies",
+    "loadRulesFailed": "Failed to load maintenance rules",
+    "loadWorkOrdersFailed": "Failed to load work orders"
+    ,
+    "scheduleSaveFailed": "Failed to save maintenance plan",
+    "scheduleDeleteFailed": "Failed to delete maintenance plan",
+    "recordsLoadFailed": "Failed to load maintenance records",
+    "recordSaveFailed": "Failed to save maintenance record"
+  }
+}
