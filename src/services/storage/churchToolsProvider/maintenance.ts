@@ -9,7 +9,7 @@ import type {
   MaintenanceSchedule,
   MaintenanceScheduleCreate,
 } from '../../../types/entities';
-import type { MaintenanceRule } from '../../../types/maintenance';
+import type { MaintenanceRule, WorkOrder } from '../../../types/maintenance';
 import { CURRENT_SCHEMA_VERSION } from '../../migrations/constants';
 
 export interface MaintenanceDependencies {
@@ -877,6 +877,201 @@ function mapToMaintenanceRule(val: unknown): MaintenanceRule {
     startDate: String(parsed['startDate']),
     nextDueDate,
     leadTimeDays: Number(parsed['leadTimeDays'] ?? 0),
+    createdBy: String(parsed['createdBy']),
+    createdByName: parsed['createdByName'] ? String(parsed['createdByName']) : undefined,
+    createdAt: String(parsed['createdAt'] ?? new Date().toISOString()),
+    updatedAt: String(parsed['updatedAt'] ?? new Date().toISOString()),
+  };
+}
+
+// ============================================================================
+// Work Orders CRUD (T4.1.5)
+// ============================================================================
+
+async function getWorkOrdersCategory(deps: MaintenanceDependencies): Promise<AssetType> {
+  const categories = await deps.getAllCategoriesIncludingHistory();
+  let category = categories.find((cat) => cat.name === '__WorkOrders__');
+
+  if (!category) {
+    const shorty = `work_orders_${Date.now().toString().slice(-4)}`;
+    const payload = {
+      customModuleId: Number(deps.moduleId),
+      name: '__WorkOrders__',
+      shorty,
+      description: 'Work orders for maintenance tasks',
+      data: null,
+    };
+    const created = await deps.apiClient.createDataCategory(deps.moduleId, payload);
+    category = deps.mapToAssetType(created);
+  }
+
+  return category;
+}
+
+export async function getWorkOrders(
+  deps: MaintenanceDependencies,
+): Promise<WorkOrder[]> {
+  const category = await getWorkOrdersCategory(deps);
+  const values = await deps.apiClient.getDataValues(deps.moduleId, category.id);
+  return values.map((val: unknown) => mapToWorkOrder(val));
+}
+
+export async function getWorkOrder(
+  deps: MaintenanceDependencies,
+  id: string,
+): Promise<WorkOrder | null> {
+  const workOrders = await getWorkOrders(deps);
+  return workOrders.find((wo) => wo.id === id) ?? null;
+}
+
+export async function createWorkOrder(
+  deps: MaintenanceDependencies,
+  workOrderData: WorkOrder,
+): Promise<WorkOrder> {
+  try {
+    const category = await getWorkOrdersCategory(deps);
+    const user = await deps.apiClient.getCurrentUser();
+
+    const payload = {
+      ...workOrderData,
+      createdAt: workOrderData.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    const valueData = {
+      dataCategoryId: Number(category.id),
+      value: JSON.stringify(payload),
+    };
+
+    const created = await deps.apiClient.createDataValue(
+      deps.moduleId,
+      category.id,
+      valueData,
+    );
+
+    const workOrder = mapToWorkOrder(created);
+
+    await deps.recordChange({
+      entityType: 'maintenance',
+      entityId: workOrder.id,
+      action: 'created',
+      newValue: `Work Order: ${workOrder.workOrderNumber}`,
+      changedBy: user.id,
+      changedByName: `${user.firstName} ${user.lastName}`,
+    });
+
+    return workOrder;
+  } catch (error) {
+    console.error('[Maintenance] Failed to create work order:', error);
+    if (error instanceof Error) {
+      throw new Error(`Could not create work order: ${error.message}`);
+    }
+    throw new Error('Could not create work order: Unknown error occurred');
+  }
+}
+
+export async function updateWorkOrder(
+  deps: MaintenanceDependencies,
+  id: string,
+  updates: WorkOrder,
+): Promise<WorkOrder> {
+  const existing = await getWorkOrder(deps, id);
+  if (!existing) {
+    throw new Error(`Work order ${id} not found`);
+  }
+
+  const category = await getWorkOrdersCategory(deps);
+  const user = await deps.apiClient.getCurrentUser();
+
+  const updated = {
+    ...existing,
+    ...updates,
+    id: existing.id,
+    createdAt: existing.createdAt,
+    createdBy: existing.createdBy,
+    updatedAt: new Date().toISOString(),
+  };
+
+  const payload = {
+    id: Number(id),
+    dataCategoryId: Number(category.id),
+    value: JSON.stringify(updated),
+  };
+
+  const result = await deps.apiClient.updateDataValue(
+    deps.moduleId,
+    category.id,
+    id,
+    payload,
+  );
+
+  const updatedWorkOrder = mapToWorkOrder(result);
+
+  await deps.recordChange({
+    entityType: 'maintenance',
+    entityId: id,
+    action: 'updated',
+    oldValue: `Work Order: ${existing.workOrderNumber} (${existing.state})`,
+    newValue: `Work Order: ${updatedWorkOrder.workOrderNumber} (${updatedWorkOrder.state})`,
+    changedBy: user.id,
+    changedByName: `${user.firstName} ${user.lastName}`,
+  });
+
+  return updatedWorkOrder;
+}
+
+export async function deleteWorkOrder(
+  deps: MaintenanceDependencies,
+  id: string,
+): Promise<void> {
+  const existing = await getWorkOrder(deps, id);
+  if (!existing) {
+    return;
+  }
+
+  const category = await getWorkOrdersCategory(deps);
+  const user = await deps.apiClient.getCurrentUser();
+
+  try {
+    await deps.apiClient.deleteDataValue(deps.moduleId, category.id, id);
+  } catch (error) {
+    console.error('[Maintenance] Failed to delete work order:', error);
+    throw error;
+  }
+
+  await deps.recordChange({
+    entityType: 'maintenance',
+    entityId: id,
+    action: 'deleted',
+    oldValue: `Work Order: ${existing.workOrderNumber}`,
+    changedBy: user.id,
+    changedByName: `${user.firstName} ${user.lastName}`,
+  });
+}
+
+function mapToWorkOrder(val: unknown): WorkOrder {
+  const raw = val as Record<string, unknown>;
+  const dataStr = (raw['value'] || raw['data']) as string | null;
+  const parsed = dataStr ? (JSON.parse(dataStr) as Record<string, unknown>) : raw;
+
+  return {
+    id: String(raw['id'] ?? parsed['id']),
+    workOrderNumber: String(parsed['workOrderNumber']),
+    type: parsed['type'] as WorkOrder['type'],
+    orderType: parsed['orderType'] as WorkOrder['orderType'],
+    state: parsed['state'] as WorkOrder['state'],
+    ruleId: parsed['ruleId'] ? String(parsed['ruleId']) : undefined,
+    companyId: parsed['companyId'] ? String(parsed['companyId']) : undefined,
+    assignedTo: parsed['assignedTo'] ? String(parsed['assignedTo']) : undefined,
+    approvalResponsibleId: parsed['approvalResponsibleId'] ? String(parsed['approvalResponsibleId']) : undefined,
+    leadTimeDays: Number(parsed['leadTimeDays'] ?? 0),
+    scheduledStart: parsed['scheduledStart'] ? String(parsed['scheduledStart']) : undefined,
+    scheduledEnd: parsed['scheduledEnd'] ? String(parsed['scheduledEnd']) : undefined,
+    actualStart: parsed['actualStart'] ? String(parsed['actualStart']) : undefined,
+    actualEnd: parsed['actualEnd'] ? String(parsed['actualEnd']) : undefined,
+    offers: (parsed['offers'] as WorkOrder['offers']) ?? [],
+    lineItems: (parsed['lineItems'] as WorkOrder['lineItems']) ?? [],
+    history: (parsed['history'] as WorkOrder['history']) ?? [],
     createdBy: String(parsed['createdBy']),
     createdByName: parsed['createdByName'] ? String(parsed['createdByName']) : undefined,
     createdAt: String(parsed['createdAt'] ?? new Date().toISOString()),

@@ -83,6 +83,7 @@ import { useTags, useEntityTags } from '../../hooks/useTags';
 import { AssetLabelPrint } from './AssetLabelPrint';
 import { KitInformationSection } from './KitInformationSection';
 import { KitSummaryPanel } from './KitSummaryPanel';
+import { AssetWorkOrdersList } from '../maintenance/AssetWorkOrdersList';
 
 interface AssetDetailProps {
   assetId: string;
@@ -763,6 +764,17 @@ export function AssetDetail({ assetId, onEdit, onClose, onDuplicate }: AssetDeta
 
         <Tabs.Panel value="maintenance-damage" pt="md">
           <Stack gap="lg">
+            {/* Work Orders Section */}
+            {maintenanceEnabled && (
+              <Card withBorder>
+                <Stack gap="md">
+                  <Title order={4}>Work Orders</Title>
+                  <Divider />
+                  <AssetWorkOrdersList assetId={assetId} />
+                </Stack>
+              </Card>
+            )}
+
             {/* Maintenance History Section */}
             {maintenanceEnabled && (
               <Card withBorder>

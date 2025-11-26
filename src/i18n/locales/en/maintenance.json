@@ -1,5 +1,12 @@
 {
   "title": "Maintenance Management",
+  "regenerateModal": {
+    "title": "Regenerate Work Orders",
+    "message": "Changing this rule will regenerate {{count}} scheduled work orders.",
+    "warning": "This will delete existing scheduled work orders and create new ones based on the updated schedule.",
+    "cancel": "Cancel",
+    "confirm": "Regenerate"
+  },
   "page": {
     "title": "Maintenance workspace",
     "description": "Track and manage asset maintenance schedules and compliance.",
@@ -166,12 +173,16 @@
     "editWorkOrder": "Edit Work Order",
     "deleteWorkOrder": "Delete Work Order",
     "noWorkOrders": "No work orders yet",
+    "noWorkOrdersForAsset": "No work orders associated with this asset",
+    "noScheduledWorkOrders": "No scheduled work orders",
+    "overdue": "Overdue",
     "deleteConfirm": "Are you sure you want to delete this work order?",
     "completionStatus": "{{completed}} completed, {{inProgress}} in progress, {{total}} total ({{percentage}}%)",
     "viewMode": {
       "table": "Table",
       "kanban": "Kanban",
-      "timeline": "Timeline"
+      "timeline": "Timeline",
+      "calendar": "Calendar"
     },
     "filterByState": "Filter by State",
     "filterByType": "Filter by Type",
@@ -507,6 +518,7 @@
     "follow-up": "Follow-up"
   },
   "intervalTypes": {
+    "days": "Days",
     "months": "Months",
     "uses": "Uses"
   },
@@ -515,6 +527,7 @@
     "external": "External"
   },
   "states": {
+    "scheduled": "Scheduled",
     "backlog": "Backlog",
     "assigned": "Assigned",
     "planned": "Planned",

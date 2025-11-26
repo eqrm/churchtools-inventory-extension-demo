@@ -1,5 +1,5 @@
 import { Container, Stack, Tabs, Title } from '@mantine/core';
-import { IconBarcode, IconHash, IconMapPin, IconBuilding, IconTag, IconToggleLeft, IconHistory } from '@tabler/icons-react';
+import { IconBarcode, IconHash, IconMapPin, IconBuilding, IconTag, IconToggleLeft } from '@tabler/icons-react';
 import { useState } from 'react';
 import { PrefixSettingsPanel } from '../components/settings/PrefixSettingsPanel';
 import { LocationSettings } from '../components/settings/LocationSettings';
@@ -10,7 +10,6 @@ import { ScannerModelForm } from '../components/settings/ScannerModelForm';
 import type { ScannerModel, ScannerModelCreate } from '../types/entities';
 import { FeatureToggleSettings } from '../components/settings/FeatureToggleSettings';
 import { loadScannerModels, saveScannerModels, upsertScannerModel } from '../services/settings/scannerModels';
-import { SettingsVersionHistory } from '../components/settings/SettingsVersionHistory';
 import { SettingsExportImport } from '../components/settings/SettingsExportImport';
 
 /**
@@ -121,9 +120,6 @@ function SettingsTabs({ scannerModels, onAddModel, onEditModel, onDeleteModel }:
         <Tabs.Tab value="scanners" leftSection={<IconBarcode size={16} />}>
           Scanners
         </Tabs.Tab>
-        <Tabs.Tab value="history" leftSection={<IconHistory size={16} />}>
-          History
-        </Tabs.Tab>
       </Tabs.List>
 
       <Tabs.Panel value="prefixes" pt="md">\n        <PrefixSettingsPanel />
@@ -144,17 +140,14 @@ function SettingsTabs({ scannerModels, onAddModel, onEditModel, onDeleteModel }:
       </Tabs.Panel>
 
       <Tabs.Panel value="scanners" pt="md">
-        <ScannerModelList
-          models={scannerModels}
-          onAdd={onAddModel}
-          onEdit={onEditModel}
-          onDelete={onDeleteModel}
-        />
-      </Tabs.Panel>
-      <Tabs.Panel value="history" pt="md">
-        <Stack gap="md">
+        <Stack gap="lg">
+          <ScannerModelList
+            models={scannerModels}
+            onAdd={onAddModel}
+            onEdit={onEditModel}
+            onDelete={onDeleteModel}
+          />
           <SettingsExportImport />
-          <SettingsVersionHistory />
         </Stack>
       </Tabs.Panel>
     </>

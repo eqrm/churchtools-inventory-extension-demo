@@ -23,7 +23,10 @@ export interface MaintenanceRuleTarget {
   ids: UUID[];
 }
 
-export type MaintenanceIntervalType = 'months' | 'uses';
+/**
+ * Interval type for recurring maintenance - days, months, or usage-based.
+ */
+export type MaintenanceIntervalType = 'days' | 'months' | 'uses';
 
 export type MaintenanceWorkType =
   | 'inspection'
@@ -56,6 +59,7 @@ export interface MaintenanceRule {
 }
 
 export type InternalWorkOrderState =
+  | 'scheduled'
   | 'backlog'
   | 'assigned'
   | 'planned'
@@ -66,6 +70,7 @@ export type InternalWorkOrderState =
   | 'done';
 
 export type ExternalWorkOrderState =
+  | 'scheduled'
   | 'backlog'
   | 'offer-requested'
   | 'offer-received'

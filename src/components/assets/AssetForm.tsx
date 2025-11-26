@@ -47,6 +47,7 @@ import { ASSET_STATUS_OPTIONS } from '../../constants/assetStatuses';
 import { useAssetGroup } from '../../hooks/useAssetGroups';
 import { getInheritanceRuleForField } from '../../services/asset-groups/inheritance';
 import { CUSTOM_FIELD_SOURCE_PREFIX } from '../../services/asset-groups/constants';
+import { AssetTypeSelectOption } from '../categories/AssetTypeSelectOption';
 
 interface AssetFormProps {
   asset?: Asset;
@@ -662,8 +663,12 @@ export function AssetForm({ asset, onSuccess, onCancel, initialData }: AssetForm
                 disabled={isEditing}
                 data={categories.map(cat => ({
                   value: cat.id,
-                  label: `${cat.icon || ''} ${cat.name}`.trim(),
+                  label: cat.name,
                 }))}
+                renderOption={({ option }) => {
+                  const category = categories.find(c => c.id === option.value);
+                  return <AssetTypeSelectOption icon={category?.icon} name={option.label} />;
+                }}
                 {...bindSelectField(form, 'assetTypeId', { emptyValue: '' })}
               />
             </Grid.Col>

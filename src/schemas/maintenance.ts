@@ -32,7 +32,7 @@ export const maintenanceRuleSchema = z
         isInternal: z.boolean(),
         serviceProviderId: uuidSchema.optional(),
         targets: z.array(maintenanceRuleTargetSchema).min(1),
-        intervalType: z.enum(['months', 'uses']),
+        intervalType: z.enum(['days', 'months', 'uses']),
         intervalValue: z.number().int().positive(),
         startDate: isoDateSchema,
         nextDueDate: isoDateSchema,

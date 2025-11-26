@@ -1,22 +1,31 @@
 import { useState } from 'react';
-import { Button, Card, FileInput, Group, Stack, Text, Textarea } from '@mantine/core';
+import { Button, Card, FileInput, Group, Stack, Text } from '@mantine/core';
 import { IconDownload, IconUpload } from '@tabler/icons-react';
 import { notifications } from '@mantine/notifications';
 import { useTranslation } from 'react-i18next';
-import { useSettingsVersions } from '../../hooks/useSettingsVersions';
+import { collectSettingsSnapshot, applySettingsSnapshot, validateSettingsSnapshot } from '../../services/settings/settingsSnapshot';
+import { settingsExportSchema } from '../../schemas/settings';
+import { churchToolsAPIClient } from '../../services/api/ChurchToolsAPIClient';
 
 export function SettingsExportImport() {
   const { t } = useTranslation('settings');
-  const { exportSettings, importSettings, isImporting } = useSettingsVersions();
   const [file, setFile] = useState<File | null>(null);
-  const [summary, setSummary] = useState('');
   const [isExporting, setIsExporting] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
 
   const handleExport = async (scope: 'full' | 'scanner-only' = 'scanner-only') => {
     setIsExporting(true);
     try {
-      const payload = await exportSettings({ scope });
-      const blob = new Blob([payload], { type: 'application/json' });
+      const snapshot = await collectSettingsSnapshot();
+      const actor = await churchToolsAPIClient.getCurrentUser();
+      const payload = settingsExportSchema.parse({
+        version: '1.0',
+        type: scope,
+        exportedAt: new Date().toISOString(),
+        exportedBy: { id: actor.id, name: actor.name },
+        settings: validateSettingsSnapshot(snapshot),
+      });
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
       const prefix = scope === 'scanner-only' ? 'inventory-scanner-settings' : 'inventory-full-settings';
       const fileName = `${prefix}-${formatTimestampForFile(new Date())}.json`;
       const url = URL.createObjectURL(blob);
@@ -51,11 +60,21 @@ export function SettingsExportImport() {
       return;
     }
 
+    setIsImporting(true);
     try {
       const contents = await file.text();
-      await importSettings(contents, summary);
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(contents);
+      } catch {
+        throw new Error('Invalid JSON file');
+      }
+      
+      const envelope = settingsExportSchema.parse(parsed);
+      const snapshot = validateSettingsSnapshot(envelope.settings);
+      await applySettingsSnapshot(snapshot, envelope.type);
+      
       setFile(null);
-      setSummary('');
       notifications.show({
         title: t('import.notifications.successTitle'),
         message: t('import.notifications.successMessage'),
@@ -67,6 +86,8 @@ export function SettingsExportImport() {
         message: error instanceof Error ? error.message : t('versioning.notifications.genericError'),
         color: 'red',
       });
+    } finally {
+      setIsImporting(false);
     }
   };
 
@@ -100,13 +121,6 @@ export function SettingsExportImport() {
             value={file}
             onChange={setFile}
             clearable
-          />
-          <Textarea
-            label={t('import.summaryLabel')}
-            placeholder={t('import.summaryPlaceholder')}
-            value={summary}
-            onChange={(event) => setSummary(event.currentTarget.value)}
-            minRows={2}
           />
           <Group justify="flex-end">
             <Button

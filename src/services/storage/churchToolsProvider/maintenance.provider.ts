@@ -6,16 +6,18 @@ import type {
   MaintenanceSchedule,
   MaintenanceScheduleCreate,
 } from '../../../types/entities'
-import type { MaintenanceRule } from '../../../types/maintenance'
+import type { MaintenanceRule, WorkOrder } from '../../../types/maintenance'
 import type { MaintenanceDependencies } from './maintenance'
 import {
   createMaintenanceHold as createMaintenanceHoldHandler,
   createMaintenanceRecord as createMaintenanceRecordHandler,
   createMaintenanceRule as createMaintenanceRuleHandler,
   createMaintenanceSchedule as createMaintenanceScheduleHandler,
+  createWorkOrder as createWorkOrderHandler,
   deleteMaintenanceRecord as deleteMaintenanceRecordHandler,
   deleteMaintenanceRule as deleteMaintenanceRuleHandler,
   deleteMaintenanceSchedule as deleteMaintenanceScheduleHandler,
+  deleteWorkOrder as deleteWorkOrderHandler,
   getMaintenanceHolds as getMaintenanceHoldsHandler,
   getMaintenanceRecord as getMaintenanceRecordHandler,
   getMaintenanceRecords as getMaintenanceRecordsHandler,
@@ -26,10 +28,13 @@ import {
   getOverdueMaintenance as getOverdueMaintenanceHandler,
   getOverdueMaintenanceSchedules as getOverdueMaintenanceSchedulesHandler,
   getUpcomingMaintenance as getUpcomingMaintenanceHandler,
+  getWorkOrder as getWorkOrderHandler,
+  getWorkOrders as getWorkOrdersHandler,
   releaseMaintenanceHold as releaseMaintenanceHoldHandler,
   updateMaintenanceRecord as updateMaintenanceRecordHandler,
   updateMaintenanceRule as updateMaintenanceRuleHandler,
   updateMaintenanceSchedule as updateMaintenanceScheduleHandler,
+  updateWorkOrder as updateWorkOrderHandler,
 } from './maintenance'
 import { ChurchToolsStorageProvider } from './core'
 
@@ -69,6 +74,12 @@ declare module './core' {
         Omit<MaintenanceCalendarHold, 'id' | 'planId' | 'assetId' | 'startDate' | 'endDate' | 'createdAt'>
       >,
     ): Promise<MaintenanceCalendarHold>
+    // Work Order methods (T4.1.5)
+    getWorkOrders(): Promise<WorkOrder[]>
+    getWorkOrder(id: string): Promise<WorkOrder | null>
+    createWorkOrder(workOrder: WorkOrder): Promise<WorkOrder>
+    updateWorkOrder(id: string, updates: WorkOrder): Promise<WorkOrder>
+    deleteWorkOrder(id: string): Promise<void>
   }
 }
 
@@ -235,4 +246,40 @@ ChurchToolsStorageProvider.prototype.releaseMaintenanceHold = async function rel
   >,
 ): Promise<MaintenanceCalendarHold> {
   return releaseMaintenanceHoldHandler(getMaintenanceDependencies(this), holdId, updates)
+}
+
+// Work Order prototype bindings (T4.1.5)
+ChurchToolsStorageProvider.prototype.getWorkOrders = async function getWorkOrders(
+  this: ProviderWithMaintenanceSupport,
+): Promise<WorkOrder[]> {
+  return getWorkOrdersHandler(getMaintenanceDependencies(this))
+}
+
+ChurchToolsStorageProvider.prototype.getWorkOrder = async function getWorkOrder(
+  this: ProviderWithMaintenanceSupport,
+  id: string,
+): Promise<WorkOrder | null> {
+  return getWorkOrderHandler(getMaintenanceDependencies(this), id)
+}
+
+ChurchToolsStorageProvider.prototype.createWorkOrder = async function createWorkOrder(
+  this: ProviderWithMaintenanceSupport,
+  workOrderData: WorkOrder,
+): Promise<WorkOrder> {
+  return createWorkOrderHandler(getMaintenanceDependencies(this), workOrderData)
+}
+
+ChurchToolsStorageProvider.prototype.updateWorkOrder = async function updateWorkOrder(
+  this: ProviderWithMaintenanceSupport,
+  id: string,
+  updates: WorkOrder,
+): Promise<WorkOrder> {
+  return updateWorkOrderHandler(getMaintenanceDependencies(this), id, updates)
+}
+
+ChurchToolsStorageProvider.prototype.deleteWorkOrder = async function deleteWorkOrder(
+  this: ProviderWithMaintenanceSupport,
+  id: string,
+): Promise<void> {
+  await deleteWorkOrderHandler(getMaintenanceDependencies(this), id)
 }

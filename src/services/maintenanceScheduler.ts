@@ -28,7 +28,8 @@ export function calculateNextDueDate(
   intervalValue: number,
   anchor: Date,
 ): ISODate | null {
-  if (intervalType !== 'months') {
+  // 'uses' is not time-based, so we can't calculate the next date
+  if (intervalType === 'uses') {
     return null;
   }
 
@@ -37,7 +38,12 @@ export function calculateNextDueDate(
     return null;
   }
 
-  dueDate.setMonth(dueDate.getMonth() + intervalValue);
+  if (intervalType === 'days') {
+    dueDate.setDate(dueDate.getDate() + intervalValue);
+  } else if (intervalType === 'months') {
+    dueDate.setMonth(dueDate.getMonth() + intervalValue);
+  }
+
   if (Number.isNaN(dueDate.getTime())) {
     return null;
   }

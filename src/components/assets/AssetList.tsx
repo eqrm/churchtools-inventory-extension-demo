@@ -34,6 +34,7 @@ import { notifications } from '@mantine/notifications';
 import { AssetStatusBadge } from './AssetStatusBadge';
 import { CustomFieldFilterInput } from './CustomFieldFilterInput';
 import { IconDisplay } from '../categories/IconDisplay';
+import { AssetTypeSelectOption } from '../categories/AssetTypeSelectOption';
 import { MaintenanceReminderBadge } from '../maintenance/MaintenanceReminderBadge';
 import type {
   Asset,
@@ -883,8 +884,12 @@ export function AssetList({
           }}
           data={assetTypes.map((type) => ({
             value: type.id,
-            label: `${type.icon || ''} ${type.name}`.trim(),
+            label: type.name,
           }))}
+          renderOption={({ option }) => {
+            const assetType = assetTypes.find(t => t.id === option.value);
+            return <AssetTypeSelectOption icon={assetType?.icon} name={option.label} />;
+          }}
           clearable
         />
 

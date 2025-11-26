@@ -337,6 +337,7 @@ export function MaintenanceRuleForm({
             label={t('maintenance:fields.intervalType')}
             required
             data={[
+              { value: 'days', label: t('maintenance:intervalTypes.days') },
               { value: 'months', label: t('maintenance:intervalTypes.months') },
               { value: 'uses', label: t('maintenance:intervalTypes.uses') },
             ]}

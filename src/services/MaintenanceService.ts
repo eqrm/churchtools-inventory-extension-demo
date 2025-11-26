@@ -23,6 +23,9 @@ import {
   computeScheduleAfterCompletion,
   shouldCreateWorkOrder,
 } from './maintenanceScheduler';
+import { generateFutureWorkOrders } from './workOrderGenerator';
+import { MAX_WORK_ORDER_HORIZON_MONTHS } from '../constants/maintenance';
+import { isWithinLeadTime } from '../utils/workOrderStatus';
 
 export interface MaintenanceServiceOptions {
   storageProvider: IStorageProvider;
@@ -192,6 +195,9 @@ export class MaintenanceService {
 
     const created = await this.storageProvider.createMaintenanceRule(rule);
 
+    // Generate future scheduled work orders for this rule
+    await this.generateScheduledWorkOrdersForRule(created);
+
     await recordUndoAction({
       entityType: 'maintenanceRule',
       entityId: created.id,
@@ -229,7 +235,20 @@ export class MaintenanceService {
       updatedAt: this.timestamp(),
     };
 
+    // Check if schedule-related fields changed
+    const scheduleChanged = this.hasScheduleChanged(existing, data);
+
+    if (scheduleChanged) {
+      // Delete existing scheduled work orders and regenerate
+      await this.deleteScheduledWorkOrdersForRule(id);
+    }
+
     const saved = await this.storageProvider.updateMaintenanceRule(id, updated);
+
+    if (scheduleChanged) {
+      // Generate new scheduled work orders
+      await this.generateScheduledWorkOrdersForRule(saved);
+    }
 
     await recordUndoAction({
       entityType: 'maintenanceRule',
@@ -245,6 +264,9 @@ export class MaintenanceService {
 
   async deleteRule(id: UUID): Promise<void> {
     const existing = await this.requireRule(id);
+
+    // Delete all scheduled work orders for this rule before deleting the rule
+    await this.deleteScheduledWorkOrdersForRule(id);
 
     await this.storageProvider.deleteMaintenanceRule(id);
 
@@ -264,6 +286,69 @@ export class MaintenanceService {
       throw new Error(`MaintenanceRule not found: ${id}`);
     }
     return rule;
+  }
+
+  /**
+   * Check if schedule-related fields changed in rule update
+   */
+  private hasScheduleChanged(
+    existing: MaintenanceRule,
+    update: Partial<MaintenanceRule>
+  ): boolean {
+    return (
+      (update.intervalType !== undefined && update.intervalType !== existing.intervalType) ||
+      (update.intervalValue !== undefined && update.intervalValue !== existing.intervalValue) ||
+      (update.startDate !== undefined && update.startDate !== existing.startDate) ||
+      (update.nextDueDate !== undefined && update.nextDueDate !== existing.nextDueDate)
+    );
+  }
+
+  /**
+   * Generate scheduled work orders for a rule up to the horizon
+   */
+  private async generateScheduledWorkOrdersForRule(rule: MaintenanceRule): Promise<void> {
+    const existingWorkOrders = await this.getWorkOrders();
+    const futureWorkOrders = generateFutureWorkOrders(
+      rule,
+      MAX_WORK_ORDER_HORIZON_MONTHS,
+      existingWorkOrders,
+      { now: this.now() }
+    );
+
+    for (const woData of futureWorkOrders) {
+      const workOrder: WorkOrder = {
+        ...woData,
+        id: crypto.randomUUID() as UUID,
+        workOrderNumber: await this.generateWorkOrderNumber(),
+        createdAt: this.timestamp(),
+        updatedAt: this.timestamp(),
+        history: [
+          {
+            id: crypto.randomUUID() as UUID,
+            state: woData.state,
+            changedAt: this.timestamp(),
+            changedBy: woData.createdBy || ('' as UUID),
+            changedByName: woData.createdByName,
+          },
+        ],
+        offers: [],
+      };
+      await this.storageProvider.createWorkOrder(workOrder);
+    }
+  }
+
+  /**
+   * Delete all scheduled work orders for a rule
+   */
+  private async deleteScheduledWorkOrdersForRule(ruleId: UUID): Promise<void> {
+    const allWorkOrders = await this.getWorkOrders();
+    const scheduledForRule = allWorkOrders.filter(
+      (wo) => wo.ruleId === ruleId && wo.state === 'scheduled'
+    );
+
+    for (const wo of scheduledForRule) {
+      await this.storageProvider.deleteWorkOrder(wo.id);
+    }
   }
 
   /**
@@ -366,19 +451,34 @@ export class MaintenanceService {
   async createWorkOrder(
     data: Omit<WorkOrder, 'id' | 'createdAt' | 'updatedAt'>
   ): Promise<WorkOrder> {
+    // Get current user if createdBy is not provided
+    let createdBy = data.createdBy;
+    let createdByName = data.createdByName;
+    if (!createdBy) {
+      const user = await this.storageProvider.getCurrentUser();
+      createdBy = user.id;
+      createdByName = `${user.firstName} ${user.lastName}`;
+    }
+
+    // Generate work order number if not provided
+    const workOrderNumber = data.workOrderNumber || await this.generateWorkOrderNumber();
+
     const workOrder: WorkOrder = {
       ...data,
+      workOrderNumber,
       orderType: data.orderType ?? 'planned',
       id: crypto.randomUUID(),
       createdAt: this.timestamp(),
       updatedAt: this.timestamp(),
+      createdBy,
+      createdByName,
       history: [
         {
           id: crypto.randomUUID(),
           state: data.state,
           changedAt: this.timestamp(),
-          changedBy: data.createdBy,
-          changedByName: data.createdByName,
+          changedBy: createdBy,
+          changedByName: createdByName,
         },
       ],
     };
@@ -647,6 +747,51 @@ export class MaintenanceService {
         } catch (error) {
           console.error(`Failed to auto-generate work order for rule ${rule.id}:`, error);
         }
+      }
+    }
+  }
+
+  /**
+   * Process scheduled work orders and activate those within lead time.
+   * This should be run daily (e.g., after autoGenerateWorkOrders) as a background job.
+   */
+  public async processScheduledWorkOrders(): Promise<void> {
+    const workOrders = await this.getWorkOrders();
+    const today = this.now();
+
+    for (const wo of workOrders) {
+      // Only process scheduled work orders
+      if (wo.state !== 'scheduled') {
+        continue;
+      }
+
+      // Check if within lead time
+      if (!isWithinLeadTime(wo, today)) {
+        continue;
+      }
+
+      // Activate the work order by moving to backlog
+      try {
+        const updated: WorkOrder = {
+          ...wo,
+          state: 'backlog',
+          history: [
+            ...wo.history,
+            {
+              id: crypto.randomUUID() as UUID,
+              state: 'backlog',
+              changedAt: this.timestamp(),
+              changedBy: wo.createdBy,
+              changedByName: wo.createdByName,
+              notes: 'Automatically activated - lead time reached',
+            },
+          ],
+          updatedAt: this.timestamp(),
+        };
+
+        await this.storageProvider.updateWorkOrder(wo.id, updated);
+      } catch (error) {
+        console.error(`Failed to activate scheduled work order ${wo.id}:`, error);
       }
     }
   }
