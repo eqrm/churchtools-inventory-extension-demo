@@ -6,6 +6,7 @@
 
 import { setupServer } from 'msw/node';
 import { handlers } from './handlers';
+import { kvStoreState } from './kv-store-state';
 
 /**
  * Mock server instance for tests
@@ -33,4 +34,10 @@ export function stopMockServer() {
  */
 export function resetMockServer() {
     server.resetHandlers();
+    kvStoreState.reset();
 }
+
+/**
+ * Export the KV store state for direct manipulation in tests
+ */
+export { kvStoreState };

@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { MantineProvider } from '@mantine/core';
@@ -38,6 +39,17 @@ if (import.meta.env.MODE === 'development') {
     void import('./utils/reset.css');
 }
 
+// Initialize MSW in development if configured
+if (import.meta.env.DEV && import.meta.env.VITE_USE_MOCKS === 'true') {
+    const { worker } = await import('./tests/mocks/browser');
+    await worker.start({
+        onUnhandledRequest: 'bypass',
+        serviceWorker: {
+            url: `${import.meta.env.BASE_URL}mockServiceWorker.js`,
+        },
+    });
+}
+
 // Validate environment variables before app initialization
 let envConfig: ReturnType<typeof validateEnvironment>;
 try {
@@ -69,6 +81,7 @@ if (import.meta.env.MODE === 'development' && username && password) {
 
 // Initialize translations before rendering UI
 await initI18n();
+console.log('[main] i18n initialized');
 
 try {
     const schemaVersioning = new SchemaVersioningService();
@@ -108,6 +121,8 @@ try {
 } catch (error) {
     renderFatalStartupError('Migration Error', error);
 }
+
+console.log('[main] Rendering React app...');
 
 // TanStack Query client configuration (T218 - optimized cache times)
 const queryClient = new QueryClient({
