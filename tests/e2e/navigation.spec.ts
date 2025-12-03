@@ -187,7 +187,7 @@ test.describe('Navigation & Layout', () => {
     });
   });
 
-  test.describe('1.3 Header & Undo History', () => {
+  test.describe('1.3 Header', () => {
     // T018 - Verify header displays app title "Inventory"
     test('T018 - header displays app title', async ({ page }) => {
       // The title is "Inventory Manager"
@@ -195,52 +195,12 @@ test.describe('Navigation & Layout', () => {
       await expect(header.getByText('Inventory Manager')).toBeVisible();
     });
 
-    // T019 - Verify undo history button is visible in header
-    test('T019 - undo history button is visible in header', async ({ page }) => {
+    // T019 - Verify global undo history button is NOT present in header (removed per Issue 8)
+    test('T019 - global undo history button is NOT present in header', async ({ page }) => {
+      // The global undo history button was removed in Issue 8
+      // Undo functionality is now only available for bulk actions
       const undoButton = page.locator('header').getByRole('button', { name: /undo|history/i });
-      await expect(undoButton).toBeVisible();
-    });
-
-    // T020 - Verify clicking undo history button opens undo history modal
-    test('T020 - clicking undo history button opens modal', async ({ page }) => {
-      const undoButton = page.locator('header').getByRole('button', { name: /undo|history/i });
-      await undoButton.click();
-      
-      // Modal should be visible with title "Undo History"
-      await expect(page.getByRole('dialog')).toBeVisible();
-      await expect(page.getByRole('heading', { name: /Undo History/i })).toBeVisible();
-    });
-
-    // T021 - Verify undo history modal displays list of recent actions (or empty state)
-    test('T021 - undo history modal displays content', async ({ page }) => {
-      const undoButton = page.locator('header').getByRole('button', { name: /undo|history/i });
-      await undoButton.click();
-      
-      // Modal should be open
-      const modal = page.getByRole('dialog');
-      await expect(modal).toBeVisible();
-      
-      // Should show either action items or an empty state message
-      // Check for the shortcut hint which is always present
-      await expect(modal.getByText(/Ctrl\+Z|⌘Z/)).toBeVisible();
-    });
-
-    // T022 - Verify undo history modal can be closed
-    test('T022 - undo history modal can be closed', async ({ page }) => {
-      const undoButton = page.locator('header').getByRole('button', { name: /undo|history/i });
-      await undoButton.click();
-      
-      const modal = page.getByRole('dialog');
-      await expect(modal).toBeVisible();
-      
-      // Close the modal using the close button
-      const closeButton = modal.getByRole('button', { name: /close/i }).or(
-        modal.locator('button[class*="CloseButton"]')
-      );
-      await closeButton.click();
-      
-      // Modal should no longer be visible
-      await expect(modal).not.toBeVisible();
+      await expect(undoButton).not.toBeVisible();
     });
   });
 });

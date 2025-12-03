@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from 'react';
-import { Button, Card, Grid, Group, Select, Stack, Textarea, TextInput, Title } from '@mantine/core';
+import { Button, Card, Grid, Group, NumberInput, Select, Stack, Switch, Textarea, TextInput, Title } from '@mantine/core';
 import { IconDeviceFloppy, IconX } from '@tabler/icons-react';
 import { useForm } from '@mantine/form';
 import { notifications } from '@mantine/notifications';
@@ -39,6 +39,9 @@ interface AssetGroupFormValues {
   inheritanceRules: Record<string, AssetGroupInheritanceRule>;
   customFieldRules: Record<string, AssetGroupInheritanceRule>;
   sharedCustomFields: Record<string, CustomFieldValue>;
+  // Unified AssetModel fields (from old AssetModel)
+  defaultWarrantyMonths?: number;
+  defaultBookable: boolean;
 }
 
 function normalizeSharedCustomFields(
@@ -100,6 +103,9 @@ export function AssetGroupForm({ group, onSuccess, onCancel }: AssetGroupFormPro
     inheritanceRules: mergeDefaults(group?.inheritanceRules ?? {}),
     customFieldRules: { ...(group?.customFieldRules ?? {}) },
     sharedCustomFields: { ...(group?.sharedCustomFields ?? {}) } as Record<string, CustomFieldValue>,
+    // Unified AssetModel fields
+    defaultWarrantyMonths: group?.defaultWarrantyMonths,
+    defaultBookable: group?.defaultBookable ?? true,
   }), [group]);
 
   const form = useForm<AssetGroupFormValues>({
@@ -206,6 +212,9 @@ export function AssetGroupForm({ group, onSuccess, onCancel }: AssetGroupFormPro
       inheritanceRules: mergeDefaults(values.inheritanceRules),
       customFieldRules: values.customFieldRules,
       sharedCustomFields: normalizeSharedCustomFields(values.sharedCustomFields, selectedAssetType.customFields),
+      // Unified AssetModel fields
+      defaultWarrantyMonths: values.defaultWarrantyMonths,
+      defaultBookable: values.defaultBookable,
     } satisfies Partial<AssetGroup>;
 
     try {
@@ -313,6 +322,19 @@ export function AssetGroupForm({ group, onSuccess, onCancel }: AssetGroupFormPro
                   label="Model"
                   placeholder="SM58"
                   {...form.getInputProps('model')}
+                />
+                <NumberInput
+                  label="Default Warranty (Months)"
+                  description="Applied when creating new assets from this model"
+                  placeholder="12"
+                  min={0}
+                  max={120}
+                  {...form.getInputProps('defaultWarrantyMonths')}
+                />
+                <Switch
+                  label="Bookable by default"
+                  description="New assets from this model will be bookable"
+                  {...form.getInputProps('defaultBookable', { type: 'checkbox' })}
                 />
               </Stack>
             </Grid.Col>

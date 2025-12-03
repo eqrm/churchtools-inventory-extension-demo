@@ -6,25 +6,22 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import {
+  ActionIcon,
   Button,
-  Card,
-  Collapse,
   Drawer,
   Group,
   Menu,
   Modal,
   Stack,
-  Text,
   Title,
+  Tooltip,
 } from '@mantine/core';
 import {
   IconBookmark,
   IconChevronDown,
   IconDeviceFloppy,
-  IconFilter,
   IconPackage,
   IconPlus,
-  IconX,
 } from '@tabler/icons-react';
 import { notifications } from '@mantine/notifications';
 import { useTranslation } from 'react-i18next';
@@ -33,7 +30,7 @@ import { useAssets } from '../../hooks/useAssets';
 import { useUIStore } from '../../stores/uiStore';
 import { useFeatureSettingsStore } from '../../stores';
 import { ViewSelector } from '../views/ViewSelector';
-import { FilterBuilder } from '../views/FilterBuilder';
+import { NotionFilterBar } from '../views/NotionFilterBar';
 import { SavedViewForm } from '../reports/SavedViewForm';
 import { SavedViewsList } from '../reports/SavedViewsList';
 import { AssetGalleryView } from './AssetGalleryView';
@@ -78,17 +75,6 @@ export function EnhancedAssetList({ onView, onEdit, onCreateNew, onCreateKit }: 
     setGroupBy,
   } = useUIStore();
 
-  // T210: Filter builder state with localStorage persistence
-  const [filtersPanelOpen, setFiltersPanelOpen] = useState<boolean>(() => {
-    const saved = localStorage.getItem('churchtools-inventory-filter-panel-expanded');
-    return saved ? JSON.parse(saved) === true : false;
-  });
-
-  // Persist filter panel state to localStorage
-  useEffect(() => {
-    localStorage.setItem('churchtools-inventory-filter-panel-expanded', JSON.stringify(filtersPanelOpen));
-  }, [filtersPanelOpen]);
-
   // T211: Save view modal
   const [showSaveView, setShowSaveView] = useState(false);
   const [editingViewId, setEditingViewId] = useState<string | null>(null);
@@ -116,15 +102,13 @@ export function EnhancedAssetList({ onView, onEdit, onCreateNew, onCreateKit }: 
   const quickFilterCount = useMemo(() => countFilterConditions(quickFilters), [quickFilters]);
   const advancedFilterCount = useMemo(() => countFilterConditions(viewFilters), [viewFilters]);
   const activeFilterCount = quickFilterCount + advancedFilterCount;
-  const hasQuickFilterConditions = quickFilterCount > 0;
-  const hasAdvancedFilterConditions = advancedFilterCount > 0;
 
-  const filtersToApply = useMemo(() => {
+  const filtersToApply = useMemo((): ViewFilterGroup => {
     const activeGroups: ViewFilterGroup[] = [];
-    if (hasActiveFilters(quickFilters)) {
+    if (quickFilters && hasActiveFilters(quickFilters)) {
       activeGroups.push(quickFilters);
     }
-    if (hasActiveFilters(viewFilters)) {
+    if (viewFilters && hasActiveFilters(viewFilters)) {
       activeGroups.push(viewFilters);
     }
 
@@ -133,7 +117,8 @@ export function EnhancedAssetList({ onView, onEdit, onCreateNew, onCreateKit }: 
     }
 
     if (activeGroups.length === 1) {
-      return activeGroups[0];
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- length check guarantees existence
+      return activeGroups[0]!;
     }
 
     return createFilterGroup('AND', activeGroups);
@@ -143,6 +128,11 @@ export function EnhancedAssetList({ onView, onEdit, onCreateNew, onCreateKit }: 
 
   const handleCreateKit = () => {
     onCreateKit?.();
+  };
+
+  const handleClearAllFilters = () => {
+    clearQuickFilters();
+    clearViewFilters();
   };
 
   // T200: Read filters from URL on mount
@@ -255,7 +245,6 @@ export function EnhancedAssetList({ onView, onEdit, onCreateNew, onCreateKit }: 
             onEdit={onEdit}
             initialFilters={legacyFilters}
             hideFilterButton
-            filtersOpen={filtersPanelOpen}
             hideViewSelector
             hideAdvancedFilters
           />
@@ -274,7 +263,6 @@ export function EnhancedAssetList({ onView, onEdit, onCreateNew, onCreateKit }: 
             onEdit={onEdit}
             initialFilters={legacyFilters}
             hideFilterButton
-            filtersOpen={filtersPanelOpen}
             hideViewSelector
             hideAdvancedFilters
           />
@@ -286,7 +274,6 @@ export function EnhancedAssetList({ onView, onEdit, onCreateNew, onCreateKit }: 
             onEdit={onEdit}
             initialFilters={legacyFilters}
             hideFilterButton
-            filtersOpen={filtersPanelOpen}
             hideViewSelector
             hideAdvancedFilters
           />
@@ -295,55 +282,38 @@ export function EnhancedAssetList({ onView, onEdit, onCreateNew, onCreateKit }: 
   };
 
   return (
-    <Stack gap="md">
-      {/* Header with ViewModeSelector and actions */}
-      <Group justify="space-between">
-        <Title order={2}>{tAssets('list.title')}</Title>
+    <Stack gap="sm">
+      {/* Compact Header */}
+      <Group justify="space-between" wrap="wrap" gap="sm">
+        <Title order={3}>{tAssets('list.title')}</Title>
 
-        <Group>
+        <Group gap="xs">
           {/* T209: ViewSelector integration */}
           <ViewSelector value={viewMode} onChange={setViewMode} />
 
           {/* T212: Saved views quick access */}
-          <Menu position="bottom-end" shadow="md">
-            <Menu.Target>
-              <Button variant="default" leftSection={<IconBookmark size={16} />}>
-                {tAssets('list.actions.views')}
-              </Button>
-            </Menu.Target>
-            <Menu.Dropdown>
-              <Menu.Label>{tAssets('list.actions.menuLabel')}</Menu.Label>
-              <Menu.Item onClick={() => setShowSavedViews(true)}>
-                {tAssets('list.actions.showAll')}
-              </Menu.Item>
-            </Menu.Dropdown>
-          </Menu>
-
-          {/* T210: Filter builder toggle */}
-          <Button
-            variant={filtersPanelOpen ? 'filled' : 'default'}
-            leftSection={<IconFilter size={16} />}
-            onClick={() => setFiltersPanelOpen((prev) => !prev)}
-          >
-            {activeFilterCount > 0
-              ? tAssets('list.actions.filtersWithCount', { count: activeFilterCount })
-              : tAssets('list.actions.filters')}
-          </Button>
+          <Tooltip label="Views">
+            <ActionIcon variant="default" size="lg" onClick={() => setShowSavedViews(true)}>
+              <IconBookmark size={18} />
+            </ActionIcon>
+          </Tooltip>
 
           {/* T211: Save current view button */}
-          <Button
-            variant="default"
-            leftSection={<IconDeviceFloppy size={16} />}
-            onClick={handleSaveCurrentView}
-            disabled={activeFilterCount === 0}
-          >
-            {tAssets('list.actions.saveView')}
-          </Button>
+          <Tooltip label="Save view">
+            <ActionIcon 
+              variant="default" 
+              size="lg" 
+              onClick={handleSaveCurrentView}
+              disabled={activeFilterCount === 0}
+            >
+              <IconDeviceFloppy size={18} />
+            </ActionIcon>
+          </Tooltip>
 
           {onCreateNew && (
             <Menu position="bottom-end" shadow="md">
               <Menu.Target>
-                <Button leftSection={<IconPlus size={16} />} rightSection={<IconChevronDown size={16} />}>
+                <Button size="sm" leftSection={<IconPlus size={16} />} rightSection={<IconChevronDown size={14} />}>
                   {tAssets('list.actions.new')}
                 </Button>
               </Menu.Target>
@@ -362,54 +332,14 @@ export function EnhancedAssetList({ onView, onEdit, onCreateNew, onCreateKit }: 
         </Group>
       </Group>
 
-      {/* T210: Filter builder panel with smooth collapse animation */}
-      <Collapse in={filtersPanelOpen}>
-        <Stack gap="md">
-          <Card withBorder>
-            <Stack gap="sm">
-              <Group justify="space-between" align="center">
-                <Text size="sm" fw={600}>
-                  Quick filters
-                </Text>
-                {hasQuickFilterConditions && (
-                  <Button
-                    variant="subtle"
-                    size="xs"
-                    color="gray"
-                    leftSection={<IconX size={14} />}
-                    onClick={clearQuickFilters}
-                  >
-                    Clear quick filters
-                  </Button>
-                )}
-              </Group>
-              <FilterBuilder mode="quick" value={quickFilters} onChange={setQuickFilters} />
-            </Stack>
-          </Card>
-
-          <Card withBorder>
-            <Stack gap="sm">
-              <Group justify="space-between" align="center">
-                <Text size="sm" fw={600}>
-                  Advanced filters
-                </Text>
-                {hasAdvancedFilterConditions && (
-                  <Button
-                    variant="subtle"
-                    size="xs"
-                    color="gray"
-                    leftSection={<IconX size={14} />}
-                    onClick={clearViewFilters}
-                  >
-                    Clear advanced filters
-                  </Button>
-                )}
-              </Group>
-              <FilterBuilder mode="advanced" value={viewFilters} onChange={setViewFilters} />
-            </Stack>
-          </Card>
-        </Stack>
-      </Collapse>
+      {/* Notion-style filter bar */}
+      <NotionFilterBar
+        quickFilters={quickFilters}
+        advancedFilters={viewFilters}
+        onQuickFiltersChange={setQuickFilters}
+        onAdvancedFiltersChange={setViewFilters}
+        onClearAll={handleClearAllFilters}
+      />
 
       {/* Render current view mode */}
       {renderView()}
@@ -424,7 +354,7 @@ export function EnhancedAssetList({ onView, onEdit, onCreateNew, onCreateKit }: 
         <SavedViewForm
           viewMode={viewMode}
           filters={viewFilters}
-          quickFilters={hasQuickFilterConditions ? quickFilters : undefined}
+          quickFilters={quickFilterCount > 0 ? quickFilters : undefined}
           sortBy={sortBy || undefined}
           sortDirection={sortDirection}
           groupBy={groupBy || undefined}

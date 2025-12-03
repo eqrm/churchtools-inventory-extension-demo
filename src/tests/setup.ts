@@ -30,6 +30,9 @@ Object.defineProperty(window, 'scrollTo', {
     value: vi.fn(),
 });
 
+// Mock Element.prototype.scrollIntoView (required for Mantine Combobox)
+Element.prototype.scrollIntoView = vi.fn();
+
 // Mock IntersectionObserver
 global.IntersectionObserver = class IntersectionObserver {
     disconnect() {}

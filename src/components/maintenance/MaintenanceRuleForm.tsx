@@ -72,11 +72,30 @@ export function MaintenanceRuleForm({
     [t],
   );
 
+  // Normalize workType: if rule has a non-predefined workType, treat it as 'custom'
+  const normalizedWorkType = useMemo(() => {
+    if (!rule?.workType) return 'inspection';
+    if (MAINTENANCE_WORK_TYPES.includes(rule.workType as MaintenanceWorkType)) {
+      return rule.workType as MaintenanceWorkType;
+    }
+    // Non-predefined work type, treat as custom
+    return 'custom' as MaintenanceWorkType;
+  }, [rule?.workType]);
+
+  const normalizedCustomLabel = useMemo(() => {
+    if (!rule?.workType) return '';
+    if (MAINTENANCE_WORK_TYPES.includes(rule.workType as MaintenanceWorkType)) {
+      return rule.workTypeCustomLabel || '';
+    }
+    // Non-predefined work type, use it as the custom label
+    return rule.workType;
+  }, [rule?.workType, rule?.workTypeCustomLabel]);
+
   const form = useForm({
     initialValues: {
       name: rule?.name || '',
-      workType: (rule?.workType ?? 'inspection') as MaintenanceWorkType,
-      workTypeCustomLabel: rule?.workTypeCustomLabel || '',
+      workType: normalizedWorkType,
+      workTypeCustomLabel: normalizedCustomLabel,
       isInternal: rule?.isInternal ?? true,
       serviceProviderId: rule?.serviceProviderId || '',
       targetIds: rule?.targets?.[0]?.ids || [],

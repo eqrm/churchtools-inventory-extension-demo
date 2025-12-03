@@ -9,7 +9,6 @@ import { useForm } from '@mantine/form';
 import {
   Button,
   Stack,
-  Group,
   Select,
   Text,
   NumberInput,
@@ -105,9 +104,15 @@ export function WorkOrderForm({
   });
 
   const handleSubmit = (values: typeof form.values) => {
+    // Check if all line items are completed - if so, transition to 'completed' state
+    const allCompleted = values.lineItems.length > 0 && 
+      values.lineItems.every((item) => item.completionStatus === 'completed');
+    
+    const newState = allCompleted ? 'completed' : values.state;
+
     const data = {
       type: values.type,
-      state: values.state as WorkOrder['state'],
+      state: newState as WorkOrder['state'],
       orderType: values.orderType as WorkOrderOrderType,
       ruleId: values.ruleId || undefined,
       companyId: values.companyId || undefined,
@@ -116,6 +121,7 @@ export function WorkOrderForm({
       leadTimeDays: values.leadTimeDays,
       scheduledStart: values.scheduledStart?.toISOString().split('T')[0],
       scheduledEnd: values.scheduledEnd?.toISOString().split('T')[0],
+      actualEnd: allCompleted ? new Date().toISOString().split('T')[0] : undefined,
       lineItems: values.lineItems,
       offers: values.offers,
     };
@@ -202,7 +208,7 @@ export function WorkOrderForm({
 
   return (
     <form onSubmit={form.onSubmit(handleSubmit)}>
-      <Stack gap="md">
+      <Stack gap="lg">
         {rules.length > 0 && (
           <Select
             label={t('maintenance:fields.maintenanceRule')}
@@ -210,6 +216,8 @@ export function WorkOrderForm({
             description={t('maintenance:descriptions.maintenanceRule')}
             data={rules.map((r) => ({ value: r.id, label: r.name }))}
             clearable
+            size="md"
+            styles={{ input: { minHeight: 44 } }}
             {...bindSelectField(form, 'ruleId', { emptyValue: '' })}
           />
         )}
@@ -229,6 +237,11 @@ export function WorkOrderForm({
               { label: t('maintenance:orderTypes.follow-up'), value: 'follow-up' },
             ]}
             fullWidth
+            size="md"
+            styles={{
+              root: { minHeight: 44 },
+              label: { padding: '10px 16px' },
+            }}
           />
           <Text size="xs" c="dimmed" mt="xs">
             {t('maintenance:descriptions.orderType')}
@@ -240,31 +253,39 @@ export function WorkOrderForm({
             label={t('maintenance:fields.serviceProvider')}
             placeholder={t('maintenance:placeholders.serviceProvider')}
             required
+            size="md"
+            styles={{ input: { minHeight: 44 } }}
             data={companies.map((c) => ({ value: c.id, label: c.name }))}
             {...bindSelectField(form, 'companyId', { emptyValue: '' })}
           />
         )}
 
-        <Group grow>
+        <Stack gap="sm">
           <DateInput
             label={t('maintenance:fields.scheduledStart')}
             placeholder={t('maintenance:placeholders.scheduledStart')}
             minDate={new Date()}
+            size="md"
+            styles={{ input: { minHeight: 44 } }}
             {...form.getInputProps('scheduledStart')}
           />
           <DateInput
             label={t('maintenance:fields.scheduledEnd')}
             placeholder={t('maintenance:placeholders.scheduledEnd')}
             minDate={form.values.scheduledStart || new Date()}
+            size="md"
+            styles={{ input: { minHeight: 44 } }}
             {...form.getInputProps('scheduledEnd')}
           />
-        </Group>
+        </Stack>
 
         <NumberInput
           label={t('maintenance:fields.leadTimeDays')}
           placeholder="14"
           description={t('maintenance:descriptions.leadTimeDays')}
           min={0}
+          size="md"
+          styles={{ input: { minHeight: 44 } }}
           {...form.getInputProps('leadTimeDays')}
         />
 
@@ -274,6 +295,8 @@ export function WorkOrderForm({
           data={assetOptions}
           searchable
           clearable
+          size="md"
+          styles={{ input: { minHeight: 44 } }}
           value={selectedAssetIds}
           onChange={handleLineItemSelectionChange}
           nothingFoundMessage={
@@ -289,10 +312,12 @@ export function WorkOrderForm({
         <TextInput
           label={t('maintenance:placeholders.scanBarcode')}
           placeholder={t('maintenance:placeholders.scanBarcode')}
-          leftSection={<IconBarcode size={16} />}
+          leftSection={<IconBarcode size={18} />}
           value={scanInput}
           onChange={(e) => setScanInput(e.currentTarget.value)}
           onKeyDown={handleAssetScan}
+          size="md"
+          styles={{ input: { minHeight: 44 } }}
           mb="sm"
         />
 
@@ -321,14 +346,26 @@ export function WorkOrderForm({
           )}
         </Box>
 
-        <Group justify="flex-end" mt="md">
-          <Button variant="subtle" onClick={onCancel} disabled={isLoading}>
-            {t('common:actions.cancel')}
-          </Button>
-          <Button type="submit" loading={isLoading}>
+        <Stack gap="sm" mt="xl">
+          <Button
+            type="submit"
+            loading={isLoading}
+            size="lg"
+            fullWidth
+            styles={{ root: { minHeight: 48 } }}
+          >
             {workOrder ? t('common:actions.save') : t('common:actions.create')}
           </Button>
-        </Group>
+          <Button
+            variant="subtle"
+            onClick={onCancel}
+            disabled={isLoading}
+            size="md"
+            fullWidth
+          >
+            {t('common:actions.cancel')}
+          </Button>
+        </Stack>
       </Stack>
     </form>
   );

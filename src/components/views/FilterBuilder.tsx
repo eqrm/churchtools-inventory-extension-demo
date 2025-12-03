@@ -1,23 +1,28 @@
 import {
   ActionIcon,
   Alert,
-  Badge,
-  Button,
-  Card,
   Combobox,
   Group,
   Modal,
-  Paper,
+  Pill,
   ScrollArea,
   SegmentedControl,
   Select,
   Stack,
   Text,
   TextInput,
+  Tooltip,
   useCombobox,
 } from '@mantine/core';
-import { IconAdjustmentsHorizontal, IconPlus, IconTrash } from '@tabler/icons-react';
-import { Fragment, memo, useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  IconAdjustmentsHorizontal,
+  IconCalendar,
+  IconHash,
+  IconLetterCase,
+  IconPlus,
+  IconX,
+} from '@tabler/icons-react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import type {
   FilterLogic,
   FilterOperator,
@@ -47,60 +52,67 @@ interface FilterFieldConfig {
   value: string;
   label: string;
   type?: FilterFieldType;
+  icon?: React.ReactNode;
 }
 
 const FILTER_FIELDS: FilterFieldConfig[] = [
-  { value: 'name', label: 'Name', type: 'text' },
-  { value: 'assetNumber', label: 'Asset Number', type: 'text' },
-  { value: 'status', label: 'Status', type: 'text' },
-  { value: 'assetType.name', label: 'Asset Type', type: 'text' },
-  { value: 'location', label: 'Location', type: 'text' },
-  { value: 'manufacturer', label: 'Manufacturer', type: 'text' },
-  { value: 'model', label: 'Model', type: 'text' },
-  { value: 'createdAt', label: 'Created date', type: 'date' },
-  { value: 'lastModifiedAt', label: 'Updated date', type: 'date' },
-  { value: 'nextMaintenance', label: 'Next maintenance', type: 'date' },
+  { value: 'name', label: 'Name', type: 'text', icon: <IconLetterCase size={14} /> },
+  { value: 'assetNumber', label: 'Asset #', type: 'text', icon: <IconHash size={14} /> },
+  { value: 'status', label: 'Status', type: 'text', icon: <IconLetterCase size={14} /> },
+  { value: 'assetType.name', label: 'Type', type: 'text', icon: <IconLetterCase size={14} /> },
+  { value: 'location', label: 'Location', type: 'text', icon: <IconLetterCase size={14} /> },
+  { value: 'manufacturer', label: 'Manufacturer', type: 'text', icon: <IconLetterCase size={14} /> },
+  { value: 'model', label: 'Model', type: 'text', icon: <IconLetterCase size={14} /> },
+  { value: 'createdAt', label: 'Created', type: 'date', icon: <IconCalendar size={14} /> },
+  { value: 'lastModifiedAt', label: 'Updated', type: 'date', icon: <IconCalendar size={14} /> },
+  { value: 'nextMaintenance', label: 'Next maint.', type: 'date', icon: <IconCalendar size={14} /> },
 ];
 
 const FILTER_FIELD_MAP = new Map(FILTER_FIELDS.map((field) => [field.value, field]));
 
 function getFilterFieldLabel(value?: string | null): string {
   if (!value) {
-    return 'Select field';
+    return 'Field';
   }
-  return FILTER_FIELD_MAP.get(value)?.label ?? 'Select field';
+  return FILTER_FIELD_MAP.get(value)?.label ?? 'Field';
 }
 
-const COMMON_FILTER_OPERATORS: { value: FilterOperator; label: string }[] = [
-  { value: 'equals', label: 'Equals' },
-  { value: 'not-equals', label: 'Does not equal' },
-  { value: 'contains', label: 'Contains' },
-  { value: 'not-contains', label: 'Does not contain' },
-  { value: 'starts-with', label: 'Starts with' },
-  { value: 'ends-with', label: 'Ends with' },
-  { value: 'greater-than', label: 'Greater than' },
-  { value: 'less-than', label: 'Less than' },
-  { value: 'in', label: 'In list' },
-  { value: 'not-in', label: 'Not in list' },
-  { value: 'is-empty', label: 'Is empty' },
-  { value: 'is-not-empty', label: 'Is not empty' },
+function getFilterFieldIcon(value?: string | null): React.ReactNode | null {
+  if (!value) return null;
+  return FILTER_FIELD_MAP.get(value)?.icon ?? null;
+}
+
+// Compact operator labels for Notion-like UI
+const COMMON_FILTER_OPERATORS: { value: FilterOperator; label: string; shortLabel: string }[] = [
+  { value: 'equals', label: 'Is', shortLabel: 'is' },
+  { value: 'not-equals', label: 'Is not', shortLabel: 'is not' },
+  { value: 'contains', label: 'Contains', shortLabel: 'contains' },
+  { value: 'not-contains', label: 'Does not contain', shortLabel: '!contains' },
+  { value: 'starts-with', label: 'Starts with', shortLabel: 'starts' },
+  { value: 'ends-with', label: 'Ends with', shortLabel: 'ends' },
+  { value: 'greater-than', label: 'Greater than', shortLabel: '>' },
+  { value: 'less-than', label: 'Less than', shortLabel: '<' },
+  { value: 'in', label: 'In list', shortLabel: 'in' },
+  { value: 'not-in', label: 'Not in list', shortLabel: 'not in' },
+  { value: 'is-empty', label: 'Is empty', shortLabel: 'empty' },
+  { value: 'is-not-empty', label: 'Is not empty', shortLabel: '!empty' },
 ];
 
-const RELATIVE_FILTER_OPERATORS: { value: FilterOperator; label: string }[] = [
-  { value: 'relative-last', label: 'In last' },
-  { value: 'relative-next', label: 'In next' },
+const RELATIVE_FILTER_OPERATORS: { value: FilterOperator; label: string; shortLabel: string }[] = [
+  { value: 'relative-last', label: 'In last', shortLabel: 'last' },
+  { value: 'relative-next', label: 'In next', shortLabel: 'next' },
 ];
 
 const LOGIC_OPTIONS: { value: FilterLogic; label: string }[] = [
-  { value: 'AND', label: 'Match all' },
-  { value: 'OR', label: 'Match any' },
+  { value: 'AND', label: 'All' },
+  { value: 'OR', label: 'Any' },
 ];
 
 type RelativeDateOperator = Extract<FilterOperator, 'relative-last' | 'relative-next'>;
 
 const RELATIVE_OPERATOR_SET = new Set<RelativeDateOperator>(['relative-last', 'relative-next']);
 
-function getOperatorOptions(fieldName?: string): { value: FilterOperator; label: string }[] {
+function getOperatorOptions(fieldName?: string): { value: FilterOperator; label: string; shortLabel: string }[] {
   const field = fieldName ? FILTER_FIELD_MAP.get(fieldName) : undefined;
   if (field?.type === 'date') {
     return [...COMMON_FILTER_OPERATORS, ...RELATIVE_FILTER_OPERATORS];
@@ -312,7 +324,7 @@ function FilterBuilderComponent({ value, onChange, mode = 'auto' }: FilterBuilde
 
   if (isAdvancedMode) {
     return (
-      <Stack gap="sm">
+      <Stack gap="xs">
         <FilterGroupEditor
           group={tree}
           isRoot
@@ -328,7 +340,7 @@ function FilterBuilderComponent({ value, onChange, mode = 'auto' }: FilterBuilde
 
   return (
     <>
-      <Stack gap="sm">
+      <Stack gap={6}>
         {shouldRenderCompact ? (
           <CompactFilterEditor
             group={tree}
@@ -337,24 +349,23 @@ function FilterBuilderComponent({ value, onChange, mode = 'auto' }: FilterBuilde
             onLogicChange={handleRootLogicChange}
           />
         ) : (
-          <Alert color="yellow" variant="light">
-            Nested filter groups are active. Open the advanced builder to edit them.
+          <Alert color="yellow" variant="light" p="xs">
+            <Text size="xs">Nested filters active. Use advanced builder to edit.</Text>
           </Alert>
         )}
 
-        <Group justify="space-between" align="center">
-          <Button size="xs" leftSection={<IconPlus size={14} />} onClick={handleAddFilterClick}>
-            Add filter
-          </Button>
+        <Group gap={6}>
+          <Tooltip label="Add filter">
+            <ActionIcon size="sm" variant="light" onClick={handleAddFilterClick}>
+              <IconPlus size={14} />
+            </ActionIcon>
+          </Tooltip>
           {!isQuickMode && (
-            <Button
-              size="xs"
-              variant="subtle"
-              leftSection={<IconAdjustmentsHorizontal size={14} />}
-              onClick={openAdvanced}
-            >
-              Advanced builder
-            </Button>
+            <Tooltip label="Advanced builder">
+              <ActionIcon size="sm" variant="subtle" onClick={openAdvanced}>
+                <IconAdjustmentsHorizontal size={14} />
+              </ActionIcon>
+            </Tooltip>
           )}
         </Group>
       </Stack>
@@ -365,8 +376,7 @@ function FilterBuilderComponent({ value, onChange, mode = 'auto' }: FilterBuilde
           onClose={closeAdvanced}
           title="Advanced filters"
           size="lg"
-          withinPortal={false}
-          overlayProps={{ opacity: 0.25 }}
+          withinPortal
         >
           <Stack gap="sm" pb="sm">
             <FilterGroupEditor
@@ -397,25 +407,32 @@ function CompactFilterEditor({ group, onConditionChange, onRemoveCondition, onLo
 
   if (conditions.length === 0) {
     return (
-      <Paper withBorder radius="sm" p="md">
-        <Text size="sm" c="dimmed">
-          No filters added yet. Use "Add filter" to get started.
-        </Text>
-      </Paper>
+      <Text size="xs" c="dimmed">
+        No filters. Click + to add one.
+      </Text>
     );
   }
 
   return (
-    <Stack gap="xs">
-      {conditions.map((condition, index) => (
-        <Fragment key={condition.id}>
-          {index > 0 && <LogicConnector logic={group.logic} onChange={onLogicChange} />}
-          <CompactConditionRow
-            condition={condition}
-            onChange={onConditionChange}
-            onRemove={onRemoveCondition}
+    <Stack gap={6}>
+      {conditions.length > 1 && (
+        <Group gap={6}>
+          <SegmentedControl
+            size="xs"
+            value={group.logic}
+            onChange={(value) => onLogicChange(value as FilterLogic)}
+            data={LOGIC_OPTIONS}
+            styles={{ root: { backgroundColor: 'var(--mantine-color-gray-1)' } }}
           />
-        </Fragment>
+        </Group>
+      )}
+      {conditions.map((condition) => (
+        <CompactConditionRow
+          key={condition.id}
+          condition={condition}
+          onChange={onConditionChange}
+          onRemove={onRemoveCondition}
+        />
       ))}
     </Stack>
   );
@@ -444,51 +461,66 @@ function CompactConditionRow({ condition, onChange, onRemove }: CompactCondition
   };
 
   return (
-    <Paper withBorder radius="sm" p="xs">
-      <Group gap="xs" align="center" wrap="wrap" justify="space-between">
-        <Group gap="xs" align="center" wrap="wrap" style={{ flex: 1, minWidth: 260 }}>
-          <FieldSelector
-            value={condition.field}
-            onChange={(value) => onChange(condition.id, { field: value })}
-          />
-          <Select
-            aria-label="Filter operator"
-            placeholder="Operator"
-            value={condition.operator ?? null}
-            onChange={(value) => value && handleOperatorChange(value as FilterOperator)}
-            data={operatorOptions}
-            size="xs"
-            w={160}
-            comboboxProps={{ withinPortal: false }}
-          />
-          {showValueInput && (
-            <TextInput
-              placeholder="Value"
-              value={String(condition.value ?? '')}
-              onChange={(event) => onChange(condition.id, { value: event.currentTarget.value })}
-              size="xs"
-              style={{ flex: 1, minWidth: 160 }}
-            />
-          )}
-          {showRelativeInput && isRelativeOperator(condition.operator) && (
-            <RelativeDateInput
-              operator={condition.operator}
-              value={ensureRelativeDateValue(condition.value, condition.operator)}
-              onChange={(nextValue) => onChange(condition.id, { value: nextValue })}
-              onOperatorChange={(nextOperator) => handleOperatorChange(nextOperator)}
-            />
-          )}
-        </Group>
+    <Group gap={4} wrap="nowrap" align="center" style={{ 
+      background: 'var(--mantine-color-gray-0)', 
+      borderRadius: 6, 
+      padding: '4px 6px',
+      border: '1px solid var(--mantine-color-gray-2)'
+    }}>
+      <FieldSelector
+        value={condition.field}
+        onChange={(value) => onChange(condition.id, { field: value })}
+      />
+      <Select
+        aria-label="Filter operator"
+        placeholder="..."
+        value={condition.operator ?? null}
+        onChange={(value) => value && handleOperatorChange(value as FilterOperator)}
+        data={operatorOptions.map(o => ({ value: o.value, label: o.shortLabel }))}
+        size="xs"
+        w={90}
+        styles={{ 
+          input: { 
+            minHeight: 28, 
+            height: 28,
+            fontSize: 12,
+            paddingLeft: 8,
+            paddingRight: 24,
+          },
+          wrapper: { minWidth: 80 }
+        }}
+        comboboxProps={{ withinPortal: true, width: 140 }}
+      />
+      {showValueInput && (
+        <TextInput
+          placeholder="value"
+          value={String(condition.value ?? '')}
+          onChange={(event) => onChange(condition.id, { value: event.currentTarget.value })}
+          size="xs"
+          style={{ flex: 1, minWidth: 80 }}
+          styles={{ input: { minHeight: 28, height: 28, fontSize: 12 } }}
+        />
+      )}
+      {showRelativeInput && isRelativeOperator(condition.operator) && (
+        <RelativeDateInput
+          operator={condition.operator}
+          value={ensureRelativeDateValue(condition.value, condition.operator)}
+          onChange={(nextValue) => onChange(condition.id, { value: nextValue })}
+          onOperatorChange={(nextOperator) => handleOperatorChange(nextOperator)}
+        />
+      )}
+      <Tooltip label="Remove" position="top">
         <ActionIcon
-          color="gray"
+          size="xs"
           variant="subtle"
+          color="gray"
           onClick={() => onRemove(condition.id)}
-          aria-label="Remove condition"
+          aria-label="Remove filter"
         >
-          <IconTrash size={14} />
+          <IconX size={14} />
         </ActionIcon>
-      </Group>
-    </Paper>
+      </Tooltip>
+    </Group>
   );
 }
 
@@ -502,37 +534,45 @@ function FieldSelector({ value, onChange }: FieldSelectorProps) {
     onDropdownClose: () => combobox.resetSelectedOption(),
   });
 
+  const icon = getFilterFieldIcon(value ?? undefined);
+
   return (
     <Combobox
       store={combobox}
-      withinPortal={false}
+      withinPortal
       onOptionSubmit={(val) => {
         onChange(val);
         combobox.closeDropdown();
       }}
     >
       <Combobox.Target>
-        <Button
-          size="xs"
-          variant="light"
+        <Pill
+          size="sm"
           onClick={() => combobox.toggleDropdown()}
+          style={{ 
+            cursor: 'pointer', 
+            backgroundColor: 'var(--mantine-color-blue-0)',
+            color: 'var(--mantine-color-blue-7)',
+            fontWeight: 500,
+            fontSize: 12,
+            padding: '2px 8px',
+          }}
         >
-          {getFilterFieldLabel(value ?? undefined)}
-        </Button>
+          <Group gap={4} wrap="nowrap">
+            {icon}
+            {getFilterFieldLabel(value ?? undefined)}
+          </Group>
+        </Pill>
       </Combobox.Target>
       <Combobox.Dropdown>
-        <Combobox.Search placeholder="Search fields" aria-label="Search fields" />
-        <ScrollArea.Autosize mah={220} type="auto">
+        <Combobox.Search placeholder="Search..." aria-label="Search fields" />
+        <ScrollArea.Autosize mah={200} type="auto">
           <Combobox.Options>
             {FILTER_FIELDS.map((field) => (
               <Combobox.Option value={field.value} key={field.value}>
-                <Group justify="space-between" gap="xs" wrap="nowrap">
-                  <Text size="sm">{field.label}</Text>
-                  {field.type && (
-                    <Badge size="xs" variant="light" color="gray">
-                      {field.type}
-                    </Badge>
-                  )}
+                <Group gap="xs" wrap="nowrap">
+                  {field.icon}
+                  <Text size="xs">{field.label}</Text>
                 </Group>
               </Combobox.Option>
             ))}
@@ -540,28 +580,6 @@ function FieldSelector({ value, onChange }: FieldSelectorProps) {
         </ScrollArea.Autosize>
       </Combobox.Dropdown>
     </Combobox>
-  );
-}
-
-interface LogicConnectorProps {
-  logic: FilterLogic;
-  onChange: (logic: FilterLogic) => void;
-}
-
-function LogicConnector({ logic, onChange }: LogicConnectorProps) {
-  return (
-    <Group justify="center" align="center" gap="xs">
-      <SegmentedControl
-        size="xs"
-        value={logic}
-        onChange={(value) => onChange(value as FilterLogic)}
-        data={LOGIC_OPTIONS}
-        aria-label="Logical operator"
-      />
-      <Text size="xs" c="dimmed">
-        {logic === 'AND' ? 'Match all filters' : 'Match any filter'}
-      </Text>
-    </Group>
   );
 }
 
@@ -588,7 +606,7 @@ function FilterGroupEditor({
     <Stack gap="xs">
       <Group justify="space-between" align="center" wrap="wrap" gap="xs">
         <Group gap="xs" align="center">
-          <Text fw={600}>{isRoot ? 'Filters' : 'Group'}</Text>
+          <Text size="sm" fw={600}>{isRoot ? 'Where' : 'Group'}</Text>
           <SegmentedControl
             size="xs"
             value={group.logic}
@@ -596,30 +614,38 @@ function FilterGroupEditor({
             data={LOGIC_OPTIONS}
           />
         </Group>
-        <Group gap="xs">
-          <Button size="xs" variant="light" leftSection={<IconPlus size={14} />} onClick={() => onAddCondition(group.id)}>
-            Add condition
-          </Button>
-          <Button size="xs" variant="default" leftSection={<IconPlus size={14} />} onClick={() => onAddGroup(group.id)}>
-            Add group
-          </Button>
-          {!isRoot && (
-            <ActionIcon color="red" variant="subtle" onClick={() => onRemoveNode(group.id)}>
-              <IconTrash size={16} />
+        <Group gap={4}>
+          <Tooltip label="Add condition">
+            <ActionIcon size="sm" variant="light" onClick={() => onAddCondition(group.id)}>
+              <IconPlus size={14} />
             </ActionIcon>
+          </Tooltip>
+          <Tooltip label="Add group">
+            <ActionIcon size="sm" variant="default" onClick={() => onAddGroup(group.id)}>
+              <IconPlus size={14} />
+            </ActionIcon>
+          </Tooltip>
+          {!isRoot && (
+            <Tooltip label="Remove group">
+              <ActionIcon size="sm" variant="subtle" color="red" onClick={() => onRemoveNode(group.id)}>
+                <IconX size={14} />
+              </ActionIcon>
+            </Tooltip>
           )}
         </Group>
       </Group>
 
       {group.children.length === 0 ? (
-        <Text size="sm" c="dimmed">
-          No filters defined.
-        </Text>
+        <Text size="xs" c="dimmed">No filters.</Text>
       ) : (
-        <Stack gap="xs" pl="sm">
+        <Stack gap="xs" pl="sm" style={{ borderLeft: '2px solid var(--mantine-color-gray-3)' }}>
           {group.children.map((child) =>
             isFilterGroup(child) ? (
-              <Card key={child.id} withBorder padding="sm" radius="sm">
+              <div key={child.id} style={{ 
+                background: 'var(--mantine-color-gray-0)', 
+                borderRadius: 6, 
+                padding: 8 
+              }}>
                 <FilterGroupEditor
                   group={child}
                   onAddCondition={onAddCondition}
@@ -628,7 +654,7 @@ function FilterGroupEditor({
                   onRemoveNode={onRemoveNode}
                   onConditionChange={onConditionChange}
                 />
-              </Card>
+              </div>
             ) : (
               <FilterConditionRow
                 key={child.id}
@@ -667,32 +693,35 @@ function FilterConditionRow({ condition, onChange, onRemove }: FilterConditionRo
   };
 
   return (
-    <Group gap="xs" align="flex-start" wrap="wrap">
+    <Group gap={4} wrap="nowrap" align="center">
       <Select
         placeholder="Field"
         value={condition.field}
         onChange={(value) => value && onChange(condition.id, { field: value })}
-        data={FILTER_FIELDS}
-        style={{ flex: 1, minWidth: 150 }}
+        data={FILTER_FIELDS.map(f => ({ value: f.value, label: f.label }))}
         size="xs"
+        w={120}
+        styles={{ input: { fontSize: 12 } }}
       />
 
       <Select
-        placeholder="Operator"
+        placeholder="Op"
         value={condition.operator}
         onChange={(value) => value && handleOperatorChange(value as FilterOperator)}
-        data={operatorOptions}
-        style={{ flex: 1, minWidth: 150 }}
+        data={operatorOptions.map(o => ({ value: o.value, label: o.shortLabel }))}
         size="xs"
+        w={90}
+        styles={{ input: { fontSize: 12 } }}
       />
 
       {showValueInput && (
         <TextInput
-          placeholder="Value"
+          placeholder="value"
           value={String(condition.value ?? '')}
           onChange={(event) => onChange(condition.id, { value: event.currentTarget.value })}
-          style={{ flex: 2, minWidth: 200 }}
           size="xs"
+          style={{ flex: 1, minWidth: 100 }}
+          styles={{ input: { fontSize: 12 } }}
         />
       )}
 
@@ -705,9 +734,11 @@ function FilterConditionRow({ condition, onChange, onRemove }: FilterConditionRo
         />
       )}
 
-      <ActionIcon color="red" variant="light" onClick={() => onRemove(condition.id)} aria-label="Remove condition">
-        <IconTrash size={16} />
-      </ActionIcon>
+      <Tooltip label="Remove">
+        <ActionIcon size="xs" variant="subtle" color="red" onClick={() => onRemove(condition.id)}>
+          <IconX size={14} />
+        </ActionIcon>
+      </Tooltip>
     </Group>
   );
 }

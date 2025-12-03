@@ -1,132 +1,118 @@
 import { useMemo } from 'react';
 import { Outlet, useMatch, Link } from 'react-router-dom';
-import { Card, Container, Stack, Title, Text, SimpleGrid, Button, Group } from '@mantine/core';
-import { IconCalendarCheck, IconClipboardList, IconGauge, IconTool, IconArrowRight } from '@tabler/icons-react';
+import { Box, Container, Group, UnstyledButton, Text, ThemeIcon, Stack } from '@mantine/core';
+import {
+  IconGauge,
+  IconTool,
+  IconClipboardList,
+  IconCalendarCheck,
+  IconChevronRight,
+} from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { MaintenanceDashboard } from '../components/maintenance/MaintenanceDashboard';
 import { routes } from '../router/routes';
 
-interface QuickLinkDefinition {
-  key: 'overview' | 'companies' | 'rules' | 'workOrders';
+interface NavItemProps {
+  icon: typeof IconGauge;
   label: string;
   description: string;
-  icon: typeof IconGauge;
-  destination: string;
+  to: string;
+  color: string;
 }
 
-/**
- * Maintenance Page - Central hub for maintenance management
- * Provides:
- * - Upcoming maintenance schedules
- * - Overdue maintenance alerts
- * - Maintenance compliance tracking
- * - Quick access to maintenance records
- */
+function NavItem({ icon: Icon, label, description, to, color }: NavItemProps) {
+  return (
+    <UnstyledButton
+      component={Link}
+      to={to}
+      p="md"
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 12,
+        borderRadius: 8,
+        border: '1px solid var(--mantine-color-gray-2)',
+        background: 'white',
+        width: '100%',
+        transition: 'all 0.15s ease',
+      }}
+    >
+      <ThemeIcon size={40} radius="md" color={color} variant="light">
+        <Icon size={22} />
+      </ThemeIcon>
+      <Box style={{ flex: 1 }}>
+        <Text fw={600} size="sm">
+          {label}
+        </Text>
+        <Text size="xs" c="dimmed" lineClamp={1}>
+          {description}
+        </Text>
+      </Box>
+      <IconChevronRight size={18} color="var(--mantine-color-gray-5)" />
+    </UnstyledButton>
+  );
+}
+
 export function MaintenancePage() {
   const { t } = useTranslation('maintenance');
   const matchRoot = useMatch({ path: routes.maintenance.root(), end: true });
   const isRootRoute = Boolean(matchRoot);
-  const quickLinks = useMemo<QuickLinkDefinition[]>(
+
+  const navItems = useMemo<NavItemProps[]>(
     () => [
       {
-        key: 'overview',
+        icon: IconGauge,
         label: t('page.links.dashboard'),
         description: t('page.sections.dashboard'),
-        icon: IconGauge,
-        destination: routes.maintenance.dashboard(),
+        to: routes.maintenance.dashboard(),
+        color: 'blue',
       },
       {
-        key: 'companies',
+        icon: IconTool,
         label: t('page.links.companies'),
         description: t('page.sections.companies'),
-        icon: IconTool,
-        destination: routes.maintenance.companies(),
+        to: routes.maintenance.companies(),
+        color: 'grape',
       },
       {
-        key: 'rules',
+        icon: IconClipboardList,
         label: t('page.links.rules'),
         description: t('page.sections.rules'),
-        icon: IconClipboardList,
-        destination: routes.maintenance.rules.list(),
+        to: routes.maintenance.rules.list(),
+        color: 'orange',
       },
       {
-        key: 'workOrders',
+        icon: IconCalendarCheck,
         label: t('page.links.workOrders'),
         description: t('page.sections.workOrders'),
-        icon: IconCalendarCheck,
-        destination: routes.maintenance.workOrders.list(),
+        to: routes.maintenance.workOrders.list(),
+        color: 'teal',
       },
     ],
     [t],
   );
 
+  if (!isRootRoute) {
+    return <Outlet />;
+  }
+
   return (
-    <Container size="xl" py="xl">
+    <Container size="lg" py="md">
       <Stack gap="lg">
-        <Stack gap="sm">
-          <Title order={1}>{t('page.title')}</Title>
-          <Text size="lg" c="dimmed">
-            {t('page.description')}
+        {/* Compact Dashboard Widget */}
+        <MaintenanceDashboard />
+
+        {/* Navigation Grid */}
+        <Box>
+          <Text size="xs" fw={600} c="dimmed" tt="uppercase" mb="sm">
+            {t('page.quickLinks.title')}
           </Text>
-        </Stack>
-
-        {isRootRoute ? (
-          <Stack gap="xl">
-            <Card withBorder radius="md" data-testid="maintenance-overview-card">
-              <Stack gap="lg">
-                <Group justify="space-between" align="flex-start">
-                  <Stack gap={4}>
-                    <Title order={3}>{t('page.overviewCard.title')}</Title>
-                    <Text size="sm" c="dimmed">
-                      {t('page.overviewCard.description')}
-                    </Text>
-                  </Stack>
-                  <Button
-                    component={Link}
-                    to={routes.maintenance.dashboard()}
-                    variant="light"
-                    leftSection={<IconGauge size={16} />}
-                  >
-                    {t('page.links.dashboard')}
-                  </Button>
-                </Group>
-                <MaintenanceDashboard />
-              </Stack>
-            </Card>
-
-            <Stack gap="sm">
-              <Title order={3}>{t('page.quickLinks.title')}</Title>
-              <Text size="sm" c="dimmed">
-                {t('page.quickLinks.description')}
-              </Text>
-              <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="lg">
-                {quickLinks.map(({ key, label, description, icon: Icon, destination }) => (
-                  <Card key={key} withBorder radius="md" data-testid={`maintenance-quick-link-${key}`}>
-                    <Stack gap="sm">
-                      <Icon size={28} stroke={1.8} />
-                      <Stack gap={2}>
-                        <Text fw={600}>{label}</Text>
-                        <Text size="sm" c="dimmed">
-                          {description}
-                        </Text>
-                      </Stack>
-                      <Button
-                        component={Link}
-                        to={destination}
-                        variant="light"
-                        rightSection={<IconArrowRight size={16} />}
-                      >
-                        {t('page.quickLinks.openLabel', { label })}
-                      </Button>
-                    </Stack>
-                  </Card>
-                ))}
-              </SimpleGrid>
-            </Stack>
-          </Stack>
-        ) : (
-          <Outlet />
-        )}
+          <Group gap="sm" grow>
+            {navItems.map((item) => (
+              <NavItem key={item.to} {...item} />
+            ))}
+          </Group>
+        </Box>
       </Stack>
     </Container>
   );

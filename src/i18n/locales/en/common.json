@@ -12,7 +12,9 @@
     "retry": "Try again",
     "undo": "Undo",
     "redo": "Redo",
-    "create": "Create"
+    "create": "Create",
+    "addNotes": "Add notes",
+    "hideNotes": "Hide notes"
   },
   "loading": "Loading...",
   "cancel": "Cancel",

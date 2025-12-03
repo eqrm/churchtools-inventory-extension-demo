@@ -55,7 +55,8 @@ export const routes = {
       list: () => '/asset-groups',
       detail: (groupId: IdLike) => `/asset-groups/${toId(groupId)}`,
     },
-    assetModels: () => '/models',
+    /** @deprecated Use assetGroups instead - redirects to /asset-groups */
+    assetModels: () => '/asset-groups',
     bookings: {
         list: () => '/bookings',
         detail: (bookingId: IdLike) => `/bookings/${toId(bookingId)}`,
@@ -102,7 +103,6 @@ export const routes = {
         export: () => '/settings/export',
         recentlyDeleted: () => '/settings/recently-deleted',
     },
-    undoHistory: () => '/undo-history',
 } as const;
 
 export type RouteBuilders = typeof routes;

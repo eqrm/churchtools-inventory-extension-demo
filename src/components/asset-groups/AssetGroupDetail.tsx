@@ -17,6 +17,7 @@ import {
   Textarea,
   TextInput,
   Title,
+  Tooltip,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import {
@@ -27,6 +28,8 @@ import {
   IconPlus,
   IconTrashX,
   IconRefresh,
+  IconDownload,
+  IconUpload,
 } from '@tabler/icons-react';
 import { useNavigate } from 'react-router-dom';
 import type { Asset, AssetGroup } from '../../types/entities';
@@ -282,184 +285,185 @@ export function AssetGroupDetail({ groupId, onEditGroup, onGroupCleared }: Asset
   }
 
   return (
-    <Stack gap="md">
-      <Card withBorder>
+    <Stack gap="sm">
+      {/* Header Card - Compact */}
+      <Card withBorder p="sm">
         {group.mainImage && (
-          <Card.Section>
-            <AspectRatio ratio={16 / 9}>
+          <Card.Section mb="sm">
+            <AspectRatio ratio={21 / 9}>
               <Image
                 src={group.mainImage}
-                alt={`${group.name} main visual`}
+                alt={`${group.name}`}
                 fit="cover"
               />
             </AspectRatio>
           </Card.Section>
         )}
-        <Card.Section inheritPadding>
-          <Stack gap="md">
-          <Group justify="space-between" align="flex-start">
-            <Stack gap="xs">
+        
+        <Stack gap="sm">
+          {/* Title Row */}
+          <Group justify="space-between" align="flex-start" wrap="nowrap">
+            <Stack gap={4} style={{ flex: 1, minWidth: 0 }}>
               <AssetGroupBadge group={group} withName />
-              <Title order={3}>{group.name}</Title>
+              <Title order={4}>{group.name}</Title>
               {group.description && (
-                <Text size="sm" c="dimmed">{group.description}</Text>
+                <Text size="xs" c="dimmed" lineClamp={2}>{group.description}</Text>
               )}
-              <Group gap="xs">
-                <Badge variant="light" color="blue">
-                  {assetTypeDefinition?.name ?? group.assetType.name}
-                </Badge>
-                {group.manufacturer && (
-                  <Badge variant="light" color="grape">{group.manufacturer}</Badge>
-                )}
-                {group.model && (
-                  <Badge variant="light" color="teal">{group.model}</Badge>
-                )}
-                <Badge variant="light" color="gray">
-                  {group.memberCount} members
-                </Badge>
-              </Group>
             </Stack>
-            <Group gap="xs">
-              <Button
-                variant="light"
-                leftSection={<IconPlus size={16} />}
-                onClick={() => setAddMembersOpen(true)}
-              >
-                Add Assets
-              </Button>
+            
+            {/* Action Buttons - Icon-based */}
+            <Group gap={4}>
+              <Tooltip label="Add assets">
+                <ActionIcon variant="light" onClick={() => setAddMembersOpen(true)}>
+                  <IconPlus size={16} />
+                </ActionIcon>
+              </Tooltip>
               <Menu shadow="md" position="bottom-end" withinPortal>
                 <Menu.Target>
-                  <ActionIcon variant="outline" aria-label="More actions">
+                  <ActionIcon variant="subtle">
                     <IconDots size={16} />
                   </ActionIcon>
                 </Menu.Target>
                 <Menu.Dropdown>
                   <Menu.Item
-                    leftSection={<IconAdjustments size={16} />}
+                    leftSection={<IconAdjustments size={14} />}
                     onClick={() => setBulkUpdateOpen(true)}
                   >
-                    Bulk update assets
+                    Bulk update
                   </Menu.Item>
                   <Menu.Item
-                    leftSection={<IconCalendarEvent size={16} />}
+                    leftSection={<IconCalendarEvent size={14} />}
                     onClick={() => setBookingModalOpen(true)}
                   >
                     Book assets
                   </Menu.Item>
+                  <Menu.Divider />
                   <Menu.Item
-                    leftSection={<IconDots size={16} />}
+                    leftSection={<IconDownload size={14} />}
                     onClick={() => handleExportSnapshot()}
                   >
-                    Export model snapshot
+                    Export
                   </Menu.Item>
                   <Menu.Item
-                    leftSection={<IconDots size={16} />}
+                    leftSection={<IconUpload size={14} />}
                     onClick={() => setImportModalOpen(true)}
                   >
-                    Import model snapshot
+                    Import
                   </Menu.Item>
+                  <Menu.Divider />
                   <Menu.Item
-                    leftSection={<IconTrashX size={16} />}
+                    leftSection={<IconTrashX size={14} />}
                     color="red"
                     onClick={() => { void handleDissolveGroup(); }}
                   >
-                    Remove all members
+                    Remove all
                   </Menu.Item>
                 </Menu.Dropdown>
               </Menu>
               {onEditGroup && (
-                <Button
-                  variant="outline"
-                  leftSection={<IconEdit size={16} />}
-                  onClick={() => onEditGroup(group)}
-                >
-                  Edit Model
-                </Button>
+                <Tooltip label="Edit">
+                  <ActionIcon variant="default" onClick={() => onEditGroup(group)}>
+                    <IconEdit size={16} />
+                  </ActionIcon>
+                </Tooltip>
               )}
             </Group>
           </Group>
 
-          <Grid>
-            <Grid.Col span={{ base: 12, md: 6 }}>
-              <Stack gap="xs">
-                <Text fw={500}>Barcode</Text>
+          {/* Info Row - Compact Badges */}
+          <Group gap={4} wrap="wrap">
+            <Badge size="xs" variant="light" color="blue">
+              {assetTypeDefinition?.name ?? group.assetType.name}
+            </Badge>
+            {group.manufacturer && (
+              <Badge size="xs" variant="light" color="grape">{group.manufacturer}</Badge>
+            )}
+            {group.model && (
+              <Badge size="xs" variant="light" color="teal">{group.model}</Badge>
+            )}
+            <Badge size="xs" variant="light" color="gray">
+              {group.memberCount} units
+            </Badge>
+          </Group>
+
+          {/* Barcode & Inherited Fields - Side by Side */}
+          <Grid gutter="sm">
+            <Grid.Col span={{ base: 12, sm: 6 }}>
+              <Stack gap={4}>
+                <Text size="xs" fw={500}>Barcode</Text>
                 {group.barcode ? (
-                  <Stack gap="xs">
-                    <Box style={{ border: '1px solid #e9ecef', padding: '12px', borderRadius: '8px', backgroundColor: '#fff', maxWidth: 220 }}>
-                      <BarcodeDisplay value={group.barcode} alt={`Barcode for ${group.name}`} width={180} />
+                  <Group gap="xs" align="flex-end">
+                    <Box style={{ border: '1px solid var(--mantine-color-gray-3)', padding: 4, borderRadius: 4, background: '#fff' }}>
+                      <BarcodeDisplay value={group.barcode} alt={group.barcode} width={120} />
                     </Box>
-                    <Text size="sm" c="dimmed">Current code: {group.barcode}</Text>
-                  </Stack>
+                    <Tooltip label="Reassign">
+                      <ActionIcon
+                        size="xs"
+                        variant="light"
+                        color="orange"
+                        onClick={() => {
+                          setRegenerateModalOpen(true);
+                          setScannedBarcode('');
+                          setRegenerateReason('');
+                        }}
+                      >
+                        <IconRefresh size={12} />
+                      </ActionIcon>
+                    </Tooltip>
+                  </Group>
                 ) : (
-                  <Text size="sm" c="dimmed">
-                    No barcode assigned yet. Use the button below to connect this model to a scanner-friendly code.
-                  </Text>
+                  <Button
+                    size="xs"
+                    variant="light"
+                    color="orange"
+                    leftSection={<IconRefresh size={12} />}
+                    onClick={() => setRegenerateModalOpen(true)}
+                  >
+                    Assign
+                  </Button>
                 )}
-                <Button
-                  size="xs"
-                  variant="light"
-                  color="orange"
-                  leftSection={<IconRefresh size={14} />}
-                  onClick={() => {
-                    setRegenerateModalOpen(true);
-                    setScannedBarcode('');
-                    setRegenerateReason('');
-                    setIsDuplicate(false);
-                    setDuplicateLabel(null);
-                  }}
-                >
-                  {group.barcode ? 'Reassign Barcode' : 'Assign Barcode'}
-                </Button>
               </Stack>
             </Grid.Col>
-            <Grid.Col span={{ base: 12, md: 6 }}>
-              <Stack gap="xs">
-                <Text fw={500}>Shared by default</Text>
-                <Text size="sm" c="dimmed">
-                  {Object.values(group.inheritanceRules ?? {}).filter(rule => rule.inherited).length} fields inherited
+            <Grid.Col span={{ base: 12, sm: 6 }}>
+              <Stack gap={4}>
+                <Text size="xs" fw={500}>Inherited</Text>
+                <Text size="xs" c="dimmed">
+                  {Object.values(group.inheritanceRules ?? {}).filter(rule => rule.inherited).length} fields shared
                 </Text>
               </Stack>
             </Grid.Col>
           </Grid>
         </Stack>
-        </Card.Section>
       </Card>
 
+      {/* Barcode History - Compact */}
       {group.barcodeHistory && group.barcodeHistory.length > 0 && (
-        <Card withBorder>
-          <Stack gap="sm">
-            <Title order={5}>Barcode History</Title>
-            <Stack gap="xs">
-              {[...group.barcodeHistory].reverse().map((entry, index) => (
-                <Group key={`${entry.barcode}-${entry.generatedAt}-${index}`} justify="space-between" align="flex-start">
-                  <Stack gap={4}>
-                    <Text fw={500}>{entry.barcode || '—'}</Text>
-                    {entry.reason && (
-                      <Text size="xs" c="dimmed">{entry.reason}</Text>
-                    )}
-                  </Stack>
-                  <Stack gap={2} align="flex-end">
-                    <Text size="xs" c="dimmed">{new Date(entry.generatedAt).toLocaleString()}</Text>
-                    <Text size="xs" c="dimmed">
-                      by {entry.generatedByName ?? entry.generatedBy}
-                    </Text>
-                  </Stack>
-                </Group>
-              ))}
-            </Stack>
+        <Card withBorder p="sm">
+          <Stack gap="xs">
+            <Text size="xs" fw={600}>Barcode History</Text>
+            {[...group.barcodeHistory].reverse().slice(0, 3).map((entry, index) => (
+              <Group key={`${entry.barcode}-${entry.generatedAt}-${index}`} justify="space-between" gap="xs">
+                <Text size="xs" fw={500}>{entry.barcode || '—'}</Text>
+                <Text size="xs" c="dimmed">
+                  {new Date(entry.generatedAt).toLocaleDateString()}
+                </Text>
+              </Group>
+            ))}
           </Stack>
         </Card>
       )}
 
+      {/* Status Summary - Compact */}
       <GroupStatusSummary members={members} />
 
+      {/* Member Table */}
       <GroupMemberTable
         members={members}
         loading={isMembersLoading}
         onNavigate={(assetId) => navigate(`/assets/${assetId}`)}
         onRemoveMember={(asset) => {
           if (
-            confirm(`Remove ${asset.name} from ${group.name}? Members will keep their individual data.`)
+            confirm(`Remove ${asset.name} from ${group.name}?`)
           ) {
             void handleRemoveMember(asset);
           }
@@ -467,7 +471,8 @@ export function AssetGroupDetail({ groupId, onEditGroup, onGroupCleared }: Asset
         onMoveMember={(asset) => setMoveMember(asset)}
       />
 
-      <Grid>
+      {/* Inheritance & Custom Fields - Side by Side */}
+      <Grid gutter="sm">
         <Grid.Col span={{ base: 12, md: 6 }}>
           <InheritanceRuleEditor
             rules={group.inheritanceRules ?? {}}
@@ -477,21 +482,21 @@ export function AssetGroupDetail({ groupId, onEditGroup, onGroupCleared }: Asset
           />
         </Grid.Col>
         <Grid.Col span={{ base: 12, md: 6 }}>
-          <Card withBorder>
-            <Stack gap="sm">
-              <Title order={5}>Shared Custom Fields</Title>
+          <Card withBorder p="sm">
+            <Stack gap="xs">
+              <Text size="xs" fw={600}>Shared Fields</Text>
               {group.sharedCustomFields && Object.keys(group.sharedCustomFields).length > 0 ? (
                 Object.entries(group.sharedCustomFields).map(([fieldId, value]) => {
                   const definition = assetTypeDefinition?.customFields.find((field) => field.id === fieldId);
                   return (
-                    <Stack key={fieldId} gap={2}>
-                      <Text fw={500}>{definition?.name ?? fieldId}</Text>
-                      <Text size="sm" c="dimmed">{formatCustomFieldValue(value)}</Text>
-                    </Stack>
+                    <Group key={fieldId} justify="space-between" gap="xs">
+                      <Text size="xs">{definition?.name ?? fieldId}</Text>
+                      <Text size="xs" c="dimmed">{formatCustomFieldValue(value)}</Text>
+                    </Group>
                   );
                 })
               ) : (
-                <Text size="sm" c="dimmed">No shared custom fields configured.</Text>
+                <Text size="xs" c="dimmed">None configured</Text>
               )}
             </Stack>
           </Card>
@@ -503,22 +508,18 @@ export function AssetGroupDetail({ groupId, onEditGroup, onGroupCleared }: Asset
         onClose={resetBarcodeDialogState}
         title="Reassign Barcode"
         centered
-        size="md"
+        size="sm"
       >
-        <Stack gap="md">
-          <Text size="sm">
-            Scan or type the new barcode for this asset model. Duplicates across assets and models are blocked automatically.
-          </Text>
-
+        <Stack gap="sm">
           {group.barcode && (
-            <Box style={{ border: '1px solid #e9ecef', padding: '12px', borderRadius: '8px', backgroundColor: '#f8f9fa', maxWidth: 220 }}>
-              <BarcodeDisplay value={group.barcode} alt="Current barcode" width={180} />
+            <Box style={{ border: '1px solid var(--mantine-color-gray-3)', padding: 8, borderRadius: 6, background: '#f8f9fa', display: 'flex', justifyContent: 'center' }}>
+              <BarcodeDisplay value={group.barcode} alt="Current" width={140} />
             </Box>
           )}
 
           <TextInput
             label="New barcode"
-            placeholder="Scan or enter new code"
+            placeholder="Scan or type"
             value={scannedBarcode}
             onChange={(event) => setScannedBarcode(event.currentTarget.value)}
             onKeyDown={(event) => {
@@ -527,32 +528,35 @@ export function AssetGroupDetail({ groupId, onEditGroup, onGroupCleared }: Asset
                 handleRegenerateBarcode();
               }
             }}
+            size="sm"
             rightSection={scannedBarcode ? (
-              isDuplicate ? <Badge color="red" size="sm">Duplicate</Badge> : <Badge color="green" size="sm">Available</Badge>
+              isDuplicate ? <Badge color="red" size="xs">Used</Badge> : <Badge color="green" size="xs">OK</Badge>
             ) : undefined}
-            error={isDuplicate && duplicateLabel ? `Already used by ${duplicateLabel}` : undefined}
+            error={isDuplicate && duplicateLabel ? `Used by ${duplicateLabel}` : undefined}
           />
 
           <Textarea
-            label="Reason (optional)"
-            placeholder="Why is this barcode changing?"
+            label="Reason"
+            placeholder="Optional"
             value={regenerateReason}
             onChange={(event) => setRegenerateReason(event.currentTarget.value)}
-            minRows={2}
+            size="sm"
+            minRows={1}
           />
 
           <Group justify="flex-end" gap="xs">
-            <Button variant="default" onClick={resetBarcodeDialogState}>
+            <Button size="xs" variant="default" onClick={resetBarcodeDialogState}>
               Cancel
             </Button>
             <Button
+              size="xs"
               color="orange"
-              leftSection={<IconRefresh size={16} />}
+              leftSection={<IconRefresh size={14} />}
               onClick={handleRegenerateBarcode}
               disabled={!scannedBarcode.trim() || isDuplicate}
               loading={regenerateBarcode.isPending}
             >
-              Save Barcode
+              Save
             </Button>
           </Group>
         </Stack>

@@ -1,17 +1,18 @@
 import { useMemo, useState } from 'react';
 import {
+  ActionIcon,
   Badge,
   Button,
   Card,
   Grid,
   Group,
+  Menu,
   Skeleton,
   Stack,
   Text,
   TextInput,
   Title,
-  ActionIcon,
-  Menu,
+  Tooltip,
 } from '@mantine/core';
 import { IconPlus, IconSearch, IconUsers, IconDots, IconTrash } from '@tabler/icons-react';
 import { notifications } from '@mantine/notifications';
@@ -56,7 +57,7 @@ export function AssetGroupList({ onSelectGroup, onCreateGroup, filters, hideHead
   };
 
   const handleDeleteGroup = async (group: AssetGroup) => {
-    const confirmed = window.confirm(`Delete asset model "${group.name}"?`);
+    const confirmed = window.confirm(`Delete "${group.name}"?`);
     if (!confirmed) {
       return;
     }
@@ -65,14 +66,14 @@ export function AssetGroupList({ onSelectGroup, onCreateGroup, filters, hideHead
     try {
       await deleteAssetGroup.mutateAsync(group.id);
       notifications.show({
-        title: 'Asset model removed',
-        message: `${group.name} was deleted`,
+        title: 'Deleted',
+        message: `${group.name} removed`,
         color: 'green',
       });
     } catch (error) {
       notifications.show({
-        title: 'Unable to delete asset model',
-        message: error instanceof Error ? error.message : 'Unexpected error occurred.',
+        title: 'Error',
+        message: error instanceof Error ? error.message : 'Failed',
         color: 'red',
       });
     } finally {
@@ -81,40 +82,37 @@ export function AssetGroupList({ onSelectGroup, onCreateGroup, filters, hideHead
   };
 
   return (
-    <Stack gap="md">
+    <Stack gap="sm">
       {!hideHeader && (
-        <Group justify="space-between" align="flex-end">
-          <Stack gap={4}>
-            <Title order={3}>Asset Models</Title>
-            <Text size="sm" c="dimmed">
-              Organize identical assets into reusable templates for shared settings.
+        <Group justify="space-between" align="center">
+          <Stack gap={2}>
+            <Title order={4}>Asset Models</Title>
+            <Text size="xs" c="dimmed">
+              Reusable templates for shared settings
             </Text>
           </Stack>
           {onCreateGroup && (
-            <Button leftSection={<IconPlus size={16} />} onClick={onCreateGroup}>
-              New Asset Model
+            <Button size="sm" leftSection={<IconPlus size={14} />} onClick={onCreateGroup}>
+              New
             </Button>
           )}
         </Group>
       )}
 
       <TextInput
-        placeholder="Search asset models"
-        leftSection={<IconSearch size={16} />}
+        placeholder="Search..."
+        leftSection={<IconSearch size={14} />}
         value={search}
         onChange={(event) => setSearch(event.currentTarget.value)}
+        size="sm"
       />
 
       {isLoading && (
-        <Grid>
-          {Array.from({ length: 6 }).map((_, index) => (
+        <Grid gutter="sm">
+          {Array.from({ length: 4 }).map((_, index) => (
             <Grid.Col key={index} span={{ base: 12, sm: 6, lg: 4 }}>
-              <Card withBorder h="100%">
-                <Stack gap="sm">
-                  <Skeleton height={16} radius="sm" />
-                  <Skeleton height={28} radius="sm" />
-                  <Skeleton height={12} radius="sm" />
-                </Stack>
+              <Card withBorder p="sm">
+                <Skeleton height={60} radius="sm" />
               </Card>
             </Grid.Col>
           ))}
@@ -123,95 +121,88 @@ export function AssetGroupList({ onSelectGroup, onCreateGroup, filters, hideHead
 
       {!isLoading && groups.length === 0 && (
         <EmptyState
-          title="No asset models"
-          message="Create your first asset model to start sharing fields across similar assets."
+          title="No models"
+          message="Create your first asset model to share fields across similar assets."
           action={onCreateGroup ? (
-            <Button leftSection={<IconPlus size={16} />} onClick={onCreateGroup}>
-              Create Asset Model
+            <Button size="sm" leftSection={<IconPlus size={14} />} onClick={onCreateGroup}>
+              Create
             </Button>
           ) : undefined}
         />
       )}
 
       {!isLoading && groups.length > 0 && (
-        <Grid>
+        <Grid gutter="sm">
           {groups.map((group) => (
             <Grid.Col key={group.id} span={{ base: 12, sm: 6, lg: 4 }}>
               <Card
                 withBorder
-                shadow={selectedGroupId === group.id ? 'md' : 'sm'}
+                p="sm"
                 radius="md"
-                h="100%"
                 onClick={() => handleSelect(group)}
                 style={{
                   cursor: onSelectGroup ? 'pointer' : 'default',
                   borderColor: selectedGroupId === group.id ? 'var(--mantine-color-blue-5)' : undefined,
                 }}
-                data-selected={selectedGroupId === group.id}
               >
-                <Stack gap="sm">
-                  <Group justify="space-between" align="flex-start">
-                    <AssetGroupBadge group={group} withName data-testid={`asset-group-${group.id}`} />
-                      <Group gap="xs">
-                        <Badge variant="light" color="gray" leftSection={<IconUsers size={14} />}>
-                          {group.memberCount} members
+                <Stack gap="xs">
+                  {/* Header Row */}
+                  <Group justify="space-between" align="flex-start" wrap="nowrap">
+                    <AssetGroupBadge group={group} withName size="sm" />
+                    <Group gap={4}>
+                      <Tooltip label={`${group.memberCount} units`}>
+                        <Badge size="xs" variant="light" color="gray" leftSection={<IconUsers size={10} />}>
+                          {group.memberCount}
                         </Badge>
-                        <Menu withinPortal position="bottom-end">
-                          <Menu.Target>
-                            <ActionIcon
-                              variant="subtle"
-                              onClick={(event) => {
-                                event.stopPropagation();
-                              }}
-                              aria-label="Asset model actions"
-                            >
-                              <IconDots size={16} />
-                            </ActionIcon>
-                          </Menu.Target>
-                          <Menu.Dropdown>
-                            <Menu.Item
-                              leftSection={<IconTrash size={14} />}
-                              color="red"
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                void handleDeleteGroup(group);
-                              }}
-                              disabled={processingGroupId === group.id || deleteAssetGroup.isPending}
-                            >
-                              Delete
-                            </Menu.Item>
-                          </Menu.Dropdown>
-                        </Menu>
-                      </Group>
+                      </Tooltip>
+                      <Menu withinPortal position="bottom-end">
+                        <Menu.Target>
+                          <ActionIcon
+                            size="xs"
+                            variant="subtle"
+                            onClick={(event) => event.stopPropagation()}
+                          >
+                            <IconDots size={14} />
+                          </ActionIcon>
+                        </Menu.Target>
+                        <Menu.Dropdown>
+                          <Menu.Item
+                            leftSection={<IconTrash size={12} />}
+                            color="red"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              void handleDeleteGroup(group);
+                            }}
+                            disabled={processingGroupId === group.id}
+                          >
+                            Delete
+                          </Menu.Item>
+                        </Menu.Dropdown>
+                      </Menu>
+                    </Group>
                   </Group>
 
+                  {/* Name & Info */}
                   <Stack gap={2}>
-                    <Text fw={500}>{group.name}</Text>
-                    <Text size="sm" c="dimmed">
-                      {group.manufacturer ? `${group.manufacturer} • ` : ''}
-                      {group.model ?? 'Model not set'}
+                    <Text size="sm" fw={500} lineClamp={1}>{group.name}</Text>
+                    <Text size="xs" c="dimmed" lineClamp={1}>
+                      {group.manufacturer ?? ''}{group.manufacturer && group.model ? ' · ' : ''}{group.model ?? 'No model'}
                     </Text>
                   </Stack>
 
-                  <Group gap="xs">
-                    <Badge variant="light" color="blue">
+                  {/* Tags Row */}
+                  <Group gap={4} wrap="wrap">
+                    <Badge size="xs" variant="light" color="blue">
                       {assetTypeLookup.get(group.assetType.id) ?? group.assetType.name}
                     </Badge>
-                    <Badge variant="light" color="grape">
-                      {inheritedFieldCount(group)} inherited fields
-                    </Badge>
-                    {group.sharedCustomFields && Object.keys(group.sharedCustomFields).length > 0 && (
-                      <Badge variant="light" color="teal">
-                        Custom shared: {Object.keys(group.sharedCustomFields).length}
-                      </Badge>
+                    {inheritedFieldCount(group) > 0 && (
+                      <Tooltip label="Inherited fields">
+                        <Badge size="xs" variant="dot" color="grape">
+                          {inheritedFieldCount(group)}
+                        </Badge>
+                      </Tooltip>
                     )}
                   </Group>
-
-                  {group.description && (
-                    <Text size="sm" c="dimmed" lineClamp={3}>
-                      {group.description}
-                    </Text>
-                  )}
                 </Stack>
               </Card>
             </Grid.Col>

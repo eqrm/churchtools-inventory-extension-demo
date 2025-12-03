@@ -113,14 +113,16 @@
   "dashboardPage": {
     "title": "Maintenance overview",
     "description": "Review workload, overdue tasks, and company assignments in one place.",
-    "openWorkspace": "Open maintenance workspace"
-    ,"loading":"Loading maintenance data...",
-    "assetLabel":"Asset {{id}}",
-    "overdueTitle":"Overdue maintenance",
-    "upcomingTitle":"Upcoming (30 days)",
-    "overdue":"Overdue",
-    "upcoming":"Upcoming",
-    "scheduled":"Scheduled"
+    "openWorkspace": "Open maintenance workspace",
+    "loading": "Loading maintenance data...",
+    "assetLabel": "Asset {{id}}",
+    "overdueTitle": "Overdue maintenance",
+    "upcomingTitle": "Upcoming (30 days)",
+    "overdue": "Overdue",
+    "upcoming": "Upcoming",
+    "scheduled": "Scheduled",
+    "createWorkOrder": "Create Work Order",
+    "viewAllRules": "View All Rules"
   },
   "reminder": {
     "overdue": "{{count}}d overdue",
@@ -320,6 +322,7 @@
     "contactPerson": "Contact Person",
     "contactEmail": "Contact Email",
     "contactPhone": "Contact Phone",
+    "contact": "Contact",
     "address": "Address",
     "serviceLevelAgreement": "Service Level Agreement",
     "hourlyRate": "Hourly Rate",
@@ -406,7 +409,8 @@
     "maintenanceRule": "Select maintenance rule (optional)",
     "scheduledEnd": "Select scheduled end date",
     "approvalResponsible": "Select person responsible for approval",
-    "scanBarcode": "Scan barcode or asset number"
+    "scanBarcode": "Scan barcode or asset number",
+    "notes": "Enter notes for this asset..."
   },
   "scheduleForm": {
     "types": {

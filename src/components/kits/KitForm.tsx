@@ -1,9 +1,11 @@
 /**
  * KitForm Component
  * Form for creating and editing equipment kits
+ * 
+ * T2.1.1-T2.1.2: Removed flexible kit support - only fixed kits are supported
  */
 
-import { useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useForm } from '@mantine/form';
 import { Stack, TextInput, Textarea, Select, Button, Group, Checkbox, Text, Divider } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
@@ -12,7 +14,7 @@ import { useCreateKit, useUpdateKit } from '../../hooks/useKits';
 import type { Kit, KitCreate, KitInheritanceProperty } from '../../types/entities';
 import { ASSET_STATUS_OPTIONS } from '../../constants/assetStatuses';
 import { FixedKitBuilder } from './FixedKitBuilder';
-import { FlexibleKitBuilder } from './FlexibleKitBuilder';
+// T2.1.1: Removed FlexibleKitBuilder import - flexible kits no longer supported
 import { MasterDataSelectInput } from '../common/MasterDataSelectInput';
 import { useMasterData } from '../../hooks/useMasterDataNames';
 import { MASTER_DATA_DEFINITIONS, normalizeMasterDataName } from '../../utils/masterData';
@@ -29,13 +31,7 @@ export function KitForm({ kit, onSuccess, onCancel }: KitFormProps) {
   const { t } = useTranslation('kits');
   const { names: locationNames, addItem: addLocation } = useMasterData(MASTER_DATA_DEFINITIONS.locations);
 
-  const typeOptions = useMemo(
-    () => [
-      { value: 'fixed', label: t('form.fields.typeOptions.fixed') },
-      { value: 'flexible', label: t('form.fields.typeOptions.flexible') },
-    ],
-    [t],
-  );
+  // T2.1.1-T2.1.2: Removed typeOptions - only fixed kits are supported
 
   const inheritanceOptions = useMemo(
     () => [
@@ -51,9 +47,9 @@ export function KitForm({ kit, onSuccess, onCancel }: KitFormProps) {
       ? {
           name: kit.name,
           description: kit.description,
-          type: kit.type,
+          type: 'fixed' as const, // T2.1.2: Always fixed
           boundAssets: kit.boundAssets,
-          poolRequirements: kit.poolRequirements,
+          poolRequirements: [], // T2.1.2: Always empty
           location: kit.location ?? '',
           status: kit.status,
           inheritedProperties: kit.inheritedProperties ?? [],
@@ -61,27 +57,20 @@ export function KitForm({ kit, onSuccess, onCancel }: KitFormProps) {
       : {
           name: '',
           description: '',
-          type: 'fixed' as const,
+          type: 'fixed' as const, // T2.1.2: Always fixed
           boundAssets: [],
-          poolRequirements: [],
+          poolRequirements: [], // T2.1.2: Always empty
           location: '',
           status: undefined,
           inheritedProperties: ['location', 'status'] satisfies KitInheritanceProperty[],
         },
     validate: {
       name: (value: string) => (!value ? t('form.validation.nameRequired') : null),
-      type: (value: KitCreate['type']) => (!value ? t('form.validation.typeRequired') : null),
+      // T2.1.2: Removed type validation - always fixed
     },
   });
 
-  // Reset builder fields when type changes
-  useEffect(() => {
-    if (form.values.type === 'fixed') {
-      form.setFieldValue('poolRequirements', []);
-    } else {
-      form.setFieldValue('boundAssets', []);
-    }
-  }, [form.values.type, form]);
+  // T2.1.2: Removed useEffect that reset builder fields when type changes
 
   const handleSubmit = async (values: KitCreate) => {
     try {
@@ -125,17 +114,7 @@ export function KitForm({ kit, onSuccess, onCancel }: KitFormProps) {
           required
         />
 
-        <Select
-          label={t('form.fields.typeLabel')}
-          description={
-            form.values.type === 'fixed'
-              ? t('form.fields.typeDescription.fixed')
-              : t('form.fields.typeDescription.flexible')
-          }
-          data={typeOptions}
-          {...form.getInputProps('type')}
-          required
-        />
+        {/* T2.1.2: Removed type Select - only fixed kits are supported */}
 
         <Textarea
           label={t('form.fields.descriptionLabel')}
@@ -191,20 +170,14 @@ export function KitForm({ kit, onSuccess, onCancel }: KitFormProps) {
           </Checkbox.Group>
         </Stack>
 
-        <Divider label={form.values.type === 'fixed' ? t('form.fixed.heading') : t('form.flexible.heading')} labelPosition="center" />
+        <Divider label={t('form.fixed.heading')} labelPosition="center" />
 
-        {form.values.type === 'fixed' ? (
-          <FixedKitBuilder
-            value={form.values.boundAssets || []}
-            onChange={(value) => form.setFieldValue('boundAssets', value)}
-            kitId={kit?.id}
-          />
-        ) : (
-          <FlexibleKitBuilder
-            value={form.values.poolRequirements || []}
-            onChange={(value) => form.setFieldValue('poolRequirements', value)}
-          />
-        )}
+        {/* T2.1.2: Always render FixedKitBuilder - flexible kits removed */}
+        <FixedKitBuilder
+          value={form.values.boundAssets || []}
+          onChange={(value) => form.setFieldValue('boundAssets', value)}
+          kitId={kit?.id}
+        />
 
         <Group justify="flex-end">
           {onCancel && (

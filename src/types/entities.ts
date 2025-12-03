@@ -315,6 +315,14 @@ export interface AssetGroup {
   memberAssetIds: UUID[]
   memberCount: number
   barcodeHistory?: BarcodeHistoryEntry[]
+  /** Default warranty months for new assets created from this model */
+  defaultWarrantyMonths?: number
+  /** Default bookable value for new assets created from this model */
+  defaultBookable?: boolean
+  /** Default values for fields when creating new assets (creation-time template) */
+  defaultValues?: Record<string, unknown>
+  /** Tag IDs to apply to new assets created from this model */
+  tagIds?: UUID[]
   createdBy: string
   createdByName: string
   createdAt: ISOTimestamp
@@ -331,6 +339,10 @@ export type AssetGroupCreate = Omit<
   memberAssetIds?: UUID[]
   memberCount?: number
   schemaVersion?: string
+  defaultWarrantyMonths?: number
+  defaultBookable?: boolean
+  defaultValues?: Record<string, unknown>
+  tagIds?: UUID[]
 }
 
 export type AssetGroupUpdate = Partial<
@@ -346,6 +358,18 @@ export interface AssetGroupFilters {
   search?: string
   memberAssetId?: UUID
 }
+
+/**
+ * Type aliases for unified AssetModel naming
+ * AssetGroup is the canonical implementation, but AssetModel is used in UI
+ */
+export type AssetModel = AssetGroup
+export type AssetModelCreate = AssetGroupCreate
+export type AssetModelUpdate = AssetGroupUpdate
+export type AssetModelFilters = AssetGroupFilters
+export type AssetModelReference = AssetGroupReference
+export type AssetModelFieldSource = AssetGroupFieldSource
+export type AssetModelInheritanceRule = AssetGroupInheritanceRule
 
 // ============================================================================
 // Booking
@@ -491,7 +515,8 @@ export interface Kit {
   schemaVersion?: string
 }
 
-export type KitType = 'fixed' | 'flexible'
+// T2.1.3: Removed 'flexible' - only fixed kits are now supported
+export type KitType = 'fixed'
 
 export type KitCreate = Pick<
   Kit,

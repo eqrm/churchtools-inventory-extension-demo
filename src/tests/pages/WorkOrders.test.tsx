@@ -157,8 +157,12 @@ describe('WorkOrders Page', () => {
     const addButton = screen.getByRole('button', { name: 'maintenance:workOrders.addNew' });
     await user.click(addButton);
 
-    // Modal should show the form title
-    expect(await screen.findByText('maintenance:workOrders.addNew')).toBeInTheDocument();
+    // Modal should show the form - look for the modal dialog
+    const modal = await screen.findByRole('dialog');
+    expect(modal).toBeInTheDocument();
+    
+    // Should have a cancel button indicating the form is open
+    expect(screen.getByRole('button', { name: 'common:actions.cancel' })).toBeInTheDocument();
   });
 
   it('should show empty state when no work orders exist', () => {

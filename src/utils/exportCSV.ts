@@ -121,3 +121,36 @@ export function exportBookingHistoryToCSV(data: BookingHistoryData): void {
   const timestamp = new Date().toISOString().split('T')[0];
   downloadCSV(combinedCSV, `booking-history-${timestamp}.csv`);
 }
+
+/**
+ * Work order completion row data for CSV export
+ */
+export interface WorkOrderCompletionRow {
+  id: string;
+  workOrderNumber: string;
+  assetName: string;
+  type: string;
+  orderType: string;
+  scheduledEnd: string;
+  actualEnd: string;
+  daysEarlyLate: number;
+}
+
+/**
+ * Export work order completion report to CSV
+ */
+export function exportWorkOrderCompletionToCSV(data: WorkOrderCompletionRow[]): void {
+  const headers = [
+    'workOrderNumber',
+    'assetName',
+    'type',
+    'orderType',
+    'scheduledEnd',
+    'actualEnd',
+    'daysEarlyLate',
+  ];
+
+  const csv = convertToCSV(data, headers);
+  const timestamp = new Date().toISOString().split('T')[0];
+  downloadCSV(csv, `work-order-completion-${timestamp}.csv`);
+}

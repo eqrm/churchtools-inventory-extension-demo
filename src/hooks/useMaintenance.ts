@@ -835,6 +835,64 @@ export function useDeleteWorkOrder() {
 }
 
 /**
+ * Hook to update a work order
+ */
+export function useUpdateWorkOrder() {
+  const service = useMaintenanceServiceInternal();
+  const queryClient = useQueryClient();
+  const upsertWorkOrder = useMaintenanceStore((state) => state.upsertWorkOrder);
+  const { t } = useTranslation();
+  const { push } = useUndoStore();
+
+  return useMutation({
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: UUID;
+      data: Partial<Omit<WorkOrder, 'id' | 'createdAt' | 'createdBy'>>;
+    }) => {
+      if (!service) {
+        throw new Error('Maintenance service unavailable');
+      }
+      return service.updateWorkOrder(id, data);
+    },
+    onMutate: async ({ id }) => {
+      await queryClient.cancelQueries({ queryKey: maintenanceKeys.workOrder(id) });
+      const previousWorkOrder = queryClient.getQueryData<WorkOrder>(maintenanceKeys.workOrder(id));
+      return { previousWorkOrder };
+    },
+    onSuccess: (updatedWorkOrder, variables, context) => {
+      upsertWorkOrder(updatedWorkOrder);
+      queryClient.setQueryData(maintenanceKeys.workOrder(updatedWorkOrder.id), updatedWorkOrder);
+      void queryClient.invalidateQueries({ queryKey: maintenanceKeys.workOrders() });
+
+      if (context?.previousWorkOrder) {
+        const { previousWorkOrder } = context;
+        push({
+          label: t('undo.updateWorkOrder', { number: updatedWorkOrder.workOrderNumber }),
+          undo: async () => {
+            if (!service) return;
+            const { id: _id, createdAt: _createdAt, createdBy: _createdBy, ...rest } = previousWorkOrder;
+            const restored = await service.updateWorkOrder(_id, rest);
+            upsertWorkOrder(restored);
+            queryClient.setQueryData(maintenanceKeys.workOrder(restored.id), restored);
+            void queryClient.invalidateQueries({ queryKey: maintenanceKeys.workOrders() });
+          },
+          redo: async () => {
+            if (!service) return;
+            const reUpdated = await service.updateWorkOrder(variables.id, variables.data);
+            upsertWorkOrder(reUpdated);
+            queryClient.setQueryData(maintenanceKeys.workOrder(reUpdated.id), reUpdated);
+            void queryClient.invalidateQueries({ queryKey: maintenanceKeys.workOrders() });
+          },
+        });
+      }
+    },
+  });
+}
+
+/**
  * Hook to transition work order state using XState
  */
 export function useTransitionWorkOrderState() {

@@ -17,7 +17,10 @@
     "test:coverage": "vitest run --coverage",
     "coverage": "vitest run --coverage",
     "analyze:bundle": "vite-bundle-visualizer --mode production --sourcemap --output dist/bundle-analysis.html",
-    "detect-german": "node scripts/detect-german.mjs"
+    "detect-german": "node scripts/detect-german.mjs",
+    "i18n:extract": "node scripts/extract-i18n-keys.mjs",
+    "i18n:validate": "node scripts/validate-i18n.mjs",
+    "i18n:check": "npm run i18n:extract && npm run i18n:validate"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -81,6 +84,7 @@
     "eslint-plugin-react-refresh": "^0.4.14",
     "fake-indexeddb": "^6.2.5",
     "globals": "^15.12.0",
+    "happy-dom": "^20.0.10",
     "jest": "^30.2.0",
     "jsdom": "^27.0.1",
     "msw": "^2.11.6",

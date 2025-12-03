@@ -1,0 +1,3385 @@
+{
+  "missingKeys": [
+    {
+      "fullKey": "maintenance:states.pending",
+      "namespace": "maintenance",
+      "key": "states.pending",
+      "reason": "Key 'states.pending' not found in maintenance.json",
+      "usages": [
+        {
+          "file": "src/components/maintenance/AssetScheduleTable.tsx",
+          "line": 39
+        }
+      ]
+    },
+    {
+      "fullKey": "maintenance:states.inProgress",
+      "namespace": "maintenance",
+      "key": "states.inProgress",
+      "reason": "Key 'states.inProgress' not found in maintenance.json",
+      "usages": [
+        {
+          "file": "src/components/maintenance/AssetScheduleTable.tsx",
+          "line": 40
+        }
+      ]
+    },
+    {
+      "fullKey": "common:error",
+      "namespace": "common",
+      "key": "error",
+      "reason": "Key 'error' not found in common.json",
+      "usages": [
+        {
+          "file": "src/components/maintenance/AssetWorkOrdersList.tsx",
+          "line": 29
+        },
+        {
+          "file": "src/components/tags/TagPropagationConfirmation.tsx",
+          "line": 93
+        },
+        {
+          "file": "src/pages/AssetModelList.tsx",
+          "line": 202
+        }
+      ]
+    },
+    {
+      "fullKey": "maintenance:validation.addressMaxLength",
+      "namespace": "maintenance",
+      "key": "validation.addressMaxLength",
+      "reason": "Key 'validation.addressMaxLength' not found in maintenance.json",
+      "usages": [
+        {
+          "file": "src/components/maintenance/MaintenanceCompanyForm.tsx",
+          "line": 76
+        }
+      ]
+    },
+    {
+      "fullKey": "maintenance:completion.placeholders.notes",
+      "namespace": "maintenance",
+      "key": "completion.placeholders.notes",
+      "reason": "Key 'completion.placeholders.notes' not found in maintenance.json",
+      "usages": [
+        {
+          "file": "src/components/maintenance/MaintenanceCompletionDrawer.tsx",
+          "line": 125
+        }
+      ]
+    },
+    {
+      "fullKey": "common:days",
+      "namespace": "common",
+      "key": "days",
+      "reason": "Key 'days' not found in common.json",
+      "usages": [
+        {
+          "file": "src/components/maintenance/WorkOrderCalendar.tsx",
+          "line": 310
+        }
+      ]
+    },
+    {
+      "fullKey": "maintenance:validation.companyRequired",
+      "namespace": "maintenance",
+      "key": "validation.companyRequired",
+      "reason": "Key 'validation.companyRequired' not found in maintenance.json",
+      "usages": [
+        {
+          "file": "src/components/maintenance/WorkOrderForm.tsx",
+          "line": 90
+        }
+      ]
+    },
+    {
+      "fullKey": "common:save",
+      "namespace": "common",
+      "key": "save",
+      "reason": "Key 'save' not found in common.json",
+      "usages": [
+        {
+          "file": "src/components/models/AssetModelForm.tsx",
+          "line": 239
+        }
+      ]
+    },
+    {
+      "fullKey": "common:create",
+      "namespace": "common",
+      "key": "create",
+      "reason": "Key 'create' not found in common.json",
+      "usages": [
+        {
+          "file": "src/components/models/AssetModelForm.tsx",
+          "line": 239
+        }
+      ]
+    },
+    {
+      "fullKey": "settings:export.buttonScannerOnly",
+      "namespace": "settings",
+      "key": "export.buttonScannerOnly",
+      "reason": "Key 'export.buttonScannerOnly' not found in settings.json",
+      "usages": [
+        {
+          "file": "src/components/settings/SettingsExportImport.tsx",
+          "line": 104
+        }
+      ]
+    },
+    {
+      "fullKey": "settings:export.buttonFull",
+      "namespace": "settings",
+      "key": "export.buttonFull",
+      "reason": "Key 'export.buttonFull' not found in settings.json",
+      "usages": [
+        {
+          "file": "src/components/settings/SettingsExportImport.tsx",
+          "line": 107
+        }
+      ]
+    },
+    {
+      "fullKey": "common:processing",
+      "namespace": "common",
+      "key": "processing",
+      "reason": "Key 'processing' not found in common.json",
+      "usages": [
+        {
+          "file": "src/components/tags/TagPropagationConfirmation.tsx",
+          "line": 132
+        }
+      ]
+    },
+    {
+      "fullKey": "common:close",
+      "namespace": "common",
+      "key": "close",
+      "reason": "Key 'close' not found in common.json",
+      "usages": [
+        {
+          "file": "src/components/tags/TagPropagationConfirmation.tsx",
+          "line": 138
+        }
+      ]
+    },
+    {
+      "fullKey": "common:undo.createAsset",
+      "namespace": "common",
+      "key": "undo.createAsset",
+      "reason": "Key 'undo.createAsset' not found in common.json",
+      "usages": [
+        {
+          "file": "src/hooks/useAssets.ts",
+          "line": 216
+        }
+      ]
+    },
+    {
+      "fullKey": "common:undo.updateAsset",
+      "namespace": "common",
+      "key": "undo.updateAsset",
+      "reason": "Key 'undo.updateAsset' not found in common.json",
+      "usages": [
+        {
+          "file": "src/hooks/useAssets.ts",
+          "line": 323
+        }
+      ]
+    },
+    {
+      "fullKey": "common:undo.deleteAsset",
+      "namespace": "common",
+      "key": "undo.deleteAsset",
+      "reason": "Key 'undo.deleteAsset' not found in common.json",
+      "usages": [
+        {
+          "file": "src/hooks/useAssets.ts",
+          "line": 373
+        }
+      ]
+    },
+    {
+      "fullKey": "common:undo.createKit",
+      "namespace": "common",
+      "key": "undo.createKit",
+      "reason": "Key 'undo.createKit' not found in common.json",
+      "usages": [
+        {
+          "file": "src/hooks/useKits.ts",
+          "line": 176
+        }
+      ]
+    },
+    {
+      "fullKey": "common:undo.updateKit",
+      "namespace": "common",
+      "key": "undo.updateKit",
+      "reason": "Key 'undo.updateKit' not found in common.json",
+      "usages": [
+        {
+          "file": "src/hooks/useKits.ts",
+          "line": 228
+        }
+      ]
+    },
+    {
+      "fullKey": "common:undo.deleteKit",
+      "namespace": "common",
+      "key": "undo.deleteKit",
+      "reason": "Key 'undo.deleteKit' not found in common.json",
+      "usages": [
+        {
+          "file": "src/hooks/useKits.ts",
+          "line": 298
+        }
+      ]
+    },
+    {
+      "fullKey": "common:undo.disassembleKit",
+      "namespace": "common",
+      "key": "undo.disassembleKit",
+      "reason": "Key 'undo.disassembleKit' not found in common.json",
+      "usages": [
+        {
+          "file": "src/hooks/useKits.ts",
+          "line": 363
+        }
+      ]
+    },
+    {
+      "fullKey": "common:undo.createMaintenanceRule",
+      "namespace": "common",
+      "key": "undo.createMaintenanceRule",
+      "reason": "Key 'undo.createMaintenanceRule' not found in common.json",
+      "usages": [
+        {
+          "file": "src/hooks/useMaintenance.ts",
+          "line": 504
+        }
+      ]
+    },
+    {
+      "fullKey": "common:undo.updateMaintenanceRule",
+      "namespace": "common",
+      "key": "undo.updateMaintenanceRule",
+      "reason": "Key 'undo.updateMaintenanceRule' not found in common.json",
+      "usages": [
+        {
+          "file": "src/hooks/useMaintenance.ts",
+          "line": 561
+        }
+      ]
+    },
+    {
+      "fullKey": "common:undo.deleteMaintenanceRule",
+      "namespace": "common",
+      "key": "undo.deleteMaintenanceRule",
+      "reason": "Key 'undo.deleteMaintenanceRule' not found in common.json",
+      "usages": [
+        {
+          "file": "src/hooks/useMaintenance.ts",
+          "line": 617
+        }
+      ]
+    },
+    {
+      "fullKey": "common:undo.createWorkOrder",
+      "namespace": "common",
+      "key": "undo.createWorkOrder",
+      "reason": "Key 'undo.createWorkOrder' not found in common.json",
+      "usages": [
+        {
+          "file": "src/hooks/useMaintenance.ts",
+          "line": 715
+        },
+        {
+          "file": "src/hooks/useMaintenance.ts",
+          "line": 759
+        }
+      ]
+    },
+    {
+      "fullKey": "common:undo.deleteWorkOrder",
+      "namespace": "common",
+      "key": "undo.deleteWorkOrder",
+      "reason": "Key 'undo.deleteWorkOrder' not found in common.json",
+      "usages": [
+        {
+          "file": "src/hooks/useMaintenance.ts",
+          "line": 812
+        }
+      ]
+    },
+    {
+      "fullKey": "common:comingSoon",
+      "namespace": "common",
+      "key": "comingSoon",
+      "reason": "Key 'comingSoon' not found in common.json",
+      "usages": [
+        {
+          "file": "src/pages/WorkOrders.tsx",
+          "line": 253
+        },
+        {
+          "file": "src/pages/WorkOrders.tsx",
+          "line": 259
+        }
+      ]
+    }
+  ],
+  "unusedKeys": [
+    {
+      "namespace": "assets",
+      "key": "list.drawerTitle",
+      "fullKey": "assets:list.drawerTitle"
+    },
+    {
+      "namespace": "assets",
+      "key": "list.modalTitle",
+      "fullKey": "assets:list.modalTitle"
+    },
+    {
+      "namespace": "assets",
+      "key": "detail.labelPrintCardDescription",
+      "fullKey": "assets:detail.labelPrintCardDescription"
+    },
+    {
+      "namespace": "assets",
+      "key": "detail.labelPrintButton",
+      "fullKey": "assets:detail.labelPrintButton"
+    },
+    {
+      "namespace": "assets",
+      "key": "detail.convertToParent",
+      "fullKey": "assets:detail.convertToParent"
+    },
+    {
+      "namespace": "assets",
+      "key": "detail.assignmentSectionTitle",
+      "fullKey": "assets:detail.assignmentSectionTitle"
+    },
+    {
+      "namespace": "assets",
+      "key": "bulkActions.addTags",
+      "fullKey": "assets:bulkActions.addTags"
+    },
+    {
+      "namespace": "assets",
+      "key": "bulkActions.removeTags",
+      "fullKey": "assets:bulkActions.removeTags"
+    },
+    {
+      "namespace": "assets",
+      "key": "bulkActions.confirmStatusChange",
+      "fullKey": "assets:bulkActions.confirmStatusChange"
+    },
+    {
+      "namespace": "assets",
+      "key": "bulkActions.confirmLocationChange",
+      "fullKey": "assets:bulkActions.confirmLocationChange"
+    },
+    {
+      "namespace": "assets",
+      "key": "bulkActions.confirmDelete",
+      "fullKey": "assets:bulkActions.confirmDelete"
+    },
+    {
+      "namespace": "assets",
+      "key": "bulkActions.successStatus",
+      "fullKey": "assets:bulkActions.successStatus"
+    },
+    {
+      "namespace": "assets",
+      "key": "bulkActions.successLocation",
+      "fullKey": "assets:bulkActions.successLocation"
+    },
+    {
+      "namespace": "assets",
+      "key": "bulkActions.successTags",
+      "fullKey": "assets:bulkActions.successTags"
+    },
+    {
+      "namespace": "assets",
+      "key": "bulkActions.successDelete",
+      "fullKey": "assets:bulkActions.successDelete"
+    },
+    {
+      "namespace": "assets",
+      "key": "bulkActions.undo",
+      "fullKey": "assets:bulkActions.undo"
+    },
+    {
+      "namespace": "assets",
+      "key": "bulkActions.undoSuccess",
+      "fullKey": "assets:bulkActions.undoSuccess"
+    },
+    {
+      "namespace": "assets",
+      "key": "bulkActions.undoFailed",
+      "fullKey": "assets:bulkActions.undoFailed"
+    },
+    {
+      "namespace": "assignment",
+      "key": "assignment.title",
+      "fullKey": "assignment:assignment.title"
+    },
+    {
+      "namespace": "assignment",
+      "key": "assignment.assignTo",
+      "fullKey": "assignment:assignment.assignTo"
+    },
+    {
+      "namespace": "assignment",
+      "key": "assignment.assignedTo",
+      "fullKey": "assignment:assignment.assignedTo"
+    },
+    {
+      "namespace": "assignment",
+      "key": "assignment.assignedBy",
+      "fullKey": "assignment:assignment.assignedBy"
+    },
+    {
+      "namespace": "assignment",
+      "key": "assignment.assignedAt",
+      "fullKey": "assignment:assignment.assignedAt"
+    },
+    {
+      "namespace": "assignment",
+      "key": "assignment.checkIn",
+      "fullKey": "assignment:assignment.checkIn"
+    },
+    {
+      "namespace": "assignment",
+      "key": "assignment.checkInConfirm",
+      "fullKey": "assignment:assignment.checkInConfirm"
+    },
+    {
+      "namespace": "assignment",
+      "key": "assignment.checkInSuccess",
+      "fullKey": "assignment:assignment.checkInSuccess"
+    },
+    {
+      "namespace": "assignment",
+      "key": "assignment.assignSuccess",
+      "fullKey": "assignment:assignment.assignSuccess"
+    },
+    {
+      "namespace": "assignment",
+      "key": "assignment.assignError",
+      "fullKey": "assignment:assignment.assignError"
+    },
+    {
+      "namespace": "assignment",
+      "key": "assignment.checkInError",
+      "fullKey": "assignment:assignment.checkInError"
+    },
+    {
+      "namespace": "assignment",
+      "key": "assignment.searchPerson",
+      "fullKey": "assignment:assignment.searchPerson"
+    },
+    {
+      "namespace": "assignment",
+      "key": "assignment.searchPlaceholder",
+      "fullKey": "assignment:assignment.searchPlaceholder"
+    },
+    {
+      "namespace": "assignment",
+      "key": "assignment.noPerson",
+      "fullKey": "assignment:assignment.noPerson"
+    },
+    {
+      "namespace": "assignment",
+      "key": "assignment.noResults",
+      "fullKey": "assignment:assignment.noResults"
+    },
+    {
+      "namespace": "assignment",
+      "key": "assignment.history.title",
+      "fullKey": "assignment:assignment.history.title"
+    },
+    {
+      "namespace": "assignment",
+      "key": "assignment.history.empty",
+      "fullKey": "assignment:assignment.history.empty"
+    },
+    {
+      "namespace": "assignment",
+      "key": "assignment.history.assignedTo",
+      "fullKey": "assignment:assignment.history.assignedTo"
+    },
+    {
+      "namespace": "assignment",
+      "key": "assignment.history.checkedIn",
+      "fullKey": "assignment:assignment.history.checkedIn"
+    },
+    {
+      "namespace": "assignment",
+      "key": "assignment.history.duration",
+      "fullKey": "assignment:assignment.history.duration"
+    },
+    {
+      "namespace": "assignment",
+      "key": "assignment.status.available",
+      "fullKey": "assignment:assignment.status.available"
+    },
+    {
+      "namespace": "assignment",
+      "key": "assignment.status.assigned",
+      "fullKey": "assignment:assignment.status.assigned"
+    },
+    {
+      "namespace": "assignment",
+      "key": "assignment.status.inUse",
+      "fullKey": "assignment:assignment.status.inUse"
+    },
+    {
+      "namespace": "assignment",
+      "key": "assignment.confirmStatusChange.title",
+      "fullKey": "assignment:assignment.confirmStatusChange.title"
+    },
+    {
+      "namespace": "assignment",
+      "key": "assignment.confirmStatusChange.message",
+      "fullKey": "assignment:assignment.confirmStatusChange.message"
+    },
+    {
+      "namespace": "assignment",
+      "key": "assignment.confirmStatusChange.confirm",
+      "fullKey": "assignment:assignment.confirmStatusChange.confirm"
+    },
+    {
+      "namespace": "assignment",
+      "key": "assignment.confirmStatusChange.cancel",
+      "fullKey": "assignment:assignment.confirmStatusChange.cancel"
+    },
+    {
+      "namespace": "common",
+      "key": "app.name",
+      "fullKey": "common:app.name"
+    },
+    {
+      "namespace": "common",
+      "key": "app.loading",
+      "fullKey": "common:app.loading"
+    },
+    {
+      "namespace": "common",
+      "key": "actions.delete",
+      "fullKey": "common:actions.delete"
+    },
+    {
+      "namespace": "common",
+      "key": "actions.close",
+      "fullKey": "common:actions.close"
+    },
+    {
+      "namespace": "common",
+      "key": "actions.undo",
+      "fullKey": "common:actions.undo"
+    },
+    {
+      "namespace": "common",
+      "key": "actions.redo",
+      "fullKey": "common:actions.redo"
+    },
+    {
+      "namespace": "common",
+      "key": "status.success",
+      "fullKey": "common:status.success"
+    },
+    {
+      "namespace": "common",
+      "key": "status.failure",
+      "fullKey": "common:status.failure"
+    },
+    {
+      "namespace": "common",
+      "key": "status.pending",
+      "fullKey": "common:status.pending"
+    },
+    {
+      "namespace": "common",
+      "key": "filters.title",
+      "fullKey": "common:filters.title"
+    },
+    {
+      "namespace": "common",
+      "key": "filters.apply",
+      "fullKey": "common:filters.apply"
+    },
+    {
+      "namespace": "common",
+      "key": "filters.reset",
+      "fullKey": "common:filters.reset"
+    },
+    {
+      "namespace": "common",
+      "key": "notifications.saved",
+      "fullKey": "common:notifications.saved"
+    },
+    {
+      "namespace": "common",
+      "key": "notifications.error",
+      "fullKey": "common:notifications.error"
+    },
+    {
+      "namespace": "common",
+      "key": "notifications.undoCompleted",
+      "fullKey": "common:notifications.undoCompleted"
+    },
+    {
+      "namespace": "damage",
+      "key": "status.broken",
+      "fullKey": "damage:status.broken"
+    },
+    {
+      "namespace": "damage",
+      "key": "status.repaired",
+      "fullKey": "damage:status.repaired"
+    },
+    {
+      "namespace": "dashboard",
+      "key": "widgets.viewAll",
+      "fullKey": "dashboard:widgets.viewAll"
+    },
+    {
+      "namespace": "kits",
+      "key": "list.filters.searchLabel",
+      "fullKey": "kits:list.filters.searchLabel"
+    },
+    {
+      "namespace": "kits",
+      "key": "list.filters.searchPlaceholder",
+      "fullKey": "kits:list.filters.searchPlaceholder"
+    },
+    {
+      "namespace": "kits",
+      "key": "list.filters.typeLabel",
+      "fullKey": "kits:list.filters.typeLabel"
+    },
+    {
+      "namespace": "kits",
+      "key": "list.filters.typePlaceholder",
+      "fullKey": "kits:list.filters.typePlaceholder"
+    },
+    {
+      "namespace": "kits",
+      "key": "list.filters.clear",
+      "fullKey": "kits:list.filters.clear"
+    },
+    {
+      "namespace": "kits",
+      "key": "list.table.name",
+      "fullKey": "kits:list.table.name"
+    },
+    {
+      "namespace": "kits",
+      "key": "list.table.type",
+      "fullKey": "kits:list.table.type"
+    },
+    {
+      "namespace": "kits",
+      "key": "list.table.status",
+      "fullKey": "kits:list.table.status"
+    },
+    {
+      "namespace": "kits",
+      "key": "list.table.completeness",
+      "fullKey": "kits:list.table.completeness"
+    },
+    {
+      "namespace": "kits",
+      "key": "list.table.typeFixed",
+      "fullKey": "kits:list.table.typeFixed"
+    },
+    {
+      "namespace": "kits",
+      "key": "list.table.typeFlexible",
+      "fullKey": "kits:list.table.typeFlexible"
+    },
+    {
+      "namespace": "kits",
+      "key": "list.table.pagination",
+      "fullKey": "kits:list.table.pagination"
+    },
+    {
+      "namespace": "kits",
+      "key": "list.table.empty",
+      "fullKey": "kits:list.table.empty"
+    },
+    {
+      "namespace": "kits",
+      "key": "list.table.emptyFiltered",
+      "fullKey": "kits:list.table.emptyFiltered"
+    },
+    {
+      "namespace": "kits",
+      "key": "list.empty.title",
+      "fullKey": "kits:list.empty.title"
+    },
+    {
+      "namespace": "kits",
+      "key": "list.empty.message",
+      "fullKey": "kits:list.empty.message"
+    },
+    {
+      "namespace": "kits",
+      "key": "list.error",
+      "fullKey": "kits:list.error"
+    },
+    {
+      "namespace": "kits",
+      "key": "list.actions.create",
+      "fullKey": "kits:list.actions.create"
+    },
+    {
+      "namespace": "kits",
+      "key": "detail.loading",
+      "fullKey": "kits:detail.loading"
+    },
+    {
+      "namespace": "kits",
+      "key": "detail.statusLabel",
+      "fullKey": "kits:detail.statusLabel"
+    },
+    {
+      "namespace": "kits",
+      "key": "detail.messages.disassembleConfirm",
+      "fullKey": "kits:detail.messages.disassembleConfirm"
+    },
+    {
+      "namespace": "kits",
+      "key": "detail.messages.disassembleSuccess",
+      "fullKey": "kits:detail.messages.disassembleSuccess"
+    },
+    {
+      "namespace": "kits",
+      "key": "detail.messages.disassembleError",
+      "fullKey": "kits:detail.messages.disassembleError"
+    },
+    {
+      "namespace": "kits",
+      "key": "pages.createModalTitle",
+      "fullKey": "kits:pages.createModalTitle"
+    },
+    {
+      "namespace": "kits",
+      "key": "form.fixed.nonAvailableWarningTitle_plural",
+      "fullKey": "kits:form.fixed.nonAvailableWarningTitle_plural"
+    },
+    {
+      "namespace": "kits",
+      "key": "form.fixed.kitAssignmentHint_plural",
+      "fullKey": "kits:form.fixed.kitAssignmentHint_plural"
+    },
+    {
+      "namespace": "kits",
+      "key": "inheritance.tooltipGeneric",
+      "fullKey": "kits:inheritance.tooltipGeneric"
+    },
+    {
+      "namespace": "kits",
+      "key": "inheritance.tooltipWithSource",
+      "fullKey": "kits:inheritance.tooltipWithSource"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "page.tabs.dashboard",
+      "fullKey": "maintenance:page.tabs.dashboard"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "page.tabs.plans",
+      "fullKey": "maintenance:page.tabs.plans"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "page.tabs.schedules",
+      "fullKey": "maintenance:page.tabs.schedules"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "page.tabs.records",
+      "fullKey": "maintenance:page.tabs.records"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "page.actions.createPlan",
+      "fullKey": "maintenance:page.actions.createPlan"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "page.actions.logMaintenance",
+      "fullKey": "maintenance:page.actions.logMaintenance"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "page.actions.resetDraft",
+      "fullKey": "maintenance:page.actions.resetDraft"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "page.plans.title",
+      "fullKey": "maintenance:page.plans.title"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "page.plans.description",
+      "fullKey": "maintenance:page.plans.description"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "page.scheduleModal.createTitle",
+      "fullKey": "maintenance:page.scheduleModal.createTitle"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "page.scheduleModal.editTitle",
+      "fullKey": "maintenance:page.scheduleModal.editTitle"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "page.records.modalTitle",
+      "fullKey": "maintenance:page.records.modalTitle"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "page.records.assetSelectLabel",
+      "fullKey": "maintenance:page.records.assetSelectLabel"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "page.records.assetSelectPlaceholder",
+      "fullKey": "maintenance:page.records.assetSelectPlaceholder"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "page.records.loadingAssets",
+      "fullKey": "maintenance:page.records.loadingAssets"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "page.records.nothingFound",
+      "fullKey": "maintenance:page.records.nothingFound"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "page.records.scheduledMaintenance",
+      "fullKey": "maintenance:page.records.scheduledMaintenance"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "page.records.selectAssetPrompt",
+      "fullKey": "maintenance:page.records.selectAssetPrompt"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "plan.placeholders.name",
+      "fullKey": "maintenance:plan.placeholders.name"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "plan.placeholders.description",
+      "fullKey": "maintenance:plan.placeholders.description"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "plan.placeholders.loadingAssets",
+      "fullKey": "maintenance:plan.placeholders.loadingAssets"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "plan.placeholders.selectAssets",
+      "fullKey": "maintenance:plan.placeholders.selectAssets"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "plan.placeholders.selectAssetsPrompt",
+      "fullKey": "maintenance:plan.placeholders.selectAssetsPrompt"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "plan.placeholders.selectCompany",
+      "fullKey": "maintenance:plan.placeholders.selectCompany"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "plan.placeholders.startDate",
+      "fullKey": "maintenance:plan.placeholders.startDate"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "plan.placeholders.endDate",
+      "fullKey": "maintenance:plan.placeholders.endDate"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "plan.placeholders.holdColor",
+      "fullKey": "maintenance:plan.placeholders.holdColor"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "plan.placeholders.intervalRuleExample",
+      "fullKey": "maintenance:plan.placeholders.intervalRuleExample"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "plan.placeholders.internalNotes",
+      "fullKey": "maintenance:plan.placeholders.internalNotes"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "plan.actions.moveToPlanned",
+      "fullKey": "maintenance:plan.actions.moveToPlanned"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "plan.actions.resetToDraft",
+      "fullKey": "maintenance:plan.actions.resetToDraft"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "plan.actions.complete",
+      "fullKey": "maintenance:plan.actions.complete"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "plan.stages.draft",
+      "fullKey": "maintenance:plan.stages.draft"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "plan.stages.planned",
+      "fullKey": "maintenance:plan.stages.planned"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "plan.stages.completed",
+      "fullKey": "maintenance:plan.stages.completed"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "plan.requirements.title",
+      "fullKey": "maintenance:plan.requirements.title"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "plan.labels.name",
+      "fullKey": "maintenance:plan.labels.name"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "plan.labels.description",
+      "fullKey": "maintenance:plan.labels.description"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "plan.labels.assets",
+      "fullKey": "maintenance:plan.labels.assets"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "plan.labels.company",
+      "fullKey": "maintenance:plan.labels.company"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "plan.labels.preferredCompany",
+      "fullKey": "maintenance:plan.labels.preferredCompany"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "plan.labels.selectedCompany",
+      "fullKey": "maintenance:plan.labels.selectedCompany"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "plan.labels.startDate",
+      "fullKey": "maintenance:plan.labels.startDate"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "plan.labels.endDate",
+      "fullKey": "maintenance:plan.labels.endDate"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "plan.labels.holdColor",
+      "fullKey": "maintenance:plan.labels.holdColor"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "plan.labels.intervalRule",
+      "fullKey": "maintenance:plan.labels.intervalRule"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "plan.labels.internalNotes",
+      "fullKey": "maintenance:plan.labels.internalNotes"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "plan.labels.scheduleWindow",
+      "fullKey": "maintenance:plan.labels.scheduleWindow"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "plan.labels.selectedCount",
+      "fullKey": "maintenance:plan.labels.selectedCount"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "plan.labels.selectedCount_plural",
+      "fullKey": "maintenance:plan.labels.selectedCount_plural"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "plan.messages.holdsUpdatedTitle",
+      "fullKey": "maintenance:plan.messages.holdsUpdatedTitle"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "plan.errors.holdsUpdateFailed",
+      "fullKey": "maintenance:plan.errors.holdsUpdateFailed"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "reminder.dueIn_plural",
+      "fullKey": "maintenance:reminder.dueIn_plural"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "reminder.nextIn_plural",
+      "fullKey": "maintenance:reminder.nextIn_plural"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "rules.viewConflicts",
+      "fullKey": "maintenance:rules.viewConflicts"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "workOrders.deleteWorkOrder",
+      "fullKey": "maintenance:workOrders.deleteWorkOrder"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "workOrders.deleteConfirm",
+      "fullKey": "maintenance:workOrders.deleteConfirm"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "scheduleList.types.all",
+      "fullKey": "maintenance:scheduleList.types.all"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "scheduleList.types.timeBased",
+      "fullKey": "maintenance:scheduleList.types.timeBased"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "scheduleList.types.usageBased",
+      "fullKey": "maintenance:scheduleList.types.usageBased"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "scheduleList.types.eventBased",
+      "fullKey": "maintenance:scheduleList.types.eventBased"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "scheduleList.types.fixedDate",
+      "fullKey": "maintenance:scheduleList.types.fixedDate"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "scheduleList.statuses.all",
+      "fullKey": "maintenance:scheduleList.statuses.all"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "scheduleList.statuses.overdue",
+      "fullKey": "maintenance:scheduleList.statuses.overdue"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "scheduleList.statuses.dueSoon",
+      "fullKey": "maintenance:scheduleList.statuses.dueSoon"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "scheduleList.statuses.scheduled",
+      "fullKey": "maintenance:scheduleList.statuses.scheduled"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "scheduleList.statuses.unscheduled",
+      "fullKey": "maintenance:scheduleList.statuses.unscheduled"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "scheduleList.columns.asset",
+      "fullKey": "maintenance:scheduleList.columns.asset"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "scheduleList.columns.interval",
+      "fullKey": "maintenance:scheduleList.columns.interval"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "scheduleList.columns.nextDue",
+      "fullKey": "maintenance:scheduleList.columns.nextDue"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "scheduleList.unknownAsset",
+      "fullKey": "maintenance:scheduleList.unknownAsset"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "scheduleList.unknownAssetId",
+      "fullKey": "maintenance:scheduleList.unknownAssetId"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "scheduleList.assetCategory",
+      "fullKey": "maintenance:scheduleList.assetCategory"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "scheduleList.lastPerformed",
+      "fullKey": "maintenance:scheduleList.lastPerformed"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "scheduleList.reminderBefore",
+      "fullKey": "maintenance:scheduleList.reminderBefore"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "scheduleList.search.label",
+      "fullKey": "maintenance:scheduleList.search.label"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "scheduleList.search.placeholder",
+      "fullKey": "maintenance:scheduleList.search.placeholder"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "scheduleList.filters.asset",
+      "fullKey": "maintenance:scheduleList.filters.asset"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "scheduleList.filters.assetAll",
+      "fullKey": "maintenance:scheduleList.filters.assetAll"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "scheduleList.filters.type",
+      "fullKey": "maintenance:scheduleList.filters.type"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "scheduleList.filters.status",
+      "fullKey": "maintenance:scheduleList.filters.status"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "scheduleList.empty.title",
+      "fullKey": "maintenance:scheduleList.empty.title"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "scheduleList.empty.filterMessage",
+      "fullKey": "maintenance:scheduleList.empty.filterMessage"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "scheduleList.empty.newMessage",
+      "fullKey": "maintenance:scheduleList.empty.newMessage"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "scheduleList.empty.action",
+      "fullKey": "maintenance:scheduleList.empty.action"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "scheduleList.delete.title",
+      "fullKey": "maintenance:scheduleList.delete.title"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "scheduleList.delete.confirm",
+      "fullKey": "maintenance:scheduleList.delete.confirm"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "scheduleList.actions.edit",
+      "fullKey": "maintenance:scheduleList.actions.edit"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "scheduleList.actions.delete",
+      "fullKey": "maintenance:scheduleList.actions.delete"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "records.title",
+      "fullKey": "maintenance:records.title"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "records.search.label",
+      "fullKey": "maintenance:records.search.label"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "records.search.placeholder",
+      "fullKey": "maintenance:records.search.placeholder"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "records.filters.asset",
+      "fullKey": "maintenance:records.filters.asset"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "records.filters.assetAll",
+      "fullKey": "maintenance:records.filters.assetAll"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "records.filters.type",
+      "fullKey": "maintenance:records.filters.type"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "records.filters.typeAll",
+      "fullKey": "maintenance:records.filters.typeAll"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "records.filters.clear",
+      "fullKey": "maintenance:records.filters.clear"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "records.types.inspection",
+      "fullKey": "maintenance:records.types.inspection"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "records.types.maintenance",
+      "fullKey": "maintenance:records.types.maintenance"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "records.types.planned-repair",
+      "fullKey": "maintenance:records.types.planned-repair"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "records.types.unplanned-repair",
+      "fullKey": "maintenance:records.types.unplanned-repair"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "records.types.improvement",
+      "fullKey": "maintenance:records.types.improvement"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "records.placeholders.descriptionExample",
+      "fullKey": "maintenance:records.placeholders.descriptionExample"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "records.placeholders.notes",
+      "fullKey": "maintenance:records.placeholders.notes"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "records.labels.notes",
+      "fullKey": "maintenance:records.labels.notes"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "records.columns.date",
+      "fullKey": "maintenance:records.columns.date"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "records.columns.asset",
+      "fullKey": "maintenance:records.columns.asset"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "records.columns.type",
+      "fullKey": "maintenance:records.columns.type"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "records.columns.description",
+      "fullKey": "maintenance:records.columns.description"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "records.columns.performedBy",
+      "fullKey": "maintenance:records.columns.performedBy"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "records.columns.cost",
+      "fullKey": "maintenance:records.columns.cost"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "records.columns.nextMaintenance",
+      "fullKey": "maintenance:records.columns.nextMaintenance"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "records.empty.title",
+      "fullKey": "maintenance:records.empty.title"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "records.empty.filterMessage",
+      "fullKey": "maintenance:records.empty.filterMessage"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "records.empty.newMessage",
+      "fullKey": "maintenance:records.empty.newMessage"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "records.empty.noRecords",
+      "fullKey": "maintenance:records.empty.noRecords"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "records.errors.loadFailed",
+      "fullKey": "maintenance:records.errors.loadFailed"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "records.pagination",
+      "fullKey": "maintenance:records.pagination"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "team.asset_plural",
+      "fullKey": "maintenance:team.asset_plural"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "team.pending",
+      "fullKey": "maintenance:team.pending"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "team.pending_plural",
+      "fullKey": "maintenance:team.pending_plural"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "team.skipped",
+      "fullKey": "maintenance:team.skipped"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "team.skipped_plural",
+      "fullKey": "maintenance:team.skipped_plural"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "duration.days_plural",
+      "fullKey": "maintenance:duration.days_plural"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "duration.hours_plural",
+      "fullKey": "maintenance:duration.hours_plural"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "fields.targetType",
+      "fullKey": "maintenance:fields.targetType"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "fields.company",
+      "fullKey": "maintenance:fields.company"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "fields.actualStart",
+      "fullKey": "maintenance:fields.actualStart"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "fields.actualEnd",
+      "fullKey": "maintenance:fields.actualEnd"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "fields.lineItems",
+      "fullKey": "maintenance:fields.lineItems"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "fields.createdBy",
+      "fullKey": "maintenance:fields.createdBy"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "fields.createdAt",
+      "fullKey": "maintenance:fields.createdAt"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "fields.updatedAt",
+      "fullKey": "maintenance:fields.updatedAt"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "labels.name",
+      "fullKey": "maintenance:labels.name"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "labels.contactPerson",
+      "fullKey": "maintenance:labels.contactPerson"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "labels.contactEmail",
+      "fullKey": "maintenance:labels.contactEmail"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "labels.contactPhone",
+      "fullKey": "maintenance:labels.contactPhone"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "labels.address",
+      "fullKey": "maintenance:labels.address"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "labels.serviceLevelAgreement",
+      "fullKey": "maintenance:labels.serviceLevelAgreement"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "labels.hourlyRate",
+      "fullKey": "maintenance:labels.hourlyRate"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "labels.contractNotes",
+      "fullKey": "maintenance:labels.contractNotes"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "labels.workType",
+      "fullKey": "maintenance:labels.workType"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "labels.internalWork",
+      "fullKey": "maintenance:labels.internalWork"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "labels.externalWork",
+      "fullKey": "maintenance:labels.externalWork"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "labels.serviceProvider",
+      "fullKey": "maintenance:labels.serviceProvider"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "labels.targetType",
+      "fullKey": "maintenance:labels.targetType"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "labels.targets",
+      "fullKey": "maintenance:labels.targets"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "labels.intervalType",
+      "fullKey": "maintenance:labels.intervalType"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "labels.intervalValue",
+      "fullKey": "maintenance:labels.intervalValue"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "labels.startDate",
+      "fullKey": "maintenance:labels.startDate"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "labels.leadTimeDays",
+      "fullKey": "maintenance:labels.leadTimeDays"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "labels.selectedAssets",
+      "fullKey": "maintenance:labels.selectedAssets"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "placeholders.name",
+      "fullKey": "maintenance:placeholders.name"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "placeholders.contactPerson",
+      "fullKey": "maintenance:placeholders.contactPerson"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "placeholders.intervalValue",
+      "fullKey": "maintenance:placeholders.intervalValue"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "placeholders.startDate",
+      "fullKey": "maintenance:placeholders.startDate"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "placeholders.leadTimeDays",
+      "fullKey": "maintenance:placeholders.leadTimeDays"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "scheduleForm.types.timeBased",
+      "fullKey": "maintenance:scheduleForm.types.timeBased"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "scheduleForm.types.usageBased",
+      "fullKey": "maintenance:scheduleForm.types.usageBased"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "scheduleForm.types.eventBased",
+      "fullKey": "maintenance:scheduleForm.types.eventBased"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "scheduleForm.types.fixedDate",
+      "fullKey": "maintenance:scheduleForm.types.fixedDate"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "scheduleForm.labels.asset",
+      "fullKey": "maintenance:scheduleForm.labels.asset"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "scheduleForm.labels.type",
+      "fullKey": "maintenance:scheduleForm.labels.type"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "scheduleForm.labels.days",
+      "fullKey": "maintenance:scheduleForm.labels.days"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "scheduleForm.labels.months",
+      "fullKey": "maintenance:scheduleForm.labels.months"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "scheduleForm.labels.years",
+      "fullKey": "maintenance:scheduleForm.labels.years"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "scheduleForm.labels.operatingHours",
+      "fullKey": "maintenance:scheduleForm.labels.operatingHours"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "scheduleForm.labels.bookingCount",
+      "fullKey": "maintenance:scheduleForm.labels.bookingCount"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "scheduleForm.labels.date",
+      "fullKey": "maintenance:scheduleForm.labels.date"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "scheduleForm.labels.remindDaysBefore",
+      "fullKey": "maintenance:scheduleForm.labels.remindDaysBefore"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "scheduleForm.placeholders.asset",
+      "fullKey": "maintenance:scheduleForm.placeholders.asset"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "scheduleForm.placeholders.loadingAssets",
+      "fullKey": "maintenance:scheduleForm.placeholders.loadingAssets"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "scheduleForm.placeholders.noAssets",
+      "fullKey": "maintenance:scheduleForm.placeholders.noAssets"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "scheduleForm.placeholders.daysExample",
+      "fullKey": "maintenance:scheduleForm.placeholders.daysExample"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "scheduleForm.placeholders.monthsExample",
+      "fullKey": "maintenance:scheduleForm.placeholders.monthsExample"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "scheduleForm.placeholders.yearsExample",
+      "fullKey": "maintenance:scheduleForm.placeholders.yearsExample"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "scheduleForm.placeholders.hoursExample",
+      "fullKey": "maintenance:scheduleForm.placeholders.hoursExample"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "scheduleForm.placeholders.bookingsExample",
+      "fullKey": "maintenance:scheduleForm.placeholders.bookingsExample"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "scheduleForm.placeholders.annualDate",
+      "fullKey": "maintenance:scheduleForm.placeholders.annualDate"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "scheduleForm.errors.assetRequiredTitle",
+      "fullKey": "maintenance:scheduleForm.errors.assetRequiredTitle"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "scheduleForm.errors.assetRequiredMessage",
+      "fullKey": "maintenance:scheduleForm.errors.assetRequiredMessage"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "descriptions.targetType",
+      "fullKey": "maintenance:descriptions.targetType"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "descriptions.intervalType",
+      "fullKey": "maintenance:descriptions.intervalType"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "descriptions.intervalValue",
+      "fullKey": "maintenance:descriptions.intervalValue"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "workTypes.inspection",
+      "fullKey": "maintenance:workTypes.inspection"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "workTypes.maintenance",
+      "fullKey": "maintenance:workTypes.maintenance"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "workTypes.planned-repair",
+      "fullKey": "maintenance:workTypes.planned-repair"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "workTypes.unplanned-repair",
+      "fullKey": "maintenance:workTypes.unplanned-repair"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "workTypes.improvement",
+      "fullKey": "maintenance:workTypes.improvement"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "workTypes.custom",
+      "fullKey": "maintenance:workTypes.custom"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "states.offer-requested",
+      "fullKey": "maintenance:states.offer-requested"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "states.offer-received",
+      "fullKey": "maintenance:states.offer-received"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "states.aborted",
+      "fullKey": "maintenance:states.aborted"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "states.obsolete",
+      "fullKey": "maintenance:states.obsolete"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "completionStatus.pending",
+      "fullKey": "maintenance:completionStatus.pending"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "completionStatus.in-progress",
+      "fullKey": "maintenance:completionStatus.in-progress"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "completionStatus.completed",
+      "fullKey": "maintenance:completionStatus.completed"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "offers.columns.assetNumber",
+      "fullKey": "maintenance:offers.columns.assetNumber"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "offers.columns.assetName",
+      "fullKey": "maintenance:offers.columns.assetName"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "offers.columns.scheduledDate",
+      "fullKey": "maintenance:offers.columns.scheduledDate"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "offers.columns.completedAt",
+      "fullKey": "maintenance:offers.columns.completedAt"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "columns.workOrderNumber",
+      "fullKey": "maintenance:columns.workOrderNumber"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "columns.type",
+      "fullKey": "maintenance:columns.type"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "columns.state",
+      "fullKey": "maintenance:columns.state"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "columns.scheduledStart",
+      "fullKey": "maintenance:columns.scheduledStart"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "columns.assignedTo",
+      "fullKey": "maintenance:columns.assignedTo"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "validation.nameTooLong",
+      "fullKey": "maintenance:validation.nameTooLong"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "validation.contactPersonRequired",
+      "fullKey": "maintenance:validation.contactPersonRequired"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "validation.contactPersonTooLong",
+      "fullKey": "maintenance:validation.contactPersonTooLong"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "validation.addressTooLong",
+      "fullKey": "maintenance:validation.addressTooLong"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "validation.slaTooLong",
+      "fullKey": "maintenance:validation.slaTooLong"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "validation.hourlyRateNegative",
+      "fullKey": "maintenance:validation.hourlyRateNegative"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "validation.intervalValueRequired",
+      "fullKey": "maintenance:validation.intervalValueRequired"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "validation.startDateRequired",
+      "fullKey": "maintenance:validation.startDateRequired"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "validation.leadTimeDaysNegative",
+      "fullKey": "maintenance:validation.leadTimeDaysNegative"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "validation.companyIdRequired",
+      "fullKey": "maintenance:validation.companyIdRequired"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "actions.delete",
+      "fullKey": "maintenance:actions.delete"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "actions.edit",
+      "fullKey": "maintenance:actions.edit"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "actions.createFromRule",
+      "fullKey": "maintenance:actions.createFromRule"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "actions.markComplete",
+      "fullKey": "maintenance:actions.markComplete"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "actions.addAsset",
+      "fullKey": "maintenance:actions.addAsset"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "actions.removeAsset",
+      "fullKey": "maintenance:actions.removeAsset"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "messages.companyCreated",
+      "fullKey": "maintenance:messages.companyCreated"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "messages.companyUpdated",
+      "fullKey": "maintenance:messages.companyUpdated"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "messages.companyDeleted",
+      "fullKey": "maintenance:messages.companyDeleted"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "messages.ruleCreated",
+      "fullKey": "maintenance:messages.ruleCreated"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "messages.ruleUpdated",
+      "fullKey": "maintenance:messages.ruleUpdated"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "messages.ruleDeleted",
+      "fullKey": "maintenance:messages.ruleDeleted"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "messages.workOrderCreated",
+      "fullKey": "maintenance:messages.workOrderCreated"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "messages.workOrderUpdated",
+      "fullKey": "maintenance:messages.workOrderUpdated"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "messages.workOrderDeleted",
+      "fullKey": "maintenance:messages.workOrderDeleted"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "messages.scheduleCreated",
+      "fullKey": "maintenance:messages.scheduleCreated"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "messages.scheduleCreatedDescription",
+      "fullKey": "maintenance:messages.scheduleCreatedDescription"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "messages.scheduleUpdated",
+      "fullKey": "maintenance:messages.scheduleUpdated"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "messages.scheduleUpdatedDescription",
+      "fullKey": "maintenance:messages.scheduleUpdatedDescription"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "messages.scheduleDeleted",
+      "fullKey": "maintenance:messages.scheduleDeleted"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "messages.scheduleDeletedDescription",
+      "fullKey": "maintenance:messages.scheduleDeletedDescription"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "messages.assetMarkedComplete",
+      "fullKey": "maintenance:messages.assetMarkedComplete"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "messages.stateTransitioned",
+      "fullKey": "maintenance:messages.stateTransitioned"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "messages.offerRequested",
+      "fullKey": "maintenance:messages.offerRequested"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "messages.offerAccepted",
+      "fullKey": "maintenance:messages.offerAccepted"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "messages.recordCreated",
+      "fullKey": "maintenance:messages.recordCreated"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "messages.recordCreatedDescription",
+      "fullKey": "maintenance:messages.recordCreatedDescription"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "errors.companyCreateFailed",
+      "fullKey": "maintenance:errors.companyCreateFailed"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "errors.companyUpdateFailed",
+      "fullKey": "maintenance:errors.companyUpdateFailed"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "errors.companyDeleteFailed",
+      "fullKey": "maintenance:errors.companyDeleteFailed"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "errors.ruleCreateFailed",
+      "fullKey": "maintenance:errors.ruleCreateFailed"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "errors.ruleUpdateFailed",
+      "fullKey": "maintenance:errors.ruleUpdateFailed"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "errors.ruleDeleteFailed",
+      "fullKey": "maintenance:errors.ruleDeleteFailed"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "errors.workOrderCreateFailed",
+      "fullKey": "maintenance:errors.workOrderCreateFailed"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "errors.workOrderUpdateFailed",
+      "fullKey": "maintenance:errors.workOrderUpdateFailed"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "errors.workOrderDeleteFailed",
+      "fullKey": "maintenance:errors.workOrderDeleteFailed"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "errors.transitionFailed",
+      "fullKey": "maintenance:errors.transitionFailed"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "errors.offerRequestFailed",
+      "fullKey": "maintenance:errors.offerRequestFailed"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "errors.offerAcceptFailed",
+      "fullKey": "maintenance:errors.offerAcceptFailed"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "errors.loadCompaniesFailed",
+      "fullKey": "maintenance:errors.loadCompaniesFailed"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "errors.loadRulesFailed",
+      "fullKey": "maintenance:errors.loadRulesFailed"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "errors.loadWorkOrdersFailed",
+      "fullKey": "maintenance:errors.loadWorkOrdersFailed"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "errors.scheduleSaveFailed",
+      "fullKey": "maintenance:errors.scheduleSaveFailed"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "errors.scheduleDeleteFailed",
+      "fullKey": "maintenance:errors.scheduleDeleteFailed"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "errors.recordsLoadFailed",
+      "fullKey": "maintenance:errors.recordsLoadFailed"
+    },
+    {
+      "namespace": "maintenance",
+      "key": "errors.recordSaveFailed",
+      "fullKey": "maintenance:errors.recordSaveFailed"
+    },
+    {
+      "namespace": "models",
+      "key": "singular",
+      "fullKey": "models:singular"
+    },
+    {
+      "namespace": "models",
+      "key": "description",
+      "fullKey": "models:description"
+    },
+    {
+      "namespace": "models",
+      "key": "deleteModel",
+      "fullKey": "models:deleteModel"
+    },
+    {
+      "namespace": "models",
+      "key": "createFromModel",
+      "fullKey": "models:createFromModel"
+    },
+    {
+      "namespace": "models",
+      "key": "modelDetails",
+      "fullKey": "models:modelDetails"
+    },
+    {
+      "namespace": "models",
+      "key": "defaultValues",
+      "fullKey": "models:defaultValues"
+    },
+    {
+      "namespace": "models",
+      "key": "assetsUsingModel",
+      "fullKey": "models:assetsUsingModel"
+    },
+    {
+      "namespace": "models",
+      "key": "assetsCount",
+      "fullKey": "models:assetsCount"
+    },
+    {
+      "namespace": "models",
+      "key": "assetsCount_plural",
+      "fullKey": "models:assetsCount_plural"
+    },
+    {
+      "namespace": "models",
+      "key": "form.description",
+      "fullKey": "models:form.description"
+    },
+    {
+      "namespace": "models",
+      "key": "form.tags",
+      "fullKey": "models:form.tags"
+    },
+    {
+      "namespace": "models",
+      "key": "form.customFields",
+      "fullKey": "models:form.customFields"
+    },
+    {
+      "namespace": "navigation",
+      "key": "sections.savedViews",
+      "fullKey": "navigation:sections.savedViews"
+    },
+    {
+      "namespace": "settings",
+      "key": "versioning.title",
+      "fullKey": "settings:versioning.title"
+    },
+    {
+      "namespace": "settings",
+      "key": "versioning.description",
+      "fullKey": "settings:versioning.description"
+    },
+    {
+      "namespace": "settings",
+      "key": "versioning.createButton",
+      "fullKey": "settings:versioning.createButton"
+    },
+    {
+      "namespace": "settings",
+      "key": "versioning.emptyState",
+      "fullKey": "settings:versioning.emptyState"
+    },
+    {
+      "namespace": "settings",
+      "key": "versioning.currentBadge",
+      "fullKey": "settings:versioning.currentBadge"
+    },
+    {
+      "namespace": "settings",
+      "key": "versioning.rollback.action",
+      "fullKey": "settings:versioning.rollback.action"
+    },
+    {
+      "namespace": "settings",
+      "key": "versioning.rollback.confirmation",
+      "fullKey": "settings:versioning.rollback.confirmation"
+    },
+    {
+      "namespace": "settings",
+      "key": "versioning.rollback.disabled",
+      "fullKey": "settings:versioning.rollback.disabled"
+    },
+    {
+      "namespace": "settings",
+      "key": "versioning.rollback.details",
+      "fullKey": "settings:versioning.rollback.details"
+    },
+    {
+      "namespace": "settings",
+      "key": "versioning.rollbackSource",
+      "fullKey": "settings:versioning.rollbackSource"
+    },
+    {
+      "namespace": "settings",
+      "key": "versioning.table.version",
+      "fullKey": "settings:versioning.table.version"
+    },
+    {
+      "namespace": "settings",
+      "key": "versioning.table.summary",
+      "fullKey": "settings:versioning.table.summary"
+    },
+    {
+      "namespace": "settings",
+      "key": "versioning.table.changedBy",
+      "fullKey": "settings:versioning.table.changedBy"
+    },
+    {
+      "namespace": "settings",
+      "key": "versioning.table.created",
+      "fullKey": "settings:versioning.table.created"
+    },
+    {
+      "namespace": "settings",
+      "key": "versioning.table.expires",
+      "fullKey": "settings:versioning.table.expires"
+    },
+    {
+      "namespace": "settings",
+      "key": "versioning.table.actions",
+      "fullKey": "settings:versioning.table.actions"
+    },
+    {
+      "namespace": "settings",
+      "key": "versioning.createModal.title",
+      "fullKey": "settings:versioning.createModal.title"
+    },
+    {
+      "namespace": "settings",
+      "key": "versioning.createModal.description",
+      "fullKey": "settings:versioning.createModal.description"
+    },
+    {
+      "namespace": "settings",
+      "key": "versioning.createModal.summaryLabel",
+      "fullKey": "settings:versioning.createModal.summaryLabel"
+    },
+    {
+      "namespace": "settings",
+      "key": "versioning.createModal.summaryPlaceholder",
+      "fullKey": "settings:versioning.createModal.summaryPlaceholder"
+    },
+    {
+      "namespace": "settings",
+      "key": "versioning.createModal.cancel",
+      "fullKey": "settings:versioning.createModal.cancel"
+    },
+    {
+      "namespace": "settings",
+      "key": "versioning.createModal.submit",
+      "fullKey": "settings:versioning.createModal.submit"
+    },
+    {
+      "namespace": "settings",
+      "key": "versioning.expiry.noExpiry",
+      "fullKey": "settings:versioning.expiry.noExpiry"
+    },
+    {
+      "namespace": "settings",
+      "key": "versioning.expiry.expired",
+      "fullKey": "settings:versioning.expiry.expired"
+    },
+    {
+      "namespace": "settings",
+      "key": "versioning.expiry.warning",
+      "fullKey": "settings:versioning.expiry.warning"
+    },
+    {
+      "namespace": "settings",
+      "key": "versioning.expiry.active",
+      "fullKey": "settings:versioning.expiry.active"
+    },
+    {
+      "namespace": "settings",
+      "key": "versioning.origin.manual",
+      "fullKey": "settings:versioning.origin.manual"
+    },
+    {
+      "namespace": "settings",
+      "key": "versioning.origin.import",
+      "fullKey": "settings:versioning.origin.import"
+    },
+    {
+      "namespace": "settings",
+      "key": "versioning.origin.rollback",
+      "fullKey": "settings:versioning.origin.rollback"
+    },
+    {
+      "namespace": "settings",
+      "key": "versioning.age.label",
+      "fullKey": "settings:versioning.age.label"
+    },
+    {
+      "namespace": "settings",
+      "key": "versioning.age.warning",
+      "fullKey": "settings:versioning.age.warning"
+    },
+    {
+      "namespace": "settings",
+      "key": "versioning.age.critical",
+      "fullKey": "settings:versioning.age.critical"
+    },
+    {
+      "namespace": "settings",
+      "key": "versioning.age.expired",
+      "fullKey": "settings:versioning.age.expired"
+    },
+    {
+      "namespace": "settings",
+      "key": "versioning.notifications.createSuccessTitle",
+      "fullKey": "settings:versioning.notifications.createSuccessTitle"
+    },
+    {
+      "namespace": "settings",
+      "key": "versioning.notifications.createSuccessMessage",
+      "fullKey": "settings:versioning.notifications.createSuccessMessage"
+    },
+    {
+      "namespace": "settings",
+      "key": "versioning.notifications.createErrorTitle",
+      "fullKey": "settings:versioning.notifications.createErrorTitle"
+    },
+    {
+      "namespace": "settings",
+      "key": "versioning.notifications.rollbackSuccessTitle",
+      "fullKey": "settings:versioning.notifications.rollbackSuccessTitle"
+    },
+    {
+      "namespace": "settings",
+      "key": "versioning.notifications.rollbackSuccessMessage",
+      "fullKey": "settings:versioning.notifications.rollbackSuccessMessage"
+    },
+    {
+      "namespace": "settings",
+      "key": "versioning.notifications.rollbackErrorTitle",
+      "fullKey": "settings:versioning.notifications.rollbackErrorTitle"
+    },
+    {
+      "namespace": "settings",
+      "key": "export.button",
+      "fullKey": "settings:export.button"
+    },
+    {
+      "namespace": "settings",
+      "key": "import.summaryLabel",
+      "fullKey": "settings:import.summaryLabel"
+    },
+    {
+      "namespace": "settings",
+      "key": "import.summaryPlaceholder",
+      "fullKey": "settings:import.summaryPlaceholder"
+    },
+    {
+      "namespace": "tags",
+      "key": "singular",
+      "fullKey": "tags:singular"
+    },
+    {
+      "namespace": "tags",
+      "key": "description",
+      "fullKey": "tags:description"
+    },
+    {
+      "namespace": "tags",
+      "key": "editTag",
+      "fullKey": "tags:editTag"
+    },
+    {
+      "namespace": "tags",
+      "key": "deleteTag",
+      "fullKey": "tags:deleteTag"
+    },
+    {
+      "namespace": "tags",
+      "key": "sourceType.kit",
+      "fullKey": "tags:sourceType.kit"
+    },
+    {
+      "namespace": "tags",
+      "key": "sourceType.model",
+      "fullKey": "tags:sourceType.model"
+    },
+    {
+      "namespace": "tags",
+      "key": "form.color",
+      "fullKey": "tags:form.color"
+    },
+    {
+      "namespace": "tags",
+      "key": "form.colorPlaceholder",
+      "fullKey": "tags:form.colorPlaceholder"
+    },
+    {
+      "namespace": "tags",
+      "key": "form.description",
+      "fullKey": "tags:form.description"
+    },
+    {
+      "namespace": "tags",
+      "key": "validation.colorRequired",
+      "fullKey": "tags:validation.colorRequired"
+    },
+    {
+      "namespace": "tags",
+      "key": "notifications.applied",
+      "fullKey": "tags:notifications.applied"
+    },
+    {
+      "namespace": "tags",
+      "key": "notifications.removed",
+      "fullKey": "tags:notifications.removed"
+    },
+    {
+      "namespace": "tags",
+      "key": "notifications.applyError",
+      "fullKey": "tags:notifications.applyError"
+    },
+    {
+      "namespace": "tags",
+      "key": "notifications.removeError",
+      "fullKey": "tags:notifications.removeError"
+    },
+    {
+      "namespace": "tags",
+      "key": "notifications.cannotRemoveInherited",
+      "fullKey": "tags:notifications.cannotRemoveInherited"
+    },
+    {
+      "namespace": "tags",
+      "key": "colors.red",
+      "fullKey": "tags:colors.red"
+    },
+    {
+      "namespace": "tags",
+      "key": "colors.pink",
+      "fullKey": "tags:colors.pink"
+    },
+    {
+      "namespace": "tags",
+      "key": "colors.grape",
+      "fullKey": "tags:colors.grape"
+    },
+    {
+      "namespace": "tags",
+      "key": "colors.violet",
+      "fullKey": "tags:colors.violet"
+    },
+    {
+      "namespace": "tags",
+      "key": "colors.indigo",
+      "fullKey": "tags:colors.indigo"
+    },
+    {
+      "namespace": "tags",
+      "key": "colors.blue",
+      "fullKey": "tags:colors.blue"
+    },
+    {
+      "namespace": "tags",
+      "key": "colors.cyan",
+      "fullKey": "tags:colors.cyan"
+    },
+    {
+      "namespace": "tags",
+      "key": "colors.teal",
+      "fullKey": "tags:colors.teal"
+    },
+    {
+      "namespace": "tags",
+      "key": "colors.green",
+      "fullKey": "tags:colors.green"
+    },
+    {
+      "namespace": "tags",
+      "key": "colors.lime",
+      "fullKey": "tags:colors.lime"
+    },
+    {
+      "namespace": "tags",
+      "key": "colors.yellow",
+      "fullKey": "tags:colors.yellow"
+    },
+    {
+      "namespace": "tags",
+      "key": "colors.orange",
+      "fullKey": "tags:colors.orange"
+    },
+    {
+      "namespace": "tags",
+      "key": "colors.gray",
+      "fullKey": "tags:colors.gray"
+    },
+    {
+      "namespace": "undo",
+      "key": "modalTitle",
+      "fullKey": "undo:modalTitle"
+    },
+    {
+      "namespace": "undo",
+      "key": "openHistoryTooltip",
+      "fullKey": "undo:openHistoryTooltip"
+    },
+    {
+      "namespace": "undo",
+      "key": "openHistoryAria",
+      "fullKey": "undo:openHistoryAria"
+    },
+    {
+      "namespace": "undo",
+      "key": "actions.undo",
+      "fullKey": "undo:actions.undo"
+    },
+    {
+      "namespace": "undo",
+      "key": "shortcuts.hint",
+      "fullKey": "undo:shortcuts.hint"
+    },
+    {
+      "namespace": "views",
+      "key": "modes.table",
+      "fullKey": "views:modes.table"
+    },
+    {
+      "namespace": "views",
+      "key": "modes.gallery",
+      "fullKey": "views:modes.gallery"
+    },
+    {
+      "namespace": "views",
+      "key": "modes.kanban",
+      "fullKey": "views:modes.kanban"
+    },
+    {
+      "namespace": "views",
+      "key": "modes.calendar",
+      "fullKey": "views:modes.calendar"
+    },
+    {
+      "namespace": "views",
+      "key": "header.savedViewsOpen",
+      "fullKey": "views:header.savedViewsOpen"
+    },
+    {
+      "namespace": "views",
+      "key": "drawer.viewMode",
+      "fullKey": "views:drawer.viewMode"
+    },
+    {
+      "namespace": "views",
+      "key": "grouping.orderLabel",
+      "fullKey": "views:grouping.orderLabel"
+    },
+    {
+      "namespace": "views",
+      "key": "grouping.emptyLabel",
+      "fullKey": "views:grouping.emptyLabel"
+    },
+    {
+      "namespace": "views",
+      "key": "grouping.ascending",
+      "fullKey": "views:grouping.ascending"
+    },
+    {
+      "namespace": "views",
+      "key": "grouping.descending",
+      "fullKey": "views:grouping.descending"
+    },
+    {
+      "namespace": "views",
+      "key": "grouping.groupLabel",
+      "fullKey": "views:grouping.groupLabel"
+    },
+    {
+      "namespace": "views",
+      "key": "grouping.emptyGroup",
+      "fullKey": "views:grouping.emptyGroup"
+    }
+  ],
+  "validKeys": [
+    "assets:detail.assignmentSinceDescription",
+    "assets:detail.assignmentCreatedDescription",
+    "assets:detail.assignmentUpdatedDescription",
+    "assets:detail.assignmentInUseLabel",
+    "assets:detail.assignmentInUseEmpty",
+    "assets:detail.assignmentCreatedLabel",
+    "assets:detail.assignmentUpdatedLabel",
+    "assets:detail.assignmentSummaryTitle",
+    "damage:modal.title",
+    "damage:notifications.reportSuccessTitle",
+    "damage:notifications.reportSuccessMessage",
+    "damage:notifications.reportErrorMessage",
+    "damage:notifications.reportErrorTitle",
+    "tags:notifications.removedTitle",
+    "tags:notifications.removedMessage",
+    "tags:notifications.removeErrorTitle",
+    "tags:notifications.removeErrorMessage",
+    "tags:emptyState.description",
+    "tags:selectOrCreate",
+    "assets:detail.labelPrintCardTitle",
+    "assets:bulkActions.selectedOfTotal",
+    "assets:bulkActions.selected",
+    "assets:bulkActions.clearSelection",
+    "assets:list.notifications.viewLoaded",
+    "assets:list.title",
+    "assets:list.actions.views",
+    "assets:list.actions.menuLabel",
+    "assets:list.actions.showAll",
+    "assets:list.actions.filtersWithCount",
+    "assets:list.actions.filters",
+    "assets:list.actions.saveView",
+    "assets:list.actions.new",
+    "views:form.title",
+    "views:notifications.createSuccessTitle",
+    "views:notifications.createSuccessMessage",
+    "views:drawer.title",
+    "common:app.error",
+    "common:actions.retry",
+    "damage:form.validation.required",
+    "damage:form.validation.minLength",
+    "damage:form.descriptionLabel",
+    "damage:form.descriptionPlaceholder",
+    "common:actions.cancel",
+    "damage:form.submit",
+    "damage:photoUpload.error.maxPhotos",
+    "damage:photoUpload.error.fileTooLarge",
+    "damage:photoUpload.error.processFailed",
+    "damage:photoUpload.compressing",
+    "damage:photoUpload.dropzone.imageAlt",
+    "damage:photoUpload.error.rejected",
+    "damage:photoUpload.dropzone.title",
+    "damage:photoUpload.dropzone.subtitle",
+    "damage:photoUpload.dropzone.count",
+    "damage:photoUpload.maxReached",
+    "damage:timeline.markAsRepairedHint",
+    "damage:timeline.empty",
+    "damage:timeline.unknownUser",
+    "damage:timeline.repairedByWithDate",
+    "damage:timeline.repairedBy",
+    "damage:timeline.repaired",
+    "damage:timeline.reported",
+    "damage:timeline.reportedBy",
+    "damage:timeline.description",
+    "damage:timeline.photos",
+    "damage:timeline.repairNotes",
+    "damage:timeline.markAsRepaired",
+    "damage:timeline.markAsRepairedTitle",
+    "damage:timeline.notesPlaceholder",
+    "damage:timeline.markAsRepairedSubmit",
+    "dashboard:widgets.assetsNeedingAttention.title",
+    "dashboard:widgets.assetsNeedingAttention.comingSoon",
+    "dashboard:widgets.assetsNeedingAttention.description",
+    "dashboard:widgets.myAssignedAssets.title",
+    "dashboard:widgets.myAssignedAssets.comingSoon",
+    "dashboard:widgets.myAssignedAssets.description",
+    "dashboard:widgets.overdueWorkOrders.title",
+    "dashboard:widgets.overdueWorkOrders.comingSoon",
+    "dashboard:widgets.overdueWorkOrders.description",
+    "dashboard:widgets.recentActivity.title",
+    "dashboard:widgets.recentActivity.comingSoon",
+    "dashboard:widgets.recentActivity.description",
+    "dashboard:widgets.upcomingMaintenance.title",
+    "dashboard:widgets.upcomingMaintenance.comingSoon",
+    "dashboard:widgets.upcomingMaintenance.description",
+    "dashboard:widgets.utilizationStats.title",
+    "dashboard:widgets.utilizationStats.comingSoon",
+    "dashboard:widgets.utilizationStats.description",
+    "views:gallery.empty",
+    "views:gallery.summary",
+    "views:header.savedViewsPlaceholder",
+    "views:header.noSavedViewsPlaceholder",
+    "views:header.nothingFound",
+    "views:header.createSavedView",
+    "views:header.manageSavedView",
+    "views:header.renameSavedView",
+    "views:header.deleteSavedView",
+    "views:header.filter",
+    "views:kanban.empty",
+    "views:kanban.columnEmpty",
+    "views:kanban.loadMore",
+    "views:filterPanel.title",
+    "views:filterPanel.badgeLabel",
+    "views:filterPanel.reset",
+    "views:filterPanel.add",
+    "views:filterPanel.empty",
+    "views:filterPanel.fieldPlaceholder",
+    "views:filterPanel.operatorPlaceholder",
+    "views:filterPanel.remove",
+    "views:filterPanel.apply",
+    "views:filterPanel.unsupported",
+    "views:filterPanel.textPlaceholder",
+    "views:filterPanel.unsupportedNumber",
+    "views:filterPanel.numberMinPlaceholder",
+    "views:filterPanel.numberMaxPlaceholder",
+    "views:filterPanel.unsupportedDate",
+    "views:filterPanel.dateAbsolute",
+    "views:filterPanel.dateRelative",
+    "views:filterPanel.dateLast",
+    "views:filterPanel.dateNext",
+    "views:filterPanel.dateUnitDays",
+    "views:filterPanel.dateUnitWeeks",
+    "views:filterPanel.dateUnitMonths",
+    "views:filterPanel.unsupportedTag",
+    "views:filterPanel.noOptions",
+    "views:filterPanel.unsupportedBoolean",
+    "views:filterPanel.booleanTrue",
+    "views:filterPanel.booleanFalse",
+    "views:filterPanel.noAdditionalValue",
+    "views:grouping.title",
+    "views:grouping.clear",
+    "views:grouping.fieldPlaceholder",
+    "views:grouping.groupsTitle",
+    "views:grouping.expandGroup",
+    "views:grouping.collapseGroup",
+    "views:grouping.resetCollapsed",
+    "views:pagination.label",
+    "views:pagination.none",
+    "views:pagination.summary",
+    "views:pagination.currentCount",
+    "views:pagination.perPage",
+    "views:table.summary",
+    "kits:form.fixed.assetStatusTitle",
+    "kits:form.fixed.assetStatusMessage",
+    "kits:form.fixed.assetStatusUnknown",
+    "kits:form.fixed.scanAlreadyAdded",
+    "kits:form.fixed.scanSuccess",
+    "kits:form.fixed.scanNotFound",
+    "kits:form.fixed.heading",
+    "kits:form.fixed.assetStatusUnknownInline",
+    "kits:form.fixed.removeAssetAria",
+    "kits:form.fixed.nonAvailableWarningTitle",
+    "kits:form.fixed.nonAvailableWarningItem",
+    "kits:form.fixed.nonAvailableWarningFootnote",
+    "kits:form.fixed.selectPlaceholder",
+    "kits:form.fixed.scanPlaceholder",
+    "kits:form.actions.addAsset",
+    "kits:form.fixed.kitAssignmentHint",
+    "kits:form.fixed.assetStatusInline",
+    "kits:form.fixed.emptyState",
+    "kits:form.flexible.heading",
+    "kits:form.flexible.mode.assetType",
+    "kits:form.flexible.mode.parentAsset",
+    "kits:form.flexible.parentBadge",
+    "kits:form.flexible.assetTypeLabel",
+    "kits:form.flexible.quantityPlaceholder",
+    "kits:form.flexible.assetTypePlaceholder",
+    "kits:form.flexible.parentAssetPlaceholder",
+    "kits:form.flexible.nothingFound",
+    "kits:form.actions.addPool",
+    "kits:form.flexible.emptyState",
+    "kits:availability.available",
+    "kits:availability.unavailable",
+    "kits:detail.error",
+    "kits:detail.notFound",
+    "kits:detail.modal.bookTitle",
+    "kits:detail.tags.directBadge",
+    "kits:detail.tags.inheritedBadge",
+    "tags:notifications.tagsUpdatedTitle",
+    "tags:notifications.tagsUpdatedMessage",
+    "tags:notifications.updateErrorTitle",
+    "tags:notifications.updateErrorMessage",
+    "tags:notifications.tagsPropagatedTitle",
+    "tags:notifications.tagsPropagated",
+    "tags:subAssets",
+    "kits:detail.typeFixed",
+    "kits:detail.typeFlexible",
+    "kits:detail.completenessComplete",
+    "kits:detail.completenessIncomplete",
+    "kits:detail.actions.book",
+    "kits:detail.actions.edit",
+    "kits:detail.actions.disassemble",
+    "kits:detail.overviewTitle",
+    "kits:detail.locationLabel",
+    "kits:detail.locationUnset",
+    "kits:detail.tagsLabel",
+    "kits:detail.completenessLabel",
+    "kits:detail.inheritanceHeading",
+    "kits:detail.inheritanceEmpty",
+    "kits:detail.timestamps.assembled",
+    "kits:detail.timestamps.disassembled",
+    "tags:title",
+    "tags:selectTags",
+    "tags:searchOrCreateTag",
+    "tags:tagPropagation.note",
+    "tags:kit",
+    "kits:detail.boundAssetsHeading",
+    "kits:detail.boundAssets.columns.asset",
+    "kits:detail.boundAssets.columns.status",
+    "kits:detail.boundAssets.unknownStatus",
+    "kits:detail.subAssetsHeading",
+    "kits:detail.subAssets.empty",
+    "kits:detail.subAssets.columns.asset",
+    "kits:detail.subAssets.columns.status",
+    "kits:detail.subAssets.columns.location",
+    "kits:detail.subAssets.columns.tags",
+    "kits:detail.poolRequirementsHeading",
+    "kits:detail.poolRequirement",
+    "kits:detail.poolRequirementFilter",
+    "kits:form.fields.typeOptions.fixed",
+    "kits:form.fields.typeOptions.flexible",
+    "kits:form.inheritance.location",
+    "kits:form.inheritance.status",
+    "kits:form.inheritance.tags",
+    "kits:form.validation.nameRequired",
+    "kits:form.validation.typeRequired",
+    "kits:form.notifications.updateTitle",
+    "kits:form.notifications.updateMessage",
+    "kits:form.notifications.createTitle",
+    "kits:form.notifications.createMessage",
+    "kits:form.notifications.errorTitle",
+    "kits:form.fields.nameLabel",
+    "kits:form.fields.namePlaceholder",
+    "kits:form.fields.typeLabel",
+    "kits:form.fields.typeDescription.fixed",
+    "kits:form.fields.typeDescription.flexible",
+    "kits:form.fields.descriptionLabel",
+    "kits:form.fields.descriptionPlaceholder",
+    "kits:form.fields.locationLabel",
+    "kits:form.fields.locationPlaceholder",
+    "kits:form.fields.locationDescription",
+    "kits:form.fields.locationEmpty",
+    "kits:form.fields.statusLabel",
+    "kits:form.fields.statusPlaceholder",
+    "kits:form.inheritance.heading",
+    "kits:form.inheritance.description",
+    "kits:form.actions.cancel",
+    "kits:form.actions.update",
+    "kits:form.actions.create",
+    "undo:shortcuts.undoInFlight",
+    "undo:shortcuts.undoUnavailable",
+    "undo:shortcuts.undoSuccess",
+    "undo:shortcuts.genericError",
+    "undo:shortcuts.undoError",
+    "navigation:title",
+    "navigation:items.dashboard",
+    "navigation:items.categories",
+    "navigation:items.assets",
+    "navigation:items.assetModels",
+    "navigation:items.kits",
+    "navigation:items.bookings",
+    "navigation:items.stockTake",
+    "navigation:items.reports",
+    "navigation:items.maintenance",
+    "navigation:items.quickScan",
+    "navigation:quickScanDescription",
+    "navigation:items.settings",
+    "maintenance:states.completed",
+    "maintenance:fields.assets",
+    "maintenance:completed",
+    "maintenance:columns.assetNumber",
+    "maintenance:columns.assetName",
+    "maintenance:columns.scheduledDate",
+    "maintenance:columns.status",
+    "maintenance:columns.completedAt",
+    "common:columns.actions",
+    "maintenance:actions.markAsComplete",
+    "maintenance:noAssets",
+    "common:loading",
+    "maintenance:workOrders.noWorkOrdersForAsset",
+    "maintenance:fields.workOrderNumber",
+    "maintenance:fields.type",
+    "maintenance:fields.orderType",
+    "maintenance:fields.state",
+    "maintenance:fields.scheduledStart",
+    "maintenance:workOrders.overdue",
+    "maintenance:validation.companyNameRequired",
+    "maintenance:validation.companyNameMaxLength",
+    "maintenance:validation.contactPersonMaxLength",
+    "maintenance:validation.contactEmailInvalid",
+    "maintenance:validation.contactPhoneInvalid",
+    "maintenance:validation.addressRequired",
+    "maintenance:validation.slaRequired",
+    "maintenance:validation.slaMaxLength",
+    "maintenance:validation.hourlyRatePositive",
+    "maintenance:fields.companyName",
+    "maintenance:placeholders.companyName",
+    "maintenance:fields.contactPerson",
+    "maintenance:placeholders.contactPersonOptional",
+    "maintenance:fields.contactEmail",
+    "maintenance:placeholders.contactEmail",
+    "maintenance:fields.contactPhone",
+    "maintenance:placeholders.contactPhone",
+    "maintenance:fields.address",
+    "maintenance:placeholders.address",
+    "maintenance:fields.serviceLevelAgreement",
+    "maintenance:placeholders.serviceLevelAgreement",
+    "maintenance:descriptions.serviceLevelAgreement",
+    "maintenance:fields.hourlyRate",
+    "maintenance:placeholders.hourlyRate",
+    "maintenance:descriptions.hourlyRate",
+    "maintenance:fields.contractNotes",
+    "maintenance:placeholders.contractNotes",
+    "maintenance:descriptions.contractNotes",
+    "common:actions.save",
+    "common:actions.create",
+    "maintenance:completion.placeholders.selectAssetLabel",
+    "maintenance:completion.drawer.title",
+    "maintenance:completion.labels.asset",
+    "maintenance:completion.labels.occurredAt",
+    "maintenance:completion.placeholders.timestamp",
+    "maintenance:completion.labels.notes",
+    "maintenance:completion.labels.upload",
+    "maintenance:completion.placeholders.selectFiles",
+    "maintenance:completion.labels.soon",
+    "maintenance:completion.placeholders.uploadDescription",
+    "maintenance:completion.actions.saveOutcome",
+    "maintenance:completion.title",
+    "maintenance:completion.emptyMessage",
+    "maintenance:completion.description",
+    "maintenance:completion.columns.assetNumber",
+    "maintenance:completion.columns.assetName",
+    "maintenance:completion.columns.status",
+    "maintenance:completion.columns.completedBy",
+    "maintenance:completion.columns.timestamp",
+    "maintenance:completion.columns.notes",
+    "maintenance:completion.actions.logCompletion",
+    "maintenance:completion.actions.markPending",
+    "maintenance:completion.actions.skipAsset",
+    "maintenance:dashboardPage.loading",
+    "maintenance:dashboardPage.title",
+    "maintenance:dashboardPage.overdueTitle",
+    "maintenance:dashboardPage.assetLabel",
+    "maintenance:dashboardPage.upcomingTitle",
+    "maintenance:dashboardPage.overdue",
+    "maintenance:dashboardPage.upcoming",
+    "maintenance:dashboardPage.scheduled",
+    "maintenance:reminder.overdue",
+    "maintenance:reminder.overdueTooltip",
+    "maintenance:reminder.daysShort",
+    "maintenance:reminder.dueIn",
+    "maintenance:reminder.nextIn",
+    "maintenance:validation.ruleNameRequired",
+    "maintenance:validation.ruleNameMaxLength",
+    "maintenance:validation.workTypeRequired",
+    "maintenance:validation.serviceProviderRequired",
+    "maintenance:validation.customWorkTypeRequired",
+    "maintenance:validation.workTypeMaxLength",
+    "maintenance:validation.targetsRequired",
+    "maintenance:validation.intervalValuePositive",
+    "maintenance:validation.leadTimeDaysNonNegative",
+    "maintenance:validation.rescheduleModeRequired",
+    "maintenance:rules.testRuleFallbackName",
+    "maintenance:fields.ruleName",
+    "maintenance:placeholders.ruleName",
+    "maintenance:fields.workType",
+    "maintenance:placeholders.workType",
+    "maintenance:descriptions.workType",
+    "maintenance:fields.customWorkType",
+    "maintenance:placeholders.customWorkType",
+    "maintenance:fields.isInternal",
+    "maintenance:types.internal",
+    "maintenance:types.external",
+    "maintenance:descriptions.isInternal",
+    "maintenance:fields.serviceProvider",
+    "maintenance:placeholders.serviceProvider",
+    "maintenance:fields.appliesTo",
+    "maintenance:targetTypes.asset",
+    "maintenance:targetTypes.kit",
+    "maintenance:targetTypes.model",
+    "maintenance:targetTypes.tag",
+    "maintenance:placeholders.selectTargets",
+    "maintenance:targetPicker.noneAvailable",
+    "maintenance:targetPicker.noMatches",
+    "maintenance:targetPicker.help",
+    "maintenance:fields.intervalValue",
+    "maintenance:fields.intervalType",
+    "maintenance:intervalTypes.days",
+    "maintenance:intervalTypes.months",
+    "maintenance:intervalTypes.uses",
+    "maintenance:fields.startDate",
+    "maintenance:descriptions.startDate",
+    "maintenance:fields.leadTimeDays",
+    "maintenance:descriptions.leadTimeDays",
+    "maintenance:fields.rescheduleMode",
+    "maintenance:rescheduleModes.actualCompletion",
+    "maintenance:rescheduleModes.replanOnce",
+    "maintenance:descriptions.rescheduleMode",
+    "maintenance:rules.testRuleHelper",
+    "maintenance:rules.testRuleButton",
+    "maintenance:rules.testRuleModalTitle",
+    "maintenance:rules.testRuleDescription",
+    "maintenance:rules.previewOccurrencesLabel",
+    "maintenance:rules.previewAnchorLabel",
+    "maintenance:rules.previewStartOverrideLabel",
+    "maintenance:rules.previewStartOverrideHelp",
+    "maintenance:rules.previewEmptyState",
+    "maintenance:rules.previewLeadTimeLabel",
+    "maintenance:rules.previewPastBadge",
+    "maintenance:rules.previewUpcomingBadge",
+    "maintenance:team.noAssetsSelected",
+    "maintenance:team.lastUpdate",
+    "maintenance:team.unknownTechnician",
+    "maintenance:team.asset",
+    "maintenance:team.noTechnicians",
+    "maintenance:offers.title",
+    "maintenance:offers.requestMore",
+    "maintenance:offers.noOffersYet",
+    "maintenance:offers.columns.company",
+    "maintenance:offers.columns.amount",
+    "maintenance:offers.columns.receivedAt",
+    "maintenance:offers.columns.notes",
+    "maintenance:offers.columns.status",
+    "maintenance:offers.accepted",
+    "maintenance:offers.pending",
+    "maintenance:offers.acceptTooltip",
+    "maintenance:regenerateModal.title",
+    "maintenance:regenerateModal.message",
+    "maintenance:regenerateModal.warning",
+    "maintenance:regenerateModal.cancel",
+    "maintenance:regenerateModal.confirm",
+    "maintenance:unknown",
+    "maintenance:fields.approvalResponsible",
+    "maintenance:placeholders.approvalResponsible",
+    "maintenance:info.approvalWorkflowInfo",
+    "maintenance:warnings.notAllAssetsCompleted",
+    "maintenance:warnings.noApprovalResponsible",
+    "maintenance:actions.approve",
+    "maintenance:info.waitingForApproval",
+    "maintenance:workOrders.noScheduledWorkOrders",
+    "maintenance:fields.rule",
+    "maintenance:fields.assignedTo",
+    "maintenance:actions.viewDetails",
+    "maintenance:workOrders.completionStatus",
+    "maintenance:validation.orderTypeRequired",
+    "maintenance:validation.lineItemsRequired",
+    "maintenance:messages.assetAlreadySelected",
+    "maintenance:messages.assetAdded",
+    "maintenance:messages.assetNotFound",
+    "maintenance:fields.maintenanceRule",
+    "maintenance:placeholders.maintenanceRule",
+    "maintenance:descriptions.maintenanceRule",
+    "maintenance:orderTypes.planned",
+    "maintenance:orderTypes.unplanned",
+    "maintenance:orderTypes.follow-up",
+    "maintenance:descriptions.orderType",
+    "maintenance:placeholders.scheduledStart",
+    "maintenance:fields.scheduledEnd",
+    "maintenance:placeholders.scheduledEnd",
+    "maintenance:labels.selectAssets",
+    "maintenance:placeholders.targets",
+    "maintenance:descriptions.lineItems",
+    "maintenance:placeholders.scanBarcode",
+    "maintenance:tabs.schedule",
+    "maintenance:selected",
+    "maintenance:invoicing.title",
+    "maintenance:invoicing.comingSoon",
+    "maintenance:invoicing.futureFeatures",
+    "maintenance:invoicing.uploadInvoice",
+    "maintenance:invoicing.trackCosts",
+    "maintenance:invoicing.generateReports",
+    "maintenance:invoicing.exportData",
+    "maintenance:invoicing.plannedRelease",
+    "maintenance:duration.days",
+    "maintenance:duration.hours",
+    "maintenance:duration.lessThanHour",
+    "maintenance:noHistory",
+    "maintenance:current",
+    "maintenance:changedBy",
+    "maintenance:duration.label",
+    "maintenance:transitions.assign",
+    "maintenance:transitions.abort",
+    "maintenance:transitions.markObsolete",
+    "maintenance:transitions.plan",
+    "maintenance:transitions.start",
+    "maintenance:transitions.complete",
+    "maintenance:transitions.approve",
+    "maintenance:transitions.reopen",
+    "maintenance:transitions.requestOffer",
+    "maintenance:transitions.requestMoreOffers",
+    "maintenance:fields.currentState",
+    "maintenance:placeholders.assignedTo",
+    "maintenance:placeholders.companyId",
+    "maintenance:placeholders.actualEnd",
+    "maintenance:info.workOrderInTerminalState",
+    "models:validation.nameRequired",
+    "models:validation.nameMaxLength",
+    "models:validation.assetTypeRequired",
+    "tags:assets",
+    "models:form.name",
+    "models:form.namePlaceholder",
+    "models:form.assetType",
+    "models:form.assetTypePlaceholder",
+    "models:form.manufacturer",
+    "models:form.manufacturerPlaceholder",
+    "models:form.modelNumber",
+    "models:form.modelNumberPlaceholder",
+    "models:form.defaultPurchasePrice",
+    "models:form.defaultWarrantyMonths",
+    "models:form.defaultBookable",
+    "models:form.defaultBookableDescription",
+    "models:form.defaultLocation",
+    "models:form.defaultNotes",
+    "tags:model",
+    "common:cancel",
+    "models:selectModel",
+    "models:noModelSelected",
+    "models:useAsTemplate",
+    "views:form.nameRequired",
+    "views:form.nameTooLong",
+    "views:form.errorFallback",
+    "views:form.errorTitle",
+    "views:form.nameLabel",
+    "views:form.namePlaceholder",
+    "views:form.publicLabel",
+    "views:form.publicDescription",
+    "views:form.cancel",
+    "views:form.update",
+    "views:form.save",
+    "views:drawer.publicLabel",
+    "views:drawer.privateLabel",
+    "views:drawer.filtersCount",
+    "views:drawer.owner",
+    "views:drawer.deleteConfirm",
+    "views:notifications.deleteSuccessTitle",
+    "views:notifications.deleteSuccessMessage",
+    "views:notifications.deleteErrorTitle",
+    "views:notifications.deleteErrorMessage",
+    "views:drawer.loading",
+    "views:drawer.error",
+    "views:drawer.empty",
+    "settings:export.notifications.successTitle",
+    "settings:export.notifications.successMessage",
+    "settings:export.notifications.errorTitle",
+    "settings:versioning.notifications.genericError",
+    "settings:import.notifications.errorTitle",
+    "settings:import.validation.noFile",
+    "settings:import.notifications.successTitle",
+    "settings:import.notifications.successMessage",
+    "settings:export.title",
+    "settings:export.description",
+    "settings:import.title",
+    "settings:import.description",
+    "settings:import.fileLabel",
+    "settings:import.filePlaceholder",
+    "settings:import.button",
+    "tags:inheritedFrom",
+    "tags:clickToRemove",
+    "tags:directTags",
+    "tags:inheritedTags",
+    "tags:createTag",
+    "tags:notifications.created",
+    "tags:notifications.createError",
+    "tags:noTagsFound",
+    "tags:addTags",
+    "tags:tagPropagation.title",
+    "tags:tagPropagation.message",
+    "tags:tagPropagation.updatingAssets",
+    "tags:tagPropagation.skipUpdate",
+    "tags:tagPropagation.applyToAll",
+    "undo:emptyState.title",
+    "undo:readOnlyHint",
+    "undo:shortcuts.generic",
+    "undo:actionLabel",
+    "undo:labels.pending",
+    "undo:labels.undone",
+    "undo:labels.expired",
+    "undo:labels.available",
+    "assets:bulkActions.changeStatus",
+    "assets:bulkActions.changeLocation",
+    "assets:bulkActions.manageTags",
+    "assets:bulkActions.delete",
+    "views:notifications.createErrorTitle",
+    "views:notifications.createErrorMessage",
+    "views:notifications.updateSuccessTitle",
+    "views:notifications.updateSuccessMessage",
+    "views:notifications.updateErrorTitle",
+    "views:notifications.updateErrorMessage",
+    "models:notifications.created",
+    "models:notifications.createError",
+    "models:notifications.updated",
+    "models:notifications.updateError",
+    "models:notifications.deleted",
+    "models:notifications.deleteError",
+    "models:notifications.assetCreatedTitle",
+    "models:notifications.assetCreatedMessage",
+    "models:title",
+    "models:createModel",
+    "models:filters.searchLabel",
+    "models:filters.searchPlaceholder",
+    "models:filters.manufacturerLabel",
+    "models:filters.manufacturerPlaceholder",
+    "models:filters.assetTypeLabel",
+    "models:filters.assetTypePlaceholder",
+    "models:filters.noAssetTypes",
+    "models:filters.clear",
+    "models:emptyState.title",
+    "models:emptyState.description",
+    "models:emptyState.action",
+    "models:emptyState.filteredTitle",
+    "models:emptyState.filteredDescription",
+    "models:emptyState.filteredAction",
+    "models:editModel",
+    "models:modals.createAssetFromModel",
+    "models:confirmDelete.title",
+    "models:confirmDelete.message",
+    "models:confirmDelete.cancel",
+    "models:confirmDelete.confirm",
+    "models:card.manufacturerFallback",
+    "models:labels.unknownAssetType",
+    "models:card.assetTypeLabel",
+    "models:card.modelNumberLabel",
+    "models:card.quickCreateTooltip",
+    "models:card.quickCreate",
+    "common:edit",
+    "common:delete",
+    "dashboard:title",
+    "maintenance:companies.title",
+    "maintenance:companies.addNew",
+    "maintenance:companies.noCompanies",
+    "maintenance:fields.name",
+    "maintenance:companies.actionsColumn",
+    "maintenance:companies.unknownContact",
+    "maintenance:companies.noEmail",
+    "maintenance:companies.noPhone",
+    "maintenance:companies.editCompany",
+    "maintenance:companies.deleteCompany",
+    "maintenance:companies.deleteConfirm",
+    "maintenance:dashboardPage.description",
+    "maintenance:dashboardPage.openWorkspace",
+    "maintenance:page.links.dashboard",
+    "maintenance:page.sections.dashboard",
+    "maintenance:page.links.companies",
+    "maintenance:page.sections.companies",
+    "maintenance:page.links.rules",
+    "maintenance:page.sections.rules",
+    "maintenance:page.links.workOrders",
+    "maintenance:page.sections.workOrders",
+    "maintenance:page.title",
+    "maintenance:page.description",
+    "maintenance:page.overviewCard.title",
+    "maintenance:page.overviewCard.description",
+    "maintenance:page.quickLinks.title",
+    "maintenance:page.quickLinks.description",
+    "maintenance:page.quickLinks.openLabel",
+    "maintenance:rules.title",
+    "maintenance:rules.addNew",
+    "maintenance:rules.conflicts",
+    "maintenance:rules.conflictWarning",
+    "maintenance:rules.noRules",
+    "maintenance:fields.targets",
+    "maintenance:rules.editRule",
+    "maintenance:rules.deleteRule",
+    "maintenance:rules.deleteConfirm",
+    "maintenance:workOrders.title",
+    "maintenance:workOrders.addNew",
+    "maintenance:workOrders.viewMode.table",
+    "maintenance:workOrders.viewMode.kanban",
+    "maintenance:workOrders.viewMode.timeline",
+    "maintenance:workOrders.viewMode.calendar",
+    "maintenance:workOrders.filterByState",
+    "maintenance:workOrders.showAll",
+    "maintenance:states.scheduled",
+    "maintenance:states.backlog",
+    "maintenance:states.assigned",
+    "maintenance:states.planned",
+    "maintenance:states.in-progress",
+    "maintenance:states.done",
+    "maintenance:workOrders.filterByType",
+    "maintenance:workOrders.noWorkOrders",
+    "maintenance:workOrders.editWorkOrder"
+  ],
+  "dynamicKeys": [
+    {
+      "pattern": "t(`modes.${value}`",
+      "file": "src/components/dataView/DataViewHeader.tsx",
+      "line": 160
+    },
+    {
+      "pattern": "t(`form.inheritance.${property}`",
+      "file": "src/components/kits/KitDetailView.tsx",
+      "line": 263
+    },
+    {
+      "pattern": "t(`maintenance:types.${workOrder.type}`",
+      "file": "src/components/maintenance/AssetWorkOrdersList.tsx",
+      "line": 148
+    },
+    {
+      "pattern": "t(`maintenance:orderTypes.${workOrder.orderType ?? 'planned'}`",
+      "file": "src/components/maintenance/AssetWorkOrdersList.tsx",
+      "line": 157
+    },
+    {
+      "pattern": "t(`maintenance:states.${workOrder.state}`",
+      "file": "src/components/maintenance/AssetWorkOrdersList.tsx",
+      "line": 162
+    },
+    {
+      "pattern": "t(`maintenance:workTypes.${value}`",
+      "file": "src/components/maintenance/MaintenanceRuleForm.tsx",
+      "line": 70
+    },
+    {
+      "pattern": "t(`maintenance:targetTypes.${targetType}`",
+      "file": "src/components/maintenance/MaintenanceRuleForm.tsx",
+      "line": 313
+    },
+    {
+      "pattern": "t(`maintenance:targetTypes.${targetType}`",
+      "file": "src/components/maintenance/MaintenanceRuleForm.tsx",
+      "line": 320
+    },
+    {
+      "pattern": "t(`maintenance:states.${wo.state}`",
+      "file": "src/components/maintenance/WorkOrderCalendar.tsx",
+      "line": 280
+    },
+    {
+      "pattern": "t(`maintenance:states.${wo.state}`",
+      "file": "src/components/maintenance/WorkOrderCalendar.tsx",
+      "line": 300
+    },
+    {
+      "pattern": "t(`maintenance:states.${entry.state}`",
+      "file": "src/components/maintenance/WorkOrderStateHistory.tsx",
+      "line": 105
+    },
+    {
+      "pattern": "t(`modes.${view.viewMode}`",
+      "file": "src/components/reports/SavedViewsList.tsx",
+      "line": 36
+    },
+    {
+      "pattern": "t(`tags:sourceType.${inheritedFrom.sourceType}`",
+      "file": "src/components/tags/InheritedTagBadge.tsx",
+      "line": 37
+    },
+    {
+      "pattern": "t(`maintenance:workTypes.${workType}`",
+      "file": "src/pages/MaintenanceRules.tsx",
+      "line": 168
+    },
+    {
+      "pattern": "t(`maintenance:targetTypes.${targetType}`",
+      "file": "src/pages/MaintenanceRules.tsx",
+      "line": 174
+    },
+    {
+      "pattern": "t(`maintenance:intervalTypes.${type}`",
+      "file": "src/pages/MaintenanceRules.tsx",
+      "line": 180
+    },
+    {
+      "pattern": "t(`maintenance:types.${workOrder.type}`",
+      "file": "src/pages/WorkOrders.tsx",
+      "line": 213
+    },
+    {
+      "pattern": "t(`maintenance:orderTypes.${workOrder.orderType ?? 'planned'}`",
+      "file": "src/pages/WorkOrders.tsx",
+      "line": 221
+    },
+    {
+      "pattern": "t(`maintenance:states.${workOrder.state}`",
+      "file": "src/pages/WorkOrders.tsx",
+      "line": 226
+    }
+  ],
+  "stats": {
+    "totalExtracted": 706,
+    "totalValid": 680,
+    "totalMissing": 26,
+    "totalUnused": 453,
+    "totalDynamic": 19
+  }
+}

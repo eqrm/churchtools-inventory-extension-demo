@@ -4,8 +4,6 @@
     "filters": {
       "searchLabel": "Search",
       "searchPlaceholder": "Search kits by name or description",
-      "typeLabel": "Kit type",
-      "typePlaceholder": "All types",
       "clear": "Clear filters"
     },
     "table": {
@@ -14,7 +12,6 @@
       "status": "Status",
       "completeness": "Completeness",
       "typeFixed": "Fixed",
-      "typeFlexible": "Flexible",
       "pagination": "Showing {{from}} to {{to}} of {{total}} kits",
       "empty": "No kits found",
       "emptyFiltered": "No kits match your filters"
@@ -34,7 +31,6 @@
     "notFound": "Kit not found.",
     "overviewTitle": "Kit overview",
     "typeFixed": "Fixed kit",
-    "typeFlexible": "Flexible kit",
     "statusLabel": "Status",
     "locationLabel": "Location",
     "locationUnset": "Not set",
@@ -96,12 +92,7 @@
       "namePlaceholder": "e.g. Sunday service audio",
       "typeLabel": "Kit type",
       "typeDescription": {
-        "fixed": "Bind specific assets that always travel together.",
-        "flexible": "Reserve assets from a pool when the kit is booked."
-      },
-      "typeOptions": {
-        "fixed": "Fixed (specific assets)",
-        "flexible": "Flexible (pool-based)"
+        "fixed": "Bind specific assets that always travel together."
       },
       "descriptionLabel": "Description",
       "descriptionPlaceholder": "Describe when or where this kit is used...",
@@ -118,20 +109,6 @@
       "location": "Location",
       "status": "Status",
       "tags": "Tags"
-    },
-    "flexible": {
-      "heading": "Pool Requirements",
-      "mode": {
-        "assetType": "By asset type",
-        "parentAsset": "By parent asset"
-      },
-      "parentBadge": "Parent asset",
-      "assetTypeLabel": "Asset type: {{name}}",
-      "quantityPlaceholder": "Quantity",
-      "assetTypePlaceholder": "Select asset type",
-      "parentAssetPlaceholder": "Select parent asset",
-      "nothingFound": "No matching assets",
-      "emptyState": "No pool requirements defined yet"
     },
     "fixed": {
       "heading": "Bound assets",

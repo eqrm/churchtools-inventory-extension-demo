@@ -1,13 +1,12 @@
 /**
  * Maintenance Companies Page (T151)
  * 
- * Table view with CRUD operations for maintenance service provider companies.
+ * Compact, tablet-friendly companies management.
  */
 
 import { useState } from 'react';
 import {
   Container,
-  Title,
   Button,
   Table,
   Group,
@@ -15,11 +14,11 @@ import {
   Modal,
   Text,
   Stack,
-  Paper,
   Badge,
-  Anchor,
+  Box,
+  ScrollArea,
 } from '@mantine/core';
-import { IconPlus, IconEdit, IconTrash } from '@tabler/icons-react';
+import { IconPlus, IconEdit, IconTrash, IconPhone, IconMail } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import {
   useMaintenanceCompanies,
@@ -58,7 +57,8 @@ export function MaintenanceCompanies() {
     setIsFormOpen(true);
   };
 
-  const handleDeleteClick = (company: MaintenanceCompany) => {
+  const handleDeleteClick = (company: MaintenanceCompany, e: React.MouseEvent) => {
+    e.stopPropagation();
     setSelectedCompany(company);
     setIsDeleteOpen(true);
   };
@@ -78,10 +78,11 @@ export function MaintenanceCompanies() {
 
   const handleFormSubmit = async (values: MaintenanceCompanyFormValues) => {
     try {
+      const companyData = values as Omit<MaintenanceCompany, 'id' | 'createdAt' | 'updatedAt'>;
       if (selectedCompany) {
-        await updateCompany.mutateAsync({ id: selectedCompany.id, data: values });
+        await updateCompany.mutateAsync({ id: selectedCompany.id, data: companyData });
       } else {
-        await createCompany.mutateAsync(values);
+        await createCompany.mutateAsync(companyData);
       }
     } finally {
       handleFormClose();
@@ -97,92 +98,85 @@ export function MaintenanceCompanies() {
   };
 
   return (
-    <Container size="xl" py="xl">
-      <Stack gap="lg">
-        <Group justify="space-between">
-          <Title order={1}>{t('maintenance:companies.title')}</Title>
-          <Button leftSection={<IconPlus size={16} />} onClick={handleCreate}>
+    <Container size="xl" py="md">
+      <Stack gap="sm">
+        {/* Header */}
+        <Group justify="flex-end">
+          <Button size="sm" leftSection={<IconPlus size={16} />} onClick={handleCreate}>
             {t('maintenance:companies.addNew')}
           </Button>
         </Group>
 
+        {/* Content */}
         {isLoading ? (
-          <Text c="dimmed">{t('common:loading')}</Text>
+          <Text c="dimmed" size="sm">{t('common:loading')}</Text>
         ) : companyList.length === 0 ? (
-          <Paper p="xl" withBorder>
-            <Text c="dimmed" ta="center">
-              {t('maintenance:companies.noCompanies')}
-            </Text>
-          </Paper>
+          <Box py="xl" ta="center">
+            <Text c="dimmed">{t('maintenance:companies.noCompanies')}</Text>
+          </Box>
         ) : (
-          <Paper withBorder>
-            <Table striped highlightOnHover>
+          <ScrollArea>
+            <Table highlightOnHover verticalSpacing="sm" style={{ minWidth: 500 }}>
               <Table.Thead>
                 <Table.Tr>
                   <Table.Th>{t('maintenance:fields.name')}</Table.Th>
-                  <Table.Th>{t('maintenance:fields.contactPerson')}</Table.Th>
-                  <Table.Th>{t('maintenance:fields.address')}</Table.Th>
-                  <Table.Th>{t('maintenance:fields.contactEmail')}</Table.Th>
-                  <Table.Th>{t('maintenance:fields.contactPhone')}</Table.Th>
-                  <Table.Th>{t('maintenance:fields.hourlyRate')}</Table.Th>
-                  <Table.Th>{t('maintenance:companies.actionsColumn')}</Table.Th>
+                  <Table.Th style={{ width: 150 }}>{t('maintenance:fields.contactPerson')}</Table.Th>
+                  <Table.Th style={{ width: 120 }}>{t('maintenance:fields.contact')}</Table.Th>
+                  <Table.Th style={{ width: 100 }}>{t('maintenance:fields.hourlyRate')}</Table.Th>
+                  <Table.Th style={{ width: 80 }}></Table.Th>
                 </Table.Tr>
               </Table.Thead>
               <Table.Tbody>
                 {companyList.map((company) => (
-                  <Table.Tr key={company.id}>
+                  <Table.Tr key={company.id} onClick={() => handleEdit(company)} style={{ cursor: 'pointer' }}>
                     <Table.Td>
-                      <Text fw={500}>{company.name}</Text>
-                    </Table.Td>
-                    <Table.Td>
-                      <Text size="sm">
-                        {company.contactPerson || t('maintenance:companies.unknownContact')}
-                      </Text>
-                    </Table.Td>
-                    <Table.Td>
-                      <Text size="sm" lineClamp={1} maw={300}>
-                        {company.address}
-                      </Text>
-                    </Table.Td>
-                    <Table.Td>
-                      {company.contactEmail ? (
-                        <Anchor size="sm" href={`mailto:${company.contactEmail}`}>
-                          {company.contactEmail}
-                        </Anchor>
-                      ) : (
-                        <Text size="sm" c="dimmed">
-                          {t('maintenance:companies.noEmail')}
-                        </Text>
+                      <Text size="sm" fw={500} lineClamp={1}>{company.name}</Text>
+                      {company.address && (
+                        <Text size="xs" c="dimmed" lineClamp={1}>{company.address}</Text>
                       )}
                     </Table.Td>
                     <Table.Td>
-                      {company.contactPhone ? (
-                        <Anchor size="sm" href={`tel:${company.contactPhone.replace(/\s+/g, '')}`}>
-                          {company.contactPhone}
-                        </Anchor>
-                      ) : (
-                        <Text size="sm" c="dimmed">
-                          {t('maintenance:companies.noPhone')}
-                        </Text>
-                      )}
+                      <Text size="sm" c="dimmed" lineClamp={1}>
+                        {company.contactPerson || '-'}
+                      </Text>
                     </Table.Td>
                     <Table.Td>
-                      <Text size="sm">{formatCurrency(company.hourlyRate)}</Text>
+                      <Group gap={4} wrap="nowrap">
+                        {company.contactEmail && (
+                          <ActionIcon 
+                            variant="subtle" 
+                            color="gray" 
+                            size="sm"
+                            component="a"
+                            href={`mailto:${company.contactEmail}`}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <IconMail size={14} />
+                          </ActionIcon>
+                        )}
+                        {company.contactPhone && (
+                          <ActionIcon 
+                            variant="subtle" 
+                            color="gray" 
+                            size="sm"
+                            component="a"
+                            href={`tel:${company.contactPhone.replace(/\s+/g, '')}`}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <IconPhone size={14} />
+                          </ActionIcon>
+                        )}
+                      </Group>
                     </Table.Td>
                     <Table.Td>
-                      <Group gap="xs">
-                        <ActionIcon
-                          variant="light"
-                          color="blue"
-                          onClick={() => handleEdit(company)}
-                        >
+                      <Text size="sm" c="dimmed">{formatCurrency(company.hourlyRate)}</Text>
+                    </Table.Td>
+                    <Table.Td>
+                      <Group gap={4} wrap="nowrap">
+                        <ActionIcon variant="subtle" color="gray" onClick={(e) => { e.stopPropagation(); handleEdit(company); }}>
                           <IconEdit size={16} />
                         </ActionIcon>
-                        <ActionIcon
-                          variant="light"
-                          color="red"
-                          onClick={() => handleDeleteClick(company)}
-                        >
+                        <ActionIcon variant="subtle" color="red" onClick={(e) => handleDeleteClick(company, e)}>
                           <IconTrash size={16} />
                         </ActionIcon>
                       </Group>
@@ -191,7 +185,7 @@ export function MaintenanceCompanies() {
                 ))}
               </Table.Tbody>
             </Table>
-          </Paper>
+          </ScrollArea>
         )}
       </Stack>
 
@@ -199,11 +193,7 @@ export function MaintenanceCompanies() {
       <Modal
         opened={isFormOpen}
         onClose={handleFormClose}
-        title={
-          selectedCompany
-            ? t('maintenance:companies.editCompany')
-            : t('maintenance:companies.addNew')
-        }
+        title={selectedCompany ? t('maintenance:companies.editCompany') : t('maintenance:companies.addNew')}
         size="lg"
       >
         <MaintenanceCompanyForm
@@ -215,29 +205,13 @@ export function MaintenanceCompanies() {
       </Modal>
 
       {/* Delete Confirmation Modal */}
-      <Modal
-        opened={isDeleteOpen}
-        onClose={() => setIsDeleteOpen(false)}
-        title={t('maintenance:companies.deleteCompany')}
-      >
+      <Modal opened={isDeleteOpen} onClose={() => setIsDeleteOpen(false)} title={t('maintenance:companies.deleteCompany')} size="sm">
         <Stack gap="md">
-          <Text>{t('maintenance:companies.deleteConfirm')}</Text>
-          {selectedCompany && (
-            <Badge size="lg" variant="light">
-              {selectedCompany.name}
-            </Badge>
-          )}
-          <Group justify="flex-end">
-            <Button variant="default" onClick={() => setIsDeleteOpen(false)}>
-              {t('common:cancel')}
-            </Button>
-            <Button
-              color="red"
-              onClick={handleDeleteConfirm}
-              loading={deleteCompany.isPending}
-            >
-              {t('common:delete')}
-            </Button>
+          <Text size="sm">{t('maintenance:companies.deleteConfirm')}</Text>
+          {selectedCompany && <Badge size="lg" variant="light">{selectedCompany.name}</Badge>}
+          <Group justify="flex-end" gap="xs">
+            <Button variant="default" size="sm" onClick={() => setIsDeleteOpen(false)}>{t('common:cancel')}</Button>
+            <Button color="red" size="sm" onClick={handleDeleteConfirm} loading={deleteCompany.isPending}>{t('common:delete')}</Button>
           </Group>
         </Stack>
       </Modal>

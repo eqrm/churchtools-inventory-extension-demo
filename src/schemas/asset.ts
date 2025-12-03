@@ -75,7 +75,8 @@ export const assetSchema = z
         bookable: z.boolean().default(true),
         // Kit integration fields
         isKit: z.boolean().optional(),
-        kitType: z.enum(['fixed', 'flexible']).optional(),
+        // T2.1.3: Removed 'flexible' - only fixed kits are supported
+        kitType: z.enum(['fixed']).optional(),
         kitInheritedProperties: z.array(z.enum(['location', 'status', 'tags'])).optional(),
         kitCompletenessStatus: z.enum(['complete', 'incomplete']).optional(),
         kitAssemblyDate: isoTimestampSchema.optional(),

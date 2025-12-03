@@ -21,7 +21,8 @@ export function KitSummaryPanel({ asset, directTags, inheritedTags }: KitSummary
   const memberPreview = kitMembers.slice(0, 4);
   const remainingCount = Math.max(0, kitMembers.length - memberPreview.length);
   const completenessColor = asset.kitCompletenessStatus === 'complete' ? 'green' : 'orange';
-  const kitTypeLabel = asset.kitType === 'fixed' ? 'Fixed Kit' : 'Flexible Kit';
+  // T2.1.3: Only fixed kits supported, no need for type label distinction
+  const kitTypeLabel = 'Fixed Kit';
 
   return (
     <Card withBorder p="md" data-testid="kit-summary-panel">

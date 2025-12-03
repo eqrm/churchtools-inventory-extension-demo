@@ -86,13 +86,24 @@ export function evaluateCondition(
     }
     
     case 'in': {
-      // Expect filterValue to be comma-separated list
-      const list = String(filterValue).split(',').map(v => v.trim().toLowerCase());
+      // Handle both comma-separated string and array formats
+      let list: string[];
+      if (Array.isArray(filterValue)) {
+        list = filterValue.map(v => String(v).toLowerCase());
+      } else {
+        list = String(filterValue).split(',').map(v => v.trim().toLowerCase());
+      }
       return list.includes(strValue);
     }
     
     case 'not-in': {
-      const list = String(filterValue).split(',').map(v => v.trim().toLowerCase());
+      // Handle both comma-separated string and array formats
+      let list: string[];
+      if (Array.isArray(filterValue)) {
+        list = filterValue.map(v => String(v).toLowerCase());
+      } else {
+        list = String(filterValue).split(',').map(v => v.trim().toLowerCase());
+      }
       return !list.includes(strValue);
     }
 

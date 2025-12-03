@@ -13,7 +13,6 @@ const AssetsPage = lazy(() => import('../pages/AssetsPage').then((module) => ({ 
 const AssetDetailPage = lazy(() => import('../pages/AssetDetailPage').then((module) => ({ default: module.AssetDetailPage })));
 const AssetGroupsPage = lazy(() => import('../pages/AssetGroupsPage').then((module) => ({ default: module.AssetGroupsPage })));
 const AssetGroupDetailPage = lazy(() => import('../pages/AssetGroupDetailPage').then((module) => ({ default: module.AssetGroupDetailPage })));
-const AssetModelsPage = lazy(() => import('../pages/AssetModelList').then((module) => ({ default: module.AssetModelList })));
 const BookingsPage = lazy(() => import('../pages/BookingsPage').then((module) => ({ default: module.BookingsPage })));
 const BookingDetailPage = lazy(() => import('../pages/BookingDetailPage').then((module) => ({ default: module.BookingDetailPage })));
 const BookingCalendarPage = lazy(() => import('../pages/BookingCalendarPage').then((module) => ({ default: module.BookingCalendarPage })));
@@ -185,8 +184,9 @@ function buildRouter() {
                         ],
                     },
                     {
+                        // Redirect old /models route to /asset-groups (Issue 1: unified AssetModel)
                         path: 'models',
-                        element: withSuspense(<AssetModelsPage />),
+                        element: <Navigate to="/asset-groups" replace />,
                     },
                     {
                         path: 'bookings',
@@ -361,12 +361,6 @@ function buildRouter() {
                         path: 'settings/recently-deleted',
                         element: withSuspense(
                             <PlaceholderPage title="Recently deleted" description="Implementation pending." />,
-                        ),
-                    },
-                    {
-                        path: 'undo-history',
-                        element: withSuspense(
-                            <PlaceholderPage title="Undo history" description="Implementation pending." />,
                         ),
                     },
                     { path: '*', element: <Navigate to={routes.dashboard()} replace /> },

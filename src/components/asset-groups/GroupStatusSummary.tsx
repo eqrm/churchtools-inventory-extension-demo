@@ -1,5 +1,5 @@
-import { Card, Group, Progress, Stack, Text, Title } from '@mantine/core';
-import { IconAlertCircle, IconCheck, IconClock } from '@tabler/icons-react';
+import { Card, Group, Progress, Stack, Text, Tooltip } from '@mantine/core';
+import { IconAlertCircle, IconCheck, IconClock, IconMapPin } from '@tabler/icons-react';
 import type { Asset } from '../../types/entities';
 
 interface GroupStatusSummaryProps {
@@ -51,57 +51,58 @@ export function GroupStatusSummary({ members }: GroupStatusSummaryProps) {
   const issuePercent = stats.total === 0 ? 0 : (stats.issue / stats.total) * 100;
 
   return (
-    <Card withBorder>
-      <Stack gap="md">
-        <Title order={5}>Group Status</Title>
-        <Stack gap="xs">
-          <Group justify="space-between">
-            <Text size="sm" fw={500}>Availability</Text>
-            <Text size="sm" c="dimmed">{stats.available} of {stats.total} available</Text>
-          </Group>
-          <Progress.Root size="xl">
-            <Progress.Section value={availablePercent} color="green">
-              <Progress.Label>{stats.available}</Progress.Label>
-            </Progress.Section>
-            <Progress.Section value={inUsePercent} color="blue">
-              <Progress.Label>{stats.inUse}</Progress.Label>
-            </Progress.Section>
-            <Progress.Section value={issuePercent} color="red">
-              <Progress.Label>{stats.issue}</Progress.Label>
-            </Progress.Section>
-          </Progress.Root>
-        </Stack>
+    <Card withBorder p="sm">
+      <Stack gap="xs">
+        {/* Progress Bar */}
+        <Group justify="space-between" gap="xs">
+          <Text size="xs" fw={500}>Status</Text>
+          <Text size="xs" c="dimmed">{stats.available}/{stats.total} available</Text>
+        </Group>
+        <Progress.Root size="lg">
+          <Tooltip label={`${stats.available} Available`}>
+            <Progress.Section value={availablePercent} color="green" />
+          </Tooltip>
+          <Tooltip label={`${stats.inUse} In Use`}>
+            <Progress.Section value={inUsePercent} color="blue" />
+          </Tooltip>
+          {stats.issue > 0 && (
+            <Tooltip label={`${stats.issue} Needs Attention`}>
+              <Progress.Section value={issuePercent} color="red" />
+            </Tooltip>
+          )}
+        </Progress.Root>
 
-        <Group gap="xl">
-          <Group gap="xs">
-            <IconCheck size={16} color="var(--mantine-color-green-6)" />
-            <Text size="sm">{stats.available} Available</Text>
+        {/* Legend - Compact */}
+        <Group gap="md">
+          <Group gap={4}>
+            <IconCheck size={12} color="var(--mantine-color-green-6)" />
+            <Text size="xs">{stats.available} Available</Text>
           </Group>
-          <Group gap="xs">
-            <IconClock size={16} color="var(--mantine-color-blue-6)" />
-            <Text size="sm">{stats.inUse} In Use</Text>
+          <Group gap={4}>
+            <IconClock size={12} color="var(--mantine-color-blue-6)" />
+            <Text size="xs">{stats.inUse} In Use</Text>
           </Group>
           {stats.issue > 0 && (
-            <Group gap="xs">
-              <IconAlertCircle size={16} color="var(--mantine-color-red-6)" />
-              <Text size="sm">{stats.issue} Needs Attention</Text>
+            <Group gap={4}>
+              <IconAlertCircle size={12} color="var(--mantine-color-red-6)" />
+              <Text size="xs">{stats.issue} Issue</Text>
             </Group>
           )}
           {stats.installed > 0 && (
-            <Text size="sm" c="dimmed">{stats.installed} Installed</Text>
+            <Text size="xs" c="dimmed">{stats.installed} Installed</Text>
           )}
         </Group>
 
+        {/* Top Locations - Inline */}
         {stats.topLocations.length > 0 && (
-          <Stack gap="xs">
-            <Text size="sm" fw={500}>Top Locations</Text>
-            {stats.topLocations.map(([location, count]) => (
-              <Group key={location} justify="space-between">
-                <Text size="sm">{location}</Text>
-                <Text size="sm" c="dimmed">{count} units</Text>
-              </Group>
+          <Group gap="xs">
+            <IconMapPin size={12} style={{ color: 'var(--mantine-color-dimmed)' }} />
+            {stats.topLocations.map(([location, count], index) => (
+              <Text key={location} size="xs" c="dimmed">
+                {location} ({count}){index < stats.topLocations.length - 1 ? ',' : ''}
+              </Text>
             ))}
-          </Stack>
+          </Group>
         )}
       </Stack>
     </Card>

@@ -1,4 +1,4 @@
-import { AppShell, Burger, Group, NavLink, Title, ActionIcon, Tooltip, Modal, Text } from '@mantine/core';
+import { AppShell, Burger, Group, NavLink, Title } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import {
   IconBox,
@@ -12,12 +12,10 @@ import {
   IconChartBar,
   IconTool,
   IconUsersGroup,
-  IconHistory,
 } from '@tabler/icons-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useCallback, useEffect, useMemo, type ReactNode, type MouseEvent as ReactMouseEvent } from 'react';
 import { useFeatureSettingsStore } from '../../stores';
-import { UndoHistory } from '../undo/UndoHistory';
 import { useUndoHistory } from '../../hooks/useUndo';
 import { useTranslation } from 'react-i18next';
 import { notifications } from '@mantine/notifications';
@@ -31,7 +29,6 @@ export function Navigation({ children, onScanClick }: NavigationProps) {
   const { t: tNav } = useTranslation('navigation');
   const { t: tUndo } = useTranslation('undo');
   const [opened, { toggle, close }] = useDisclosure();
-  const [undoHistoryOpened, { open: openUndoHistory, close: closeUndoHistory }] = useDisclosure(false);
   const location = useLocation();
   const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad|iPod/.test(navigator.userAgent);
   const { bookingsEnabled, maintenanceEnabled, kitsEnabled } = useFeatureSettingsStore((state) => ({
@@ -43,8 +40,6 @@ export function Navigation({ children, onScanClick }: NavigationProps) {
     history: undoHistory,
     undoAction,
     isMutating: isUndoMutating,
-    error: undoError,
-    refetch: refetchUndoHistory,
   } = useUndoHistory();
 
   const routeIsActive = (path: string | undefined) => {
@@ -55,7 +50,7 @@ export function Navigation({ children, onScanClick }: NavigationProps) {
     // Exact match for list pages (e.g., /assets, /kits, /bookings)
     // These should only be active when on the exact path, not on detail pages
     if (path === '/assets' || path === '/kits' || path === '/bookings' || 
-        path === '/categories' || path === '/asset-groups' || path === '/models' || path === '/reports' || 
+        path === '/categories' || path === '/asset-groups' || path === '/reports' || 
         path === '/damage-reports') {
       return location.pathname === path;
     }
@@ -77,7 +72,6 @@ export function Navigation({ children, onScanClick }: NavigationProps) {
     close();
   };
   const scanShortcut = isMac ? '⌘S' : 'Alt+S';
-  const undoShortcut = isMac ? '⌘Z' : 'Ctrl+Z';
 
   const latestUndoableAction = useMemo(() => {
     const now = Date.now();
@@ -123,12 +117,6 @@ export function Navigation({ children, onScanClick }: NavigationProps) {
   }, [isUndoMutating, latestUndoableAction, tUndo, undoAction]);
 
   useEffect(() => {
-    if (undoHistoryOpened) {
-      void refetchUndoHistory();
-    }
-  }, [undoHistoryOpened, refetchUndoHistory]);
-
-  useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       const modifierPressed = isMac ? event.metaKey : event.ctrlKey;
       if (!modifierPressed || event.key.toLowerCase() !== 'z' || event.shiftKey) {
@@ -164,26 +152,14 @@ export function Navigation({ children, onScanClick }: NavigationProps) {
       padding="md"
     >
       <AppShell.Header>
-        <Group h="100%" px="md" justify="space-between">
-          <Group>
-            <Burger
-              opened={opened}
-              onClick={toggle}
-              hiddenFrom="sm"
-              size="sm"
-            />
-            <Title order={3}>{tNav('title')}</Title>
-          </Group>
-          <Tooltip label={tUndo('openHistoryTooltip', { shortcut: undoShortcut })}>
-            <ActionIcon
-              variant="subtle"
-              size="lg"
-              onClick={openUndoHistory}
-              aria-label={tUndo('openHistoryAria')}
-            >
-              <IconHistory size={20} />
-            </ActionIcon>
-          </Tooltip>
+        <Group h="100%" px="md">
+          <Burger
+            opened={opened}
+            onClick={toggle}
+            hiddenFrom="sm"
+            size="sm"
+          />
+          <Title order={3}>{tNav('title')}</Title>
         </Group>
       </AppShell.Header>
 
@@ -221,11 +197,11 @@ export function Navigation({ children, onScanClick }: NavigationProps) {
         <NavLink
           data-nav-label={tNav('items.assetModels')}
           component={Link}
-          to="/models"
+          to="/asset-groups"
           label={tNav('items.assetModels')}
           leftSection={<IconUsersGroup size={20} />}
-          active={routeIsActive('/models')}
-          onClick={(event) => handleNavClick(event, { label: 'Asset Models', route: '/models' })}
+          active={routeIsActive('/asset-groups')}
+          onClick={(event) => handleNavClick(event, { label: 'Asset Models', route: '/asset-groups' })}
         />
 
         {kitsEnabled && (
@@ -310,23 +286,6 @@ export function Navigation({ children, onScanClick }: NavigationProps) {
       <AppShell.Main data-view-key={location.pathname}>
         {children}
       </AppShell.Main>
-
-      <Modal
-        opened={undoHistoryOpened}
-        onClose={closeUndoHistory}
-        title={tUndo('modalTitle')}
-        size="lg"
-      >
-        {undoError && (
-          <Text c="red" size="sm" mb="sm">
-            {undoError}
-          </Text>
-        )}
-        <Text size="sm" c="dimmed" mb="sm">
-          {tUndo('shortcuts.hint', { shortcut: undoShortcut })}
-        </Text>
-        <UndoHistory actions={undoHistory} shortcutHint={undoShortcut} />
-      </Modal>
     </AppShell>
   );
 }

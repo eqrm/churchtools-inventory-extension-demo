@@ -193,9 +193,10 @@ export class KitService {
     return kit;
   }
 
+  // T2.1.4: Simplified - only fixed kits are supported, always require bound assets
   private assertFixedKitDefinition(data: KitCreate): void {
-    if (data.type === 'fixed' && (!data.boundAssets || data.boundAssets.length === 0)) {
-      throw new Error('Fixed kits require at least one bound asset.');
+    if (!data.boundAssets || data.boundAssets.length === 0) {
+      throw new Error('Kits require at least one bound asset.');
     }
   }
 
@@ -203,11 +204,8 @@ export class KitService {
     return (kit.boundAssets ?? []).map((asset) => asset.assetId);
   }
 
+  // T2.1.4: Simplified - only fixed kits are supported
   private async syncCompletenessStatus(kit: Kit): Promise<Kit> {
-    if (kit.type !== 'fixed') {
-      return kit;
-    }
-
     const assets = await this.loadAssetsByIds(this.getBoundAssetIds(kit));
     const hasBrokenAsset = assets.some((asset) => asset.status === 'broken');
     const completeness = hasBrokenAsset ? 'incomplete' : 'complete';
@@ -219,14 +217,8 @@ export class KitService {
     return await this.storageProvider.updateKit(kit.id, { completenessStatus: completeness });
   }
 
+  // T2.1.4: Simplified - only fixed kits are supported
   private async syncAssetBindings(next: Kit, previous?: Kit): Promise<void> {
-    if (next.type !== 'fixed') {
-      if (previous?.type === 'fixed' && previous.boundAssets?.length) {
-        await this.detachAssets(previous, this.getBoundAssetIds(previous));
-      }
-      return;
-    }
-
     const nextIds = new Set(this.getBoundAssetIds(next));
     const previousIds = new Set(this.getBoundAssetIds(previous ?? { boundAssets: [] }));
 
@@ -297,11 +289,8 @@ export class KitService {
     return prevSignature !== nextSignature;
   }
 
+  // T2.1.4: Simplified - only fixed kits are supported
   private async propagateInheritedProperties(next: Kit, previous?: Kit): Promise<void> {
-    if (next.type !== 'fixed') {
-      return;
-    }
-
     if (!next.inheritedProperties || next.inheritedProperties.length === 0) {
       return;
     }

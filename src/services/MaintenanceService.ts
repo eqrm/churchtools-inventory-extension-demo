@@ -625,6 +625,35 @@ export class MaintenanceService {
     return saved;
   }
 
+  /**
+   * Update work order with partial data
+   */
+  async updateWorkOrder(
+    id: UUID,
+    data: Partial<Omit<WorkOrder, 'id' | 'createdAt' | 'createdBy'>>
+  ): Promise<WorkOrder> {
+    const existing = await this.requireWorkOrder(id);
+
+    const updated: WorkOrder = {
+      ...existing,
+      ...data,
+      updatedAt: this.timestamp(),
+    };
+
+    const saved = await this.storageProvider.updateWorkOrder(id, updated);
+
+    await recordUndoAction({
+      entityType: 'workOrder',
+      entityId: id,
+      actionType: 'update',
+      beforeState: { workOrder: existing } satisfies WorkOrderUndoState,
+      afterState: { workOrder: saved } satisfies WorkOrderUndoState,
+      metadata: { workOrderNumber: saved.workOrderNumber },
+    });
+
+    return saved;
+  }
+
   async deleteWorkOrder(id: UUID): Promise<void> {
     const existing = await this.requireWorkOrder(id);
 
