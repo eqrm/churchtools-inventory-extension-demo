@@ -118,12 +118,15 @@ function CompletionStats({ data }: { data: CompletedWorkOrderRow[] }) {
  * WorkOrderCompletionReport Component
  */
 export function WorkOrderCompletionReport() {
-  const { data: workOrders, isLoading: workOrdersLoading, error: workOrdersError } = useWorkOrders();
-  const { data: rules, isLoading: rulesLoading } = useMaintenanceRules();
+  const { data: workOrdersData, isLoading: workOrdersLoading, error: workOrdersError } = useWorkOrders();
+  const { data: rulesData, isLoading: rulesLoading } = useMaintenanceRules();
   const { data: assets, isLoading: assetsLoading } = useAssets();
 
   const completedWorkOrders = useMemo<CompletedWorkOrderRow[]>(() => {
-    if (!workOrders) return [];
+    const workOrders = workOrdersData ?? [];
+    const rules = rulesData ?? [];
+    
+    if (workOrders.length === 0) return [];
     
     // Filter to only completed work orders (done state)
     const completed = workOrders.filter(wo => wo.state === 'done');
@@ -131,10 +134,10 @@ export function WorkOrderCompletionReport() {
     return completed.map(wo => {
       // Get asset name from rule if available
       let assetName = 'Unknown';
-      if (wo.ruleId && rules && assets) {
+      if (wo.ruleId && rules.length > 0 && assets) {
         const rule = rules.find(r => r.id === wo.ruleId);
         if (rule) {
-          const asset = assets.find(a => a.id === rule.assetId);
+          const asset = assets.find(a => a.id === (rule as { assetId?: string }).assetId);
           if (asset) {
             assetName = asset.name;
           }
@@ -152,7 +155,7 @@ export function WorkOrderCompletionReport() {
         daysEarlyLate: calculateDaysEarlyLate(wo.scheduledEnd, wo.actualEnd),
       };
     });
-  }, [workOrders, rules, assets]);
+  }, [workOrdersData, rulesData, assets]);
 
   if (workOrdersLoading || rulesLoading || assetsLoading) return <Loader />;
   if (workOrdersError) return <Text c="red">Failed to load work orders</Text>;

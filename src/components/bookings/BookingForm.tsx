@@ -41,7 +41,8 @@ const conflictService = new BookingConflictService()
  
 export function BookingForm({ booking, kitId, onSuccess, onCancel }: BookingFormProps) {
   const { data: assets } = useAssets() // T075: Get all assets, filter by bookable status and availability
-  const { data: kits } = useKits()
+  const { data: kitsData } = useKits()
+  const kits = kitsData ?? []
   const { data: currentUser } = useCurrentUser()
   const { data: allBookings } = useBookings() // T076: For conflict checking
   const createBooking = useCreateBooking()

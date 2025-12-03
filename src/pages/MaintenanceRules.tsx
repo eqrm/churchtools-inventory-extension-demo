@@ -78,9 +78,9 @@ export function MaintenanceRules() {
   const ruleList = useMemo(() => (rules as MaintenanceRule[]) || [], [rules]);
   const conflictSet = useMemo(() => {
     const set = new Set<string>();
-    (conflicts as Array<{ rule1Id: string; rule2Id: string }>).forEach((c) => {
-      set.add(c.rule1Id);
-      set.add(c.rule2Id);
+    (conflicts as Array<{ rule1: MaintenanceRule; rule2: MaintenanceRule }>).forEach((c) => {
+      set.add(c.rule1.id);
+      set.add(c.rule2.id);
     });
     return set;
   }, [conflicts]);

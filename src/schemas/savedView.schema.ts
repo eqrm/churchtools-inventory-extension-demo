@@ -39,13 +39,13 @@ const FilterConditionSchema = z.object({
   type: z.literal('condition').optional(),
   field: z.string(),
   operator: FilterOperatorSchema,
-  value: z.unknown().optional(),
+  value: z.unknown(),
 });
 
 const FilterGroupSchema: z.ZodType<ViewFilterGroup> = z.lazy(() =>
   z.object({
     id: z.string(),
-    type: z.literal('group').optional(),
+    type: z.literal('group'),
     logic: FilterLogicSchema,
     children: z.array(z.union([FilterConditionSchema, FilterGroupSchema])),
   }),
@@ -117,14 +117,16 @@ export function migrateSavedView(data: unknown): SavedViewSchemaType {
 
   const legacy = LegacySavedViewSchema.safeParse(data);
   if (legacy.success) {
-    const { schemaVersion: _schemaVersion, filters, sortDirection, quickFilters, ...rest } = legacy.data;
+    const { schemaVersion: _schemaVersion, filters, sortDirection, sortBy, groupBy, quickFilters, ...rest } = legacy.data;
     const normalizedFilters = convertLegacyFiltersToGroup(filters as LegacyViewFilter[]);
     return {
       ...rest,
       schemaVersion: SAVED_VIEW_SCHEMA_VERSION,
       filters: normalizeFilterGroup(normalizedFilters),
       quickFilters: quickFilters ? normalizeFilterGroup(quickFilters) : undefined,
+      sortBy: sortBy ?? undefined,
       sortDirection: sortDirection ?? undefined,
+      groupBy: groupBy ?? undefined,
       createdAt: rest.createdAt ?? FALLBACK_TIMESTAMP,
       lastModifiedAt: rest.lastModifiedAt ?? FALLBACK_TIMESTAMP,
     } satisfies SavedViewSchemaType;

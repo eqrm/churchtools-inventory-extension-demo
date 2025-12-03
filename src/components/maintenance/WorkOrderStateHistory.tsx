@@ -23,6 +23,7 @@ export function WorkOrderStateHistory({ history }: WorkOrderStateHistoryProps) {
 
   const getStateColor = (state: WorkOrderState): string => {
     const colorMap: Record<WorkOrderState, string> = {
+      scheduled: 'indigo',
       backlog: 'gray',
       assigned: 'blue',
       planned: 'cyan',

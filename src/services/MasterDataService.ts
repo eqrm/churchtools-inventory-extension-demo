@@ -5,7 +5,11 @@ import { getChurchToolsStorageProvider } from './churchTools/storageProvider';
 type ProviderFactory = () => IStorageProvider;
 
 export class MasterDataService {
-  constructor(private readonly providerFactory: ProviderFactory = getChurchToolsStorageProvider) {}
+  private readonly providerFactory: ProviderFactory;
+
+  constructor(providerFactory: ProviderFactory = getChurchToolsStorageProvider) {
+    this.providerFactory = providerFactory;
+  }
 
   private get provider(): IStorageProvider {
     return this.providerFactory();

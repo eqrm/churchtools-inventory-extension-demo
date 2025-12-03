@@ -290,7 +290,7 @@ export function useMaintenanceCompanies() {
   const service = useMaintenanceServiceInternal();
   const upsertCompanies = useMaintenanceStore((state) => state.upsertCompanies);
 
-  return useQuery({
+  const query = useQuery<MaintenanceCompany[]>({
     queryKey: maintenanceKeys.companies(),
     queryFn: async () => {
       if (!service) {
@@ -299,10 +299,14 @@ export function useMaintenanceCompanies() {
       return await service.getCompanies();
     },
     enabled: Boolean(service),
-    onSuccess: (companies) => {
-      upsertCompanies(companies);
-    },
   });
+
+  // Sync to store when data changes
+  if (query.data) {
+    upsertCompanies(query.data);
+  }
+
+  return query;
 }
 
 /**
@@ -414,7 +418,7 @@ export function useMaintenanceRules() {
   const service = useMaintenanceServiceInternal();
   const upsertRules = useMaintenanceStore((state) => state.upsertRules);
 
-  return useQuery({
+  const query = useQuery<MaintenanceRule[]>({
     queryKey: maintenanceKeys.rules(),
     queryFn: async () => {
       if (!service) {
@@ -423,10 +427,14 @@ export function useMaintenanceRules() {
       return await service.getRules();
     },
     enabled: Boolean(service),
-    onSuccess: (rules) => {
-      upsertRules(rules);
-    },
   });
+
+  // Sync to store when data changes
+  if (query.data) {
+    upsertRules(query.data);
+  }
+
+  return query;
 }
 
 /**
@@ -461,7 +469,7 @@ export function useRuleConflicts() {
   const service = useMaintenanceServiceInternal();
   const setRuleConflicts = useMaintenanceStore((state) => state.setRuleConflicts);
 
-  return useQuery({
+  const query = useQuery<{ rule1: MaintenanceRule; rule2: MaintenanceRule }[]>({
     queryKey: maintenanceKeys.ruleConflicts(),
     queryFn: async () => {
       if (!service) {
@@ -470,10 +478,14 @@ export function useRuleConflicts() {
       return await service.detectRuleConflicts();
     },
     enabled: Boolean(service),
-    onSuccess: (conflicts) => {
-      setRuleConflicts(conflicts);
-    },
   });
+
+  // Sync to store when data changes
+  if (query.data) {
+    setRuleConflicts(query.data);
+  }
+
+  return query;
 }
 
 /**
@@ -646,7 +658,7 @@ export function useWorkOrders() {
   const service = useMaintenanceServiceInternal();
   const upsertWorkOrders = useMaintenanceStore((state) => state.upsertWorkOrders);
 
-  return useQuery({
+  const query = useQuery<WorkOrder[]>({
     queryKey: maintenanceKeys.workOrders(),
     queryFn: async () => {
       if (!service) {
@@ -655,10 +667,14 @@ export function useWorkOrders() {
       return await service.getWorkOrders();
     },
     enabled: Boolean(service),
-    onSuccess: (workOrders) => {
-      upsertWorkOrders(workOrders);
-    },
   });
+
+  // Sync to store when data changes
+  if (query.data) {
+    upsertWorkOrders(query.data);
+  }
+
+  return query;
 }
 
 /**

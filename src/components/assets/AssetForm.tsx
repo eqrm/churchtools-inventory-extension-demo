@@ -441,10 +441,11 @@ export function AssetForm({ asset, onSuccess, onCancel, initialData }: AssetForm
 
       // Apply custom field defaults
       Object.entries(customDefaults).forEach(([key, value]) => {
-        if (value !== undefined) {
+        if (value !== undefined && value !== null) {
+          const customFieldValue = value as CustomFieldValue;
           form.setFieldValue('customFieldValues', {
             ...form.values.customFieldValues,
-            [key]: value,
+            [key]: customFieldValue,
           });
         }
       });

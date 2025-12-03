@@ -320,6 +320,7 @@ export class MaintenanceService {
         ...woData,
         id: crypto.randomUUID() as UUID,
         workOrderNumber: await this.generateWorkOrderNumber(),
+        createdBy: woData.createdBy || ('' as UUID),
         createdAt: this.timestamp(),
         updatedAt: this.timestamp(),
         history: [

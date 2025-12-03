@@ -111,7 +111,7 @@ export function useAssetMaintenanceStatus(assetId: UUID): UseAssetMaintenanceSta
       });
     
     const nextScheduled = futureWorkOrders.length > 0 
-      ? futureWorkOrders[0].scheduledStart 
+      ? futureWorkOrders[0]?.scheduledStart 
       : undefined;
     
     return {

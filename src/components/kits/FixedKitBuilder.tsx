@@ -11,7 +11,7 @@ import { IconPlus, IconTrash } from '@tabler/icons-react';
 import { useAssets } from '../../hooks/useAssets';
 import { useTranslation } from 'react-i18next';
 import { ASSET_STATUS_KANBAN_COLORS, ASSET_STATUS_LABELS } from '../../constants/assetStatuses';
-import type { Asset } from '../../types/entities';
+import type { Asset, AssetStatus } from '../../types/entities';
 import { buildSelectableKitAssets } from '../../utils/kitAssets';
 import { AssetSelectionModal } from '../common/AssetSelectionModal';
 
@@ -73,10 +73,10 @@ export function FixedKitBuilder({ value, onChange, kitId }: FixedKitBuilderProps
         return {
           assetId: bound.assetId,
           assetNumber: bound.assetNumber,
-          status,
+          status: status as AssetStatus,
         };
       })
-      .filter((entry): entry is { assetId: string; assetNumber: string; status: Asset['status'] } => entry !== null);
+      .filter((entry): entry is { assetId: string; assetNumber: string; status: AssetStatus } => entry !== null);
   }, [assetLookup, value]);
 
   const notifyAssetStatus = (assetNumber: string, status?: string) => {

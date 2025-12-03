@@ -58,7 +58,7 @@ export function useKits(options?: UseKitsOptions) {
   const upsertKits = useKitStore((state) => state.upsertKits);
   const enabled = options?.enabled ?? true;
 
-  return useQuery({
+  const query = useQuery<Kit[]>({
     queryKey: kitKeys.lists(),
     queryFn: async () => {
       if (!kitService) {
@@ -67,10 +67,14 @@ export function useKits(options?: UseKitsOptions) {
       return await kitService.getKits();
     },
     enabled: Boolean(kitService && enabled),
-    onSuccess: (kits) => {
-      upsertKits(kits);
-    },
   });
+
+  // Sync to store when data changes
+  if (query.data) {
+    upsertKits(query.data);
+  }
+
+  return query;
 }
 
 /**

@@ -733,16 +733,16 @@ export function AssetDetail({ assetId, onEdit, onClose, onDuplicate }: AssetDeta
                 </Card>
 
                 {/* Custom Fields - Only if exists */}
-                {categoryDefinition?.dataFields && categoryDefinition.dataFields.length > 0 && (
+                {categoryDefinition?.customFields && categoryDefinition.customFields.length > 0 && (
                   <Card withBorder p="md">
                     <Stack gap="sm">
                       <Text size="sm" fw={600}>Custom Fields</Text>
                       <Grid gutter="xs">
-                        {categoryDefinition.dataFields.map((field) => {
-                          const value = asset.customFields?.[field.key];
+                        {categoryDefinition.customFields.map((field) => {
+                          const value = asset.customFieldValues?.[field.name];
                           if (!value) return null;
                           return (
-                            <Grid.Col span={6} key={field.key}>
+                            <Grid.Col span={6} key={field.id}>
                               <Text size="xs" c="dimmed" mb={2}>{field.name}</Text>
                               <Text size="sm">{String(value)}</Text>
                             </Grid.Col>

@@ -112,7 +112,6 @@ export class PropertyInheritanceService {
         entityType: 'kit',
         entityId: kit.id,
         actionType: 'compound',
-        description: `Propagated ${property} from kit ${kit.name}`,
         beforeState: {
           kitId: kit.id,
           kitName: kit.name,
@@ -129,6 +128,7 @@ export class PropertyInheritanceService {
           kitId: kit.id,
           kitName: kit.name,
           propertyName: property,
+          description: `Propagated ${property} from kit ${kit.name}`,
         },
         createdEntityIds: updatedIds,
       });
@@ -215,12 +215,12 @@ export class PropertyInheritanceService {
   private normalizePropertyValue<T extends KitInheritanceProperty>(property: T, value: unknown): PropertyValueMap[T] {
     if (property === 'tags') {
       if (value === undefined) {
-        return [] as PropertyValueMap[T];
+        return [] as unknown as PropertyValueMap[T];
       }
       if (!Array.isArray(value) || value.some((entry) => typeof entry !== 'string')) {
         throw new Error('Tags inheritance requires an array of tag ids');
       }
-      return [...value] as PropertyValueMap[T];
+      return [...value] as unknown as PropertyValueMap[T];
     }
 
     if (typeof value !== 'string') {

@@ -5,7 +5,7 @@ const toId = (value: IdLike): string => value.toString();
 /**
  * Route parameter types for query strings
  */
-export interface RouteParams {
+export interface RouteParams extends Record<string, unknown> {
   status?: string;
   tags?: string[];
   sort?: string;

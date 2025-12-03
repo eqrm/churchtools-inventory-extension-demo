@@ -102,23 +102,18 @@ export async function createKit(deps: KitDependencies, data: KitCreate): Promise
   const category = await getKitsCategory(deps);
   const user = await deps.apiClient.getCurrentUser();
 
-  if (data.type === 'fixed' && (!data.boundAssets || data.boundAssets.length === 0)) {
+  // T2.1.3: Only fixed kits are now supported
+  if (!data.boundAssets || data.boundAssets.length === 0) {
     throw new Error('Fixed kit must have at least one bound asset');
   }
 
-  if (data.type === 'flexible' && (!data.poolRequirements || data.poolRequirements.length === 0)) {
-    throw new Error('Flexible kit must have at least one pool requirement');
-  }
-
-  if (data.type === 'fixed' && data.boundAssets) {
-    for (const boundAsset of data.boundAssets) {
-      const asset = await deps.getAsset(boundAsset.assetId);
-      if (!asset) {
-        throw new Error(`Asset ${boundAsset.assetNumber} not found`);
-      }
-      if (asset.status === 'deleted') {
-        throw new Error(`Asset ${boundAsset.assetNumber} has been deleted and cannot be added to a kit`);
-      }
+  for (const boundAsset of data.boundAssets) {
+    const asset = await deps.getAsset(boundAsset.assetId);
+    if (!asset) {
+      throw new Error(`Asset ${boundAsset.assetNumber} not found`);
+    }
+    if (asset.status === 'deleted') {
+      throw new Error(`Asset ${boundAsset.assetNumber} has been deleted and cannot be added to a kit`);
     }
   }
 

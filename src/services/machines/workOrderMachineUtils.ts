@@ -70,7 +70,9 @@ export function canTransition(
   const snapshot = actor.getSnapshot();
   
   // Check if event can be sent in current state
-  const canSend = snapshot.can(event);
+  // Type assertion needed because the union of events doesn't exactly match each machine's event type
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const canSend = snapshot.can(event as any);
   
   actor.stop();
   return canSend;
@@ -182,7 +184,12 @@ export function getStateDuration(
     return null; // Never entered this state
   }
   
-  const enterTime = new Date(history[enterIndex].changedAt).getTime();
+  const enterEntry = history[enterIndex];
+  if (!enterEntry) {
+    return null;
+  }
+  
+  const enterTime = new Date(enterEntry.changedAt).getTime();
   
   // Find next state change
   const exitIndex = history.findIndex((h, i) => i > enterIndex && h.state !== state);
@@ -192,6 +199,11 @@ export function getStateDuration(
     return Date.now() - enterTime;
   }
   
-  const exitTime = new Date(history[exitIndex].changedAt).getTime();
+  const exitEntry = history[exitIndex];
+  if (!exitEntry) {
+    return Date.now() - enterTime;
+  }
+  
+  const exitTime = new Date(exitEntry.changedAt).getTime();
   return exitTime - enterTime;
 }

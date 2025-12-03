@@ -776,6 +776,7 @@ export interface ChangeHistoryEntry {
     | 'booking'
     | 'kit'
     | 'maintenance'
+    | 'maintenanceCompany'
     | 'stocktake'
     | 'asset-prefix'
     | 'master-data'

@@ -54,7 +54,8 @@ function useKitColumns(): DataTableColumn<Kit>[] {
 export function KitList({ onKitClick, onCreateClick }: KitListProps) {
   const navigate = useNavigate();
   const [filtersOpen, setFiltersOpen] = useState(true);
-  const { data: kits = [], isLoading, error } = useKits();
+  const { data: kitsData, isLoading, error } = useKits();
+  const kits: Kit[] = kitsData ?? [];
 
   const {
     viewMode,

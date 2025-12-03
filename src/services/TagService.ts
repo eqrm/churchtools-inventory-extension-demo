@@ -3,6 +3,15 @@ import type { UUID } from '../types/entities';
 import { recordUndoAction, registerUndoHandler } from './undo';
 import type { UndoAction } from '../types/undo';
 import { getChurchToolsStorageProvider } from './churchTools/storageProvider';
+import type { ChurchToolsStorageProvider } from './storage/churchToolsProvider/core';
+
+// Type for ChurchTools data value records returned by API
+interface DataValueRecord {
+  id: string | number;
+  dataCategoryId: number;
+  value?: string | null;
+  data?: string | null;
+}
 
 export interface TagCreate {
   name: string;
@@ -19,6 +28,11 @@ export interface TagUpdate {
 
 const CATEGORY_NAME = '__Tags__';
 
+// Helper to get the ChurchTools-specific provider with internal methods
+function getProviderInternal(): ChurchToolsStorageProvider {
+  return getChurchToolsStorageProvider() as unknown as ChurchToolsStorageProvider;
+}
+
 // Temporary in-memory storage until storage provider implements tag methods
 const tagsStore = new Map<UUID, Tag>();
 const entityTagsStore = new Map<string, Set<UUID>>(); // key: ${entityType}:${entityId}
@@ -30,7 +44,7 @@ async function loadTagsFromStorage(): Promise<void> {
   if (tagsStore.size > 0) return; // Already loaded
 
   try {
-    const provider = getChurchToolsStorageProvider();
+    const provider = getProviderInternal();
     const moduleId = provider.moduleId;
     const apiClient = provider.apiClient;
     
@@ -52,7 +66,7 @@ async function loadTagsFromStorage(): Promise<void> {
     }
 
     // Load all tag records
-    const values = await apiClient.getDataValues(moduleId, category.id);
+    const values = await apiClient.getDataValues(moduleId, category.id) as DataValueRecord[];
     values.forEach((record) => {
       const value = (record.value ?? record.data) as string | null;
       if (!value) return;
@@ -60,12 +74,12 @@ async function loadTagsFromStorage(): Promise<void> {
       const parsed = JSON.parse(value) as Record<string, unknown>;
       const tag: Tag = {
         id: String(record.id),
-        name: String(parsed.name),
-        color: String(parsed.color),
-        description: typeof parsed.description === 'string' ? parsed.description : undefined,
-        createdBy: String(parsed.createdBy ?? 'system'),
-        createdByName: typeof parsed.createdByName === 'string' ? parsed.createdByName : undefined,
-        createdAt: String(parsed.createdAt ?? new Date().toISOString()),
+        name: String(parsed['name']),
+        color: String(parsed['color']),
+        description: typeof parsed['description'] === 'string' ? parsed['description'] : undefined,
+        createdBy: String(parsed['createdBy'] ?? 'system'),
+        createdByName: typeof parsed['createdByName'] === 'string' ? parsed['createdByName'] : undefined,
+        createdAt: String(parsed['createdAt'] ?? new Date().toISOString()),
       };
       tagsStore.set(tag.id, tag);
     });
@@ -80,7 +94,7 @@ async function loadTagsFromStorage(): Promise<void> {
  */
 async function saveTagToStorage(tag: Omit<Tag, 'id'>): Promise<Tag> {
   try {
-    const provider = getChurchToolsStorageProvider();
+    const provider = getProviderInternal();
     const moduleId = provider.moduleId;
     const apiClient = provider.apiClient;
     
@@ -114,7 +128,7 @@ async function saveTagToStorage(tag: Omit<Tag, 'id'>): Promise<Tag> {
       value: JSON.stringify(payload),
     };
 
-    const created = await apiClient.createDataValue(moduleId, category.id, dataValue);
+    const created = await apiClient.createDataValue(moduleId, category.id, dataValue) as DataValueRecord;
     
     // Return the tag with the ID assigned by ChurchTools
     return {

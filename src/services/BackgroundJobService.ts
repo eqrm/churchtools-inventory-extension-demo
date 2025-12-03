@@ -42,13 +42,14 @@ export const backgroundJobService = new BackgroundJobService();
 
 // Register work order auto-generation job
 import { MaintenanceService } from './MaintenanceService';
+import { getChurchToolsStorageProvider } from './churchTools/storageProvider';
 
 backgroundJobService.register({
   id: 'work-order-auto-generation',
   description: 'Auto-generate work orders from maintenance rules (runs daily at 00:05)',
   job: async () => {
-    const storageProvider = await import('../types/storage').then(m => m.storageProvider);
-    const maintenanceService = new MaintenanceService(storageProvider);
+    const storageProvider = getChurchToolsStorageProvider();
+    const maintenanceService = new MaintenanceService({ storageProvider });
     await maintenanceService.autoGenerateWorkOrders();
   },
 });

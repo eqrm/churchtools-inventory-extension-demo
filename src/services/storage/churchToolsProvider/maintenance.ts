@@ -9,7 +9,7 @@ import type {
   MaintenanceSchedule,
   MaintenanceScheduleCreate,
 } from '../../../types/entities';
-import type { MaintenanceRule, WorkOrder } from '../../../types/maintenance';
+import type { MaintenanceRule, MaintenanceWorkType, WorkOrder } from '../../../types/maintenance';
 import { CURRENT_SCHEMA_VERSION } from '../../migrations/constants';
 
 export interface MaintenanceDependencies {
@@ -868,7 +868,7 @@ function mapToMaintenanceRule(val: unknown): MaintenanceRule {
   return {
     id: String(raw['id'] ?? parsed['id']),
     name: String(parsed['name']),
-    workType: String(parsed['workType']),
+    workType: String(parsed['workType']) as MaintenanceWorkType,
     isInternal: Boolean(parsed['isInternal']),
     serviceProviderId: parsed['serviceProviderId'] ? String(parsed['serviceProviderId']) : undefined,
     targets: (parsed['targets'] as MaintenanceRule['targets']) ?? [],
